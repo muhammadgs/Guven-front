@@ -800,6 +800,10 @@ const TaskManagerLoader = {
 
     // CSS fayllarını yüklə
     loadTaskManagerStyles: function() {
+        // Deploy zamanı bunu artır: 1.0.2, 1.0.3 və s.
+        // Test zamanı cache problemi qalarsa müvəqqəti Date.now() istifadə edə bilərsən.
+        const version = '1.0.1';
+
         const taskStyles = [
             '../assets/css/task_css/task.css',
             '../assets/css/task_css/edit_module.css',
@@ -807,14 +811,33 @@ const TaskManagerLoader = {
             '../assets/css/task_css/modals.css',
             '../assets/css/task_css/main.css',
             '../assets/css/task_css/quickNav.css',
-            '../assets/css/task_css/task_details_modal.css'
+
+            // task.html-də var idi, amma loader-də çatışmırdı
+            '../assets/css/task_css/new_task_design.css',
+            '../assets/css/task_css/raport.css',
+            '../assets/css/task_css/partnerTaskEditModule.css',
+            '../assets/css/task_css/load_buttons_task_list.css',
+
+            '../assets/css/task_css/task_details_modal.css',
+
+            // Hesabat modalları üçün
+            '../assets/css/task_css/report/userReportModal.css',
+            '../assets/css/task_css/report/enhancedModals.css'
         ];
 
         taskStyles.forEach(href => {
-            if (!document.querySelector(`link[href="${href}"]`)) {
+            const normalizedHref = href.replace(/^\.\.\//, '');
+
+            const alreadyLoaded = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+                .some(link => {
+                    const currentHref = link.getAttribute('href') || '';
+                    return currentHref.includes(normalizedHref);
+                });
+
+            if (!alreadyLoaded) {
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = href;
+                link.href = `${href}?v=${version}`;
                 document.head.appendChild(link);
                 console.log(`✅ TaskManagerLoader: CSS yükləndi: ${href}`);
             }
