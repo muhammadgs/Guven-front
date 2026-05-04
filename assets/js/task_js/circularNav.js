@@ -112,20 +112,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== PANELƏ KLİK (balacalaşmış vəziyyətdə açmaq üçün) =====
-    if(waveNav) {
+    if (waveNav) {
         waveNav.addEventListener('click', function(e) {
-            // Əgər panel balacalaşıbsa və birbaşa panelə klik olunubsa (item-lərə yox)
-            if(this.classList.contains('minimized') && !e.target.closest('.wave-item')) {
+            if (!e.target.closest('.wave-item')) {
+                e.preventDefault();
                 e.stopPropagation();
-
-                // Panel normala qayıtsın
-                restorePanel();
-
-                // Seçilmiş item varsa, onu seçili saxla
-                if(activeItem) {
-                    const target = activeItem.dataset.target;
-                    showSection(target);
-                }
             }
         });
     }
