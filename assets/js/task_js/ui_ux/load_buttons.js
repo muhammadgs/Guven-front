@@ -224,22 +224,30 @@ function getRealCompanyIdFromToken() {
         }
     }
 
-    // ==================== BÜTÜN CƏDVƏLLƏRİ GÖSTƏR ====================
+    
+    function showTaskManagerSection(section) {
+        if (!section) return;
+        const isTaskTableCard = section.classList.contains('table-card') && !section.classList.contains('new-task-section');
+        section.style.display = isTaskTableCard ? 'flex' : 'block';
+        section.classList.add('active-section');
+    }
+
+// ==================== BÜTÜN CƏDVƏLLƏRİ GÖSTƏR ====================
     function showAllTables() {
         const activeSection = document.getElementById('activeTableSection');
         const externalSection = document.getElementById('externalTableSection');
         const partnerSection = document.getElementById('partnerTableSection');
         const archiveSection = document.getElementById('archiveTableSection');
 
-        if (activeSection) activeSection.style.display = 'block';
-        if (externalSection) externalSection.style.display = 'block';
-        if (partnerSection) partnerSection.style.display = 'block';
-        if (archiveSection) archiveSection.style.display = 'block';
+        if (activeSection) showTaskManagerSection(activeSection);
+        if (externalSection) showTaskManagerSection(externalSection);
+        if (partnerSection) showTaskManagerSection(partnerSection);
+        if (archiveSection) showTaskManagerSection(archiveSection);
 
         const archiveCheckbox = document.getElementById('showArchiveTable');
         if (archiveCheckbox && archiveCheckbox.checked === false) {
             archiveCheckbox.checked = true;
-            if (archiveSection) archiveSection.style.display = 'block';
+            if (archiveSection) showTaskManagerSection(archiveSection);
         }
 
         console.log('✅ Bütün cədvəllər göstərildi');
@@ -483,7 +491,7 @@ function getRealCompanyIdFromToken() {
 
         const section = document.getElementById(config.sectionId);
         if (section && section.style.display === 'none') {
-            section.style.display = 'block';
+            showTaskManagerSection(section);
         }
 
         console.log(`✅ ${tableType} cədvəlinə ${tasks.length} task yükləndi`);

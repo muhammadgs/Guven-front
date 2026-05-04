@@ -149,6 +149,38 @@ const TaskManagerLoader = {
         console.log('✅ Naviqasiya gücləndirildi');
     },
 
+
+
+    showTaskManagerSection: function(section) {
+        if (!section) return;
+
+        const isTaskTableCard = section.classList.contains('table-card') && !section.classList.contains('new-task-section');
+        section.style.display = isTaskTableCard ? 'flex' : 'block';
+        section.classList.add('active-section');
+    },
+
+    showTargetSection: function(target, sections) {
+        Object.values(sections).forEach(section => {
+            if (section) {
+                section.style.display = 'none';
+                section.classList.remove('active-section');
+            }
+        });
+
+        const newTaskSection = document.getElementById('newTaskCreateSection');
+        if (newTaskSection) {
+            newTaskSection.style.display = 'none';
+            newTaskSection.classList.remove('active-section');
+        }
+
+        if (target === 'new') {
+            this.showTaskManagerSection(newTaskSection);
+            return;
+        }
+
+        this.showTaskManagerSection(sections[target]);
+    },
+
     // YENİ: Panel vəziyyətini tənzimlə - TAM EKRAN VERSİYASI
     adjustPanelState: function(target) {
         const waveNav = document.getElementById('waveNav');
@@ -800,6 +832,7 @@ const TaskManagerLoader = {
 
     // CSS fayllarını yüklə
     loadTaskManagerStyles: function() {
+        const version = '1.0.1';
         const taskStyles = [
             '../assets/css/task_css/task.css',
             '../assets/css/task_css/edit_module.css',
@@ -807,16 +840,27 @@ const TaskManagerLoader = {
             '../assets/css/task_css/modals.css',
             '../assets/css/task_css/main.css',
             '../assets/css/task_css/quickNav.css',
-            '../assets/css/task_css/task_details_modal.css'
+            '../assets/css/task_css/new_task_design.css',
+            '../assets/css/task_css/raport.css',
+            '../assets/css/task_css/partnerTaskEditModule.css',
+            '../assets/css/task_css/load_buttons_task_list.css',
+            '../assets/css/task_css/task_details_modal.css',
+            '../assets/css/task_css/report/userReportModal.css',
+            '../assets/css/task_css/report/enhancedModals.css'
         ];
 
         taskStyles.forEach(href => {
-            if (!document.querySelector(`link[href="${href}"]`)) {
+            const normalizedHref = `${href}?v=${version}`;
+            const alreadyLoaded = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(link =>
+                (link.getAttribute('href') || '').split('?')[0] === href
+            );
+
+            if (!alreadyLoaded) {
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = href;
+                link.href = normalizedHref;
                 document.head.appendChild(link);
-                console.log(`✅ TaskManagerLoader: CSS yükləndi: ${href}`);
+                console.log(`✅ TaskManagerLoader: CSS yükləndi: ${normalizedHref}`);
             }
         });
     },
