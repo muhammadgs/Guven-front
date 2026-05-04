@@ -32,15 +32,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== BÜTÜN BÖLMƏLƏRİ GİZLƏ =====
     function hideAllSections() {
-        Object.values(sections).forEach(s => { if(s) s.style.display = 'none'; });
-        if(newTaskSection) newTaskSection.style.display = 'none';
+        Object.values(sections).forEach(section => {
+            if (section) {
+                section.style.display = 'none';
+                section.classList.remove('active-section');
+            }
+        });
+        if (newTaskSection) {
+            newTaskSection.style.display = 'none';
+            newTaskSection.classList.remove('active-section');
+        }
+    }
+
+    function showTaskManagerSection(section) {
+        if (!section) return;
+
+        const isTaskTableCard =
+            section.classList.contains('table-card') &&
+            !section.classList.contains('new-task-section');
+
+        section.style.display = isTaskTableCard ? 'flex' : 'block';
+        section.classList.add('active-section');
     }
 
     // ===== BÖLMƏ GÖSTƏR =====
     function showSection(name) {
         hideAllSections();
-        if(name === 'new' && newTaskSection) newTaskSection.style.display = 'block';
-        else if(sections[name]) sections[name].style.display = 'block';
+        if(name === 'new' && newTaskSection) showTaskManagerSection(newTaskSection);
+        else if(sections[name]) showTaskManagerSection(sections[name]);
     }
 
     // ===== SEÇİMİ TƏMİZLƏ =====
