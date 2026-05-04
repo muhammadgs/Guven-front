@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giriş et | Güvən Finans</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/cal-sans@1.0.1/public/web/cal-sans.css" rel="stylesheet" />
+
+  <!-- Login CSS -->
+  <script>
+        (function() {
+            const v = Date.now();
+            const cssFiles = [
+                'assets/css/login_css/login.css',
+                'assets/css/style.css',
+                'assets/css/login_css/forgot-password.css'
+            ];
+            cssFiles.forEach(file => {
+                document.write(`<link rel="stylesheet" href="${file}?v=${v}" />`);
+            });
+            console.log('✅ CSS faylları yükləndi. Versiya:', v);
+        })();
+  </script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/favicon.png">
+  <link rel="apple-touch-icon" href="assets/images/favicon.png">
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<main class="auth-page">
+  <section class="auth-hero">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-head">
+          <h1 class="auth-title">Giriş et</h1>
+          <p class="auth-subtitle">Zəhmət olmasa məlumatlarınızı daxil edin.</p>
+        </div>
+
+        <!-- status message -->
+        <div class="auth-status is-hidden" id="authStatus"></div>
+
+        <form class="auth-form" id="loginForm" action="#" method="post" novalidate>
+          <div class="field">
+            <label for="login" class="field-label">Email və ya nömrə</label>
+            <div class="field-control">
+              <i class="fa-regular fa-user field-icon"></i>
+              <input
+                type="text"
+                id="login"
+                name="login"
+                class="field-input"
+                placeholder="example@mail.com və ya +994..."
+                required
+                autocomplete="username"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="password" class="field-label">Şifrə</label>
+            <div class="field-control">
+              <i class="fa-solid fa-lock field-icon"></i>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                class="field-input"
+                placeholder="Şifrənizi daxil edin"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+          </div>
+
+          <!-- ===== ƏLAVƏ 1: ŞİFRƏNİ UNUTMUSAN? DÜYMƏSİ ===== -->
+          <div class="forgot-password">
+            <button type="button" class="forgot-btn" id="forgotPasswordBtn">
+              <i class="fa-regular fa-circle-question"></i> Şifrəni unutmusan?
+            </button>
+          </div>
+          <!-- ===== ƏLAVƏ 1 SON ===== -->
+
+          <button type="submit" class="auth-btn">
+            Daxil ol
+          </button>
+
+          <p class="auth-footer">
+            Hesabınız yoxdur?
+            <a href="register.html" class="auth-link">Qeydiyyatdan keçin</a>
+          </p>
+
+          <p class="auth-footer">
+            Artıq hesabınız var?
+            <a href="login.html" class="auth-link">Daxil olun</a>
+          </p>
+        </form>
+      </div>
+
+      <a class="auth-back" href="index.html">
+        <i class="fa-solid fa-arrow-left"></i> Ana səhifəyə qayıt
+      </a>
+    </div>
+  </section>
+</main>
+
+<!-- ===== ƏLAVƏ 2: FORGOT PASSWORD MODAL ===== -->
+<div class="modal" id="forgotModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Şifrəni sıfırla</h3>
+      <button class="modal-close" id="closeModalBtn">&times;</button>
+    </div>
+
+    <!-- Step 1: Choose method -->
+    <div id="step1">
+      <p class="modal-subtitle">Şifrə sıfırlama linkini haraya göndərək?</p>
+
+      <div class="method-selector">
+        <label class="method-option">
+          <input type="radio" name="resetMethod" value="email" checked>
+          <span class="method-content">
+            <i class="fa-regular fa-envelope"></i>
+            <span>E-poçt</span>
+          </span>
+        </label>
+
+        <label class="method-option">
+          <input type="radio" name="resetMethod" value="telegram">
+          <span class="method-content">
+            <i class="fa-brands fa-telegram"></i>
+            <span>Telegram</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="field" id="emailField">
+        <label for="resetEmail" class="field-label">E-poçt ünvanı</label>
+        <div class="field-control">
+          <i class="fa-regular fa-envelope field-icon"></i>
+          <input type="email" id="resetEmail" class="field-input" placeholder="example@mail.com">
+        </div>
+      </div>
+
+      <div class="field" id="telegramField" style="display: none;">
+        <label for="resetTelegram" class="field-label">Telegram istifadəçi adı</label>
+        <div class="field-control">
+          <i class="fa-brands fa-telegram field-icon"></i>
+          <input type="text" id="resetTelegram" class="field-input" placeholder="@username">
+        </div>
+      </div>
+
+      <button type="button" class="auth-btn" id="sendResetLinkBtn">Link göndər</button>
+    </div>
+
+    <!-- Step 2: Success message -->
+    <div id="step2" style="display: none;">
+      <div class="success-icon">
+        <i class="fa-regular fa-circle-check"></i>
+      </div>
+      <p class="success-message">Link göndərildi!</p>
+      <p class="success-info" id="successInfo"></p>
+      <button type="button" class="auth-btn" id="step2OkBtn">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ƏLAVƏ 3: RESET PASSWORD MODAL ===== -->
+<div class="modal" id="resetModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Yeni şifrə təyin et</h3>
+      <button class="modal-close" id="closeResetModalBtn">&times;</button>
+    </div>
+
+    <div>
+      <p class="modal-subtitle">Yeni şifrənizi daxil edin</p>
+
+      <div class="field">
+        <label for="newPassword" class="field-label">Yeni şifrə</label>
+        <div class="field-control">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input type="password" id="newPassword" class="field-input" placeholder="Yeni şifrə">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="confirmPassword" class="field-label">Şifrə təkrar</label>
+        <div class="field-control">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input type="password" id="confirmPassword" class="field-input" placeholder="Şifrəni təkrarlayın">
+        </div>
+      </div>
+
+      <div class="password-error" id="passwordError"></div>
+
+      <button type="button" class="auth-btn" id="resetPasswordBtn">Şifrəni yenilə</button>
+    </div>
+  </div>
+</div>
+<!-- ===== ƏLAVƏLƏR SON ===== -->
+
+<script>
+  (function() {
+    const v = Date.now();
+    const jsFiles = [
+      'assets/js/login_js/login.js',
+      'assets/js/login_js/forgot-password.js'
+    ];
+    jsFiles.forEach(file => {
+      document.write(`<script src="${file}?v=${v}"><\/script>`);
+    });
+    console.log('✅ JS faylları yükləndi. Versiya:', v);
+  })();
+</script>
+
+</body>
+</html>

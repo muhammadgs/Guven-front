@@ -1,0 +1,2022 @@
+@keyframes slideLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Köhnə CSS-iniz olduğu kimi qalır */
+/* ===== DALĞA FORMALI 6 HİSSƏLİ TASK PƏNCƏRƏLƏR ===== */
+
+/* GÖZƏL ARXA FON RƏNGİ - gradient bənövşəyi */
+body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* NORMAL VƏZİYYƏT - MƏRKƏZDƏ, 6 HİSSƏ */
+.wave-nav-container {
+    width: 80%;
+    max-width: 900px;
+    margin: 40px auto 20px auto;
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    border-radius: 60px 60px 30px 30px;
+    box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.5);
+    padding: 30px 20px;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    z-index: 100;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+/* 6 HİSSƏ ÜÇÜN XÜSUSİ DÜZÜLÜŞ */
+.wave-nav-container .wave-nav-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+/* HƏR BİR HİSSƏ (ITEM) ÜÇÜN STİL */
+.wave-nav-container .wave-item {
+    flex: 0 1 calc(33.333% - 40px);
+    min-width: 140px;
+    max-width: 180px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    padding: 20px 10px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* İTEM HOVER EFEKTİ */
+.wave-nav-container .wave-item:hover {
+    transform: translateY(-10px) scale(1.05);
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* SEÇİLMİŞ İTEM */
+.wave-nav-container .wave-item.selected {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 4px solid #ffffff !important;
+    transform: translateY(-15px) scale(1.08);
+    box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* İKONLAR - NORMAL VƏZİYYƏTDƏ BÖYÜK */
+.wave-nav-container .wave-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+    margin: 0 auto 10px auto;
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* SEÇİLMİŞ İTEM-də İKON */
+.wave-nav-container .wave-item.selected .wave-icon {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+    border-color: white;
+}
+
+/* BAŞLIQLAR */
+.wave-nav-container .wave-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: white;
+    margin: 8px 0 5px 0;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* SAYLAR */
+.wave-nav-container .wave-count {
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    background: rgba(255, 255, 255, 0.25);
+    padding: 4px 12px;
+    border-radius: 40px;
+    display: inline-block;
+    min-width: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* SEÇİLMİŞ İTEM-də SAY */
+.wave-nav-container .wave-item.selected .wave-count {
+    background: white;
+    color: #3b82f6;
+    font-weight: 900;
+}
+
+/* ===== BALACALAŞMIŞ VƏZİYYƏT - YUXARIDA, İKONLAR DÜZÜLÜR ===== */
+.wave-nav-container.minimized {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    border: none;
+    animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* BALACALAŞMIŞ VƏZİYYƏTDƏ İTEMLƏR - ÜFÜQİ DÜZÜLÜR */
+.wave-nav-container.minimized .wave-nav-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.wave-nav-container.minimized .wave-item {
+    flex: 0 1 auto;
+    min-width: 60px;
+    max-width: 80px;
+    padding: 8px 5px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    margin: 0;
+    transform: none !important;
+    box-shadow: none;
+}
+
+.wave-nav-container.minimized .wave-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px) !important;
+}
+
+.wave-nav-container.minimized .wave-item.selected {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* BALACALAŞMIŞ VƏZİYYƏTDƏ İKONLAR */
+.wave-nav-container.minimized .wave-icon {
+    width: 45px !important;
+    height: 45px !important;
+    font-size: 22px !important;
+    margin: 0 auto 2px auto !important;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* BALACALAŞMIŞ VƏZİYYƏTDƏ BAŞLIQLAR */
+.wave-nav-container.minimized .wave-title {
+    font-size: 10px !important;
+    margin: 2px 0 0 0 !important;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: nowrap;
+    display: block !important;
+    color: white;
+}
+
+/* BALACALAŞMIŞ VƏZİYYƏTDƏ SAYLAR GİZLƏNİR */
+.wave-nav-container.minimized .wave-count {
+    display: none;
+}
+
+/* BALACALAŞMIŞ VƏZİYYƏTDƏ HEADER GİZLƏNİR */
+.wave-nav-container.minimized .wave-nav-header,
+.wave-nav-container.minimized .wave-toggle-btn {
+    display: none;
+}
+
+/* BÖLMƏLƏR ÜÇÜN STİLLƏR */
+.table-card, #newTaskCreateSection {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    margin: 20px auto;
+    padding: 10px;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 1900px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#mainContent {
+    padding: 20px;
+    min-height: calc(100vh - 200px);
+}
+
+/* RESPONSİV DÜZƏLİŞLƏR */
+@media (max-width: 768px) {
+    /* Normal vəziyyət - mobil */
+    .wave-nav-container {
+        width: 95%;
+        padding: 20px 10px;
+        border-radius: 40px;
+        margin: 20px auto;
+    }
+
+    .wave-nav-container .wave-item {
+        flex: 0 1 calc(50% - 30px);
+        min-width: 120px;
+    }
+
+    .wave-nav-container .wave-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+
+    .wave-nav-container .wave-title {
+        font-size: 13px;
+    }
+
+    .wave-nav-container .wave-count {
+        font-size: 20px;
+        min-width: 45px;
+    }
+
+    /* Balacalaşmış vəziyyət - mobil */
+    .wave-nav-container.minimized {
+        padding: 8px 10px;
+    }
+
+    .wave-nav-container.minimized .wave-item {
+        min-width: 50px;
+    }
+
+    .wave-nav-container.minimized .wave-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 20px !important;
+    }
+
+    .wave-nav-container.minimized .wave-title {
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Normal vəziyyət - kiçik mobil */
+    .wave-nav-container .wave-item {
+        flex: 0 1 100%;
+        max-width: 250px;
+    }
+
+    /* Balacalaşmış vəziyyət - kiçik mobil */
+    .wave-nav-container.minimized .wave-nav-items {
+        gap: 2px;
+    }
+
+    .wave-nav-container.minimized .wave-item {
+        min-width: 45px;
+    }
+
+    .wave-nav-container.minimized .wave-icon {
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 18px !important;
+    }
+
+    .wave-nav-container.minimized .wave-title {
+        font-size: 8px !important;
+    }
+}
+
+/* Qalan stilləriniz olduğu kimi qalır */
+/* Partner cədvəli üçün xüsusi stillər */
+#partnerTasksTable th {
+    background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    padding: 8px 6px;
+    white-space: nowrap;
+    border-bottom: 2px solid #cbd5e1;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#partnerTasksTable td {
+    padding: 8px 6px;
+    font-size: 13px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* A və C şirkət badge-ləri */
+.company-badge-a {
+    display: inline-block;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-right: 4px;
+}
+
+.company-badge-c {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-right: 4px;
+}
+
+/* Şirkət sütunu */
+.company-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.company-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+}
+
+/* Action düymələr */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+}
+
+/* Status badge-lər */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-in-progress { background: #dbeafe; color: #1e40af; }
+.status-completed { background: #d1fae5; color: #065f46; }
+.status-overdue { background: #fee2e2; color: #991b1b; }
+.status-cancelled { background: #e5e7eb; color: #4b5563; }
+
+/* Fayl indikatoru */
+.file-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #6366f1;
+    cursor: pointer;
+}
+
+.file-indicator i { font-size: 14px; }
+.file-indicator span {
+    background: #6366f1;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 10px;
+}
+
+/* Pagination */
+.pagination-btn {
+    padding: 6px 10px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 4px;
+    margin: 0 10px;
+}
+
+.pagination-number {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #64748b;
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 36px;
+    text-align: center;
+}
+
+.pagination-number.active {
+    background: #4f46e5;
+    color: white;
+    border-color: #4f46e5;
+}
+
+/* Tooltip */
+[title] {
+    cursor: help;
+}
+
+/* Responsive */
+@media (max-width: 1600px) {
+    #partnerTasksTable {
+        font-size: 12px;
+    }
+
+    #partnerTasksTable th,
+    #partnerTasksTable td {
+        padding: 6px 4px;
+    }
+}
+
+/* Qiymət sütunları */
+.text-right {
+    text-align: right;
+}
+
+.money-value {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    color: #0f172a;
+}
+/* Şirkət badge-ləri */
+.company-badge-a {
+    background: #4f46e5;
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.company-badge-c {
+    background: #10b981;
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Şirkət konteyneri */
+.company-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.company-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 13px;
+}
+
+.company-item.a {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.company-item.c {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+}
+
+.company-name {
+    font-weight: 500;
+}
+
+.company-name.a {
+    color: #1e293b;
+}
+
+.company-name.c {
+    color: #065f46;
+}
+
+/* Ox işarəsi */
+.arrow-icon {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Siz indikatoru */
+.you-indicator {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 5px;
+}
+
+.you-indicator.a {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.you-indicator.c {
+    background: #d1fae5;
+    color: #065f46;
+}
+/* ===== TAPŞIRIQLAR BAŞLIĞI - MƏRKƏZDƏ YERLƏŞMİŞ VERSİYA ===== */
+.tasks-header {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    padding: 18px 25px;
+    margin: 15px 250px 20px 250px;
+    border-radius: 24px;
+    box-shadow:
+        0 25px 45px -15px rgba(0, 0, 0, 0.2),
+        0 1px 3px rgba(0, 0, 0, 0.05),
+        inset 0 1px 1px rgba(255, 255, 255, 0.7);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    min-height: 90px;
+}
+
+/* Fon üçün gözəl gradient abstrakt forma */
+.tasks-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(236, 72, 153, 0.08) 0%, transparent 50%);
+    z-index: 0;
+}
+
+/* Dalğalı xətt effekti */
+.tasks-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(59, 130, 246, 0.3) 20%,
+        rgba(139, 92, 246, 0.5) 50%,
+        rgba(236, 72, 153, 0.3) 80%,
+        transparent 100%
+    );
+    z-index: 1;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 2;
+}
+
+/* Mərkəz hissə */
+.header-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex: 0 1 auto;
+    position: relative;
+}
+
+/* İkon üçün gözəl fon */
+.header-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(145deg, #ffffff, #f1f5f9);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    position: relative;
+    box-shadow:
+        0 15px 25px -8px rgba(59, 130, 246, 0.3),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.05),
+        inset 0 2px 10px rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.header-icon-wrapper i {
+    font-size: 28px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 4px 6px rgba(59, 130, 246, 0.3));
+    transition: all 0.3s ease;
+}
+
+.header-icon-wrapper:hover i {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* İkonun ətrafında parıltı */
+.header-icon-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+    border-radius: 22px;
+    opacity: 0.3;
+    filter: blur(6px);
+    z-index: -1;
+    animation: glowPulse 3s ease infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.3; filter: blur(6px); }
+    50% { opacity: 0.5; filter: blur(8px); }
+}
+
+/* Başlıq mətni */
+.tasks-header h1 {
+    margin: 0 0 6px 0;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    position: relative;
+    display: inline-block;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg,
+        #1e293b 0%,
+        #334155 40%,
+        #3b82f6 80%,
+        #8b5cf6 100%
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: textGradient 6s ease infinite;
+    position: relative;
+}
+
+@keyframes textGradient {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Status göstəricisi */
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(5px);
+    padding: 6px 16px;
+    border-radius: 40px;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    margin-top: 5px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    position: relative;
+    animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.status-dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    background: #10b981;
+    border-radius: 50%;
+    opacity: 0.2;
+    animation: ripple 2s ease infinite;
+}
+
+@keyframes ripple {
+    0% { transform: scale(1); opacity: 0.2; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.status-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    letter-spacing: 0.3px;
+}
+
+/* Dekorativ elementlər - sol və sağ */
+.header-decoration {
+    position: relative;
+    width: 100px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    opacity: 0.6;
+}
+
+.header-decoration.left {
+    justify-content: flex-start;
+}
+
+.header-decoration.right {
+    justify-content: flex-end;
+}
+
+.deco-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    animation: float 4s ease infinite;
+}
+
+.header-decoration.right .deco-circle {
+    animation-delay: 0.5s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.1); }
+}
+
+.deco-line {
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(180deg,
+        rgba(59, 130, 246, 0.3),
+        rgba(139, 92, 246, 0.3),
+        rgba(236, 72, 153, 0.3)
+    );
+    border-radius: 2px;
+    animation: heightPulse 3s ease infinite;
+}
+
+.header-decoration.right .deco-line {
+    animation-delay: 1s;
+}
+
+@keyframes heightPulse {
+    0%, 100% { height: 40px; opacity: 0.3; }
+    50% { height: 60px; opacity: 0.6; }
+}
+
+/* Toggle düyməsi - sağ küncdə */
+.header-toggle {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    font-size: 18px;
+    z-index: 10;
+}
+
+.header-toggle:hover {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border-color: transparent;
+    transform: translateY(-50%) translateY(-2px);
+    box-shadow: 0 8px 20px -5px rgba(59, 130, 246, 0.4);
+}
+
+/* Minimized versiya */
+.tasks-header.minimized {
+    position: fixed;
+    left: 20px;
+    top: 15px;
+    margin: 0;
+    padding: 1px 2px;
+    z-index: 1000;
+    background: linear-gradient(145deg, #3b82f6, #f8fafc);
+    border: none;
+    box-shadow:
+        0 1px 3px -10px rgba(59, 130, 246, 0.4),
+        0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: slideInLeft 0.4s ease;
+    min-width: auto;
+    justify-content: flex-start;
+}
+
+.tasks-header.minimized .header-content {
+    max-width: none;
+}
+
+.tasks-header.minimized .header-center {
+    flex-direction: row;
+    gap: 10px;
+}
+
+.tasks-header.minimized .header-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    margin-bottom: 0;
+}
+
+.tasks-header.minimized .header-icon-wrapper i {
+    font-size: 20px;
+}
+
+.tasks-header.minimized h1 {
+    font-size: 16px;
+    margin: 0;
+}
+
+.tasks-header.minimized .gradient-text {
+    background: white;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.tasks-header.minimized .header-status,
+.tasks-header.minimized .header-decoration,
+.tasks-header.minimized .header-icon-wrapper::after {
+    display: none;
+}
+
+.tasks-header.minimized .header-toggle {
+    width: 32px;
+    margin: 1px 200px 1px 200px;
+    height: 32px;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.tasks-header.minimized .header-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .tasks-header {
+        padding: 15px 20px;
+        margin: 10px 15px 15px 15px;
+        min-height: 80px;
+    }
+
+    .header-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+    }
+
+    .header-icon-wrapper i {
+        font-size: 24px;
+    }
+
+    .tasks-header h1 {
+        font-size: 22px;
+    }
+
+    .header-decoration {
+        width: 60px;
+    }
+
+    .deco-circle {
+        width: 30px;
+        height: 30px;
+    }
+
+    .deco-line {
+        height: 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    .header-decoration {
+        display: none;
+    }
+
+    .header-status {
+        padding: 4px 12px;
+    }
+
+    .status-text {
+        font-size: 12px;
+    }
+
+    .tasks-header h1 {
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tasks-header {
+        padding: 12px 15px;
+    }
+
+    .header-icon-wrapper {
+        width: 45px;
+        height: 45px;
+        border-radius: 14px;
+    }
+
+    .header-icon-wrapper i {
+        font-size: 22px;
+    }
+
+    .tasks-header h1 {
+        font-size: 18px;
+    }
+
+    .header-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+        right: 12px;
+    }
+}
+/* =====================================
+   SÜTUN FİLTRİ - XÜSUSİ STİLLƏR
+   ===================================== */
+
+/* Filtr inputları üçün əsas stillər */
+.column-filter {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    background: white;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+/* Filtr input fokuslandıqda */
+.column-filter:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Filtr input hover effekti */
+.column-filter:hover {
+    border-color: #94a3b8;
+}
+
+/* Filtr aktiv olduqda sütun başlığı */
+.filter-active th {
+    background: #f0f9ff !important;
+    border-bottom: 2px solid #3b82f6 !important;
+}
+
+/* Filtr aktiv olduqda sütun başlığındakı span */
+.filter-active th span {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+/* Filtr ikonkası */
+.filter-icon {
+    margin-left: 5px;
+    font-size: 12px;
+    color: #3b82f6;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.filter-icon:hover {
+    opacity: 1;
+}
+
+/* Filtrləri təmizlə düyməsi */
+.clear-filters-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    transition: all 0.2s;
+}
+
+.clear-filters-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.clear-filters-btn i {
+    font-size: 11px;
+}
+
+/* Filter məlumat sahəsi */
+.filter-info {
+    margin-left: 15px;
+    color: #3b82f6;
+    font-size: 13px;
+    display: inline-block;
+    padding: 4px 10px;
+    background: #eff6ff;
+    border-radius: 20px;
+    border: 1px solid #bfdbfe;
+}
+
+/* Aktiv filtr sayı göstəricisi */
+.active-filter-badge {
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    margin-left: 5px;
+}
+
+/* Filtrlənmiş sətir stilləri */
+.filtered-row-hidden {
+    display: none !important;
+}
+
+/* Yüklənən zaman animasiya */
+.filter-loading {
+    position: relative;
+}
+
+.filter-loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+/* Responsive dizayn */
+@media (max-width: 768px) {
+    .column-filter {
+        padding: 4px 6px;
+        font-size: 11px;
+    }
+
+    .filter-info {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+
+    .clear-filters-btn {
+        padding: 2px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Təmizlə düyməsi üçün xüsusi stillər */
+#clearFiltersBtn {
+    color: #ef4444 !important;
+    transition: all 0.2s;
+}
+
+#clearFiltersBtn:hover {
+    background: #fee2e2 !important;
+    transform: scale(1.05);
+}
+
+#clearFiltersBtn i {
+    font-size: 14px;
+}
+
+/* Sütun başlığında filtr input üçün yer */
+#activeTableSection th {
+    position: relative;
+    vertical-align: top;
+    padding-bottom: 8px !important;
+}
+
+#activeTableSection th span {
+    display: block;
+    margin-bottom: 4px;
+}
+
+/* Boş filtr nəticəsi */
+.no-filter-results {
+    text-align: center;
+    padding: 40px !important;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.no-filter-results i {
+    font-size: 24px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* Filtr input placeholder rəngi */
+.column-filter::placeholder {
+    color: #94a3b8;
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+/* Dark mode desteyi (əgər varsa) */
+[data-theme="dark"] .column-filter {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .column-filter:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+
+[data-theme="dark"] .filter-info {
+    background: #1e293b;
+    border-color: #334155;
+    color: #60a5fa;
+}
+
+[data-theme="dark"] .clear-filters-btn {
+    background: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+[data-theme="dark"] .clear-filters-btn:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .filter-active th {
+    background: #172554 !important;
+}
+
+[data-theme="dark"] .filter-active th span {
+    color: #93c5fd;
+}
+
+.tasks-header::before,
+.tasks-header::after {
+    display: none !important;
+}
+
+.header-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.professional-logo {
+    max-width: 90%;
+    width: auto;
+    height: auto;
+    max-height: 100px;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .professional-logo {
+        max-width: 70%;
+        max-height: 80px;
+    }
+
+    .tasks-header {
+        padding: 15px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .professional-logo {
+        max-width: 80%;
+        max-height: 70px;
+    }
+
+    .tasks-header {
+        padding: 12px 15px;
+    }
+}
+
+/* ===== TASK MANAGER NAV: 6 düymə eyni ölçüdə, 3 yuxarı + 3 aşağı ===== */
+
+/* Ümumi nav paneli */
+.wave-nav-container {
+    width: min(86%, 1250px) !important;
+    max-width: 1250px !important;
+    margin: 28px auto 20px auto !important;
+    padding: 42px 48px !important;
+    border-radius: 46px !important;
+    box-sizing: border-box !important;
+}
+
+/* Cache düyməsi sağda ayrıca dursun, seçim grid-ini sıxmasın */
+.wave-nav-content {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 6 seçim tam grid olsun: 3 yuxarı, 3 aşağı */
+.wave-nav-container .wave-nav-items {
+    display: grid !important;
+    grid-template-columns: repeat(3, 180px) !important;
+    grid-auto-rows: 150px !important;
+    gap: 28px 34px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    width: max-content !important;
+    max-width: 100% !important;
+}
+
+/* Hər seçim eyni ölçüdə */
+.wave-nav-container .wave-item {
+    width: 180px !important;
+    height: 150px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
+    min-height: 150px !important;
+    max-height: 150px !important;
+    flex: none !important;
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 16px 14px !important;
+    margin: 0 !important;
+    border-radius: 24px !important;
+}
+
+/* İç kontent mərkəzdə və sabit */
+.wave-nav-container .wave-item-content {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* İkonlar hamısında eyni */
+.wave-nav-container .wave-icon {
+    width: 64px !important;
+    height: 64px !important;
+    min-width: 64px !important;
+    min-height: 64px !important;
+    margin: 0 !important;
+    font-size: 28px !important;
+    flex-shrink: 0 !important;
+}
+
+/* Yazı/count sahəsi də səliqəli */
+.wave-nav-container .wave-text {
+    min-height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    text-align: center !important;
+}
+
+.wave-nav-container .wave-title {
+    margin: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+.wave-nav-container .wave-count {
+    min-width: 42px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+}
+
+/* Seçilmiş item böyüyüb ölçünü pozmasın */
+.wave-nav-container .wave-item.selected {
+    transform: none !important;
+    border-width: 3px !important;
+    box-sizing: border-box !important;
+}
+
+/* Hover da ölçünü pozmasın */
+.wave-nav-container .wave-item:hover {
+    transform: translateY(-4px) !important;
+}
+
+/* Cache düyməsi grid-ə qarışmasın */
+.wave-nav-container .wave-nav-extra {
+    position: absolute !important;
+    right: 0 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+}
+
+/* Cache düyməsi çox yer tutmasın */
+.wave-nav-container .cache-clear-btn {
+    white-space: nowrap !important;
+}
+
+/* Orta ekranlarda grid yenə 3+3 qalsın */
+@media (max-width: 1200px) {
+    .wave-nav-container {
+        width: 94% !important;
+        padding: 34px 28px !important;
+    }
+
+    .wave-nav-container .wave-nav-items {
+        grid-template-columns: repeat(3, 160px) !important;
+        grid-auto-rows: 138px !important;
+        gap: 22px !important;
+    }
+
+    .wave-nav-container .wave-item {
+        width: 160px !important;
+        height: 138px !important;
+        min-width: 160px !important;
+        max-width: 160px !important;
+        min-height: 138px !important;
+        max-height: 138px !important;
+    }
+
+    .wave-nav-container .wave-icon {
+        width: 58px !important;
+        height: 58px !important;
+        min-width: 58px !important;
+        min-height: 58px !important;
+        font-size: 25px !important;
+    }
+
+    .wave-nav-container .wave-nav-extra {
+        position: static !important;
+        transform: none !important;
+        justify-content: center !important;
+        margin-top: 22px !important;
+    }
+}
+
+/* Mobil görünüşdə 2 sütuna keçsin */
+@media (max-width: 768px) {
+    .wave-nav-container {
+        width: 96% !important;
+        padding: 24px 14px !important;
+        border-radius: 28px !important;
+    }
+
+    .wave-nav-container .wave-nav-items {
+        grid-template-columns: repeat(2, 145px) !important;
+        grid-auto-rows: 128px !important;
+        gap: 16px !important;
+    }
+
+    .wave-nav-container .wave-item {
+        width: 145px !important;
+        height: 128px !important;
+        min-width: 145px !important;
+        max-width: 145px !important;
+        min-height: 128px !important;
+        max-height: 128px !important;
+    }
+}
+
+/* ===== GF44 HEADER SİLİNDİKDƏN SONRA TASK PANELİ YUXARI QALXSIN ===== */
+
+
+
+/* ===== TASK NAV: mərkəzdə 3+3, seçimdən sonra yuxarıda linear ===== */
+
+/* iframe/task səhifəsində artıq scroll və artıq boşluq olmasın */
+html,
+body {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Böyük vəziyyət: menyu səhifənin tam ortasında */
+body .wave-nav-container:not(.minimized) {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+
+    width: min(78vw, 1180px) !important;
+    max-width: 1180px !important;
+    min-height: 390px !important;
+
+    margin: 0 !important;
+    padding: 42px 52px !important;
+    border-radius: 34px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    transition:
+            top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            padding 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            border-radius 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Böyük vəziyyətdə content grid-i sıxılmasın */
+body .wave-nav-container:not(.minimized) .wave-nav-content {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+/* Böyük vəziyyət: 3 yuxarı + 3 aşağı */
+body .wave-nav-container:not(.minimized) .wave-nav-items {
+    display: grid !important;
+    grid-template-columns: repeat(3, 180px) !important;
+    grid-auto-rows: 140px !important;
+    gap: 28px 34px !important;
+    justify-content: center !important;
+    align-items: center !important;
+
+    width: max-content !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+/* Böyük vəziyyətdə hər düymə eyni ölçüdə */
+body .wave-nav-container:not(.minimized) .wave-item {
+    width: 180px !important;
+    height: 140px !important;
+    min-width: 180px !important;
+    max-width: 180px !important;
+    min-height: 140px !important;
+    max-height: 140px !important;
+
+    flex: none !important;
+    margin: 0 !important;
+    padding: 14px 12px !important;
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 22px !important;
+}
+
+/* İç kontent tam ortada */
+body .wave-nav-container:not(.minimized) .wave-item-content {
+    width: 100% !important;
+    height: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+}
+
+/* Böyük vəziyyətdə ikonlar eyni ölçüdə */
+body .wave-nav-container:not(.minimized) .wave-icon {
+    width: 62px !important;
+    height: 62px !important;
+    min-width: 62px !important;
+    min-height: 62px !important;
+    margin: 0 !important;
+    font-size: 27px !important;
+}
+
+/* Böyük vəziyyətdə yazılar/count səliqəli */
+body .wave-nav-container:not(.minimized) .wave-text {
+    min-height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+}
+
+body .wave-nav-container:not(.minimized) .wave-title {
+    margin: 0 !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+}
+
+body .wave-nav-container:not(.minimized) .wave-count {
+    min-width: 40px !important;
+    height: 34px !important;
+    padding: 0 10px !important;
+
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 21px !important;
+    line-height: 1 !important;
+}
+
+/* Böyük vəziyyətdə seçilmiş düymə ölçünü pozmasın */
+body .wave-nav-container:not(.minimized) .wave-item.selected {
+    transform: none !important;
+    border-width: 3px !important;
+}
+
+/* Böyük vəziyyətdə hover ölçünü pozmasın */
+body .wave-nav-container:not(.minimized) .wave-item:hover {
+    transform: translateY(-4px) !important;
+}
+
+/* Böyük vəziyyətdə Cache düyməsi grid-i sıxmasın */
+body .wave-nav-container:not(.minimized) .wave-nav-extra {
+    position: absolute !important;
+    right: 28px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Kiçik vəziyyət: yuxarıda linear menyu */
+body .wave-nav-container.minimized {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    transform: none !important;
+
+    width: 100vw !important;
+    max-width: none !important;
+    min-height: 82px !important;
+    height: 82px !important;
+
+    margin: 0 !important;
+    padding: 8px 18px !important;
+    border-radius: 0 !important;
+    border: none !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    z-index: 9999 !important;
+
+    transition:
+            top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            left 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            min-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            padding 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            border-radius 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+            transform 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Kiçik vəziyyətdə content ortada linear */
+body .wave-nav-container.minimized .wave-nav-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+/* Kiçik vəziyyətdə 6 düymə yan-yana */
+body .wave-nav-container.minimized .wave-nav-items {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 34px !important;
+
+    width: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+/* Kiçik vəziyyətdə düymə ölçüləri */
+body .wave-nav-container.minimized .wave-item {
+    width: 72px !important;
+    height: 66px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    min-height: 66px !important;
+    max-height: 66px !important;
+
+    flex: 0 0 72px !important;
+    margin: 0 !important;
+    padding: 4px !important;
+
+    border-radius: 14px !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Kiçik vəziyyətdə seçilmiş düymə səliqəli qalsın */
+body .wave-nav-container.minimized .wave-item.selected {
+    transform: none !important;
+    border: 2px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Kiçik vəziyyətdə ikonlar */
+body .wave-nav-container.minimized .wave-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+
+    margin: 0 auto 4px auto !important;
+    font-size: 19px !important;
+}
+
+/* Kiçik vəziyyətdə yazılar */
+body .wave-nav-container.minimized .wave-title {
+    font-size: 11px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+/* Kiçik vəziyyətdə saylar gizlənsin */
+body .wave-nav-container.minimized .wave-count {
+    display: none !important;
+}
+
+/* Kiçik linear vəziyyətdə Cache düyməsini gizlədirik ki menyu tam mərkəzdə qalsın */
+body .wave-nav-container.minimized .wave-nav-extra {
+    display: none !important;
+}
+
+/* Menyu yuxarı qalxanda cədvəl/form onun altında başlasın */
+body .wave-nav-container.minimized ~ .table-card,
+body .wave-nav-container.minimized ~ #newTaskCreateSection {
+    margin-top: 96px !important;
+}
+
+/* Mobil görünüş */
+@media (max-width: 768px) {
+    body .wave-nav-container:not(.minimized) {
+        width: 94vw !important;
+        min-height: 420px !important;
+        padding: 28px 18px !important;
+    }
+
+    body .wave-nav-container:not(.minimized) .wave-nav-items {
+        grid-template-columns: repeat(2, 145px) !important;
+        grid-auto-rows: 124px !important;
+        gap: 18px !important;
+    }
+
+    body .wave-nav-container:not(.minimized) .wave-item {
+        width: 145px !important;
+        height: 124px !important;
+        min-width: 145px !important;
+        max-width: 145px !important;
+        min-height: 124px !important;
+        max-height: 124px !important;
+    }
+
+    body .wave-nav-container:not(.minimized) .wave-nav-extra {
+        position: static !important;
+        transform: none !important;
+        justify-content: center !important;
+        margin-top: 18px !important;
+    }
+
+    body .wave-nav-container.minimized .wave-nav-items {
+        gap: 12px !important;
+    }
+
+    body .wave-nav-container.minimized .wave-item {
+        width: 58px !important;
+        min-width: 58px !important;
+        max-width: 58px !important;
+        flex-basis: 58px !important;
+    }
+}
+
+/* ===== MINIMIZED LINEAR NAV - SELIQELI SECILMIS ITEM FIX ===== */
+
+/* Yuxarı linear panelin hündürlüyü sabit və rahat olsun */
+body .wave-nav-container.minimized {
+    height: 96px !important;
+    min-height: 96px !important;
+    max-height: 96px !important;
+    padding: 8px 24px !important;
+    overflow: visible !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* İç content panelin ortasında dursun */
+body .wave-nav-container.minimized .wave-nav-content {
+    height: 100% !important;
+    width: 100% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* 6 menu yan-yana, eyni xətt üzrə */
+body .wave-nav-container.minimized .wave-nav-items {
+    height: 100% !important;
+
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 34px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
+
+/* Hər linear menu item eyni ölçüdə olsun */
+body .wave-nav-container.minimized .wave-item {
+    width: 88px !important;
+    height: 78px !important;
+    min-width: 88px !important;
+    max-width: 88px !important;
+    min-height: 78px !important;
+    max-height: 78px !important;
+    flex: 0 0 88px !important;
+
+    margin: 0 !important;
+    padding: 7px 8px 6px 8px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border: 2px solid transparent !important;
+    border-radius: 18px !important;
+    box-sizing: border-box !important;
+
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+    overflow: visible !important;
+}
+
+/* Item içində icon + yazı tam mərkəzdə */
+body .wave-nav-container.minimized .wave-item-content {
+    width: 100% !important;
+    height: 100% !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    gap: 0px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Icon artıq yuxarı daşmasın */
+body .wave-nav-container.minimized .wave-icon {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 21px !important;
+    line-height: 1 !important;
+
+    transform: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Yazılar icon-un altında səliqəli qalsın */
+body .wave-nav-container.minimized .wave-title {
+    display: block !important;
+    margin: 0 !important;
+
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+
+    white-space: nowrap !important;
+    text-align: center !important;
+}
+
+/* Minimized vəziyyətdə count görünməsin */
+body .wave-nav-container.minimized .wave-count {
+    display: none !important;
+}
+
+/* Seçilmiş item-in ağ çərçivəsi icon + yazını tam əhatə etsin */
+body .wave-nav-container.minimized .wave-item.selected,
+body .wave-nav-container.minimized .wave-item.active-item {
+    width: 88px !important;
+    height: 78px !important;
+    min-width: 88px !important;
+    max-width: 88px !important;
+    min-height: 88px !important;
+    max-height: 98px !important;
+
+    padding: 7px 8px 6px 8px !important;
+
+    background: rgba(255, 255, 255, 0.18) !important;
+    border: 2px solid rgba(255, 255, 255, 0.95) !important;
+    border-radius: 18px !important;
+
+    box-shadow:
+            0 8px 18px rgba(0, 0, 0, 0.12),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+
+    transform: none !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+
+/* Seçilmiş item-in icon-u böyüyüb çərçivədən çıxmasın */
+body .wave-nav-container.minimized .wave-item.selected .wave-icon,
+body .wave-nav-container.minimized .wave-item.active-item .wave-icon {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+
+    margin: 0 !important;
+    transform: none !important;
+
+    background: rgba(255, 255, 255, 0.26) !important;
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Hover zamanı da item yuxarı sıçrayıb çərçivəni pozmasın */
+body .wave-nav-container.minimized .wave-item:hover {
+    transform: none !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+body .wave-nav-container.minimized .wave-item.selected:hover,
+body .wave-nav-container.minimized .wave-item.active-item:hover {
+    transform: none !important;
+    background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Cache düyməsi linear vəziyyətdə mərkəzi pozmasın */
+body .wave-nav-container.minimized .wave-nav-extra {
+    display: none !important;
+}
+
+/* Kiçik ekranlarda aralıqları azalt */
+@media (max-width: 768px) {
+    body .wave-nav-container.minimized {
+        height: 92px !important;
+        min-height: 92px !important;
+        padding: 8px 10px !important;
+    }
+
+    body .wave-nav-container.minimized .wave-nav-items {
+        gap: 12px !important;
+    }
+
+    body .wave-nav-container.minimized .wave-item,
+    body .wave-nav-container.minimized .wave-item.selected,
+    body .wave-nav-container.minimized .wave-item.active-item {
+        width: 68px !important;
+        min-width: 68px !important;
+        max-width: 68px !important;
+        flex-basis: 68px !important;
+    }
+
+    body .wave-nav-container.minimized .wave-title {
+        font-size: 10px !important;
+    }
+}

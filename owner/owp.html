@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Güvən Finans | Profil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet" />
+
+
+    <link rel="icon" type="image/png" href="../assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="../assets/images/favicon.png">
+
+    <script>
+        (function() {
+            const v = Date.now();
+            const cssFiles = [
+                '../assets/css/owner_profile_css/owner_profile.css',
+                '../assets/css/owner_profile_css/dashboard.css',
+                '../assets/css/owner_profile_css/one_c/one_c_dashboard.css',
+                '../assets/css/owner_profile_css/sidebar-compact-op.css',
+                '../assets/css/owner_profile_css/fullscreen-sidebar.css',
+                '../assets/css/owner_profile_css/file_service/file_service.css'
+            ];
+            cssFiles.forEach(file => {
+                document.write(`<link rel="stylesheet" href="${file}?v=${v}" />`);
+            });
+            console.log('✅ CSS faylları yükləndi. Versiya:', v);
+        })();
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Poppins", "ui-sans-serif", "system-ui"],
+                    },
+                    colors: {
+                        "brand-blue": "#7DB6FF",
+                        "brand-soft": "#EAF3FF",
+                        "brand-ink": "#1F2A44",
+                        "success-green": "#10B981",
+                        "error-red": "#EF4444",
+                    },
+                    boxShadow: {
+                        soft: "0 18px 40px rgba(64, 129, 255, 0.18)",
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+<body class="h-screen bg-brand-soft font-sans text-brand-ink overflow-hidden loading">
+<!-- LOADER - SƏHİFƏ TAM YÜKLƏNƏNƏ QƏDƏR GÖRÜNƏCƏK -->
+<div id="pageLoader" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center transition-opacity duration-500">
+    <div class="text-center" style="transform: translate(0, 0);">
+        <div class="relative flex items-center justify-center">
+            <!-- Xarici dairə -->
+            <div class="w-24 h-24 rounded-full border-4 border-brand-soft border-t-brand-blue animate-spin"></div>
+            <!-- Daxili logo - tam mərkəzdə -->
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-brand-blue to-blue-600 flex items-center justify-center shadow-lg">
+                    <span class="text-white font-bold text-xl">GF44</span>
+                </div>
+            </div>
+        </div>
+        <p class="text-brand-blue font-semibold mt-6 animate-pulse">Güvən Finans</p>
+        <p class="text-sm text-slate-400 mt-2">Profil məlumatları yüklənir...</p>
+        <div class="flex gap-1 justify-center mt-4">
+            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay: 0s"></div>
+            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay: 0.2s"></div>
+            <div class="w-2 h-2 rounded-full bg-brand-blue animate-bounce" style="animation-delay: 0.4s"></div>
+        </div>
+    </div>
+</div>
+
+<div class="h-screen flex flex-col">
+    <!-- Header - SİZİN SCRIPTLƏRİNİZ İŞLƏYƏCƏK -->
+    <header class="flex-shrink-0 px-6 py-4">
+        
+    </header>
+    <!-- Ana content -->
+    <div class="flex-1 min-h-0 px-6 pb-6">
+        <div class="h-full flex gap-6" id="mainContainer">
+            <!-- Sol sidebar - ID dəyişmir -->
+            <aside class="h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
+                <div class="h-full flex flex-col p-6 overflow-y-auto" id="sidebarContent">
+                    <div class="mt-auto pt-6 border-t border-slate-100">
+                        <!-- Əsas Tənzimləmə Buttonu -->
+                        <button id="settingsMainBtn" class="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
+                            <div class="flex items-center gap-3">
+                                <div class="h-10 w-10 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue font-semibold">
+                                    GF44
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-sm font-semibold" id="companyNameDisplay">Şirkət</p>
+                                    <p class="text-xs text-slate-500" id="userNameDisplay">İstifadəçi</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-chevron-up text-slate-400 text-sm transition-transform group-hover:text-brand-blue" id="settingsArrow"></i>
+                            </div>
+                        </button>
+
+                        <!-- Açılan Tənzimləmə Paneli -->
+                        <div id="settingsPanel" class="hidden mt-2 rounded-2xl bg-white p-2 shadow-soft space-y-1">
+                            <!-- Tənzimləmələr Linki -->
+                            <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="settingsLink">
+                                <i class="fa-solid fa-sliders w-5"></i>
+                                <span class="flex-1 text-left">Tənzimləmələr</span>
+                            </a>
+
+                            <!-- Profil -->
+                            <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold bg-brand-soft text-brand-blue" data-sidebar-item id="profileBtn">
+                                <i class="fa-solid fa-user w-5 text-center"></i>
+                                <span class="sidebar-text whitespace-nowrap">Profil</span>
+                            </a>
+
+                            <!-- Ana Səhifə -->
+                            <a href="../index.html" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue">
+                                <i class="fa-solid fa-house w-5"></i>
+                                <span class="flex-1 text-left">Ana Səhifə</span>
+                            </a>
+
+                            <!-- Çıxış -->
+                            <button class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" onclick="logoutUser()" id="logoutBtn" type="button">
+                                <i class="fa-solid fa-right-from-bracket w-5"></i>
+                                <span class="flex-1 text-left">Çıxış</span>
+                            </button>
+
+                            <!-- Tema Dəyişmə -->
+                            <button id="themeToggle" class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" type="button">
+                                <i class="fas fa-moon w-5"></i>
+                                <span class="flex-1 text-left">Qaranlıq rejim</span>
+                                <i class="fa-solid fa-toggle-off text-brand-blue text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h2 class="sidebar-title text-sm font-semibold text-slate-400">İdarəetmə</h2>
+                    <nav class="mt-6 space-y-2 flex-1">
+                        <!-- Giriş -->
+                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
+                            <i class="fa-solid fa-gauge-high w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Əsas səhifə</span>
+                        </a>
+                        <!-- İşçilərimin Listi -->
+                        <a href="#" id="openEmployeesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-users w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Əməkdaşlar</span>
+                        </a>
+                        <!-- Şirkətlərin Listi -->
+                        <a href="#" id="openCompaniesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-building w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Şirkətlər</span>
+                        </a>
+                        <!-- Partniyorlar -->
+                        <a href="#" id="openPartniorModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-handshake w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Partniyorlar</span>
+                        </a>
+
+                        <!-- Task Manager -->
+                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn">
+                            <i class="fa-solid fa-list-check w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Tapşırıqlar</span>
+                        </a>
+                        <!-- Fayllarım -->
+                        <a href="#" id="fayllarimBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-folder-open w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Sənədlər</span>
+                        </a>
+                        <!-- Departament və İş Növləri -->
+                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-diagram-project w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Departamentlər</span>
+                        </a>
+                        <!-- Diaqram -->
+                        <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Diaqram</span>
+                        </a>
+                        <a href="#" onclick="if(typeof GF1C!=='undefined'){GF1C.open(); return false;}else{console.error('GF1C yüklənməyib'); return false;}" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue">
+                            <i class="fa-solid fa-database w-5 text-center"></i>
+                            <span class="sidebar-text whitespace-nowrap">Baza</span>
+                        </a>
+                    </nav>
+
+                </div>
+            </aside>
+
+
+            <!-- Sağ content - ID dəyişmir -->
+            <main class="h-full flex-1 rounded-3xl bg-white shadow-soft overflow-hidden">
+                <div class="h-full overflow-y-auto p-8" id="profileContent">
+
+                    <!-- GİRİŞ BÖLMƏSİ (Dashboard) -->
+                    <section id="dashboardSection">
+                        <div class="text-center mb-10">
+                            <h2 class="text-4xl font-bold welcome-text mb-2">Xoş Gəlmisiniz!</h2>
+                            <p class="text-slate-500">Idarəetmə panelinə xoş gəldiniz</p>
+                        </div>
+
+                        <!-- 3 lü statistik kartlar - SİZİN JS İLƏ DOLACAQ -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <!-- Şirkətlərimin sayı -->
+                            <div class="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-6 shadow-soft border border-blue-100 stat-card">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="h-16 w-16 rounded-xl bg-brand-blue/20 flex items-center justify-center">
+                                        <i class="fa-solid fa-building text-3xl text-brand-blue"></i>
+                                    </div>
+                                    <span class="text-4xl font-bold text-brand-ink" id="dashboardCompaniesCount">8</span>
+                                </div>
+                                <h3 class="text-lg font-semibold">Şirkətlərimin sayı</h3>
+                                <p class="text-sm text-slate-500">Aktiv şirkətlər</p>
+                            </div>
+
+                            <!-- İşçilərimin sayı -->
+                            <div class="bg-gradient-to-br from-green-50 to-white rounded-2xl p-6 shadow-soft border border-green-100 stat-card">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="h-16 w-16 rounded-xl bg-green-500/20 flex items-center justify-center">
+                                        <i class="fa-solid fa-users text-3xl text-green-600"></i>
+                                    </div>
+                                    <span class="text-4xl font-bold text-brand-ink" id="dashboardEmployeesCount">24</span>
+                                </div>
+                                <h3 class="text-lg font-semibold">İşçilərimin sayı</h3>
+                                <p class="text-sm text-slate-500">Aktiv işçilər</p>
+                            </div>
+
+                            <!-- Aktiv taskların sayı -->
+                            <div class="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 shadow-soft border border-purple-100 stat-card">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="h-16 w-16 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                        <i class="fa-solid fa-list-check text-3xl text-purple-600"></i>
+                                    </div>
+                                    <span class="text-4xl font-bold text-brand-ink" id="dashboardTasksCount">12</span>
+                                </div>
+                                <h3 class="text-lg font-semibold">Aktiv Tapşırıqların sayı</h3>
+                                <p class="text-sm text-slate-500">Tamamlanmalı olanlar</p>
+                            </div>
+                        </div>
+
+                        <!-- Son aktivliklər -->
+                        <div class="bg-brand-soft/30 rounded-2xl p-6">
+                            <h3 class="text-xl font-semibold mb-4">Son Aktivliklər</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-user-plus text-brand-blue"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Yeni işçi əlavə edildi</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-building text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Yeni şirkət qeydiyyatdan keçdi -</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                                    <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <i class="fa-solid fa-check-circle text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Task tamamlandı - <span class="text-purple-600">Hesabat hazırlanması</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- PROFİL BÖLMƏSİ - BÜTÜN ID-LƏR QORUNUR -->
+                    <section id="profileSection" class="hidden">
+                        <div class="mb-8">
+                            <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">İşçi Paneli</span>
+                            <p class="text-slate-500 mt-2">
+                                Profilinizin məlumatlarını buradan idarə edə bilərsiniz.
+                            </p>
+                        </div>
+
+                        <!-- Şəkil yerləri - ID-lər qorunur -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <!-- Profil şəkli -->
+                            <div class="space-y-3">
+                                <label class="text-sm font-semibold">Profil Şəkli</label>
+                                <div class="relative rounded-2xl border-2 border-dashed border-slate-200 min-h-[200px] flex flex-col items-center justify-center cursor-pointer hover:border-brand-blue transition group" id="profileImageUpload">
+                                    <i class="fa-solid fa-cloud-upload-alt text-3xl text-slate-300 mb-2"></i>
+                                    <span class="text-sm text-slate-400">Şəkil yükləmək üçün klikləyin</span>
+                                </div>
+                                <input type="file" id="profileImageInput" class="hidden" accept="image/*">
+                            </div>
+
+                            <!-- Şirkət şəkli -->
+                            <div class="space-y-3">
+                                <label class="text-sm font-semibold">Şirkət Şəkli</label>
+                                <div class="relative rounded-2xl border-2 border-dashed border-slate-200 min-h-[200px] flex flex-col items-center justify-center cursor-pointer hover:border-brand-blue transition group" id="companyImageUpload">
+                                    <i class="fa-solid fa-cloud-upload-alt text-3xl text-slate-300 mb-2"></i>
+                                    <span class="text-sm text-slate-400">Şəkil yükləmək üçün klikləyin</span>
+                                </div>
+                                <input type="file" id="companyImageInput" class="hidden" accept="image/*">
+                            </div>
+                        </div>
+
+                        <!-- ŞİRKƏT MƏLUMATLARI -->
+                        <div class="bg-brand-soft/30 rounded-2xl p-6 mb-8">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-building text-brand-blue"></i>
+                                Şirkət Məlumatları
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Şirkətin adı -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Şirkətin adı</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="Şirkət adı" id="companyName">
+                                </div>
+
+                                <!-- VÖEN -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">VÖEN</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="VÖEN" id="voen">
+                                </div>
+
+                                <!-- ASAN İMZA - İdarə et button ilə -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                                        ASAN İmza
+                                        <button type="button" id="openAsanImzaModalBtn" class="text-brand-blue text-xs hover:underline flex items-center gap-1">
+                                            <i class="fa-solid fa-id-card"></i> İdarə et
+                                        </button>
+                                    </label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 cursor-not-allowed" placeholder="ASAN İmza nömrəsi" id="asanImza" readonly>
+                                    <p class="text-xs text-slate-400">Birdən çox ASAN İmza əlavə etmək üçün "İdarə et" düyməsini sıxın</p>
+                                </div>
+
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Şirkətin kodu</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm bg-slate-50 cursor-not-allowed" placeholder="Şirkət kodu" id="companyCode" readonly>
+                                    <p class="text-xs text-slate-400">Bu kod dəyişdirilə bilməz</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ŞƏXSİ MƏLUMATLARIM -->
+                        <div class="bg-brand-soft/30 rounded-2xl p-6">
+                            <h3 class="text-xl font-semibold mb-6 flex items-center gap-2">
+                                <i class="fa-solid fa-user text-brand-blue"></i>
+                                Şəxsi Məlumatlarım
+                            </h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Ad -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Ad</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="Adınız" id="firstName">
+                                </div>
+
+                                <!-- Soyad -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Soyad</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="Soyadınız" id="lastName">
+                                </div>
+
+                                <!-- Ata adı -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Ata adı</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="Ata adınız" id="fatherName">
+                                </div>
+
+                                <!-- Doğum Tarixi -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Doğum Tarixi</label>
+                                    <input type="date" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" id="birthDate">
+                                </div>
+
+                                <!-- Telegram -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                                        Telegram
+                                        <span id="telegramStatus" class="text-xs font-normal">
+                                            <i class="fa-solid fa-times-circle text-error-red"></i>
+                                            <span class="ml-1">Təsdiqlənməyib</span>
+                                        </span>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="@username" id="telegramUsername">
+                                        <button type="button" class="text-slate-400 hover:text-brand-blue" id="verifyTelegram">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Cinsiyyət -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Cinsiyyət</label>
+                                    <select class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" id="gender">
+                                        <option value="">Seçin</option>
+                                        <option value="male">Kişi</option>
+                                        <option value="female">Qadın</option>
+                                    </select>
+                                </div>
+
+                                <!-- FİN Kod -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">FİN Kod</label>
+                                    <input type="text" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="FİN kod" id="finCode">
+                                </div>
+
+                                <!-- Email -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                                        Email
+                                        <span id="emailStatus" class="text-xs font-normal">
+                                            <i class="fa-solid fa-check-circle text-success-green"></i>
+                                            <span class="ml-1">Təsdiqlənib</span>
+                                        </span>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="email" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="Email" id="email" value="info@guvenfinans.az">
+                                        <button type="button" class="text-slate-400 hover:text-brand-blue" id="changeEmail">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Telefon -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600 flex items-center gap-2">
+                                        Telefon
+                                        <span id="phoneStatus" class="text-xs font-normal">
+                                            <i class="fa-solid fa-times-circle text-error-red"></i>
+                                            <span class="ml-1">Təsdiqlənməyib</span>
+                                        </span>
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <input type="tel" class="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none" placeholder="+994" id="phone" value="+994501234567">
+                                        <button type="button" class="text-slate-400 hover:text-brand-blue" id="verifyPhone">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Şifrə -->
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-slate-600">Şifrə (dəyişmək üçün)</label>
+                                    <div class="relative">
+                                        <input type="password" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-brand-blue focus:outline-none pr-10" placeholder="Yeni şifrə" id="password">
+                                        <button type="button" class="absolute right-3 top-3 text-slate-400 hover:text-brand-blue" id="togglePassword">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Yadda saxla düyməsi -->
+                            <div class="mt-8 pt-4 border-t border-slate-200">
+                                <button type="button" id="saveProfileBtn" class="rounded-2xl bg-brand-blue px-8 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#6aa9ff]">
+                                    <i class="fa-regular fa-floppy-disk mr-2"></i>
+                                    Dəyişiklikləri Yadda Saxla
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ŞİRKƏTLƏR BÖLMƏSİ (gizli) - ID dəyişmir -->
+                    <section id="companiesSection" class="hidden">
+                        <div class="mb-8">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Şirkətlər</span>
+                                    <p class="text-slate-500 mt-2">Bağlı şirkətlərinizin siyahısı</p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Statistik kartlar -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm text-gray-600">Cəmi Şirkət</p><p class="text-2xl font-bold text-gray-900" id="totalCompaniesCount">0</p></div>
+                                    <div class="h-12 w-12 rounded-lg bg-blue-500/20 flex items-center justify-center"><i class="fa-solid fa-building text-blue-600"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm text-gray-600">Aktiv Şirkət</p><p class="text-2xl font-bold text-gray-900" id="activeCompaniesCount">0</p></div>
+                                    <div class="h-12 w-12 rounded-lg bg-green-500/20 flex items-center justify-center"><i class="fa-solid fa-check-circle text-green-600"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm text-gray-600">Ümumi İşçi</p><p class="text-2xl font-bold text-gray-900" id="totalEmployeesCount">0</p></div>
+                                    <div class="h-12 w-12 rounded-lg bg-amber-500/20 flex items-center justify-center"><i class="fa-solid fa-users text-amber-600"></i></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm text-gray-600">Son əlavə</p><p class="text-lg font-bold text-gray-900" id="lastAddedDate">-</p></div>
+                                    <div class="h-12 w-12 rounded-lg bg-purple-500/20 flex items-center justify-center"><i class="fa-solid fa-calendar-plus text-purple-600"></i></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Axtarış və filter -->
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <!-- RELATIONSHIP FILTER BUTTONLARI -->
+                            <div class="flex gap-2 bg-white p-1 rounded-xl border border-gray-200 shadow-sm">
+                                <button id="showAllCompaniesBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 bg-brand-blue text-white shadow-md">
+                                    <i class="fa-solid fa-building"></i>
+                                    <span>Şirkətlər</span>
+                                </button>
+                                <button id="showParentCompaniesBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 text-gray-600 hover:bg-blue-50">
+                                    <i class="fa-solid fa-arrow-up-wide-short"></i>
+                                    <span>Icraçı</span>
+                                </button>
+                                <button id="showChildCompaniesBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 text-gray-600 hover:bg-blue-50">
+                                    <i class="fa-solid fa-arrow-down-wide-short"></i>
+                                    <span>Sifarişçi</span>
+                                </button>
+                                <button id="showPartnerCompaniesBtn" class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 text-gray-600 hover:bg-blue-50">
+                                    <span>Partnyor</span>
+                                </button>
+                            </div>
+
+                            <div class="flex-1">
+                                <div class="relative">
+                                    <i class="fa-solid fa-search absolute left-4 top-3.5 text-gray-400"></i>
+                                    <input type="text" id="companySearch" placeholder="Şirkət adı, kodu və ya VOEN üzrə axtar..." class="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent shadow-sm">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="companyFilter" class="px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent shadow-sm">
+                                    <option value="all">Hamısı</option>
+                                    <option value="active">Yalnız aktiv</option>
+                                    <option value="inactive">Yalnız deaktiv</option>
+                                </select>
+                                <button id="exportCompaniesBtn" class="px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 flex items-center gap-2 shadow-sm"><i class="fa-solid fa-download"></i> Export</button>
+                            </div>
+                        </div>
+
+                        <!-- Şirkətlər cədvəli -->
+                        <div id="companiesTableContainer" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                            <div class="text-center py-16">
+                                <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-brand-blue border-t-transparent"></div>
+                                <p class="text-gray-500 mt-4">Şirkət siyahısı yüklənir...</p>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="mt-6 flex items-center justify-between">
+                            <div class="text-sm text-gray-600"><span id="showingText">0-0 of 0</span></div>
+                            <div class="flex gap-2">
+                                <button id="prevPageBtn" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                                <button id="nextPageBtn" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+                    <!-- ŞİRKƏT DETALLARI BÖLMƏSİ (gizli) - ID dəyişmir -->
+                    <section id="companyDetailsSection" class="hidden">
+                        <div class="mb-8">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Şirkət Detalları</span>
+                                    <p class="text-slate-500 mt-2">Şirkət haqqında ətraflı məlumat</p>
+                                </div>
+                                <button id="backToCompaniesBtn" class="px-4 py-2 bg-brand-soft text-brand-blue rounded-xl hover:bg-brand-blue hover:text-white transition flex items-center gap-2">
+                                    <i class="fa-solid fa-arrow-left"></i> Geri
+                                </button>
+                            </div>
+                        </div>
+                        <div id="companyDetailsContent" class="bg-white rounded-xl border border-gray-200 p-6"></div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+<!-- ==================== ASAN İMZA MODAL ==================== -->
+<div id="asanImzaModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50" style="display: none;">
+    <div class="bg-white rounded-3xl w-full max-w-4xl mx-4 shadow-2xl overflow-hidden animate-fade-in-up">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-brand-blue/10 to-white">
+            <div>
+                <h3 class="text-xl font-bold text-brand-ink flex items-center gap-2">
+                    <i class="fa-solid fa-id-card text-brand-blue"></i>
+                    ASAN İmza Məlumatları
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Birdən çox ASAN İmza əlavə edə bilərsiniz</p>
+            </div>
+            <button id="closeAsanImzaModal" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="fa-solid fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 max-h-[60vh] overflow-y-auto">
+            <!-- ASAN İMZA LİSTİ -->
+            <div id="asanImzaList" class="space-y-3 mb-6">
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+                    <p>Yüklənir...</p>
+                </div>
+            </div>
+
+            <!-- YENİ ASAN İMZA ƏLAVƏ ET FORMU -->
+            <div class="border-t border-gray-200 pt-6 mt-4">
+                <h4 class="font-semibold text-brand-ink mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-brand-blue"></i>
+                    Yeni ASAN İmza əlavə et
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">ASAN İmza Nömrəsi</label>
+                        <input type="text" id="newAsanImzaNumber" maxlength="50" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN İmza nömrəsi">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">ASAN ID</label>
+                        <input type="text" id="newAsanId" maxlength="50" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN ID">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">PIN1</label>
+                        <input type="text" id="newPin1" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="4 rəqəm">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">PIN2</label>
+                        <input type="text" id="newPin2" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="4 rəqəm">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">PUK</label>
+                        <input type="text" id="newPuk" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="10 rəqəm">
+                    </div>
+                    <div class="flex items-end">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="newIsPrimary" class="w-4 h-4 text-brand-blue rounded">
+                            <span class="text-sm text-gray-700">Əsas ASAN İmza et</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end gap-2">
+                    <button id="saveNewAsanImza" class="bg-brand-blue text-white px-6 py-2 rounded-xl hover:bg-blue-600 transition flex items-center gap-2">
+                        <i class="fa-solid fa-save"></i> Yadda Saxla
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- SİZİN BÜTÜN JS FAYLLARINIZ - AVTOMAT VERSİYA İLƏ -->
+    <script>
+        (function() {
+            const v = Date.now();
+
+            const jsFiles = [
+                '../assets/js/owner_profile_js/dashboard/dashboard.js',
+                '../assets/js/owner_profile_js/api.service.js',
+                '../assets/js/owner_profile_js/auth.service.js',
+                '../assets/js/owner_profile_js/profile.service.js',
+                '../assets/js/owner_profile_js/employees.service.js',
+                '../assets/js/owner_profile_js/company_service/company.service.js',
+                '../assets/js/owner_profile_js/company_service/company.detail.panel.js',
+                '../assets/js/owner_profile_js/partners.modal.js',
+                '../assets/js/owner_profile_js/file.service.js',
+                '../assets/js/owner_profile_js/one_c/one_c_dashboard.js',
+                '../assets/js/owner_profile_js/file_service/files.ui.js',
+                '../assets/js/owner_profile_js/file_service/file.service.extended.js',
+                '../assets/js/owner_profile_js/file_service/companyFolderService.js',
+                '../assets/js/owner_profile_js/file_service/folder-permission-modal.js',
+                '../assets/js/owner_profile_js/ui.service.js',
+                '../assets/js/owner_profile_js/permissions.service.js',
+                '../assets/js/owner_profile_js/sidebar-fullscreen.js',
+                '../assets/js/owner_profile_js/obligations.service.js',
+                '../assets/js/owner_profile_js/positions.service.js',
+                '../assets/js/owner_profile_js/salary.service.js',
+                '../assets/js/owner_profile_js/task_manager/taskManagerLoader.js',
+                '../assets/js/owner_profile_js/main.js'
+            ];
+
+            jsFiles.forEach(file => {
+                document.write(`<script src="${file}?v=${v}"><\/script>`);
+            });
+
+            console.log('✅ JS faylları yükləndi. Versiya:', v);
+        })();
+    </script>
+
+
+
+</body>
+</html>
+

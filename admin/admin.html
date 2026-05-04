@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Güvən Finans</title>
+
+    <script>
+        (function() {
+            // Versiya nömrəsi - build zamanı sabitləmək olar
+            const v = '1.0.0'; // Sabit versiya (cache üçün)
+            // const v = Date.now(); // Əgər cache istəmirsinizsə, bunu açın
+
+            // CSS faylları
+            const styles = [
+                'admin-panel.css'
+
+            ];
+
+            // CSS-ləri əlavə et
+            styles.forEach(style => {
+                document.write(`<link rel="stylesheet" href="../assets/css/admin_css/${style}?v=${v}" />`);
+            });
+        })();
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Admin panel yüklənir...</p>
+    </div>
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="logo-container">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">GÜVƏN FİNANS | Admin Panel</div>
+        </div>
+
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">A</div>
+            <div>
+                <div id="userName">Admin</div>
+                <small id="userRole">Super Admin</small>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Çıxış
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="admin-sidebar" id="adminSidebar">
+        <ul class="sidebar-menu">
+            <li class="menu-item active" data-page="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </li>
+            <li class="menu-item" data-page="pending">
+                <i class="fas fa-clock"></i>
+                <span>Gözləmədə olanlar</span>
+                <span class="badge" id="pendingCount">0</span>
+            </li>
+            <li class="menu-item" data-page="all-users">
+                <i class="fas fa-users"></i>
+                <span>Bütün istifadəçilər</span>
+            </li>
+            <li class="menu-item" data-page="companies">
+                <i class="fas fa-building"></i>
+                <span>Şirkətlər</span>
+            </li>
+            <li class="menu-item" data-page="employees">
+                <i class="fas fa-user-tie"></i>
+                <span>İşçilər</span>
+            </li>
+            <li class="menu-item" data-page="reports">
+                <i class="fas fa-chart-bar"></i>
+                <span>Hesabatlar</span>
+            </li>
+            <li class="menu-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span>Tənzimləmələr</span>
+            </li>
+            <li class="menu-item" data-page="content-services">
+                <i class="fas fa-concierge-bell"></i>
+                <span>Xidmətlər</span>
+            </li>
+            <li class="menu-item" data-page="content-partners">
+                <i class="fas fa-handshake"></i>
+                <span>Partnyorlar</span>
+            </li>
+            <li class="menu-item" data-page="content-projects">
+                <i class="fas fa-project-diagram"></i>
+                <span>Layihələr</span>
+            </li>
+            <li class="menu-item" data-page="files">
+                <i class="fas fa-folder-open"></i>
+                <span>Fayl Meneceri</span>
+            </li>
+            <li class="menu-item" data-page="logs">
+                <i class="fas fa-history"></i>
+                <span>Loglar</span>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="admin-content" id="adminContent">
+        <!-- Dashboard Page -->
+        <div class="page-content" id="dashboardPage">
+            <h1 class="page-title">
+                <i class="fas fa-tachometer-alt"></i>
+                Admin Dashboard
+            </h1>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Gözləmədə olan qeydiyyatlar</h3>
+                        <div class="stat-value" id="pendingRegistrations">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon users">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Ümumi istifadəçilər</h3>
+                        <div class="stat-value" id="totalUsers">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Aktiv istifadəçilər</h3>
+                        <div class="stat-value" id="activeUsers">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon rejected">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Rədd edilənlər</h3>
+                        <div class="stat-value" id="rejectedApplications">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon building">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Ümumi şirkətlər</h3>
+                        <div class="stat-value" id="totalCompanies">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon building">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Aktiv şirkətlər</h3>
+                        <div class="stat-value" id="activeCompanies">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon employees">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Ümumi işçilər</h3>
+                        <div class="stat-value" id="totalEmployees">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon employees">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Aktiv işçilər</h3>
+                        <div class="stat-value" id="activeEmployees">0</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Son qeydiyyatlar</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-outline" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Yenilə
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="recentRegistrationsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ad Soyad</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th>Şirkət</th>
+                                <th>VÖEN</th>
+                                <th>Status</th>
+                                <th>Tarix</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRegistrationsBody">
+                            <tr>
+                                <td colspan="9" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+         <!-- Xidmətlər Page -->
+        <div class="page-content hidden" id="contentServicesPage">
+            <h1 class="page-title">
+                <i class="fas fa-concierge-bell"></i>
+                Xidmətlər İdarəetmə
+            </h1>
+
+            <div class="action-bar">
+                <button class="btn btn-success" onclick="showAddServiceModal()">
+                    <i class="fas fa-plus"></i> Yeni Xidmət Əlavə Et
+                </button>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="serviceSearch" placeholder="Xidmət adı ilə axtar...">
+                    <button class="btn btn-primary" onclick="searchServices()">
+                        <i class="fas fa-search"></i> Axtar
+                    </button>
+                </div>
+            </div>
+
+            <div class="services-manager">
+                <div class="services-list-container">
+                    <h3>Xidmətlərin Siyahısı</h3>
+                    <div class="table-responsive">
+                        <table id="servicesTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Xidmət Adı</th>
+                                    <th>Maddələrin Sayı</th>
+                                    <th>Sıra</th>
+                                    <th>Status</th>
+                                    <th>Əməliyyatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="servicesListBody">
+                                <tr>
+                                    <td colspan="6" class="text-center">Xidmətlər yüklənir...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="service-preview-container">
+                    <h3>Xidmət Görünüşü</h3>
+                    <div class="service-preview" id="servicePreview">
+                        <!-- Xidmət preview burada görünəcək -->
+                        <div class="preview-placeholder">
+                            <p>Soldan xidmət seçin və ya yeni xidmət yaradın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Partnyorlar Page -->
+        <div class="page-content hidden" id="contentPartnersPage">
+            <h1 class="page-title">
+                <i class="fas fa-handshake"></i>
+                Partnyorlar İdarəetmə
+            </h1>
+
+            <div class="action-bar">
+                <button class="btn btn-success" onclick="showAddPartnerModal()">
+                    <i class="fas fa-plus"></i> Yeni Partnyor Əlavə Et
+                </button>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="partnerSearch" placeholder="Partnyor adı ilə axtar...">
+                    <button class="btn btn-primary" onclick="searchPartners()">
+                        <i class="fas fa-search"></i> Axtar
+                    </button>
+                </div>
+            </div>
+
+            <div class="partners-manager">
+                <div class="partners-list-container">
+                    <h3>Partnyorların Siyahısı</h3>
+                    <div class="table-responsive">
+                        <table id="partnersTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Partnyor Adı</th>
+                                    <th>Logo</th>
+                                    <th>Website</th>
+                                    <th>Sıra</th>
+                                    <th>Status</th>
+                                    <th>Əməliyyatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partnersListBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Partnyorlar yüklənir...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="partner-preview-container">
+                    <h3>Partnyor Görünüşü</h3>
+                    <div class="partner-preview" id="partnerPreview">
+                        <!-- Partnyor preview burada görünəcək -->
+                        <div class="preview-placeholder">
+                            <p>Soldan partnyor seçin və ya yeni partnyor yaradın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Layihələr Page -->
+        <div class="page-content hidden" id="contentProjectPage">
+            <h1 class="page-title">
+                <i class="fas fa-project-diagram"></i>
+                Layihələr İdarəetmə
+            </h1>
+
+            <div class="action-bar">
+                <button class="btn btn-success" onclick="showAddProjectModal()">
+                    <i class="fas fa-plus"></i> Yeni Layihə Əlavə Et
+                </button>
+                <div class="search-container">
+                    <input type="text" class="search-input" id="projectSearch" placeholder="Layihə adı ilə axtar...">
+                    <button class="btn btn-primary" onclick="searchProjects()">
+                        <i class="fas fa-search"></i> Axtar
+                    </button>
+                </div>
+            </div>
+
+            <div class="projects-manager">
+                <div class="projects-list-container">
+                    <h3>Layihələrin Siyahısı</h3>
+                    <div class="table-responsive">
+                        <table id="projectsTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Layihə Adı</th>
+                                    <th>Media</th>
+                                    <th>Açıqlama & Məlumat</th>
+                                    <th>Sıra</th>
+                                    <th>Status</th>
+                                    <th>Əməliyyatlar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsListBody">
+                                <tr>
+                                    <td colspan="7" class="text-center">Layihələr yüklənir...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="project-preview-container">
+                    <h3>Layihə Görünüşü</h3>
+                    <div class="project-preview" id="projectPreview">
+                        <!-- Layihə preview burada görünəcək -->
+                        <div class="preview-placeholder">
+                            <p>Soldan layihə seçin və ya yeni layihə yaradın.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Registrations Page -->
+        <div class="page-content hidden" id="pendingPage">
+            <h1 class="page-title">
+                <i class="fas fa-clock"></i>
+                Gözləmədə olan qeydiyyatlar
+            </h1>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="pendingSearch" placeholder="Ad, soyad, email və ya VÖEN ilə axtar...">
+                <select class="filter-select" id="pendingFilter">
+                    <option value="all">Bütün gözləmədə olanlar</option>
+                    <option value="ceo">CEO</option>
+                    <option value="company_admin">Şirkət Admini</option>
+                    <option value="employee">İşçi</option>
+                </select>
+                <button class="btn btn-primary" onclick="searchPending()">
+                    <i class="fas fa-search"></i> Axtar
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Gözləmədə olan qeydiyyatlar</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-outline" onclick="exportPending()">
+                            <i class="fas fa-download"></i> İxrac et
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="pendingRegistrationsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ad Soyad</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th>Tip</th>
+                                <th>Şirkət</th>
+                                <th>Tarix</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingRegistrationsBody">
+                            <tr>
+                                <td colspan="8" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pendingPagination">
+                    <!-- Pagination buraya yüklənəcək -->
+                </div>
+            </div>
+        </div>
+
+        <!-- All Users Page -->
+        <div class="page-content hidden" id="allUsersPage">
+            <h1 class="page-title">
+                <i class="fas fa-users"></i>
+                Bütün istifadəçilər
+            </h1>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="usersSearch" placeholder="İstifadəçi axtar...">
+                <select class="filter-select" id="usersStatusFilter">
+                    <option value="all">Bütün statuslar</option>
+                    <option value="active">Aktiv</option>
+                    <option value="pending">Gözləmədə</option>
+                    <option value="rejected">Rədd edilib</option>
+                </select>
+                <select class="filter-select" id="usersTypeFilter">
+                    <option value="all">Bütün tiplər</option>
+                    <option value="admin">Admin</option>
+                    <option value="company_admin">Şirkət Admini</option>
+                    <option value="employee">İşçi</option>
+                    <option value="ceo">CEO</option>
+                </select>
+                <button class="btn btn-primary" onclick="searchUsers()">
+                    <i class="fas fa-search"></i> Axtar
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">İstifadəçi siyahısı</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-success" onclick="showAddUserModal()">
+                            <i class="fas fa-plus"></i> Yeni istifadəçi
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="allUsersTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ad Soyad</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th>Tip</th>
+                                <th>Şirkət</th>
+                                <th>Status</th>
+                                <th>Qeydiyyat tarixi</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allUsersBody">
+                            <tr>
+                                <td colspan="9" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="usersPagination">
+                    <!-- Pagination buraya yüklənəcək -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Companies Page -->
+        <div class="page-content hidden" id="companiesPage">
+            <h1 class="page-title">
+                <i class="fas fa-building"></i>
+                Şirkətlər
+            </h1>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="companiesSearch" placeholder="Şirkət adı, kod və ya VÖEN ilə axtar...">
+                <select class="filter-select" id="companiesFilter">
+                    <option value="all">Bütün şirkətlər</option>
+                    <option value="active">Aktiv</option>
+                    <option value="inactive">Aktiv deyil</option>
+                </select>
+                <button class="btn btn-primary" onclick="searchCompanies()">
+                    <i class="fas fa-search"></i> Axtar
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Şirkət siyahısı</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-success" onclick="showAddCompanyModal()">
+                            <i class="fas fa-plus"></i> Yeni şirkət
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="companiesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Şirkət adı</th>
+                                <th>Şirkət kodu</th>
+                                <th>VÖEN</th>
+                                <th>CEO</th>
+                                <th>Ünvan</th>
+                                <th>Telefon</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Qeydiyyat tarixi</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companiesBody">
+                            <tr>
+                                <td colspan="11" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="companiesPagination">
+                    <!-- Pagination buraya yüklənəcək -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Page -->
+        <div class="page-content hidden" id="employeesPage">
+            <h1 class="page-title">
+                <i class="fas fa-user-tie"></i>
+                İşçilər
+            </h1>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="employeesSearch" placeholder="İşçi axtar...">
+                <select class="filter-select" id="employeesFilter">
+                    <option value="all">Bütün işçilər</option>
+                    <option value="active">Aktiv</option>
+                    <option value="inactive">Aktiv deyil</option>
+                    <option value="full_time">Tam ştat</option>
+                    <option value="part_time">Yarım ştat</option>
+                    <option value="contract">Müqavilə</option>
+                </select>
+                <button class="btn btn-primary" onclick="searchEmployees()">
+                    <i class="fas fa-search"></i> Axtar
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">İşçi siyahısı</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-success" onclick="showAddEmployeeModal()">
+                            <i class="fas fa-plus"></i> Yeni işçi
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="employeesTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ad Soyad</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th>Vəzifə</th>
+                                <th>Şirkət</th>
+                                <th>Status</th>
+                                <th>Qeydiyyat tarixi</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesBody">
+                            <tr>
+                                <td colspan="9" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="employeesPagination">
+                    <!-- Pagination buraya yüklənəcək -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Add/Edit Project Modal -->
+        <div class="modal-overlay hidden" id="projectModal">
+            <div class="modal modal-lg">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="projectModalTitle">Yeni Layihə Əlavə Et</h3>
+                    <button class="modal-close" onclick="closeModal('projectModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="projectForm">
+                        <input type="hidden" id="projectId" value="">
+
+                        <div class="form-group">
+                            <label class="form-label">Layihə Adı *</label>
+                            <input type="text" class="form-control" id="projectName"
+                                   placeholder="Məs: ERP Sistem İmplementasiyası" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Media Tipi</label>
+                            <select class="form-control" id="projectMediaType" onchange="toggleMediaInput()">
+                                <option value="image">Şəkil</option>
+                                <option value="video">Video</option>
+                                <option value="youtube">YouTube Video</option>
+                            </select>
+                        </div>
+
+                        <!-- ============ ŞƏKİL YÜKLƏMƏ - DÜYMƏ ƏLAVƏ EDİLDİ ============ -->
+                        <div class="form-group" id="imageInputGroup">
+                            <label class="form-label">Şəkil</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-control" id="projectImage"
+                                       placeholder="Şəkil URL-i avtomatik yazılacaq"
+                                       readonly style="background: #f5f5f5; flex: 1;">
+                                <button type="button" class="btn btn-primary" onclick="showFileUploadModal('image')" style="white-space: nowrap;">
+                                    <i class="fas fa-cloud-upload-alt"></i> Serverə Yüklə
+                                </button>
+                            </div>
+                            <small class="form-text">JPG, PNG, GIF, WebP - Maks: 5MB</small>
+                        </div>
+
+                        <!-- ============ VİDEO YÜKLƏMƏ - DÜYMƏ ƏLAVƏ EDİLDİ ============ -->
+                        <div class="form-group hidden" id="videoInputGroup">
+                            <label class="form-label">Video</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="text" class="form-control" id="projectVideo"
+                                       placeholder="Video URL-i avtomatik yazılacaq"
+                                       readonly style="background: #f5f5f5; flex: 1;">
+                                <button type="button" class="btn btn-danger" onclick="showFileUploadModal('video')" style="white-space: nowrap;">
+                                    <i class="fas fa-cloud-upload-alt"></i> Serverə Yüklə
+                                </button>
+                            </div>
+                            <small class="form-text">MP4, WebM, MOV - Maks: 50MB</small>
+                        </div>
+
+                        <!-- ============ YOUTUBE ============ -->
+                        <div class="form-group hidden" id="youtubeInputGroup">
+                            <label class="form-label">YouTube Video ID</label>
+                            <input type="text" class="form-control" id="projectYoutube"
+                                   placeholder="dQw4w9WgXcQ">
+                            <small class="form-text">YouTube video ID (məs: https://youtu.be/<strong>dQw4w9WgXcQ</strong>)</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Qısa Açıqlama *</label>
+                            <textarea class="form-control" id="projectDescription" rows="3"
+                                      placeholder="Layihə haqqında qısa məlumat..." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Tam Açıqlama</label>
+                            <textarea class="form-control" id="projectFullDescription" rows="5"
+                                      placeholder="Layihə haqqında ətraflı məlumat..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Kateqoriya</label>
+                            <input type="text" class="form-control" id="projectCategory"
+                                   placeholder="Məs: ERP, CRM, Maliyyə">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Müştəri Adı</label>
+                            <input type="text" class="form-control" id="projectClient"
+                                   placeholder="Məs: ABC Şirkəti">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label">Başlama Tarixi</label>
+                                    <input type="date" class="form-control" id="projectStartDate">
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label class="form-label">Bitmə Tarixi</label>
+                                    <input type="date" class="form-control" id="projectEndDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Sıra Nömrəsi</label>
+                            <input type="number" class="form-control" id="projectOrder"
+                                   value="1" min="1" max="100">
+                            <small class="form-text">Layihələrin görünüş sırası</small>
+                        </div>
+
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="projectIsActive" checked>
+                            <label class="form-check-label">Aktiv</label>
+                        </div>
+
+                        <div class="media-preview mt-20" id="mediaPreviewContainer" style="display: none;">
+                            <h4>Media Önizləməsi:</h4>
+                            <div class="preview-media-wrapper" id="mediaPreview">
+                                <!-- Media preview burada görünəcək -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('projectModal')">Ləğv et</button>
+                    <button class="btn btn-success" onclick="saveProject()">Yadda Saxla</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div class="page-content hidden" id="reportsPage">
+            <h1 class="page-title">
+                <i class="fas fa-chart-bar"></i>
+                Hesabatlar
+            </h1>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #9b59b6;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Aylıq qeydiyyatlar</h3>
+                        <div class="stat-value" id="monthlyRegistrationsReport">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #1abc9c;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Yeni şirkətlər</h3>
+                        <div class="stat-value" id="newCompaniesReport">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #e67e22;">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Yeni işçilər</h3>
+                        <div class="stat-value" id="newEmployeesReport">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon" style="background-color: #34495e;">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-title">Təsdiq nisbəti</h3>
+                        <div class="stat-value" id="approvalRateReport">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="data-table-container mt-20">
+                <div class="table-header">
+                    <h3 class="table-title">Aylıq hesabat</h3>
+                    <div class="table-actions">
+                        <select class="filter-select" id="reportMonth">
+                            <option value="">Bütün aylar</option>
+                            <option value="1">Yanvar</option>
+                            <option value="2">Fevral</option>
+                            <option value="3">Mart</option>
+                            <option value="4">Aprel</option>
+                            <option value="5">May</option>
+                            <option value="6">İyun</option>
+                            <option value="7">İyul</option>
+                            <option value="8">Avqust</option>
+                            <option value="9">Sentyabr</option>
+                            <option value="10">Oktyabr</option>
+                            <option value="11">Noyabr</option>
+                            <option value="12">Dekabr</option>
+                        </select>
+                        <select class="filter-select" id="reportYear">
+                            <!-- İllər buraya yüklənəcək -->
+                        </select>
+                        <button class="btn btn-primary" onclick="loadReports()">
+                            <i class="fas fa-filter"></i> Göstər
+                        </button>
+                        <button class="btn btn-success" onclick="exportReport()">
+                            <i class="fas fa-download"></i> İxrac et
+                        </button>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>Tarix</th>
+                                <th>Yeni qeydiyyatlar</th>
+                                <th>Təsdiqlənənlər</th>
+                                <th>Rədd edilənlər</th>
+                                <th>Yeni şirkətlər</th>
+                                <th>Yeni işçilər</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page-content hidden" id="settingsPage">
+            <h1 class="page-title">
+                <i class="fas fa-cog"></i>
+                Tənzimləmələr
+            </h1>
+
+            <div class="settings-container">
+                <div class="settings-card">
+                    <h3 class="settings-title">Sistem tənzimləmələri</h3>
+                    <div class="settings-body">
+                        <div class="form-group">
+                            <label class="form-label">Admin email bildirişləri</label>
+                            <select class="form-control" id="adminNotifications">
+                                <option value="enabled">Aktiv</option>
+                                <option value="disabled">Deaktiv</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Avtomatik təsdiq</label>
+                            <select class="form-control" id="autoApprove">
+                                <option value="disabled">Deaktiv (manual təsdiq)</option>
+                                <option value="enabled">Aktiv (avtomatik təsdiq)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Qeydiyyat müddəti (gün)</label>
+                            <input type="number" class="form-control" id="registrationPeriod" value="30" min="1" max="365">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Session timeout (saniyə)</label>
+                            <input type="number" class="form-control" id="sessionTimeout" value="1800" min="300" max="86400">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Maksimum login cəhdi</label>
+                            <input type="number" class="form-control" id="maxLoginAttempts" value="5" min="1" max="10">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Şifrə müddəti (gün)</label>
+                            <input type="number" class="form-control" id="passwordExpiryDays" value="90" min="1" max="365">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Qeydiyyat tələbləri</label>
+                            <textarea class="form-control" id="registrationRequirements" rows="4">1. VÖEN nüsxəsi
+                                2. Hüquqi ünvan
+                                3. Bank hesabı məlumatları
+                                4. Əlaqə şəxsi məlumatları
+                            </textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i> Tənzimləmələri yadda saxla
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Page -->
+        <div class="page-content hidden" id="logsPage">
+            <h1 class="page-title">
+                <i class="fas fa-history"></i>
+                Sistem Logları
+            </h1>
+
+            <div class="search-container">
+                <select class="filter-select" id="logType">
+                    <option value="activation">Aktivlik logları</option>
+                    <option value="login">Login logları</option>
+                    <option value="activity">Aktivlik logları</option>
+                </select>
+                <input type="date" class="form-control" id="logDateFrom">
+                <input type="date" class="form-control" id="logDateTo">
+                <button class="btn btn-primary" onclick="loadLogs()">
+                    <i class="fas fa-filter"></i> Göstər
+                </button>
+            </div>
+
+            <div class="data-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">Sistem logları</h3>
+                </div>
+                <div class="table-responsive">
+                    <table id="logsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Admin</th>
+                                <th>İstifadəçi</th>
+                                <th>Əməliyyat</th>
+                                <th>Şərh</th>
+                                <th>Tarix</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Məlumat yüklənir...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="logsPagination">
+                    <!-- Pagination buraya yüklənəcək -->
+                </div>
+            </div>
+        </div>
+               <!-- Files Page (Fayl Meneceri) -->
+        <div class="page-content hidden" id="filesPage">
+                <!-- FileManager buraya dinamik yüklənəcək -->
+            <div id="fm-root-placeholder">
+                <div style="text-align:center; padding:50px;">
+                    <div class="spinner"></div>
+                    <p>Fayl meneceri yüklənir...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+
+    <!-- View User Modal -->
+    <div class="modal-overlay hidden" id="viewUserModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Məlumatlar</h3>
+                <button class="modal-close" onclick="closeModal('viewUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="userDetails">
+                    <!-- Məlumatlar buraya yüklənəcək -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('viewUserModal')">Bağla</button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Add/Edit Partner Modal -->
+    <div class="modal-overlay hidden" id="partnerModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" id="partnerModalTitle">Yeni Partnyor Əlavə Et</h3>
+                <button class="modal-close" onclick="closeModal('partnerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="partnerForm">
+                    <input type="hidden" id="partnerId" value="">
+
+                    <div class="form-group">
+                        <label class="form-label">Partnyor Adı *</label>
+                        <input type="text" class="form-control" id="partnerName"
+                               placeholder="Məs: Microsoft" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Logo URL</label>
+                        <input type="url" class="form-control" id="partnerLogo"
+                               placeholder="https://example.com/logo.png">
+                        <small class="form-text">Logonun tam URL ünvanı</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Website URL</label>
+                        <input type="url" class="form-control" id="partnerWebsite"
+                               placeholder="https://microsoft.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sıra Nömrəsi</label>
+                        <input type="number" class="form-control" id="partnerOrder"
+                               value="1" min="1" max="100">
+                        <small class="form-text">Partnyorların görünüş sırası</small>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="partnerIsActive" checked>
+                        <label class="form-check-label">Aktiv</label>
+                    </div>
+
+                    <div class="logo-preview mt-20" id="logoPreviewContainer" style="display: none;">
+                        <h4>Logo Önizləməsi:</h4>
+                        <div class="preview-logo-wrapper" id="logoPreview">
+                            <!-- Logo preview burada görünəcək -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('partnerModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="savePartner()">Yadda Saxla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Partner Confirmation Modal -->
+    <div class="modal-overlay hidden" id="deletePartnerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Partnyoru Sil</h3>
+                <button class="modal-close" onclick="closeModal('deletePartnerModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deletePartnerMessage">Bu partnyoru silmək istədiyinizə əminsiniz?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('deletePartnerModal')">Ləğv et</button>
+                <button class="btn btn-danger" onclick="confirmDeletePartner()">Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Service Modal -->
+    <div class="modal-overlay hidden" id="serviceModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" id="serviceModalTitle">Yeni Xidmət Əlavə Et</h3>
+                <button class="modal-close" onclick="closeModal('serviceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceForm">
+                    <input type="hidden" id="serviceId" value="">
+
+                    <div class="form-group">
+                        <label class="form-label">Xidmət Adı *</label>
+                        <input type="text" class="form-control" id="serviceName"
+                               placeholder="Məs: Mühasibatlıq xidmətləri" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Sıra Nömrəsi</label>
+                        <input type="number" class="form-control" id="serviceOrder"
+                               value="1" min="1" max="100">
+                        <small class="form-text">Xidmətlərin görünüş sırası</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Xidmət Maddələri</label>
+                        <div id="serviceItemsContainer">
+                            <div class="service-item-input">
+                                <div class="form-row">
+                                    <div class="form-col" style="flex: 1;">
+                                        <input type="text" class="form-control service-item"
+                                               placeholder="Məs: Mühasibatlığın qurulması və idarə edilməsi">
+                                    </div>
+                                    <div class="form-col" style="width: 100px;">
+                                        <button type="button" class="btn btn-danger" onclick="removeServiceItem(this)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="addServiceItem()">
+                            <i class="fas fa-plus"></i> Yeni Maddə Əlavə Et
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">CTA Düyməsi Mətni</label>
+                        <input type="text" class="form-control" id="serviceCta"
+                               value="Ətraflı...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Scroll Target</label>
+                        <input type="text" class="form-control" id="serviceTarget"
+                               value="konsultasiya">
+                        <small class="form-text">Məs: #konsultasiya</small>
+                    </div>
+
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="serviceIsActive" checked>
+                        <label class="form-check-label">Aktiv</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('serviceModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="saveService()">Yadda Saxla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Service Confirmation Modal -->
+    <div class="modal-overlay hidden" id="deleteServiceModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Xidməti Sil</h3>
+                <button class="modal-close" onclick="closeModal('deleteServiceModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteServiceMessage">Bu xidməti silmək istədiyinizə əminsiniz?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('deleteServiceModal')">Ləğv et</button>
+                <button class="btn btn-danger" onclick="confirmDeleteService()">Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Approve/Reject Modal -->
+    <div class="modal-overlay hidden" id="approveRejectModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Qeydiyyatı təsdiqlə/Rədd et</h3>
+                <button class="modal-close" onclick="closeModal('approveRejectModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Qərar</label>
+                    <select class="form-control" id="approvalDecision">
+                        <option value="approve">Təsdiqlə</option>
+                        <option value="reject">Rədd et</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Şərh (isteğe bağlı)</label>
+                    <textarea class="form-control" id="approvalComment" rows="4" placeholder="Qərarınız üçün şərh əlavə edə bilərsiniz..."></textarea>
+                </div>
+
+                <div id="currentApplicationInfo">
+                    <!-- Məlumatlar buraya yüklənəcək -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('approveRejectModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="submitApprovalDecision()" id="submitApprovalBtn">Təsdiqlə</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay hidden" id="addUserModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Yeni istifadəçi əlavə et</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Ad *</label>
+                            <input type="text" class="form-control" id="newUserName" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Soyad</label>
+                            <input type="text" class="form-control" id="newUserLastname">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="newUserEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Telefon nömrəsi *</label>
+                            <input type="tel" class="form-control" id="newUserPhone" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">VÖEN</label>
+                            <input type="text" class="form-control" id="newUserVoen">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">FIN kodu</label>
+                            <input type="text" class="form-control" id="newUserFinCode">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Şirkət kodu</label>
+                    <input type="text" class="form-control" id="newUserCompanyCode">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Vəzifə</label>
+                            <input type="text" class="form-control" id="newUserPosition" value="CEO">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">İstifadəçi tipi *</label>
+                            <select class="form-control" id="newUserType" onchange="toggleCompanyField()">
+                                <option value="company_admin">Şirkət Admini</option>
+                                <option value="employee">İşçi</option>
+                                <option value="admin">Sistem Admini</option>
+                                <option value="ceo">CEO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="companyFieldGroup">
+                    <label class="form-label">Şirkət</label>
+                    <select class="form-control" id="newUserCompany">
+                        <option value="">Seçin (isteğe bağlı)</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Doğum tarixi</label>
+                            <input type="date" class="form-control" id="newUserBirthDate">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Cinsiyyət</label>
+                            <select class="form-control" id="newUserGender">
+                                <option value="">Seçin</option>
+                                <option value="male">Kişi</option>
+                                <option value="female">Qadın</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row" id="adminFields" style="display: none;">
+                    <div class="form-col">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="newUserIsAdmin">
+                            <label class="form-check-label">Admin hüquqları</label>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="newUserIsSuperAdmin">
+                            <label class="form-check-label">Super Admin</label>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="newUserIsActive" checked>
+                            <label class="form-check-label">Aktiv</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Şifrə *</label>
+                            <input type="password" class="form-control" id="newUserPassword" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Şifrəni təsdiqlə *</label>
+                            <input type="password" class="form-control" id="newUserPasswordConfirm" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addUserModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="addNewUser()">Əlavə et</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal-overlay hidden" id="editUserModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">İstifadəçini redaktə et</h3>
+                <button class="modal-close" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="editUserForm">
+                    <!-- Form buraya yüklənəcək -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('editUserModal')">Ləğv et</button>
+                <button class="btn btn-primary" onclick="saveUserChanges()">Yadda saxla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Company Modal -->
+    <div class="modal-overlay hidden" id="addCompanyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Yeni şirkət əlavə et</h3>
+                <button class="modal-close" onclick="closeModal('addCompanyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Şirkət adı *</label>
+                    <input type="text" class="form-control" id="newCompanyName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Şirkət kodu *</label>
+                    <input type="text" class="form-control" id="newCompanyCode" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">VÖEN *</label>
+                    <input type="text" class="form-control" id="newCompanyVoen" required maxlength="10">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">CEO adı *</label>
+                    <input type="text" class="form-control" id="newCompanyCeoName" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ünvan</label>
+                    <input type="text" class="form-control" id="newCompanyAddress">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Telefon</label>
+                    <input type="tel" class="form-control" id="newCompanyPhone">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="newCompanyEmail">
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="newCompanyIsActive" checked>
+                    <label class="form-check-label">Aktiv</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addCompanyModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="addNewCompany()">Əlavə et</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Company Modal -->
+    <div class="modal-overlay hidden" id="editCompanyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Şirkəti redaktə et</h3>
+                <button class="modal-close" onclick="closeModal('editCompanyModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="editCompanyForm">
+                    <!-- Form buraya yüklənəcək -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('editCompanyModal')">Ləğv et</button>
+                <button class="btn btn-primary" onclick="saveCompanyChanges()">Yadda saxla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div class="modal-overlay hidden" id="addEmployeeModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Yeni işçi əlavə et</h3>
+                <button class="modal-close" onclick="closeModal('addEmployeeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Ad *</label>
+                            <input type="text" class="form-control" id="newEmployeeName" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Soyad *</label>
+                            <input type="text" class="form-control" id="newEmployeeSurname" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="newEmployeeEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Telefon nömrəsi *</label>
+                            <input type="tel" class="form-control" id="newEmployeePhone" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">FIN kodu *</label>
+                    <input type="text" class="form-control" id="newEmployeeFinCode" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Şifrə *</label>
+                            <input type="password" class="form-control" id="newEmployeePassword" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Şifrəni təsdiqlə *</label>
+                            <input type="password" class="form-control" id="newEmployeePasswordConfirm" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Şirkət *</label>
+                    <select class="form-control" id="newEmployeeCompany" required>
+                        <option value="">Seçin</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vəzifə</label>
+                    <input type="text" class="form-control" id="newEmployeePosition">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">İşə başlama tarixi</label>
+                            <input type="date" class="form-control" id="newEmployeeHireDate">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label class="form-label">Maaş</label>
+                            <input type="number" class="form-control" id="newEmployeeSalary" step="0.01">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">İş növü</label>
+                    <select class="form-control" id="newEmployeeEmploymentType">
+                        <option value="full_time">Tam ştat</option>
+                        <option value="part_time">Yarım ştat</option>
+                        <option value="contract">Müqavilə</option>
+                    </select>
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="newEmployeeIsActive" checked>
+                    <label class="form-check-label">Aktiv</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('addEmployeeModal')">Ləğv et</button>
+                <button class="btn btn-success" onclick="addNewEmployee()">Əlavə et</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Employee Modal -->
+    <div class="modal-overlay hidden" id="editEmployeeModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">İşçini redaktə et</h3>
+                <button class="modal-close" onclick="closeModal('editEmployeeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmployeeForm">
+                    <input type="hidden" id="editEmployeeId" value="">
+
+                    <h4>Şəxsi məlumatlar</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Ad *</label>
+                                <input type="text" class="form-control" id="editEmployeeFirstName" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Soyad *</label>
+                                <input type="text" class="form-control" id="editEmployeeLastName" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="editEmployeeEmail" required>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Telefon *</label>
+                                <input type="tel" class="form-control" id="editEmployeePhone" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">VÖEN</label>
+                                <input type="text" class="form-control" id="editEmployeeVoen" maxlength="10">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">FIN Kod</label>
+                                <input type="text" class="form-control" id="editEmployeeFinCode" maxlength="20">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Doğum tarixi</label>
+                                <input type="date" class="form-control" id="editEmployeeBirthDate">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Cinsiyyət</label>
+                                <select class="form-control" id="editEmployeeGender">
+                                    <option value="">Seçin</option>
+                                    <option value="male">Kişi</option>
+                                    <option value="female">Qadın</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>İş məlumatları</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Vəzifə</label>
+                                <input type="text" class="form-control" id="editEmployeePosition">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Şirkət kodu</label>
+                                <input type="text" class="form-control" id="editEmployeeCompanyCode" maxlength="10">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">İstifadəçi tipi</label>
+                                <select class="form-control" id="editEmployeeUserType">
+                                    <option value="employee">İşçi</option>
+                                    <option value="company_admin">Şirkət Admini</option>
+                                    <option value="admin">Sistem Admini</option>
+                                    <option value="ceo">CEO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">İşə başlama tarixi</label>
+                                <input type="date" class="form-control" id="editEmployeeHireDate">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4>Maliyyə məlumatları</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Maaş</label>
+                                <input type="number" class="form-control" id="editEmployeeSalary" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-group">
+                                <label class="form-label">Valyuta</label>
+                                <select class="form-control" id="editEmployeeCurrency">
+                                    <option value="AZN">AZN</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bank hesabı</label>
+                        <input type="text" class="form-control" id="editEmployeeBankAccount">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">İş növü</label>
+                        <select class="form-control" id="editEmployeeEmploymentType">
+                            <option value="full_time">Tam ştat</option>
+                            <option value="part_time">Yarım ştat</option>
+                            <option value="contract">Müqavilə</option>
+                            <option value="temporary">Müvəqqəti</option>
+                        </select>
+                    </div>
+
+                    <h4>Status və hüquqlar</h4>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editEmployeeIsActive">
+                                <label class="form-check-label">Aktiv</label>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editEmployeeIsAdmin">
+                                <label class="form-check-label">Admin</label>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editEmployeeIsSuperAdmin">
+                                <label class="form-check-label">Super Admin</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editEmployeeEmailVerified">
+                                <label class="form-check-label">Email təsdiqlənib</label>
+                            </div>
+                        </div>
+                        <div class="form-col">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="editEmployeePhoneVerified">
+                                <label class="form-check-label">Telefon təsdiqlənib</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('editEmployeeModal')">Ləğv et</button>
+                <button class="btn btn-primary" onclick="saveEmployeeChanges()">Yadda saxla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay hidden" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Silinməni təsdiqlə</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteMessage">Bu əməliyyatı təsdiqləyirsiniz?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('deleteModal')">Ləğv et</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Sil</button>
+            </div>
+        </div>
+    </div>
+
+
+
+        <script>
+        // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
+        const v = '1.0.0';
+
+        // Core services
+        document.write('<script src="../assets/js/admin_js/core.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/auth.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/notifications.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/utils.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/dashboard.js?v=' + v + '"><\/script>');
+
+        // Managers
+        document.write('<script src="../assets/js/admin_js/pending.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/users.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/companies.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/employees.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/reports.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/file_manager/filemanager.js?v=' + v + '"><\/script>');
+
+        // Row creators
+        document.write('<script src="../assets/js/admin_js/projectApiService.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/services.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/partners.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/projects.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/admin_js/modal-forms.js?v=' + v + '"><\/script>');
+
+    </script>
+
+
+</body>
+</html>

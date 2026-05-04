@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="az" data-theme="light">
+<head>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional Task Management System - İşçi, İş və Əmək Haqqı İdarəetmə Sistemi">
+    <meta name="author" content="Task Manager Pro">
+
+    <title>İş İdarəetmə Paneli</title>
+
+    <!-- ========== CACHE TƏMİZLƏMƏ SİSTEMİ ========== -->
+    <script>
+        (function() {
+            // Versiya nömrəsi - build zamanı sabitləmək olar
+            const v = '1.0.0'; // Sabit versiya (cache üçün)
+            // const v = Date.now(); // Əgər cache istəmirsinizsə, bunu açın
+
+            // CSS faylları
+            const styles = [
+                'task.css',
+                'edit_module.css',
+                'buttonManager.css',
+                'main.css',
+                'quickNav.css',
+                'new_task_design.css',
+                'raport.css',
+                'partnerTaskEditModule.css',
+                'load_buttons_task_list.css',
+                'task_details_modal.css'
+            ];
+
+            // CSS-ləri əlavə et
+            styles.forEach(style => {
+                document.write(`<link rel="stylesheet" href="../assets/css/task_css/${style}?v=${v}" />`);
+            });
+        })();
+    </script>
+
+    <script>
+        (function() {
+            // Versiya nömrəsi - build zamanı sabitləmək olar
+            const v = '1.0.0'; // Sabit versiya (cache üçün)
+            // const v = Date.now(); // Əgər cache istəmirsinizsə, bunu açın
+
+            // CSS faylları
+            const styles = [
+                'userReportModal.css',
+                'enhancedModals.css'
+
+            ];
+
+            // CSS-ləri əlavə et
+            styles.forEach(style => {
+                document.write(`<link rel="stylesheet" href="../assets/css/task_css/report/${style}?v=${v}" />`);
+            });
+        })();
+    </script>
+
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- XLSX kütüphanesi için CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%233b82f6%22>📊</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%233b82f6%22>📊</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%233b82f6%22>📊</text></svg>">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* ========== CACHE TƏMİZLƏMƏ DÜYMƏSİ STİLLƏRİ ========== */
+        .cache-clear-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 18px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            font-size: 13px;
+            margin-left: auto;
+            z-index: 100;
+        }
+
+        .cache-clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(220, 38, 38, 0.4);
+            background: linear-gradient(135deg, #ea580c 0%, #b91c1c 100%);
+        }
+
+        .cache-clear-btn:active {
+            transform: translateY(1px);
+        }
+
+        .cache-clear-btn i {
+            font-size: 14px;
+        }
+
+        /* Dalğa naviqasiyası ilə eyni sətirdə göstərmək üçün */
+        .wave-nav-container {
+            position: relative;
+        }
+
+        .wave-nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .wave-nav-items {
+            flex: 1;
+        }
+
+        .wave-nav-extra {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .wave-nav-content {
+                flex-direction: column;
+            }
+            .wave-nav-extra {
+                margin-top: 10px;
+                margin-bottom: 10px;
+                padding-right: 0;
+            }
+            .cache-clear-btn {
+                margin-left: 0;
+            }
+        }
+
+        /* Header layout - sadəcə logo */
+        .tasks-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- ===== DALĞA FORMALI 6 HİSSƏLİ TASK PƏNCƏRƏLƏR ===== -->
+    <div class="wave-nav-container" id="waveNav">
+        <div class="wave-nav-content" id="waveNavContent">
+            <div class="wave-nav-items">
+                <!-- Yeni task -->
+                <div class="wave-item" data-target="new" id="waveNewTaskBtn">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Yeni</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+
+                <!-- Şirkətin Aktiv İşləri -->
+                <div class="wave-item" data-target="active">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Daxili</span>
+                            <span class="wave-count" id="countActive">0</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+
+                <!-- Digər Şirkətlərin İşləri -->
+                <div class="wave-item" data-target="external">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Şirkət</span>
+                            <span class="wave-count" id="countExternal">0</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+
+                <!-- Partnyorlar Taski -->
+                <div class="wave-item" data-target="partner">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-handshake"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Partnyor</span>
+                            <span class="wave-count" id="countPartner">0</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+
+                <!-- Hesabat -->
+                <div class="wave-item" data-target="report">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Hesabat</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+
+                <!-- Arxiv -->
+                <div class="wave-item" data-target="archive">
+                    <div class="wave-item-content">
+                        <div class="wave-icon">
+                            <i class="fas fa-archive"></i>
+                        </div>
+                        <div class="wave-text">
+                            <span class="wave-title">Arxiv</span>
+                        </div>
+                    </div>
+                    <div class="wave-ripple"></div>
+                </div>
+            </div>
+
+            <!-- ===== CACHE TƏMİZLƏMƏ DÜYMƏSİ - Dalğa naviqasiyasının sağ tərəfində ===== -->
+            <div class="wave-nav-extra">
+                <button class="cache-clear-btn" id="clearCacheBtn" title="Cache təmizlə və səhifəni yenilə">
+                    <i class="fas fa-broom"></i>
+                    <span>Cache Təmizlə</span>
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+        <!-- Yeni Tapşırıq Bölməsi - Card Dizaynlı Versiya -->
+    <section class="table-card new-task-section" id="newTaskCreateSection" style="display: none;">
+        <div class="table-header">
+            <div class="table-title-group">
+                <h2 class="table-title">
+                    <i class="fas fa-plus-circle"></i>
+                    Yeni Tapşırıq
+                </h2>
+                <div class="table-subtitle">Tapşırıq tipini seçin və məlumatları doldurun</div>
+            </div>
+        </div>
+
+        <!-- 3 Card Seçim Bölməsi -->
+        <div class="task-type-cards-container" id="taskTypeCardsContainer">
+            <div class="task-type-card" data-task-type="internal">
+                <div class="card-icon internal-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Daxili Task</h3>
+                    <p class="card-description">Öz şirkətiniz daxilində işçilərə tapşırıq göndərin</p>
+                    <div class="card-badge">Daxili İşlər</div>
+                </div>
+                <div class="card-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <div class="task-type-card" data-task-type="parent">
+                <div class="card-icon parent-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Üst Şirkət Task</h3>
+                    <p class="card-description">Üst şirkətlərinizə tapşırıq göndərin</p>
+                    <div class="card-badge">Üst Qurum</div>
+                </div>
+                <div class="card-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+
+            <div class="task-type-card" data-task-type="partner">
+                <div class="card-icon partner-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Partnyor Task</h3>
+                    <p class="card-description">Partnyor şirkətlərinizə tapşırıq göndərin</p>
+                    <div class="card-badge">Əməkdaşlıq</div>
+                </div>
+                <div class="card-arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Kartı (Dinamik olaraq göstəriləcək) -->
+        <div class="form-card-container" id="formCardContainer" style="display: none;">
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-title-group">
+                        <i class="fas fa-edit" id="formTypeIcon"></i>
+                        <h3 id="formCardTitle">Daxili Tapşırıq</h3>
+                    </div>
+                    <button type="button" class="form-close-btn" id="closeFormCardBtn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="form-card-body">
+                    <form id="taskForm">
+                        <div class="form-grid">
+                            <!-- Şirkət seçimi (Daxili üçün) -->
+                            <div class="form-group" id="companyFieldGroup">
+                                <label class="form-label">
+                                    <i class="fas fa-building"></i>
+                                    Şirkət
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="companySelect" name="company_id" required class="form-select">
+                                        <option value="">Şirkət seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Üst Şirkət (Parent üçün) -->
+                            <div class="form-group" id="parentCompanyGroup" style="display: none;">
+                                <label class="form-label">
+                                    <i class="fas fa-arrow-up"></i>
+                                    Üst Şirkət
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="parentCompanySelect" name="parent_company_id" class="form-select">
+                                        <option value="">Üst şirkət seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                                <div class="form-text">Üst şirkətlərinizə task göndərin</div>
+                            </div>
+
+                            <!-- Partnyor seçimi -->
+                            <div class="form-group" id="partnerFieldGroup" style="display: none;">
+                                <label class="form-label">
+                                    <i class="fas fa-handshake"></i>
+                                    Partnyor
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="partniyorSelect" name="company_id" class="form-select">
+                                        <option value="">Partnyor seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- İcra Edən (Öz şirkət) -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-tie"></i>
+                                    İcra Edən
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="executorSelect" name="executor_user_id" class="form-select">
+                                        <option value="">İşçi seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Digər Şirkətin İşçisi -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-users"></i>
+                                    Digər Şirkətin İşçisi
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="selectedCompanyExecutor" name="executor_user_id" class="form-select">
+                                        <option value="">İşçi seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Şöbə -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-sitemap"></i>
+                                    Şöbə
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="departmentSelect" name="department_id" required class="form-select">
+                                        <option value="">Şöbə seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- İşin növü -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-tasks"></i>
+                                    İşin Növü
+                                </label>
+                                <div class="select-wrapper">
+                                    <select id="taskTypeSelect" name="task_type_id" required class="form-select">
+                                        <option value="">İş növü seçin</option>
+                                    </select>
+                                    <i class="fas fa-chevron-down select-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Son müddət -->
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-times"></i>
+                                    Son Müddət
+                                </label>
+                                <input type="date" id="dueAtInput" name="due_date" required class="form-input" />
+                            </div>
+
+                            <!-- Seçilmiş şirkətə göstər -->
+                            <div class="form-group">
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="isVisibleToOtherCompanies" name="is_visible_to_other_companies" class="checkbox-input">
+                                    <label for="isVisibleToOtherCompanies" class="checkbox-label">
+                                        <i class="fas fa-eye"></i>
+                                        Seçilmiş şirkətə göstər
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Tapşırıq açıqlaması - tam en -->
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <i class="fas fa-align-left"></i>
+                                    Tapşırıq Açıqlaması
+                                </label>
+                                <textarea id="descriptionInput" name="description" placeholder="Tapşırığın detallı təsvirini yazın..." rows="3" class="form-textarea"></textarea>
+                            </div>
+
+                            <!-- Fayl əlavəsi - tam en -->
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <i class="fas fa-paperclip"></i>
+                                    Fayl Əlavəsi
+                                </label>
+                                <div class="file-upload-zone" id="fileDropZone">
+                                    <div class="file-upload-icon">
+                                        <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                    </div>
+                                    <div class="file-upload-text">
+                                        Faylı buraya sürüşdürün və ya klikləyin
+                                    </div>
+                                    <input type="file" id="taskAttachment" name="attachment" accept=".xlsx,.xls,.pdf,.jpg,.png,.jpeg,.doc,.docx" class="file-input" hidden multiple />
+                                </div>
+                                <div class="file-list" id="fileList"></div>
+                            </div>
+
+                            <!-- Səs qeydi - tam en -->
+                            <div class="form-group full-width">
+                                <label class="form-label">
+                                    <i class="fas fa-microphone"></i>
+                                    Səs Qeydi Əlavəsi
+                                </label>
+                                <div class="audio-recorder-container">
+                                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
+                                        <div id="recordingTimer" class="recording-timer" style="display: none;">
+                                            <i class="fas fa-clock"></i>
+                                            <span id="timerDisplay" class="timer-display">00:00</span>
+                                        </div>
+                                        <div id="recordingStatus" class="recording-status">
+                                            <i class="fas fa-circle"></i>
+                                            <span>Səs qeydi hazırdır</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                        <button type="button" id="startRecordingBtn" class="primary-btn">
+                                            <i class="fas fa-microphone"></i>
+                                            Səs Qeydinə Başla
+                                        </button>
+                                        <button type="button" id="stopRecordingBtn" class="secondary-btn" disabled>
+                                            <i class="fas fa-stop"></i>
+                                            Dayandır
+                                        </button>
+                                        <button type="button" id="saveRecordingBtn" class="primary-btn" disabled>
+                                            <i class="fas fa-save"></i>
+                                            Saxla
+                                        </button>
+                                        <button type="button" id="cancelRecordingBtn" class="secondary-btn" disabled>
+                                            <i class="fas fa-times"></i>
+                                            Ləğv et
+                                        </button>
+                                    </div>
+                                    <div id="audioPreview" class="audio-preview" style="display: none;">
+                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                            <i class="fas fa-music" style="color: #3b82f6;"></i>
+                                            <span style="font-weight: 500;">Səs qeydiniz:</span>
+                                        </div>
+                                        <audio id="recordedAudio" controls></audio>
+                                        <div class="audio-meta">
+                                            <span id="audioDuration">Müddət: -</span>
+                                            <span id="audioSize">Ölçü: -</span>
+                                        </div>
+                                    </div>
+                                    <canvas id="audioVisualizer" width="600" height="60"></canvas>
+                                    <input type="hidden" id="audioData" name="audio_data" />
+                                    <input type="hidden" id="audioFilename" name="audio_filename" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <button type="button" class="secondary-btn" id="cancelBtn">
+                                <i class="fas fa-times"></i>
+                                Ləğv et
+                            </button>
+                            <button type="submit" class="primary-btn" id="saveBtn">
+                                <i class="fas fa-save"></i>
+                                Tapşırıq Yarat
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+       <!-- Active Tasks Section -->
+        <section class="table-card" id="activeTableSection">
+            <div class="table-header">
+                <div class="table-meta">
+                    <!-- BURAYA YENİ ƏLAVƏ: Ümumi say göstəricisi -->
+                    <div class="task-count-info">
+                        <span class="task-count-label">Ümumi Tapşırıqlar:</span>
+                        <span class="task-count-number" id="activeTableTotalCount">0</span>
+                    </div>
+                    <!-- Düymələr solda -->
+                    <div class="table-actions">
+                       <button class="table-action-btn" id="activeSortBtn" title="Sırala">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+
+                        <button class="table-action-btn" id="activeColumnsBtn" title="Sütunları yönləndir">
+                            <i class="fas fa-columns"></i>
+                        </button>
+
+                        <!-- Prev Button -->
+                        <button class="table-action-btn" id="prevBtnList" title="Əvvəlki səhifə">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+
+                        <!-- SƏHİFƏ NÖMRƏLƏRİ - PREV VƏ NEXT ARASINDA -->
+                        <div class="pagination-numbers-container" id="activePaginationNumbers">
+                            <!-- JavaScript tərəfindən doldurulacaq -->
+                        </div>
+
+                        <!-- Next Button -->
+                        <button class="table-action-btn" id="nextBtnList" title="Növbəti səhifə">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <!-- ACTIVE SECTION SELECT BUTTON -->
+                    <div class="task-load-buttons external-load-buttons">
+                        <select class="task-limit-select" data-table="active">
+                            <option value="20">20 Sətir</option>
+                            <option value="50" selected>50 Sətir</option>
+                            <option value="100">100 Sətir</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="excel-table data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" data-min-width="50">
+                                <div class="table-header-cell">
+                                    <span>S/S</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="120">
+                                <div class="table-header-cell">
+                                    <span>Tarix</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="150">
+                                <div class="table-header-cell">
+                                    <span>Şirkət</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="190">
+                                <div class="table-header-cell">
+                                    <span>Kim tərəfindən</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>İcra edən</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>Status</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>İşin növü</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="150">
+                                <div class="table-header-cell">
+                                    <span>Tapşırıq açıqlaması</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>Fayl</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>Son müddət</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>Əməliyyatlar</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>İcra tarixi</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="180">
+                                <div class="table-header-cell">
+                                    <span>İcra müddəti</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="150">
+                                <div class="table-header-cell">
+                                    <span>Şöbə</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr class="loading-row">
+                            <td colspan="16">
+                                <div class="table-loading">
+                                    <div class="loader">
+                                        <div></div>
+                                        <div></div>
+                                    </div>
+                                    <p>Məlumatlar yüklənir...</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- External Tasks Section -->
+        <section class="table-card external-section" id="externalTableSection">
+            <div class="table-header">
+                <div class="table-meta">
+                    <!-- EXTERNAL ÜÇÜN SAY GÖSTƏRİCİSİ -->
+                    <div class="task-count-info">
+                        <span>Ümumi Tapşırıqlar: </span>
+                        <strong id="externalTableTotalCount">0</strong>
+                    </div>
+                    <div class="table-actions">
+                        <button class="table-action-btn" id="externalSortBtn" title="Sırala">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                        <button class="table-action-btn" id="externalColumnsBtn" title="Sütunları yönləndir">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                        <button class="table-action-btn" id="externalPrevBtn" title="Əvvəlki səhifə">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+
+                        <div class="pagination-numbers-container" id="externalPaginationNumbers"></div>
+
+                        <button class="table-action-btn" id="externalNextBtn" title="Növbəti səhifə">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <!-- External Tasks Section -->
+                    <div class="task-load-buttons external-load-buttons">
+                        <select class="task-limit-select" data-table="external">
+                            <option value="20">20 Sətir</option>
+                            <option value="50" selected>50 Sətir</option>
+                            <option value="100">100 Sətir</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="excel-table data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" data-min-width="50">
+                                <div class="table-header-cell">
+                                    <span>S/S</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Tarix</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Şirkət</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Kim tərəfindən</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>İcra edən</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Status</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>İşin növü</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Tapşırıq açıqlaması</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Fayl</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Son müddət</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Əməliyyatlar</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>İcra tarixi</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                            <th data-min-width="80">
+                                <div class="table-header-cell">
+                                    <span>Şöbə</span>
+                                </div>
+                                <div class="resizer"></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="externalTableBody">
+                        <tr class="empty-row">
+                            <td colspan="12">
+                                <div class="empty-state">
+                                    <i class="fas fa-building fa-2x"></i>
+                                    <h3>Digər Şirkət İşləri</h3>
+                                    <p>Hazırda digər şirkətlərdən heç bir iş sorğusu yoxdur.</p>
+                                    <p class="empty-hint">Digər şirkətlər sizə iş göndərdikdə burada görünəcək.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Partner Tasks Section -->
+        <section class="table-card partner-section" id="partnerTableSection">
+            <div class="table-header">
+                <div class="table-actions">
+                    <div class="task-count-info" style="margin-right: 15px;">
+                        <span>Ümumi Tapşırıqlar: </span>
+                        <strong id="partnerTableTotalCount">0</strong>
+                    </div>
+                    <button class="table-action-btn" id="partnerSortBtn" title="Sırala">
+                        <i class="fas fa-sort-amount-down"></i>
+                    </button>
+                    <button class="table-action-btn" id="partnerPrevBtn" title="Əvvəlki səhifə">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <!-- SƏHİFƏ NÖMRƏLƏRİ - PREV VƏ NEXT ARASINDA -->
+                    <div class="pagination-numbers-container" id="partnerPaginationNumbers"></div>
+
+                    <button class="table-action-btn" id="partnerNextBtn" title="Növbəti səhifə">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button class="table-action-btn" id="partnerFilterContainer" title="Filter">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="PartnerTableManager.refresh()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <!-- Partner Tasks Section -->
+                <div class="task-load-buttons partner-load-buttons">
+                    <select class="task-limit-select" data-table="partner">
+                        <option value="20">20 Sətir</option>
+                        <option value="50" selected>50 Sətir</option>
+                        <option value="100">100 Sətir</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar" id="partnerFilterBar" style="display: none; padding: 10px; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="partnerStatusFilter">
+                            <option value="">Bütün statuslar</option>
+                            <option value="pending">Gözləyir</option>
+                            <option value="in_progress">İşlənir</option>
+                            <option value="completed">Tamamlandı</option>
+                            <option value="rejected">Rədd edildi</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" id="partnerPriorityFilter">
+                            <option value="">Bütün prioritetlər</option>
+                            <option value="low">Aşağı</option>
+                            <option value="medium">Orta</option>
+                            <option value="high">Yüksək</option>
+                            <option value="urgent">Təcili</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control form-control-sm" id="partnerSearchFilter" placeholder="Axtar...">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-sm btn-primary w-100" id="partnerApplyFilter">Tətbiq et</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="overflow-x: auto; max-width: 100%;">
+                <table class="excel-table data-table" id="partnerTasksTable" style="width: 100%; min-width: 1800px; table-layout: fixed;">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;">№</th>
+                            <th style="width: 90px;">Tarix</th>
+                            <th style="width: 250px;">
+                                <div class="d-flex flex-column">
+                                    <span>Şirkət</span>
+                                </div>
+                            </th>
+                            <th style="width: 120px;">
+                                <div class="d-flex flex-column">
+                                    <span>Kim tərəfindən</span>
+                                </div>
+                            </th>
+                            <th style="width: 120px;">
+                                <div class="d-flex flex-column">
+                                    <span>İcraçı</span>
+                                </div>
+                            </th>
+                            <th style="width: 100px;">Son müddət</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 80px;">Əməliyyatlar</th>
+                            <th style="width: 120px;">İş növü</th>
+                            <th style="width: 250px;">Açıqlama</th>
+                            <th style="width: 70px;">Fayl</th>
+                            <th style="width: 80px;">Müddət(dəq)</th>
+                            <th style="width: 120px;">Şöbə</th>
+                        </tr>
+                    </thead>
+                    <tbody id="partnerTableBody">
+                        <tr class="empty-row">
+                            <td colspan="16">
+                                <div class="empty-state">
+                                    <i class="fas fa-handshake fa-3x mb-3" style="color: #94a3b8;"></i>
+                                    <h3>Partnyor Taskları</h3>
+                                    <p>Hazırda partnyor taskları yoxdur.</p>
+
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+
+        <!-- Report Section -->
+        <section class="table-card report-section" id="reportTableSection">
+            <div class="table-header">
+                <div class="table-title-group">
+                    <h2 class="table-title">
+                        <i class="fas fa-chart-bar table-icon"></i>
+                        Hesabat və Analitika
+                    </h2>
+                    <div class="table-subtitle" id="reportMeta">
+                        <span class="last-update" id="lastReportUpdate">
+                            <i class="fas fa-sync-alt"></i>
+                            Son yenilənmə: indi
+                        </span>
+                    </div>
+                </div>
+                <div class="report-actions">
+                    <button class="table-action-btn" id="refreshReportBtn" title="Hesabatı yenilə">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="table-action-btn" id="exportReportBtn" title="Hesabatı ixrac et">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="table-action-btn" id="printReportBtn" title="Hesabatı çap et">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <div class="date-range-picker">
+                        <input type="date" id="reportStartDate" class="date-input" value="">
+                        <span> - </span>
+                        <input type="date" id="reportEndDate" class="date-input" value="">
+                        <button class="primary-btn btn-sm" id="applyDateRangeBtn">
+                            <i class="fas fa-check"></i>
+                            Tətbiq et
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Kartları -->
+            <div class="report-cards-grid">
+                <!-- Ümumi tasklar -->
+                <div class="report-card" data-type="total">
+                    <div class="report-card-header">
+                        <div class="report-card-icon total-bg">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="report-card-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="totalTrend">+12%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Ümumi tapşırıqlar</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="totalTasksCount">0</span>
+                            <span class="report-card-subvalue" id="totalTasksComparison">öncəki dövr</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill" id="totalProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tamamlanan -->
+                <div class="report-card" data-type="completed">
+                    <div class="report-card-header">
+                        <div class="report-card-icon completed-bg">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="report-card-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="completedTrend">+8%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Tamamlanan</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="completedTasksCount">0</span>
+                            <span class="report-card-subvalue" id="completedPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill success" id="completedProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gözləmədə -->
+                <div class="report-card" data-type="pending">
+                    <div class="report-card-header">
+                        <div class="report-card-icon pending-bg">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span id="pendingTrend">-5%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Gözləmədə</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="pendingTasksCount">0</span>
+                            <span class="report-card-subvalue" id="pendingPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill warning" id="pendingProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Müddəti keçən -->
+                <div class="report-card" data-type="overdue">
+                    <div class="report-card-header">
+                        <div class="report-card-icon overdue-bg">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="overdueTrend">+3%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Müddəti keçən</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="overdueTasksCount">0</span>
+                            <span class="report-card-subvalue" id="overduePercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill danger" id="overdueProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           <!-- Detallı Statistika Bölməsi -->
+            <div class="report-details-grid">
+                <!-- Şirkət üzrə statistika -->
+                <div class="report-detail-card">
+                    <div class="detail-card-header">
+                        <h3>
+                            <i class="fas fa-building"></i>
+                            Şirkətlər üzrə statistika
+                        </h3>
+                        <button class="expand-btn" data-target="companyStats">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="detail-card-body" id="companyStats">
+                        <!-- YENİ: Axtarış qutusu -->
+                        <div class="search-box-container">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchCompany" class="search-input" placeholder="Şirkət axtar...">
+                            </div>
+                            <span class="search-hint">Ad və ya kod ilə axtar</span>
+                        </div>
+                        <div class="company-stats-list" id="companyStatsList">
+                            <!-- Dinamik olaraq doldurulacaq -->
+                            <div class="loading-spinner small"></div>
+                        </div>
+                        <div class="view-all-link">
+                            <a href="#" id="viewAllCompanies">Hamısını göstər <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Şöbə üzrə statistika -->
+                <div class="report-detail-card">
+                    <div class="detail-card-header">
+                        <h3>
+                            <i class="fas fa-sitemap"></i>
+                            Şöbələr üzrə statistika
+                        </h3>
+                        <button class="expand-btn" data-target="departmentStats">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="detail-card-body" id="departmentStats">
+                        <!-- YENİ: Axtarış qutusu -->
+                        <div class="search-box-container">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchDepartment" class="search-input" placeholder="Şöbə axtar...">
+                            </div>
+                            <span class="search-hint">Ad və ya kod ilə axtar</span>
+                        </div>
+                        <div class="department-stats-list" id="departmentStatsList">
+                            <!-- Dinamik olaraq doldurulacaq -->
+                            <div class="loading-spinner small"></div>
+                        </div>
+                        <div class="view-all-link">
+                            <a href="#" id="viewAllDepartments">Hamısını göstər <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İşçi üzrə statistika -->
+                <div class="report-detail-card">
+                    <div class="detail-card-header">
+                        <h3>
+                            <i class="fas fa-users"></i>
+                            İşçilər üzrə statistika
+                        </h3>
+                        <button class="expand-btn" data-target="employeeStats">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="detail-card-body" id="employeeStats">
+                        <!-- YENİ: Axtarış qutusu -->
+                        <div class="search-box-container">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchEmployee" class="search-input" placeholder="İşçi axtar...">
+                            </div>
+                            <span class="search-hint">Ad, soyad, vəzifə və ya şöbə ilə axtar</span>
+                        </div>
+                        <div class="employee-stats-list" id="employeeStatsList">
+                            <!-- Dinamik olaraq doldurulacaq -->
+                            <div class="loading-spinner small"></div>
+                        </div>
+                        <div class="view-all-link">
+                            <a href="#" id="viewAllEmployees">Hamısını göstər <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İş növü üzrə statistika -->
+                <div class="report-detail-card">
+                    <div class="detail-card-header">
+                        <h3>
+                            <i class="fas fa-tag"></i>
+                            İş növləri üzrə statistika
+                        </h3>
+                        <button class="expand-btn" data-target="taskTypeStats">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="detail-card-body" id="taskTypeStats">
+                        <!-- YENİ: Axtarış qutusu -->
+                        <div class="search-box-container">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchTaskType" class="search-input" placeholder="İş növü axtar...">
+                            </div>
+                            <span class="search-hint">Ad və ya kod ilə axtar</span>
+                        </div>
+                        <div class="tasktype-stats-list" id="taskTypeStatsList">
+                            <!-- Dinamik olaraq doldurulacaq -->
+                            <div class="loading-spinner small"></div>
+                        </div>
+                        <div class="view-all-link">
+                            <a href="#" id="viewAllTaskTypes">Hamısını göstər <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Partnerlər bölməsi (əgər varsa) -->
+            <div class="report-detail-card" style="margin-top: 10px;">
+                <div class="detail-card-header">
+                    <h3>
+                        <i class="fas fa-handshake"></i>
+                        Partnerlər üzrə statistika
+                    </h3>
+                    <button class="expand-btn" data-target="partnerStats">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+                <div class="detail-card-body" id="partnerStats">
+                    <!-- YENİ: Axtarış qutusu -->
+                    <div class="search-box-container">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchPartner" class="search-input" placeholder="Partner axtar...">
+                        </div>
+                        <span class="search-hint">Şirkət adı və ya əlaqə şəxs ilə axtar</span>
+                    </div>
+                    <div class="partner-stats-list" id="partnerStatsList">
+                        <!-- Dinamik olaraq doldurulacaq -->
+                        <div class="loading-spinner small"></div>
+                    </div>
+                    <div class="view-all-link">
+                        <a href="#" id="viewAllPartners">Hamısını göstər <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Qrafik Bölməsi -->
+            <div class="report-charts-grid">
+                <!-- Aylıq trend qrafiki -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4>
+                            <i class="fas fa-chart-line"></i>
+                            Aylıq trend
+                        </h4>
+                        <div class="chart-legend">
+                            <span class="legend-item">
+                                <span class="legend-color completed"></span>
+                                Tamamlanan
+                            </span>
+                            <span class="legend-item">
+                                <span class="legend-color pending"></span>
+                                Gözləmədə
+                            </span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="monthlyTrendChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Status paylanması -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4>
+                            <i class="fas fa-chart-pie"></i>
+                            Status paylanması
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="statusPieChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cədvəl görünüşü -->
+            <div class="report-table-wrapper">
+                <div class="table-tabs">
+                    <button class="tab-btn active" data-tab="tasks">Tapşırıqlar</button>
+                    <button class="tab-btn" data-tab="companies">Şirkətlər</button>
+                    <button class="tab-btn" data-tab="employees">İşçilər</button>
+                    <button class="tab-btn" data-tab="financial">Maliyyə</button>
+                </div>
+
+                <div class="tab-content active" id="tasksTab">
+                    <table class="report-data-table">
+                        <thead>
+                            <tr>
+                                <th>Tapşırıq</th>
+                                <th>Şirkət</th>
+                                <th>İcraçı</th>
+                                <th>Status</th>
+                                <th>Başlama tarixi</th>
+                                <th>Bitmə tarixi</th>
+                                <th>Müddət</th>
+                                <th>Əməliyyatlar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTasksBody">
+                            <tr class="empty-row">
+                                <td colspan="8">
+                                    <div class="empty-state small">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <p>Məlumat yoxdur</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tab-content" id="companiesTab">
+                    <!-- Şirkətlər cədvəli -->
+                </div>
+
+                <div class="tab-content" id="employeesTab">
+                    <!-- İşçilər cədvəli -->
+                </div>
+
+                <div class="tab-content" id="financialTab">
+                    <!-- Maliyyə cədvəli -->
+                </div>
+            </div>
+
+            <!-- Hesabat xülasəsi -->
+            <div class="report-summary">
+                <div class="summary-stats">
+                    <div class="summary-item">
+                        <span class="summary-label">Orta icra müddəti:</span>
+                        <span class="summary-value" id="avgCompletionTime">0 gün</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Məhsuldarlıq dərəcəsi:</span>
+                        <span class="summary-value" id="productivityRate">0%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Vaxtında tamamlanma:</span>
+                        <span class="summary-value" id="ontimeRate">0%</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Aktiv istifadəçilər:</span>
+                        <span class="summary-value" id="activeUsers">0</span>
+                    </div>
+                </div>
+                <div class="summary-actions">
+                    <button class="secondary-btn" id="generateFullReport">
+                        <i class="fas fa-file-pdf"></i>
+                        Tam hesabat
+                    </button>
+                    <button class="secondary-btn" id="scheduleReport">
+                        <i class="fas fa-clock"></i>
+                        Planlaşdır
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Report Modal (Detallı görünüş üçün) -->
+        <div class="modal-backdrop" id="reportDetailModal">
+            <div class="modal report-detail-modal">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="reportDetailTitle">
+                        <i class="fas fa-chart-bar"></i>
+                        Detallı Hesabat
+                    </h3>
+                    <button class="close-btn" id="closeReportModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="reportDetailBody">
+                    <!-- Dinamik məzmun -->
+                </div>
+                <div class="modal-footer">
+                    <button class="primary-btn" id="exportDetailReport">
+                        <i class="fas fa-download"></i>
+                        İxrac et
+                    </button>
+                    <button class="secondary-btn" id="printDetailReport">
+                        <i class="fas fa-print"></i>
+                        Çap et
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Archive Section - Dəyişdirilmiş versiya -->
+        <section class="table-card archive-section" id="archiveTableSection">
+            <div class="table-header">
+                <!-- Archive Tip Tabs -->
+                <div class="archive-tabs" style="display: flex; gap: 10px; margin-bottom: 15px; padding: 0 15px;">
+                    <button class="archive-tab-btn active" data-archive-type="internal" id="internalArchiveTab">
+                        <i class="fas fa-building"></i>
+                        Daxili
+                    </button>
+                    <button class="archive-tab-btn" data-archive-type="external" id="externalArchiveTab">
+                        <i class="fas fa-"></i>
+                        Şirkətlər
+                    </button>
+                    <button class="archive-tab-btn" data-archive-type="external" id="partnerArchiveTab">
+                        <i class="fas fa-handshake"></i>
+                        Partnyor
+                    </button>
+                    <!-- Archive Section -->
+                    <div class="task-load-buttons archive-load-buttons">
+                        <select class="task-limit-select" data-table="archive">
+                            <option value="20">20 Sətir</option>
+                            <option value="50" selected>50 Sətir</option>
+                            <option value="100">100 Sətir</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="task-count-info">
+                    <span class="task-count-label">Ümumi Tapşırıqlar:</span>
+                    <span class="task-count-number" id="archiveTableTotalCount">0</span>
+                </div>
+
+                <div class="table-meta">
+                    <div class="table-actions">
+                        <button class="table-action-btn" id="archiveSortBtn" title="Sırala">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                        <button class="table-action-btn" id="archivePrevBtn" title="Əvvəlki səhifə">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+
+                        <!-- Archive səhifə nömrələri -->
+                        <div class="pagination-numbers-container" id="archivePaginationNumbers"></div>
+
+                        <button class="table-action-btn" id="archiveNextBtn" title="Növbəti səhifə">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="table-actions">
+                        <button class="secondary-btn btn-sm" id="exportArchiveBtn" style="margin-left: 10px;">
+                            <i class="fas fa-download"></i>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table class="excel-table data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">S/S</th>
+                            <th>Tarix</th>
+                            <th>Şirkət</th>
+                            <th>Kim tərəfindən</th>
+                            <th>İcra edən</th>
+                            <th>Şöbə</th>
+                            <th>İşin növü</th>
+                            <th class="description-col">Tapşırıq açıqlaması</th>
+                            <th class="file-col">Fayl</th>
+                            <th>Status</th>
+                            <th>Son müddət</th>
+                            <th>İcra tarixi</th>
+                            <th>İcra müddəti</th>
+                            <th>Saatlıq əmək haqqı</th>
+                            <th>Formalaşan əmək haqqı</th>
+                        </tr>
+                    </thead>
+                    <tbody id="archiveTableBody">
+                        <tr class="empty-row">
+                            <td colspan="15">
+                                <div class="empty-state">
+                                    <i class="fas fa-archive fa-2x"></i>
+                                    <h3>Arxivlənmiş İşlər</h3>
+                                    <p>Hazırda heç bir arxiv işi yoxdur.</p>
+                                    <p class="empty-hint">Tamamlanmış işlər avtomatik olaraq buraya arxivlənir.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- Task Details Modal -->
+    <div class="modal-backdrop" id="descriptionModal">
+        <div class="modal description-modal" role="dialog" aria-modal="true" aria-labelledby="descriptionModalTitle">
+            <div class="modal-header">
+                <div class="modal-title" id="descriptionModalTitle">
+                    <i class="fas fa-info-circle"></i>
+                    Tapşırıq Detalları
+                </div>
+                <button class="close-btn" id="closeDescriptionBtn" aria-label="Bağla">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-content">
+                <div class="task-detail-grid">
+                    <div class="task-detail-section">
+                        <div class="detail-label">Tapşırıq Kodu</div>
+                        <div class="detail-value" id="detailTaskCode">-</div>
+                    </div>
+                    <div class="task-detail-section">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-pending" id="detailStatus">Gözləmədə</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="secondary-btn" id="closeDetailsBtn">
+                    <i class="fas fa-times"></i>
+                    Bağla
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal-backdrop" id="filterModal">
+        <div class="modal filter-modal" role="dialog" aria-modal="true" aria-labelledby="filterModalTitle">
+            <div class="modal-header">
+                <div class="modal-title" id="filterModalTitle">
+                    <i class="fas fa-filter"></i>
+                    Filtrləmə Seçimləri
+                </div>
+                <button class="close-btn" id="closeFilterBtn" aria-label="Bağla">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="filterForm" class="modal-form">
+                <div class="form-content">
+                    <div class="form-group" style="grid-column: span 2; margin-bottom: 20px;">
+                        <label class="form-label">
+                            <i class="fas fa-table"></i>
+                            Filtrlənəcək Cədvəl
+                        </label>
+                        <div class="table-selection-radios">
+                            <div class="radio-group">
+                                <input type="radio" id="filterActiveTable" name="filter_table" value="active" class="radio-input" checked>
+                                <label for="filterActiveTable" class="radio-label">
+                                    <span class="radio-icon">
+                                        <i class="fas fa-tasks"></i>
+                                    </span>
+                                    <span class="radio-text">
+                                        <strong>Şirkətin Aktiv İşləri</strong>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="filterExternalTable" name="filter_table" value="external" class="radio-input">
+                                <label for="filterExternalTable" class="radio-label">
+                                    <span class="radio-icon">
+                                        <i class="fas fa-building"></i>
+                                    </span>
+                                    <span class="radio-text">
+                                        <strong>Digər Şirkətlərin İşləri</strong>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="radio-group">
+                                <input type="radio" id="filterArchiveTable" name="filter_table" value="archive" class="radio-input">
+                                <label for="filterArchiveTable" class="radio-label">
+                                    <span class="radio-icon">
+                                        <i class="fas fa-archive"></i>
+                                    </span>
+                                    <span class="radio-text">
+                                        <strong>Arxiv İşlər</strong>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="secondary-btn" id="resetFiltersBtn">
+                        <i class="fas fa-redo"></i>
+                        Sıfırla
+                    </button>
+                    <button type="submit" class="primary-btn">
+                        <i class="fas fa-check"></i>
+                        Filtrlə
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loader">
+                <div></div>
+                <div></div>
+            </div>
+            <p class="loading-text" id="loadingText">Yüklənir...</p>
+        </div>
+    </div>
+
+
+
+    <!-- Notifications Container -->
+    <div class="notifications-container" id="notificationsContainer"></div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/assets/js/task_js/sw.js', {
+                    scope: '/assets/js/task_js/'
+                })
+                .then(registration => {
+                    console.log('✅ Service Worker qeydiyyatdan keçdi:', registration.scope);
+                })
+                .catch(error => {
+                    console.warn('⚠️ Service Worker xətası:', error);
+                });
+            });
+        }
+    </script>
+
+    <!-- ========== CACHE TƏMİZLƏMƏ SCRIPT ========== -->
+    <script>
+        // Cache təmizləmə funksiyası
+        async function clearAllCacheAndRefresh() {
+            console.log('🧹 Cache təmizləmə prosesi başladı...');
+
+            try {
+                // 1. Göstəricini göstər
+                const btn = document.getElementById('clearCacheBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Təmizlənir...</span>';
+                btn.disabled = true;
+
+                // 2. SessionStorage təmizlə (task cache-lər)
+                const sessionKeys = Object.keys(sessionStorage);
+                sessionKeys.forEach(key => {
+                    if (key.startsWith('tc_') || key.includes('task') || key.includes('cache')) {
+                        sessionStorage.removeItem(key);
+                        console.log(`🗑️ SessionStorage-dan silindi: ${key}`);
+                    }
+                });
+
+                // 3. LocalStorage təmizlə (task ilə əlaqəli olanlar)
+                const localStorageKeys = Object.keys(localStorage);
+                localStorageKeys.forEach(key => {
+                    if (key.startsWith('task_confirm_end_') ||
+                        key.startsWith('task_delay_') ||
+                        key.startsWith('task_work_start_') ||
+                        key === 'tasks_cache' ||
+                        key === 'tasks_cache_timestamp' ||
+                        key === 'externalTasks_cache' ||
+                        key === 'externalTasks_cache_timestamp') {
+                        localStorage.removeItem(key);
+                        console.log(`🗑️ LocalStorage-dan silindi: ${key}`);
+                    }
+                });
+
+                // 4. IndexedDB təmizlə (əgər dbManager varsa)
+                if (window.dbManager && window.dbManager.clearCache) {
+                    await window.dbManager.clearCache();
+                    console.log('✅ IndexedDB cache təmizləndi');
+                } else if (window.dbManager) {
+                    // Əgər clearCache metodu yoxdursa, bütün store-ları təmizlə
+                    const stores = ['tasks', 'partners', 'externalTasks', 'archiveTasks', 'cacheInfo'];
+                    for (const store of stores) {
+                        try {
+                            await window.dbManager.clearCache(store);
+                        } catch (e) {
+                            console.warn(`⚠️ ${store} təmizlənə bilmədi:`, e);
+                        }
+                    }
+                }
+
+                // 5. Service Worker cache təmizlə (əgər varsa)
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        if (cacheName.includes('task') || cacheName.includes('manager')) {
+                            await caches.delete(cacheName);
+                            console.log(`🗑️ Service Worker cache silindi: ${cacheName}`);
+                        }
+                    }
+                }
+
+                // 6. TaskCache global obyektini təmizlə (əgər varsa)
+                if (typeof TaskCache !== 'undefined' && TaskCache.clear) {
+                    TaskCache.clear();
+                    console.log('✅ TaskCache təmizləndi');
+                }
+
+                // 7. Kiçik bir gözləmə (cache tamamilə təmizlənsin)
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // 8. Səhifəni yenilə
+                console.log('🔄 Səhifə yenilənir...');
+                window.location.reload();
+
+            } catch (error) {
+                console.error('❌ Cache təmizləmə xətası:', error);
+                alert('Cache təmizlənərkən xəta baş verdi. Səhifə yenilənir...');
+                window.location.reload();
+            }
+        }
+
+        // Düyməyə klik eventi əlavə et
+        document.addEventListener('DOMContentLoaded', function() {
+            const clearBtn = document.getElementById('clearCacheBtn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearAllCacheAndRefresh);
+                console.log('✅ Cache təmizləmə düyməsi aktiv edildi');
+            }
+        });
+    </script>
+
+    <!-- ========== INDEXEDDB MANAGER (CACHE ÜÇÜN) ========== -->
+    <script src="../assets/js/task_js/dbManager.js"></script>
+
+    <!-- ========== API SERVICE (CACHE DƏSTƏKLİ) ========== -->
+    <script src="../assets/js/task_js/api_service/apiService.js"></script>
+
+    <script>
+        // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
+        const v = '1.0.3';
+
+        // Core services
+        document.write('<script src="../assets/js/task_js/api_service/authService.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/api_service/notification.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/api_service/telegramNotification.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/ui_ux/columnResizer.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/ui_ux/commentTracker.js?v=' + v + '"><\/script>');
+
+        // Managers
+        document.write('<script src="../assets/js/task_js/soundManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/formManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/modalManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/tableManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/company_task/taskEditModul.js?v=' + v + '"><\/script>');
+
+        // Row creators
+        document.write('<script src="../assets/js/task_js/company_task/activeRowCreator.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/ui_ux/load_buttons.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/external_company/externalRowCreator.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/external_company/externalTableManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/external_company/taskEditExternal.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/partner_task/partnerRowCreator.js?v=' + v + '"><\/script>');
+
+        // Partner
+        document.write('<script src="../assets/js/task_js/partner_task/partnerTableManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/partner_task/partnerTaskEditModule.js?v=' + v + '"><\/script>');
+
+        // Digər fayllar
+        document.write('<script src="../assets/js/task_js/task_creater/createTask.js?v=' + v + '"><\/script>');
+        // raport
+        document.write('<script src="../assets/js/task_js/raport/report.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/raport/users/userReportExporter.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/raport/users/userReportModal.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/raport/users/enhancedModals.js?v=' + v + '"><\/script>');
+
+
+        document.write('<script src="../assets/js/task_js/dashboardRedirect.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/ui_ux/column-filter.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/ui_ux/new_task_design.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/formatters.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/excelExport.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/buttonManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/validators.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/audio_recorder/audioRecorder.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/file_manager/fileUpload.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/circularNav.js?v=' + v + '"><\/script>');
+
+        // Archive faylları
+        document.write('<script src="../assets/js/task_js/archive/archiveTasks.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/archive/archiveTableManager.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/archive/external_task_archive.js?v=' + v + '"><\/script>');
+        document.write('<script src="../assets/js/task_js/archive/partner_task_archive.js?v=' + v + '"><\/script>');
+
+        // Main task manager - ƏN SONDA!
+        document.write('<script src="../assets/js/task_js/task.js?v=' + v + '"><\/script>');
+    </script>
+
+
+</body>
+</html> 

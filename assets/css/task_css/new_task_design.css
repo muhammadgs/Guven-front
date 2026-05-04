@@ -1,0 +1,763 @@
+/* ============================================ */
+/* new_task_modal.css - Yeni Tapşırıq Modal Dizaynı */
+/* ============================================ */
+
+:root {
+    --primary-color: #3b82f6;
+    --primary-dark: #2563eb;
+    --primary-light: #60a5fa;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+}
+
+/* ========= 3 CARD KONTEYNER ========= */
+.task-type-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border-radius: var(--radius-xl);
+    margin-bottom: 1.5rem;
+}
+
+/* ========= CARD STILI ========= */
+.task-type-card {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.task-type-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    transform: scaleX(0);
+    transition: transform 0.4s ease;
+    transform-origin: left;
+}
+
+.task-type-card[data-task-type="internal"]::before {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+.task-type-card[data-task-type="parent"]::before {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.task-type-card[data-task-type="partner"]::before {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.task-type-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.task-type-card:hover::before {
+    transform: scaleX(1);
+}
+
+.task-type-card.active {
+    border: 2px solid;
+    box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.task-type-card[data-task-type="internal"].active {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), white);
+}
+
+.task-type-card[data-task-type="parent"].active {
+    border-color: #10b981;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), white);
+}
+
+.task-type-card[data-task-type="partner"].active {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), white);
+}
+
+/* ========= CARD İKONLARI ========= */
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    transition: all 0.3s ease;
+}
+
+.internal-icon {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+    color: #3b82f6;
+}
+
+.parent-icon {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+    color: #10b981;
+}
+
+.partner-icon {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));
+    color: #f59e0b;
+}
+
+.task-type-card:hover .card-icon {
+    transform: scale(1.05);
+}
+
+/* ========= CARD MƏZMUNU ========= */
+.card-content {
+    flex: 1;
+}
+
+.card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin-bottom: 0.35rem;
+}
+
+.card-description {
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: var(--gray-100);
+    border-radius: 2rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--gray-600);
+}
+
+.task-type-card[data-task-type="internal"] .card-badge {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.task-type-card[data-task-type="parent"] .card-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.task-type-card[data-task-type="partner"] .card-badge {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+/* ========= CARD ARROW ========= */
+.card-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    transition: all 0.3s ease;
+}
+
+.task-type-card:hover .card-arrow {
+    transform: translateX(6px);
+}
+
+.task-type-card[data-task-type="internal"]:hover .card-arrow {
+    background: #3b82f6;
+    color: white;
+}
+
+.task-type-card[data-task-type="parent"]:hover .card-arrow {
+    background: #10b981;
+    color: white;
+}
+
+.task-type-card[data-task-type="partner"]:hover .card-arrow {
+    background: #f59e0b;
+    color: white;
+}
+
+/* ========= MODAL OVERLAY (edit_module.css-dən) ========= */
+.newtask-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.newtask-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ========= MODAL CONTENT ========= */
+.newtask-modal {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 900px;
+    max-height: 85vh;
+    overflow: hidden;
+    animation: modalSlideIn 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========= MODAL HEADER ========= */
+.newtask-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.newtask-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.newtask-modal-title i {
+    font-size: 1.25rem;
+    color: #007bff;
+}
+
+.newtask-modal-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.newtask-modal-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.newtask-modal-close:hover {
+    background: #eee;
+    color: #333;
+}
+
+/* ========= MODAL BODY ========= */
+.newtask-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* ========= FORM ========= */
+.newtask-form {
+    width: 100%;
+}
+
+.newtask-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.newtask-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.newtask-form-group.full-width {
+    grid-column: span 2;
+}
+
+.newtask-form-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.newtask-form-label i {
+    color: #007bff;
+    width: 14px;
+}
+
+.newtask-select,
+.newtask-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    background: white;
+    transition: all 0.2s;
+}
+
+.newtask-select:focus,
+.newtask-input:focus,
+.newtask-textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.newtask-textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.newtask-form-text {
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* ========= CHECKBOX ========= */
+.newtask-checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.newtask-checkbox {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.newtask-checkbox-label {
+    font-size: 0.8rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+/* ========= FILE UPLOAD (Kiçildilmiş) ========= */
+.newtask-file-zone {
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    padding: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #f8f9fa;
+}
+
+.newtask-file-zone:hover {
+    border-color: #007bff;
+    background: #f0f7ff;
+}
+
+.newtask-file-icon {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.newtask-file-text {
+    font-size: 0.7rem;
+    color: #6c757d;
+}
+
+.newtask-file-list {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.newtask-file-item {
+    background: #e9ecef;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.newtask-file-item i.fa-times {
+    cursor: pointer;
+    color: #dc3545;
+    font-size: 0.6rem;
+}
+
+/* ========= AUDIO RECORDER (Kiçildilmiş) ========= */
+.newtask-audio-container {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    border: 1px solid #eee;
+}
+
+.newtask-audio-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.newtask-audio-status i {
+    font-size: 0.5rem;
+    color: #dc3545;
+}
+
+.newtask-audio-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.newtask-audio-btn {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.newtask-audio-btn.primary {
+    background: #007bff;
+    color: white;
+}
+
+.newtask-audio-btn.primary:hover {
+    background: #0056b3;
+}
+
+.newtask-audio-btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.newtask-audio-btn.secondary:hover {
+    background: #545b62;
+}
+
+.newtask-audio-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.newtask-audio-preview {
+    margin-top: 8px;
+}
+
+.newtask-audio-preview audio {
+    width: 100%;
+    height: 36px;
+    margin-top: 6px;
+}
+
+#newtaskAudioVisualizer {
+    width: 100%;
+    height: 40px;
+    margin-top: 8px;
+    border-radius: 4px;
+    background: #e9ecef;
+}
+
+/* ========= MODAL FOOTER ========= */
+.newtask-modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-radius: 0 0 8px 8px;
+}
+
+.newtask-btn {
+    padding: 8px 20px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.newtask-btn.primary {
+    background: #007bff;
+    color: white;
+}
+
+.newtask-btn.primary:hover {
+    background: #0056b3;
+}
+
+.newtask-btn.secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.newtask-btn.secondary:hover {
+    background: #545b62;
+}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width: 1024px) {
+    .task-type-cards-container {
+        gap: 1rem;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .task-type-cards-container {
+        grid-template-columns: 1fr;
+    }
+
+    .newtask-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .newtask-form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .newtask-modal {
+        width: 95%;
+    }
+
+    .task-type-card {
+        padding: 1rem;
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+/* ========= MODAL OVERLAY ========= */
+.newtask-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    /* Qırağa klikləmə işarəsini göstərmə */
+    cursor: default;
+}
+
+/* Modal özü üçün cursor default */
+.newtask-modal {
+    cursor: default;
+}
+/* ========= YENİ TASK MODAL - MƏCBURİ GÖSTERME ========= */
+.new-task-modal-overlay {
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    z-index: 100000 !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+.new-task-modal-overlay.active {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.new-task-modal-content {
+    background: white !important;
+    border-radius: 16px !important;
+    width: 90% !important;
+    max-width: 900px !important;
+    max-height: 85vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+.new-task-modal-header {
+    padding: 16px 20px !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    background: #f8fafc !important;
+}
+
+.new-task-modal-header h3 {
+    margin: 0 !important;
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+    color: #1e293b !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.new-task-modal-header h3 i {
+    color: #3b82f6 !important;
+}
+
+.new-task-modal-close {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: #f1f5f9 !important;
+    border: none !important;
+    font-size: 16px !important;
+    cursor: pointer !important;
+    color: #64748b !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.new-task-modal-close:hover {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+.new-task-modal-body {
+    padding: 20px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+}
+
+.new-task-modal-footer {
+    padding: 16px 20px !important;
+    border-top: 1px solid #e2e8f0 !important;
+    background: #f8fafc !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+}
+
+.new-task-modal-footer .btn-primary {
+    background: #3b82f6 !important;
+    color: white !important;
+    padding: 8px 20px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    cursor: pointer !important;
+}
+
+.new-task-modal-footer .btn-primary:hover {
+    background: #2563eb !important;
+}
+
+.new-task-modal-footer .btn-secondary {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 8px 20px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+}
+
+.new-task-modal-footer .btn-secondary:hover {
+    background: #e2e8f0 !important;
+}

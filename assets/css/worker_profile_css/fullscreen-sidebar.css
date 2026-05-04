@@ -1,0 +1,472 @@
+/* fullscreen-sidebar.css */
+
+/* Ümumi tam ekran */
+html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ana container */
+.h-screen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header sabit */
+header {
+    flex-shrink: 0;
+}
+
+/* Ana content - qalan yeri tutur */
+.flex-1.min-h-0 {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Sidebar daralmış vəziyyət - SADƏCƏ İKONKALAR */
+.sidebar-collapsed {
+    width: 80px !important;
+}
+
+.sidebar-collapsed .sidebar-title {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-text {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding: 12px 0 !important;
+}
+
+.sidebar-collapsed .sidebar-link i {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+/* Mishka yaxınlaşanda sidebar böyüsün */
+#mainSidebar:hover {
+    width: 260px !important;
+    transition: width 0.3s ease;
+    z-index: 10;
+}
+
+#mainSidebar:hover .sidebar-title {
+    display: block;
+}
+
+#mainSidebar:hover .sidebar-text {
+    display: inline-block;
+}
+
+#mainSidebar:hover .sidebar-link {
+    justify-content: flex-start;
+    padding: 12px 16px !important;
+}
+
+/* Profil hissəsinin scrollu */
+#profileContent, #filesContent {
+    height: 100%;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+#profileContent::-webkit-scrollbar,
+#filesContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#profileContent::-webkit-scrollbar-track,
+#filesContent::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#profileContent::-webkit-scrollbar-thumb,
+#filesContent::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 10px;
+}
+
+/* Fayllarım bölməsi */
+#filesSection {
+    height: 100%;
+}
+
+/* Modal tam ekran */
+.companies-modal .max-w-6xl {
+    max-width: 95% !important;
+    width: 95% !important;
+    height: 90vh !important;
+}
+/* Sidebar scroll styling */
+#sidebarContent {
+    scrollbar-width: thin;
+    scrollbar-color: #7DB6FF #EAF3FF;
+}
+
+#sidebarContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebarContent::-webkit-scrollbar-track {
+    background: #EAF3FF;
+    border-radius: 10px;
+}
+
+#sidebarContent::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 10px;
+}
+
+#sidebarContent::-webkit-scrollbar-thumb:hover {
+    background: #6aa9ff;
+}
+
+/* fullscreen-sidebar.css */
+
+#taskManagerSection {
+    display: block;
+    height: calc(100vh - 70px);  /* -70px + 100vh = 100vh - 70px */
+    width: 100%;
+}
+
+/* Və ya daha specifik selector */
+section#taskManagerSection {
+    display: block;
+    height: calc(100vh - 70px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #mainContainer {
+        flex-direction: column;
+    }
+
+    #mainSidebar {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .sidebar-collapsed {
+        width: 100% !important;
+        height: 60px !important;
+        overflow: hidden;
+    }
+
+    #mainSidebar:hover {
+        width: 100% !important;
+        height: auto !important;
+    }
+    /* Sizin CSS-iniz - heç bir ID dəyişmir */
+        .sidebar-collapsed .sidebar-title,
+        .sidebar-collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar-collapsed .sidebar-link {
+            justify-content: center;
+            padding: 12px 0 !important;
+        }
+        #mainSidebar {
+            width: 260px;
+            transition: all 0.3s ease;
+        }
+        #mainSidebar.sidebar-collapsed {
+            width: 80px;
+        }
+        #mainSidebar:hover {
+            width: 260px !important;
+        }
+        #mainSidebar:hover .sidebar-title,
+        #mainSidebar:hover .sidebar-text {
+            display: block;
+        }
+        #mainSidebar:hover .sidebar-link {
+            justify-content: flex-start;
+            padding: 12px 16px !important;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        input[readonly] {
+            background-color: #f8fafc;
+            cursor: not-allowed;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(64, 129, 255, 0.2);
+        }
+        .welcome-text {
+            background: linear-gradient(135deg, #7DB6FF 0%, #4A90E2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        /* Şəkil yükləmə sahələri üçün */
+        #profileImageUpload, #companyImageUpload {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        #profileImageUpload img, #companyImageUpload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 1rem;
+        }
+}
+
+/* ===== OWNER SIDEBAR PROFILE CARD FIX ===== */
+
+:root {
+    --gf-sidebar-collapsed-width: 118px;
+    --gf-sidebar-expanded-width: 300px;
+    --gf-profile-card-height: 92px;
+}
+
+@media (min-width: 769px) {
+    /* Sidebar qısalanda artıq çox daralmır */
+    #mainSidebar,
+    #mainSidebar.sidebar-collapsed,
+    #mainSidebar:not(:hover) {
+        width: var(--gf-sidebar-collapsed-width) !important;
+        min-width: var(--gf-sidebar-collapsed-width) !important;
+        max-width: var(--gf-sidebar-collapsed-width) !important;
+        transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease !important;
+    }
+
+    /* Mouse üzərinə gələndə geniş vəziyyət */
+    #mainSidebar:hover {
+        width: var(--gf-sidebar-expanded-width) !important;
+        min-width: var(--gf-sidebar-expanded-width) !important;
+        max-width: var(--gf-sidebar-expanded-width) !important;
+        z-index: 20 !important;
+    }
+
+    /* Qısa vəziyyətdə daxili boşluq azalsın, amma avatar sıxılmasın */
+    #mainSidebar:not(:hover) #sidebarContent,
+    #mainSidebar.sidebar-collapsed:not(:hover) #sidebarContent {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Profil kartının hündürlüyü sabit qalsın */
+    #mainSidebar:not(:hover) #settingsMainBtn,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn {
+        width: 100% !important;
+        height: var(--gf-profile-card-height) !important;
+        min-height: var(--gf-profile-card-height) !important;
+        max-height: var(--gf-profile-card-height) !important;
+        padding: 0 !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 28px !important;
+        overflow: hidden !important;
+        transform: none !important;
+    }
+
+    #mainSidebar:not(:hover) #settingsMainBtn > div:first-child,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn > div:first-child {
+        width: 100% !important;
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+
+    /* Qısa vəziyyətdə yazılar və ox gizlənsin */
+    #mainSidebar:not(:hover) #settingsMainBtn .text-left,
+    #mainSidebar:not(:hover) #settingsArrow,
+    #mainSidebar:not(:hover) #settingsPanel,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn .text-left,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsArrow,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsPanel {
+        display: none !important;
+    }
+
+
+    /* GF44 dairəsi rounded kartın tam mərkəzində qalsın */
+    #mainSidebar:not(:hover) #settingsMainBtn,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn {
+        position: relative !important;
+        display: grid !important;
+        place-items: center !important;
+    }
+
+    #mainSidebar:not(:hover) #settingsMainBtn > div:first-child,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn > div:first-child {
+        position: absolute !important;
+        inset: 0 !important;
+        display: grid !important;
+        place-items: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #mainSidebar:not(:hover) #settingsMainBtn .h-10.w-10,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn .h-10.w-10 {
+        position: absolute !important;
+        left: 50% !important;
+        top: 50% !important;
+        width: 54px !important;
+        height: 54px !important;
+        min-width: 54px !important;
+        flex: 0 0 54px !important;
+        margin: 0 !important;
+        transform: translate(-50%, -50%) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+    }
+
+    /* Qısa vəziyyətdə menu yazıları gizli qalsın */
+    #mainSidebar:not(:hover) .sidebar-title,
+    #mainSidebar:not(:hover) .sidebar-text,
+    #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-title,
+    #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-text {
+        display: none !important;
+    }
+
+    #mainSidebar:not(:hover) .sidebar-link,
+    #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-link {
+        justify-content: center !important;
+        padding: 12px 0 !important;
+    }
+
+    #mainSidebar:not(:hover) .sidebar-link i,
+    #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-link i {
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+    }
+
+    /* Geniş vəziyyətdə profil kartı səliqəli qalsın */
+    #mainSidebar:hover #sidebarContent {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+        overflow-x: hidden !important;
+    }
+
+    #mainSidebar:hover #settingsMainBtn {
+        height: var(--gf-profile-card-height) !important;
+        min-height: var(--gf-profile-card-height) !important;
+        max-height: var(--gf-profile-card-height) !important;
+        padding: 12px 16px !important;
+        border-radius: 24px !important;
+        transform: none !important;
+    }
+
+    #mainSidebar:hover #settingsMainBtn > div:first-child {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    #mainSidebar:hover #settingsMainBtn .text-left {
+        display: block !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+
+    #mainSidebar:hover #companyNameDisplay,
+    #mainSidebar:hover #userNameDisplay {
+        display: block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 220px !important;
+        margin: 0 !important;
+    }
+
+    #mainSidebar:hover #settingsArrow {
+        display: inline-block !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* ===== TASK MANAGER AÇIQ OLANDA AĞ PARENT SƏHİFƏNİ TAM GİZLƏT ===== */
+
+body.task-manager-open main.task-manager-open {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    overflow: hidden !important;
+    border-radius: 24px !important;
+}
+
+/* Ağ profileContent artıq görünməsin və onun scroll-u çıxmasın */
+body.task-manager-open #profileContent.task-manager-open {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+    height: 100% !important;
+}
+
+/* Chrome/Edge/Safari parent scrollbar gizlənsin */
+body.task-manager-open #profileContent.task-manager-open::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* Task section bütün sahəni tutsun */
+body.task-manager-open #taskManagerSection {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+}
+
+/* Task HTML birbaşa inject olunursa, yuxarı logo/header boşluğu da task sahəsində qalsın */
+body.task-manager-open .tasks-header,
+body.task-manager-open .wave-nav-container,
+body.task-manager-open .table-card {
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Əsas bənövşəyi task sahəsi sağ/sol/yuxarı ağ hissəsiz otursun */
+body.task-manager-open .wave-nav-container {
+    width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 0 18px 18px !important;
+}
+
+/* Cədvəl də tam enə yayılsın */
+body.task-manager-open .table-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Yeganə scroll task managerin öz içində olsun */
+body.task-manager-open #taskManagerSection,
+body.task-manager-open #taskManagerSection > * {
+    box-sizing: border-box !important;
+}
+
+/* Əgər task içində ayrıca uzunluq yaranırsa, scroll yalnız task paneldə qalsın */
+body.task-manager-open #taskManagerSection {
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+}

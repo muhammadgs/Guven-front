@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <title>Qeydiyyatdan keç | Güvən Finans</title>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/cal-sans@1.0.1/public/web/cal-sans.css" rel="stylesheet" />
+
+
+    <script>
+        (function() {
+            const v = Date.now();
+            const cssFiles = [
+                'assets/css/style.css'
+            ];
+            cssFiles.forEach(file => {
+                document.write(`<link rel="stylesheet" href="${file}?v=${v}" />`);
+            });
+            console.log('✅ CSS faylları yükləndi. Versiya:', v);
+        })();
+    </script>
+
+
+    <!-- Bu səhifəyə xüsusi yeni CSS -->
+    <link rel="stylesheet" href="assets/css/register.css" />
+    <link rel="icon" type="image/png" href="assets/images/favicon.png">
+    <link rel="apple-touch-icon" href="assets/images/favicon.png">
+
+</head>
+
+<body class="page-register loader-active register-page">
+<!-- Loader (istəsən çıxara bilərsən, amma home ilə eyni qalsın deyə saxladım) -->
+<div id="gti-loader" role="status" aria-live="polite" aria-label="Loading">
+    <div class="loader-inner">
+        <span class="logo-layer logo-trace" aria-hidden="true"></span>
+        <span class="logo-layer logo-fill" aria-hidden="true"></span>
+    </div>
+</div>
+
+<div id="site-shell">
+    <a href="#main" class="skip-link">Skip to main content</a>
+
+    <!-- HEADER (ağ + shadow, scroll effekti deaktiv) -->
+    <header id="main-header" class="site-header header-scrolled no-scroll-effect">
+        <div class="topbar">
+            <div class="topbar-left">
+                <a href="mailto:info@guvenfinans.az" class="nav-link topbar-link">
+                    <i class="fas fa-envelope"></i> info@guvenfinans.az
+                </a>
+
+                <a id="header-phone-link" href="tel:+994557636993" class="nav-link topbar-link topbar-phone">
+                    <i class="fas fa-phone-alt"></i> +994 55 763 69 93
+                </a>
+            </div>
+
+            <div class="topbar-right">
+                <a href="#" class="social-icon" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="#" class="social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="#" class="social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" class="social-icon" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+            </div>
+        </div>
+
+        <hr id="header-divider" class="header-divider" />
+        <!-- Django-da main_nav boş idi — burada da əlavə nav yoxdur -->
+    </header>
+
+    <!-- MAIN -->
+    <main id="main" class="main">
+        <section class="register-section">
+            <div class="register-container">
+                <div class="register-intro">
+                    <h1 class="register-title">Qeydiyyatdan keç</h1>
+                    <p class="register-subtitle">Zəhmət olmasa qeydiyyat növünüzü seçin</p>
+                </div>
+
+                <div class="register-grid">
+                    <a href="register-owner.html" class="register-card">
+                        <div class="register-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <h2 class="register-card-title">Sahibkar</h2>
+                        <p class="register-card-text">
+                            Biznesinizi Güvən Finans platformasında idarə etmək üçün qeydiyyatdan keçin.
+                        </p>
+                    </a>
+
+                    <a href="register-worker.html" class="register-card">
+                        <div class="register-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h2 class="register-card-title">Əməkdaş</h2>
+                        <p class="register-card-text">
+                            Komandamıza qoşulmaq üçün profilinizi yaradın və imkanları kəşf edin.
+                        </p>
+                    </a>
+                </div>
+                <p class="auth-footer">
+                    Artıq hesabınız var?
+                    <a href="login.html" class="auth-link">Daxil olun</a>
+                </p>
+                <a class="auth-back" href="index.html">
+                    <i class="fa-solid fa-arrow-left"></i> Ana səhifəyə qayıt
+                </a>
+
+
+            </div>
+
+            <!-- Blur gradient blob -->
+            <div class="register-blob-wrap" aria-hidden="true">
+                <div class="register-blob"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER (home-dakı ilə eyni saxlayıram ki, sayt bütöv görünsün) -->
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="index.html" class="footer-brand">
+                        <img src="assets/images/logo.png" alt="Güvən Finans" class="footer-logo" />
+                        <h3 class="footer-brand-title">Güvən Finans</h3>
+                        <p class="footer-brand-subtitle">İnnovativ maliyyə həlləri</p>
+                    </a>
+
+                    <div class="footer-social">
+                        <a href="#" class="footer-social-btn" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                        <a href="#" class="footer-social-btn" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="footer-social-btn" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="footer-social-btn" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-title">Əlaqə</h3>
+                    <ul class="footer-list">
+                        <li><i class="fas fa-envelope"></i> <a href="mailto:info@guvenfinans.az">info@guvenfinans.az</a></li>
+                        <li><i class="fas fa-phone-alt"></i> <a href="tel:+994513210989">(+994) 51 321 0989</a></li>
+                        <li><i class="fas fa-map-marker-alt"></i> Əhməd Rəcəbli 33, Esra Plaza, B bloku, 4-cü mərtəbə Azərbaycan/Bakı</li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-title">Xidmətlərimiz</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html#xidmetler">Proqram təminatı xidməti</a></li>
+                        <li><a href="index.html#xidmetler">Mühasibatlıq xidməti</a></li>
+                        <li><a href="index.html#xidmetler">Hüquq xidməti</a></li>
+                        <li><a href="index.html#xidmetler">Vergi xidməti</a></li>
+                        <li><a href="index.html#xidmetler">İnsan resursları xidməti</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-col">
+                    <h3 class="footer-title">Səhifələr</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html#hero-section">Ana səhifə</a></li>
+                        <li><a href="index.html#konsultasiya">Konsultasiya</a></li>
+                        <li><a href="index.html#partnyorlar">Partnyorlarımız</a></li>
+                        <li><a href="index.html#biz-kimik">Haqqımızda</a></li>
+                        <li><a href="index.html#layiheler">Layihələr</a></li>
+                        <li><a href="index.html#xidmetler">Xidmətlər</a></li>
+                        <li><a href="index.html#niye-biz">Niyə biz?</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>Copyright &copy; 2023 Bütün Hüquqları Güvən Finans tərəfindən qorunur.</p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<script>
+        (function() {
+            const v = Date.now();
+
+            const jsFiles = [
+                'assets/js/register.js',
+
+            ];
+
+            jsFiles.forEach(file => {
+                document.write(`<script src="${file}?v=${v}"><\/script>`);
+            });
+
+            console.log('✅ JS faylları yükləndi. Versiya:', v);
+        })();
+    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const loader = document.getElementById('gti-loader');
+        const siteShell = document.getElementById('site-shell');
+        const body = document.body;
+        const MIN_DURATION = 850;
+        const startTime = performance.now();
+
+        const navigationEntry = performance.getEntriesByType('navigation')[0];
+        const legacyNavType = performance.navigation?.type === 1 ? 'reload' : 'navigate';
+        const navigationType = navigationEntry?.type || legacyNavType;
+        const loaderAlreadyShown = sessionStorage.getItem('gtiLoaderShown') === '1';
+        const shouldShowLoader = navigationType === 'reload' || !loaderAlreadyShown;
+
+        const revealSite = () => {
+            if (loader) {
+                loader.classList.add('fade-out');
+                setTimeout(() => loader.remove(), 360);
+            }
+            body.classList.add('loaded');
+            body.classList.remove('loader-active');
+            if (siteShell) siteShell.style.pointerEvents = 'auto';
+        };
+
+        if (shouldShowLoader) {
+            body.classList.add('loader-active');
+            sessionStorage.setItem('gtiLoaderShown', '1');
+
+            const elapsed = () => performance.now() - startTime;
+            const remaining = Math.max(0, MIN_DURATION - elapsed());
+            setTimeout(revealSite, remaining);
+        } else {
+            if (loader) loader.remove();
+            body.classList.add('loaded');
+            body.classList.remove('loader-active');
+            if (siteShell) siteShell.style.pointerEvents = 'auto';
+        }
+
+        // Telefon linki təsdiqi
+        const phoneLink = document.getElementById('header-phone-link');
+        if (phoneLink) {
+            phoneLink.addEventListener('click', (e) => {
+                if (!confirm('Hörmətli istifadəçi, bu nömrəyə zəng etmək istəyirsiniz?')) {
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!--
+=============================================================
+  admin-panel.html-ə əlavə ediləcək ÜÇÜ DƏYİŞİKLİK
+=============================================================
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DƏYİŞİKLİK 1 — Sol menyuya "Fayl Meneceri" düyməsi əlavə et
+  Yerləşdirin: <ul class="sidebar-menu"> içindəki digər <li>-lərdən sonra
+  (məsələn, logs menyusundan əvvəl)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+<!-- ▼ ƏLAVƏ EDİN: Sol menyuya bu <li>-ni əlavə edin ▼ -->
+<li class="menu-item" data-page="files">
+    <i class="fas fa-folder-open"></i>
+    <span>Fayl Meneceri</span>
+</li>
+<!-- ▲ SON ▲ -->
+
+
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DƏYİŞİKLİK 2 — Sağ panelə (main content) filesPage div-ini əlavə et
+  Yerləşdirin: <main class="admin-content"> içindəki
+  digər .page-content div-lərindən birinin yanına (sonuna)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+<!-- ▼ ƏLAVƏ EDİN: Bütün .page-content div-lərindən SONRA ▼ -->
+<div class="page-content hidden" id="filesPage">
+    <!-- Fayl Meneceri buraya yüklənəcək (filemanager.js tərəfindən) -->
+</div>
+<!-- ▲ SON ▲ -->
+
+
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DƏYİŞİKLİK 3 — filemanager.js skriptini qoşun
+  Yerləşdirin: </body> bağlanmadan əvvəl, digər <script>-lərdən SONRA
+  (core.js-dən SONRA olmalıdır)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+
+<!-- ▼ ƏLAVƏ EDİN: Digər <script>-lərdən SONRA ▼ -->
+<script src="assets/js/admin_js/filemanager.js"></script>
+<!-- ▲ SON ▲ -->
+
+
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  DƏYİŞİKLİK 4 — core.js-in pageMappings obyektinə əlavə
+  core.js faylında showPage() funksiyasının içindəki
+  pageMappings obyektinə bu sətri əlavə edin:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    const pageMappings = {
+        'dashboard': 'dashboardPage',
+        'pending': 'pendingPage',
+        'all-users': 'allUsersPage',
+        'companies': 'companiesPage',
+        'employees': 'employeesPage',
+        'reports': 'reportsPage',
+        'settings': 'settingsPage',
+        'content-services': 'contentServicesPage',
+        'content-partners': 'contentPartnersPage',
+        'content-projects': 'contentProjectPage',
+        'logs': 'logsPage',
+        'files': 'filesPage'   // ← BU SƏTRİ ƏLAVƏ EDİN
+    };
+
+  VƏ switch(pageName) blokuna bu case-i əlavə edin:
+
+        case 'files':
+            // filemanager.js özü idarə edir, burada heç nə yazmaq lazım deyil
+            break;
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  XÜLASƏ — cəmi 4 dəyişiklik:
+  1. sidebar-a <li> əlavə et
+  2. main-ə #filesPage <div> əlavə et
+  3. </body>-dən əvvəl filemanager.js <script>-i əlavə et
+  4. core.js-ə 'files':'filesPage' əlavə et
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->

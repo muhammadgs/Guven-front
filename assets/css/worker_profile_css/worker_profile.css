@@ -1,0 +1,594 @@
+/* Profil səhifəsi üçün əlavə CSS */
+
+/* Şəkil yükləmə sahəsi üçün */
+.image-upload-area {
+    transition: all 0.3s ease;
+}
+
+.image-upload-area:hover {
+    border-color: #7DB6FF;
+    background-color: #EAF3FF10;
+}
+
+/* Status ikonları */
+.status-icon {
+    transition: transform 0.2s ease;
+}
+
+.status-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Tənzimləmə kartları */
+.settings-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.settings-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(64, 129, 255, 0.18);
+}
+
+/* Form elementləri üçün */
+.form-input:focus {
+    box-shadow: 0 0 0 3px rgba(125, 182, 255, 0.1);
+}
+
+/* Şifrə göz ikonası */
+.password-toggle {
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #7DB6FF;
+}
+
+/* Modal animasiyası */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-enter {
+    animation: modalFadeIn 0.3s ease;
+}
+
+/* Loading spinner */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Notification */
+.notification {
+    animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+/* File list items */
+.file-item {
+    transition: background-color 0.2s ease;
+}
+
+.file-item:hover {
+    background-color: #f8fafc;
+}
+
+/* Badge styles */
+.badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-success {
+    background-color: #10B98120;
+    color: #10B981;
+}
+
+.badge-warning {
+    background-color: #F59E0B20;
+    color: #F59E0B;
+}
+
+.badge-error {
+    background-color: #EF444420;
+    color: #EF4444;
+}
+
+/* Responsive dizayn üçün */
+@media (max-width: 768px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+}
+
+/* Fokus zamanı */
+:focus-visible {
+    outline: 2px solid #7DB6FF;
+    outline-offset: 2px;
+}
+
+/* Scrollbar dizaynı */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+}
+
+.status-verified {
+    background-color: #10B98120;
+    color: #10B981;
+}
+
+.status-pending {
+    background-color: #F59E0B20;
+    color: #F59E0B;
+}
+
+.status-unverified {
+    background-color: #EF444420;
+    color: #EF4444;
+}
+
+/* Action buttons */
+.action-btn {
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Profile Page Custom Styles */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #6aa9ff;
+}
+
+/* Image upload hover effects */
+#profileImageUpload:hover,
+#companyImageUpload:hover {
+    border-color: #7DB6FF !important;
+    background-color: rgba(125, 182, 255, 0.05) !important;
+}
+
+/* Form input focus states */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(125, 182, 255, 0.2) !important;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(125, 182, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #7DB6FF;
+    animation: spin 1s ease-in-out infinite;
+}
+
+/* Notification animation */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.notification {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Button hover effects */
+button:hover {
+    transform: translateY(-1px);
+    transition: transform 0.2s ease;
+}
+
+/* Card hover effects */
+.hover-card:hover {
+    transform: translateY(-4px);
+    transition: all 0.3s ease;
+    box-shadow: 0 20px 40px rgba(64, 129, 255, 0.2) !important;
+}
+
+/* Error states */
+.border-error-red {
+    border-color: #EF4444 !important;
+}
+
+.text-error-red {
+    color: #EF4444 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .mobile-stack {
+        flex-direction: column;
+    }
+
+    .mobile-full {
+        width: 100%;
+    }
+
+    .mobile-text-center {
+        text-align: center;
+    }
+}
+
+.companies-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.company-row:hover {
+    background-color: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(125, 182, 255, 0.1);
+}
+
+.action-btn {
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+}
+
+.status-active {
+    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+}
+
+.status-inactive {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+}
+/* fullscreen-sidebar.css */
+
+/* Ümumi tam ekran */
+html, body {
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ana container */
+.h-screen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header sabit */
+header {
+    flex-shrink: 0;
+}
+
+/* Ana content - qalan yeri tutur */
+.flex-1.min-h-0 {
+    flex: 1;
+    min-height: 0;
+}
+
+/* Sidebar daralmış vəziyyət - SADƏCƏ İKONKALAR */
+.sidebar-collapsed {
+    width: 80px !important;
+}
+
+.sidebar-collapsed .sidebar-title {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-text {
+    display: none;
+}
+
+.sidebar-collapsed .sidebar-link {
+    justify-content: center;
+    padding: 12px 0 !important;
+}
+
+.sidebar-collapsed .sidebar-link i {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+/* Mishka yaxınlaşanda sidebar böyüsün */
+#mainSidebar:hover {
+    width: 260px !important;
+    transition: width 0.3s ease;
+    z-index: 10;
+}
+
+#mainSidebar:hover .sidebar-title {
+    display: block;
+}
+
+#mainSidebar:hover .sidebar-text {
+    display: inline-block;
+}
+
+#mainSidebar:hover .sidebar-link {
+    justify-content: flex-start;
+    padding: 12px 16px !important;
+}
+
+/* Profil hissəsinin scrollu */
+#profileContent, #filesContent {
+    height: 100%;
+    overflow-y: auto;
+    padding: 2rem;
+}
+
+#profileContent::-webkit-scrollbar,
+#filesContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#profileContent::-webkit-scrollbar-track,
+#filesContent::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#profileContent::-webkit-scrollbar-thumb,
+#filesContent::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 10px;
+}
+
+/* Fayllarım bölməsi */
+#filesSection {
+    height: 100%;
+}
+
+/* Modal tam ekran */
+.companies-modal .max-w-6xl {
+    max-width: 95% !important;
+    width: 95% !important;
+    height: 90vh !important;
+}
+/* Sidebar scroll styling */
+#sidebarContent {
+    scrollbar-width: thin;
+    scrollbar-color: #7DB6FF #EAF3FF;
+}
+
+#sidebarContent::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebarContent::-webkit-scrollbar-track {
+    background: #EAF3FF;
+    border-radius: 10px;
+}
+
+#sidebarContent::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 10px;
+}
+
+#sidebarContent::-webkit-scrollbar-thumb:hover {
+    background: #6aa9ff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #mainContainer {
+        flex-direction: column;
+    }
+
+    #mainSidebar {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .sidebar-collapsed {
+        width: 100% !important;
+        height: 60px !important;
+        overflow: hidden;
+    }
+
+    #mainSidebar:hover {
+        width: 100% !important;
+        height: auto !important;
+    }
+    /* Sizin CSS-iniz - heç bir ID dəyişmir */
+        .sidebar-collapsed .sidebar-title,
+        .sidebar-collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar-collapsed .sidebar-link {
+            justify-content: center;
+            padding: 12px 0 !important;
+        }
+        #mainSidebar {
+            width: 260px;
+            transition: all 0.3s ease;
+        }
+        #mainSidebar.sidebar-collapsed {
+            width: 80px;
+        }
+        #mainSidebar:hover {
+            width: 260px !important;
+        }
+        #mainSidebar:hover .sidebar-title,
+        #mainSidebar:hover .sidebar-text {
+            display: block;
+        }
+        #mainSidebar:hover .sidebar-link {
+            justify-content: flex-start;
+            padding: 12px 16px !important;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        input[readonly] {
+            background-color: #f8fafc;
+            cursor: not-allowed;
+        }
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(64, 129, 255, 0.2);
+        }
+        .welcome-text {
+            background: linear-gradient(135deg, #7DB6FF 0%, #4A90E2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        /* Şəkil yükləmə sahələri üçün */
+        #profileImageUpload, #companyImageUpload {
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        #profileImageUpload img, #companyImageUpload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 1rem;
+        }
+}
+
