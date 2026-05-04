@@ -47,7 +47,7 @@ body {
 }
 
 /* Daxili / Şirkət / Partnyor / Arxiv cədvəl kartları ekranı doldursun */
-body .table-card:not(.new-task-section) {
+body .table-card:not(.new-task-section):not(.report-section) {
     height: calc(100vh - 112px) !important;
     min-height: calc(100vh - 112px) !important;
     margin-top: 0 !important;
@@ -57,12 +57,12 @@ body .table-card:not(.new-task-section) {
 }
 
 /* Header sabit qalsın, cədvəl hissəsi böyüsün */
-body .table-card:not(.new-task-section) .table-header {
+body .table-card:not(.new-task-section):not(.report-section) .table-header {
     flex: 0 0 auto;
 }
 
 /* Əsas fix: 500px limiti silinir, ekranın qalan hissəsini tutur */
-body .table-card:not(.new-task-section) .table-wrapper {
+body .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
     flex: 1 1 auto !important;
     height: auto !important;
     max-height: none !important;
@@ -71,12 +71,12 @@ body .table-card:not(.new-task-section) .table-wrapper {
 }
 
 /* Table yuxarıdan aşağıya qədər normal yayılsın */
-body .table-card:not(.new-task-section) .data-table {
+body .table-card:not(.new-task-section):not(.report-section) .data-table {
     width: 100%;
 }
 
 /* Sticky header scroll içində düzgün işləsin */
-body .table-card:not(.new-task-section) .data-table thead {
+body .table-card:not(.new-task-section):not(.report-section) .data-table thead {
     position: sticky;
     top: 0;
     z-index: 20;
@@ -86,39 +86,27 @@ body .table-card:not(.new-task-section) .data-table thead {
 :root { --tm-section-gap: 112px; }
 body { overflow: hidden; }
 body .table-card { min-height: 0; }
-body .table-card:not(.new-task-section) {
+body .table-card:not(.new-task-section):not(.report-section) {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - var(--tm-section-gap));
   height: calc(100vh - var(--tm-section-gap));
   overflow: hidden;
 }
-body .table-card:not(.new-task-section) .table-header,
-body .table-card:not(.new-task-section) .table-meta,
-body .table-card:not(.new-task-section) .table-footer { flex: 0 0 auto; }
-body .table-card:not(.new-task-section) .table-wrapper {
+body .table-card:not(.new-task-section):not(.report-section) .table-header,
+body .table-card:not(.new-task-section):not(.report-section) .table-meta,
+body .table-card:not(.new-task-section):not(.report-section) .table-footer { flex: 0 0 auto; }
+body .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   max-height: none;
 }
-body .table-card:not(.new-task-section) .data-table,
-body .table-card:not(.new-task-section) .excel-table { width: max-content; min-width: 100%; }
-body .table-card:not(.new-task-section) .data-table thead,
-body .table-card:not(.new-task-section) .excel-table thead { position: sticky; top: 0; z-index: 10; }
+body .table-card:not(.new-task-section):not(.report-section) .data-table,
+body .table-card:not(.new-task-section):not(.report-section) .excel-table { width: max-content; min-width: 100%; }
+body .table-card:not(.new-task-section):not(.report-section) .data-table thead,
+body .table-card:not(.new-task-section):not(.report-section) .excel-table thead { position: sticky; top: 0; z-index: 10; }
 
-#reportTableSection,
-.table-card.report-section {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - var(--tm-section-gap));
-  height: calc(100vh - var(--tm-section-gap));
-  overflow: hidden;
-}
-#reportTableSection .report-section-content,
-#reportTableSection .report-content,
-#reportTableSection .report-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
-#reportTableSection .report-table-wrapper { overflow: auto; min-height: 0; }
 
 #newTaskCreateSection {
   max-height: calc(100vh - var(--tm-section-gap));
@@ -127,4 +115,32 @@ body .table-card:not(.new-task-section) .excel-table thead { position: sticky; t
 
 @media (max-width: 768px) {
   :root { --tm-section-gap: 132px; }
+}
+
+/* ===== Report section scroll fix (Hesabat only) ===== */
+#reportTableSection.table-card.report-section {
+  display: flex !important;
+  flex-direction: column;
+  height: calc(100vh - var(--tm-section-gap));
+  max-height: calc(100vh - var(--tm-section-gap));
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+#reportTableSection.table-card.report-section > * {
+  flex: 0 0 auto;
+}
+
+#reportTableSection.report-section .report-table-wrapper,
+#reportTableSection.report-section .tab-content,
+#reportTableSection.report-section .tab-content.active {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#reportTableSection.report-section .report-data-table {
+  width: max-content;
+  min-width: 100%;
 }
