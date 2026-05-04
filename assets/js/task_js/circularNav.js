@@ -53,6 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         section.style.display = isTaskTableCard ? 'flex' : 'block';
         section.classList.add('active-section');
+
+        if (section.id === 'reportTableSection') {
+            section.scrollTop = 0;
+        }
     }
 
     // ===== BÖLMƏ GÖSTƏR =====

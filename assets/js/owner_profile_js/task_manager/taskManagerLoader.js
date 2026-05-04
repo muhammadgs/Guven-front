@@ -157,6 +157,10 @@ const TaskManagerLoader = {
         const isTaskTableCard = section.classList.contains('table-card') && !section.classList.contains('new-task-section');
         section.style.display = isTaskTableCard ? 'flex' : 'block';
         section.classList.add('active-section');
+
+        if (section.id === 'reportTableSection') {
+            section.scrollTop = 0;
+        }
     },
 
     showTargetSection: function(target, sections) {
