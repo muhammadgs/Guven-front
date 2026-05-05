@@ -85,6 +85,11 @@ const TaskManagerLoader = {
     enhanceNavigation: function() {
         console.log('🎯 TaskManagerLoader: Naviqasiya gücləndirilir...');
 
+        if (window.__taskNavManagedByCircular) {
+            console.log('ℹ️ Circular nav state manager aktivdir, əlavə handler bağlanmadı');
+            return;
+        }
+
         const waveNav = document.getElementById('waveNav');
         const navItems = document.querySelectorAll('.wave-item');
         const sections = {

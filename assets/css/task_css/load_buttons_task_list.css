@@ -148,11 +148,10 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
   display: none !important;
 }
 
-.table-card.task-section-active:not(.new-task-section) {
+.task-manager-section-active .task-section-active.table-card {
   display: flex;
 }
 
-.table-card[style*="display: none"],
-#reportTableSection[style*="display: none"] {
-  display: none !important;
+.task-manager-section-active .task-section-active:not(.table-card) {
+  display: block;
 }

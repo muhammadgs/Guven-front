@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Bölmələr
     const sections = {
-        new: document.getElementById('newTableSection'),
+        new: document.getElementById('newTaskCreateSection'),
         active: document.getElementById('activeTableSection'),
         external: document.getElementById('externalTableSection'),
         partner: document.getElementById('partnerTableSection'),
@@ -23,47 +23,61 @@ document.addEventListener('DOMContentLoaded', function() {
         archive: document.getElementById('archiveTableSection')
     };
 
-    const newTaskSection = document.getElementById('newTaskCreateSection');
-
+    
     // Dəyişənlər
     let activeItem = null;
     let currentSection = 'new';
     let lastClickedItem = null; // ƏLAVƏ EDİLDİ - Son kliklənən item-i izləmək üçün
 
     // ===== BÜTÜN BÖLMƏLƏRİ GİZLƏ =====
-    function hideAllSections() {
-        Object.values(sections).forEach(section => {
-            if (section) {
-                section.style.display = 'none';
-                section.classList.remove('active-section');
-            }
-        });
-        if (newTaskSection) {
-            newTaskSection.style.display = 'none';
-            newTaskSection.classList.remove('active-section');
-        }
+    function getTaskManagerRoot() {
+        return document.querySelector('.task-manager-container') ||
+            document.getElementById('taskManagerSection') ||
+            document.body;
     }
 
-    function showTaskManagerSection(section) {
+    function setTaskManagerInitialState() {
+        const root = getTaskManagerRoot();
+        root.classList.add('task-manager-initial');
+        root.classList.remove('task-manager-section-active');
+        hideAllSections();
+    }
+
+    function setTaskManagerActiveState() {
+        const root = getTaskManagerRoot();
+        root.classList.remove('task-manager-initial');
+        root.classList.add('task-manager-section-active');
+    }
+
+    function hideSection(section) {
+        if (!section) return;
+        section.classList.remove('task-section-active', 'active-section', 'fade-in');
+        section.classList.add('task-section-hidden');
+        section.style.display = 'none';
+    }
+
+    function hideAllSections() {
+        Object.values(sections).forEach(hideSection);
+    }
+
+    function showTaskManagerSection(section, target) {
         if (!section) return;
 
-        const isTaskTableCard =
-            section.classList.contains('table-card') &&
-            !section.classList.contains('new-task-section');
-
+        const isTaskTableCard = section.classList.contains('table-card');
+        section.classList.remove('task-section-hidden');
+        section.classList.add('task-section-active', 'active-section', 'fade-in');
         section.style.display = isTaskTableCard ? 'flex' : 'block';
-        section.classList.add('active-section');
 
-        if (section.id === 'reportTableSection') {
+        if (target === 'report') {
             section.scrollTop = 0;
         }
     }
 
     // ===== BÖLMƏ GÖSTƏR =====
     function showSection(name) {
+        setTaskManagerActiveState();
         hideAllSections();
-        if(name === 'new' && newTaskSection) showTaskManagerSection(newTaskSection);
-        else if(sections[name]) showTaskManagerSection(sections[name]);
+        showTaskManagerSection(sections[name], name);
     }
 
     // ===== SEÇİMİ TƏMİZLƏ =====
@@ -165,7 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ===== İLKİN YÜKLƏMƏ =====
-    hideAllSections();
+    setTaskManagerInitialState();
+    window.__taskNavManagedByCircular = true;
 
 
     // İlk açılışda heç bir item seçili olmasın.
