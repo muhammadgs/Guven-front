@@ -160,6 +160,7 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 /* ===== Task Manager active table sections: fill remaining viewport cleanly ===== */
 :root {
   --task-nav-height: 96px;
+  --task-section-top-gap: 14px;
   --task-bottom-gap: 12px;
 }
 
@@ -177,9 +178,10 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 .task-manager-section-active .task-section-active#externalTableSection,
 .task-manager-section-active .task-section-active#partnerTableSection,
 .task-manager-section-active .task-section-active#archiveTableSection {
-  height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
-  max-height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
-  min-height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
+  margin-top: var(--task-section-top-gap) !important;
+  height: calc(100vh - var(--task-nav-height) - var(--task-section-top-gap) - var(--task-bottom-gap)) !important;
+  max-height: calc(100vh - var(--task-nav-height) - var(--task-section-top-gap) - var(--task-bottom-gap)) !important;
+  min-height: calc(100vh - var(--task-nav-height) - var(--task-section-top-gap) - var(--task-bottom-gap)) !important;
   margin-bottom: var(--task-bottom-gap) !important;
 }
 
