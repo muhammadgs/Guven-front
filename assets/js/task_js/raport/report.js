@@ -149,9 +149,12 @@ class ReportManager {
             btn.addEventListener('click', (e) => this.switchTab(e.target));
         });
 
-        document.querySelectorAll('.expand-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.toggleExpand(e.target));
-        });
+        const reportSection = document.getElementById('reportTableSection');
+        if (reportSection) {
+            reportSection.querySelectorAll('.expand-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => this.toggleExpand(e.target));
+            });
+        }
 
         // ========== HAMISINA BAX DÜYMƏLƏRİ ==========
         const viewAllCompanies = document.getElementById('viewAllCompanies');
@@ -2082,6 +2085,11 @@ class ReportManager {
     }
 
     toggleExpand(btn) {
+        const reportSection = document.getElementById('reportTableSection');
+        if (reportSection && reportSection.contains(btn)) {
+            return;
+        }
+
         const targetId = btn.dataset.target;
         const content = document.getElementById(targetId);
 
