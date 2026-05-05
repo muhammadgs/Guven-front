@@ -119,7 +119,6 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 
 /* ===== Report section scroll fix (Hesabat only) ===== */
 #reportTableSection.table-card.report-section {
-  display: flex !important;
   flex-direction: column;
   height: calc(100vh - var(--tm-section-gap));
   max-height: calc(100vh - var(--tm-section-gap));
@@ -143,4 +142,17 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 #reportTableSection.report-section .report-data-table {
   width: max-content;
   min-width: 100%;
+}
+
+.task-section-hidden {
+  display: none !important;
+}
+
+.table-card.task-section-active:not(.new-task-section) {
+  display: flex;
+}
+
+.table-card[style*="display: none"],
+#reportTableSection[style*="display: none"] {
+  display: none !important;
 }
