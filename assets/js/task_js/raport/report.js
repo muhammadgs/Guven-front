@@ -156,52 +156,6 @@ class ReportManager {
             });
         }
 
-        // ========== HAMISINA BAX DÜYMƏLƏRİ ==========
-        const viewAllCompanies = document.getElementById('viewAllCompanies');
-        if (viewAllCompanies) {
-            viewAllCompanies.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAllCompanies();
-            });
-        }
-
-        const viewAllDepartments = document.getElementById('viewAllDepartments');
-        if (viewAllDepartments) {
-            viewAllDepartments.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAllDepartments();
-            });
-        }
-
-        const viewAllEmployees = document.getElementById('viewAllEmployees');
-        if (viewAllEmployees) {
-            viewAllEmployees.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAllEmployees();
-            });
-        }
-
-        const viewAllTaskTypes = document.getElementById('viewAllTaskTypes');
-        if (viewAllTaskTypes) {
-            viewAllTaskTypes.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAllTaskTypes();
-            });
-        }
-
-        const viewAllPartners = document.getElementById('viewAllPartners');
-        if (viewAllPartners) {
-            viewAllPartners.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                this.showAllPartners();
-            });
-        }
-
         if (this.elements.closeModalBtn) {
             this.elements.closeModalBtn.addEventListener('click', () => {
                 this.closeModal();
