@@ -838,9 +838,20 @@ class ReportManager {
     }
 
     // ========== STATİSTİKALAR ==========
+    clearSearchResultCount(listElement) {
+        if (!listElement || !listElement.parentNode) return;
+        const oldCount = listElement.parentNode.querySelector('.search-result-count');
+        if (oldCount) oldCount.remove();
+    }
+
+    resetStatsListScroll(listElement) {
+        if (!listElement) return;
+        listElement.scrollTop = 0;
+    }
 
     updateCompanyStats() {
         if (!this.elements.companyStats) return;
+        this.clearSearchResultCount(this.elements.companyStats);
 
         const companies = this.data.companies || [];
         const tasks = this.data.tasks || [];
@@ -931,6 +942,7 @@ class ReportManager {
         } else {
             this.elements.companyStats.innerHTML = html;
         }
+        this.resetStatsListScroll(this.elements.companyStats);
 
         // YENİ: Nəticə sayını göstər (əgər filter varsa)
         if (searchTerm && this.elements.companyStats) {
@@ -948,6 +960,7 @@ class ReportManager {
 
     updateDepartmentStats() {
         if (!this.elements.departmentStats) return;
+        this.clearSearchResultCount(this.elements.departmentStats);
 
         const departments = this.data.departments || [];
         const tasks = this.data.tasks || [];
@@ -1014,6 +1027,7 @@ class ReportManager {
         } else {
             this.elements.departmentStats.innerHTML = html;
         }
+        this.resetStatsListScroll(this.elements.departmentStats);
 
         // Nəticə sayını göstər
         if (searchTerm) {
@@ -1030,6 +1044,7 @@ class ReportManager {
 
     updateEmployeeStats() {
         if (!this.elements.employeeStats) return;
+        this.clearSearchResultCount(this.elements.employeeStats);
 
         const employees = this.data.employees || [];
         const tasks = this.data.tasks || [];
@@ -1112,6 +1127,7 @@ class ReportManager {
         } else {
             this.elements.employeeStats.innerHTML = html;
         }
+        this.resetStatsListScroll(this.elements.employeeStats);
 
         // Nəticə sayını göstər
         if (searchTerm) {
@@ -1128,6 +1144,7 @@ class ReportManager {
 
     updateTaskTypeStats() {
         if (!this.elements.taskTypeStats) return;
+        this.clearSearchResultCount(this.elements.taskTypeStats);
 
         const taskTypes = this.data.taskTypes || [];
         const tasks = this.data.tasks || [];
@@ -1189,6 +1206,7 @@ class ReportManager {
         } else {
             this.elements.taskTypeStats.innerHTML = html;
         }
+        this.resetStatsListScroll(this.elements.taskTypeStats);
 
         // Nəticə sayını göstər
         if (searchTerm) {
@@ -1205,6 +1223,7 @@ class ReportManager {
 
     updatePartnerStats() {
         if (!this.elements.partnerStats) return;
+        this.clearSearchResultCount(this.elements.partnerStats);
 
         const partners = this.data.partners || [];
         const partnerTasks = this.data.partnerTasks || [];
@@ -1272,6 +1291,7 @@ class ReportManager {
         } else {
             this.elements.partnerStats.innerHTML = html;
         }
+        this.resetStatsListScroll(this.elements.partnerStats);
 
         // Nəticə sayını göstər
         if (searchTerm) {

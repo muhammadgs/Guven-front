@@ -457,10 +457,47 @@
 .company-stats-list,
 .department-stats-list,
 .employee-stats-list,
-.tasktype-stats-list {
+.tasktype-stats-list,
+.partner-stats-list {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+#reportTableSection {
+    --report-stat-visible-items: 3;
+    --report-stat-item-gap: 15px;
+    --report-stat-item-height: 77px;
+}
+
+#reportTableSection .report-stat-list-scroll {
+    max-height: calc(
+        (var(--report-stat-item-height) * var(--report-stat-visible-items)) +
+        (var(--report-stat-item-gap) * (var(--report-stat-visible-items) - 1))
+    );
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 6px;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+#reportTableSection .report-stat-list-scroll > * {
+    flex: 0 0 auto;
+    min-height: var(--report-stat-item-height);
+}
+
+#reportTableSection .report-stat-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+#reportTableSection .report-stat-list-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.5);
+}
+
+#reportTableSection .report-stat-list-scroll::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .stat-item {
