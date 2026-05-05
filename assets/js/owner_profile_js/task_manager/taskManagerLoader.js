@@ -137,26 +137,36 @@ const TaskManagerLoader = {
             });
         }
 
-        // İlk item-i seç
-        setTimeout(() => {
-            const activeItem = document.querySelector('.wave-item[data-target="active"]');
-            if (activeItem) {
-                activeItem.classList.add('selected', 'active-item');
-                TaskManagerLoader.adjustPanelState('active');
-            }
-        }, 100);
+        // İlkin ekran: heç bir bölmə göstərilməsin, yalnız mərkəzi 6-li menyu qalsın
+        this.hideAllTaskManagerSections(sections);
 
         console.log('✅ Naviqasiya gücləndirildi');
     },
 
 
 
+    hideTaskManagerSection: function(section) {
+        if (!section) return;
+
+        section.classList.remove('task-section-active', 'active-section', 'fade-in');
+        section.classList.add('task-section-hidden');
+        section.style.display = 'none';
+    },
+
+    hideAllTaskManagerSections: function(sections) {
+        Object.values(sections).forEach(section => this.hideTaskManagerSection(section));
+
+        const newTaskSection = document.getElementById('newTaskCreateSection');
+        this.hideTaskManagerSection(newTaskSection);
+    },
+
     showTaskManagerSection: function(section) {
         if (!section) return;
 
         const isTaskTableCard = section.classList.contains('table-card') && !section.classList.contains('new-task-section');
+        section.classList.remove('task-section-hidden');
+        section.classList.add('task-section-active', 'active-section');
         section.style.display = isTaskTableCard ? 'flex' : 'block';
-        section.classList.add('active-section');
 
         if (section.id === 'reportTableSection') {
             section.scrollTop = 0;
@@ -164,19 +174,9 @@ const TaskManagerLoader = {
     },
 
     showTargetSection: function(target, sections) {
-        Object.values(sections).forEach(section => {
-            if (section) {
-                section.style.display = 'none';
-                section.classList.remove('active-section');
-            }
-        });
+        this.hideAllTaskManagerSections(sections);
 
         const newTaskSection = document.getElementById('newTaskCreateSection');
-        if (newTaskSection) {
-            newTaskSection.style.display = 'none';
-            newTaskSection.classList.remove('active-section');
-        }
-
         if (target === 'new') {
             this.showTaskManagerSection(newTaskSection);
             return;
