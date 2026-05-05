@@ -155,3 +155,59 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 .task-manager-section-active .task-section-active:not(.table-card) {
   display: block;
 }
+
+
+/* ===== Task Manager active table sections: fill remaining viewport cleanly ===== */
+:root {
+  --task-nav-height: 96px;
+  --task-bottom-gap: 12px;
+}
+
+#activeTableSection,
+#externalTableSection,
+#partnerTableSection,
+#archiveTableSection {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection,
+.task-manager-section-active .task-section-active#externalTableSection,
+.task-manager-section-active .task-section-active#partnerTableSection,
+.task-manager-section-active .task-section-active#archiveTableSection {
+  height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
+  max-height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
+  min-height: calc(100vh - var(--task-nav-height) - var(--task-bottom-gap)) !important;
+  margin-bottom: var(--task-bottom-gap) !important;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#externalTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#partnerTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#archiveTableSection .table-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .table-header,
+.task-manager-section-active .task-section-active#externalTableSection .table-header,
+.task-manager-section-active .task-section-active#partnerTableSection .table-header,
+.task-manager-section-active .task-section-active#archiveTableSection .table-header,
+.task-manager-section-active .task-section-active#archiveTableSection .archive-tabs,
+.task-manager-section-active .task-section-active#activeTableSection .filter-bar,
+.task-manager-section-active .task-section-active#externalTableSection .filter-bar,
+.task-manager-section-active .task-section-active#partnerTableSection .filter-bar {
+  flex: 0 0 auto;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .data-table,
+.task-manager-section-active .task-section-active#externalTableSection .data-table,
+.task-manager-section-active .task-section-active#partnerTableSection .excel-table,
+.task-manager-section-active .task-section-active#archiveTableSection .data-table,
+.task-manager-section-active .task-section-active#archiveTableSection .excel-table {
+  width: max-content;
+  min-width: 100%;
+}
