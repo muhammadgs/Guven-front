@@ -25,10 +25,18 @@ class StatsManager {
             pending: general.pending_tasks || 0,
             in_progress: general.in_progress_tasks || 0,
             overdue: general.overdue_tasks || 0,
+            // Placeholder-ready fields for future report API metrics.
+            refused: general.refused_tasks || 0,
+            cancelled: general.cancelled_tasks || 0,
+            approvalPending: general.approval_pending_tasks || 0,
             totalTrend: trends.total_tasks || 0,
             completedTrend: trends.completed_tasks || 0,
             pendingTrend: trends.pending_tasks || 0,
             overdueTrend: trends.overdue_tasks || 0,
+            refusedTrend: trends.refused_tasks || 0,
+            cancelledTrend: trends.cancelled_tasks || 0,
+            approvalPendingTrend: trends.approval_pending_tasks || 0,
+            inProgressTrend: trends.in_progress_tasks || 0,
             totalRevenue: financial.total_revenue || 0,
             totalCost: financial.total_cost || 0,
             totalProfit: financial.total_profit || 0
@@ -37,6 +45,10 @@ class StatsManager {
         stats.completedPercentage = stats.total ? Math.round((stats.completed / stats.total) * 100) : 0;
         stats.pendingPercentage = stats.total ? Math.round((stats.pending / stats.total) * 100) : 0;
         stats.overduePercentage = stats.total ? Math.round((stats.overdue / stats.total) * 100) : 0;
+        stats.refusedPercentage = stats.total ? Math.round((stats.refused / stats.total) * 100) : 0;
+        stats.cancelledPercentage = stats.total ? Math.round((stats.cancelled / stats.total) * 100) : 0;
+        stats.approvalPendingPercentage = stats.total ? Math.round((stats.approvalPending / stats.total) * 100) : 0;
+        stats.inProgressPercentage = stats.total ? Math.round((stats.in_progress / stats.total) * 100) : 0;
 
         // Average completion time
         const completedTasks = tasks.filter(t => t.completed_date);
@@ -87,6 +99,9 @@ class StatsManager {
                 t.status === 'overdue' ||
                 (t.due_date && new Date(t.due_date) < now && t.status !== 'completed')
             ).length,
+            refused_tasks: 0,
+            cancelled_tasks: 0,
+            approval_pending_tasks: 0,
             active_employees: new Set(tasks.map(t => t.assigned_to).filter(id => id)).size,
             active_companies: new Set(tasks.map(t => t.company_id).filter(id => id)).size
         };
@@ -123,6 +138,13 @@ class StatsManager {
                 this.data.tasks.filter(t => t.status === 'overdue').length,
                 previousTasks.filter(t => t.status === 'overdue').length
             ),
+            in_progress_tasks: calcTrend(
+                this.data.tasks.filter(t => t.status === 'in_progress').length,
+                previousTasks.filter(t => t.status === 'in_progress').length
+            ),
+            refused_tasks: 0,
+            cancelled_tasks: 0,
+            approval_pending_tasks: 0,
             revenue: calcTrend(this.data.financial?.total_revenue || 0, 0),
             productivity: calcTrend(
                 (this.data.tasks.filter(t => t.status === 'completed').length / (currentCount || 1)) * 100,
@@ -170,6 +192,30 @@ class StatsManager {
             elements.overdueProgress.style.width = `${stats.overduePercentage}%`;
         }
 
+        if (elements.refusedTasks) {
+            elements.refusedTasks.textContent = stats.refused;
+            elements.refusedPercentage.textContent = `${stats.refusedPercentage}%`;
+            elements.refusedProgress.style.width = `${stats.refusedPercentage}%`;
+        }
+
+        if (elements.cancelledTasks) {
+            elements.cancelledTasks.textContent = stats.cancelled;
+            elements.cancelledPercentage.textContent = `${stats.cancelledPercentage}%`;
+            elements.cancelledProgress.style.width = `${stats.cancelledPercentage}%`;
+        }
+
+        if (elements.approvalPendingTasks) {
+            elements.approvalPendingTasks.textContent = stats.approvalPending;
+            elements.approvalPendingPercentage.textContent = `${stats.approvalPendingPercentage}%`;
+            elements.approvalPendingProgress.style.width = `${stats.approvalPendingPercentage}%`;
+        }
+
+        if (elements.inProgressTasks) {
+            elements.inProgressTasks.textContent = stats.in_progress;
+            elements.inProgressPercentage.textContent = `${stats.inProgressPercentage}%`;
+            elements.inProgressProgress.style.width = `${stats.inProgressPercentage}%`;
+        }
+
         this.updateTrends();
         this.updateMetrics();
     }
@@ -182,13 +228,18 @@ class StatsManager {
             { el: elements.totalTrend, value: stats.totalTrend },
             { el: elements.completedTrend, value: stats.completedTrend },
             { el: elements.pendingTrend, value: stats.pendingTrend },
-            { el: elements.overdueTrend, value: stats.overdueTrend }
+            { el: elements.overdueTrend, value: stats.overdueTrend, inverse: true },
+            { el: elements.refusedTrend, value: stats.refusedTrend, inverse: true },
+            { el: elements.cancelledTrend, value: stats.cancelledTrend, inverse: true },
+            { el: elements.approvalPendingTrend, value: stats.approvalPendingTrend, inverse: true },
+            { el: elements.inProgressTrend, value: stats.inProgressTrend }
         ];
 
-        trendConfigs.forEach(({ el, value }) => {
+        trendConfigs.forEach(({ el, value, inverse = false }) => {
             if (el) {
+                const isPositive = inverse ? value <= 0 : value >= 0;
                 el.textContent = `${value > 0 ? '+' : ''}${value}%`;
-                el.className = `report-card-trend ${value >= 0 ? 'positive' : 'negative'}`;
+                el.className = `report-card-trend ${isPositive ? 'positive' : 'negative'}`;
             }
         });
     }

@@ -1074,6 +1074,98 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- İmtinalar -->
+                <div class="report-card" data-type="refused">
+                    <div class="report-card-header">
+                        <div class="report-card-icon refused-bg">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-minus"></i>
+                            <span id="refusedTrend">0%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">İmtinalar</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="refusedTasksCount">0</span>
+                            <span class="report-card-subvalue" id="refusedPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill refused" id="refusedProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ləğv edilənlər -->
+                <div class="report-card" data-type="cancelled">
+                    <div class="report-card-header">
+                        <div class="report-card-icon cancelled-bg">
+                            <i class="fas fa-times-circle"></i>
+                        </div>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-minus"></i>
+                            <span id="cancelledTrend">0%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Ləğv edilənlər</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="cancelledTasksCount">0</span>
+                            <span class="report-card-subvalue" id="cancelledPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill cancelled" id="cancelledProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Təsdiq gözləmə -->
+                <div class="report-card" data-type="approval-pending">
+                    <div class="report-card-header">
+                        <div class="report-card-icon approval-pending-bg">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-minus"></i>
+                            <span id="approvalPendingTrend">0%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">Təsdiq gözləmə</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="approvalPendingTasksCount">0</span>
+                            <span class="report-card-subvalue" id="approvalPendingPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill approval-pending" id="approvalPendingProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- İcrada -->
+                <div class="report-card" data-type="in-progress">
+                    <div class="report-card-header">
+                        <div class="report-card-icon in-progress-bg">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <div class="report-card-trend positive">
+                            <i class="fas fa-minus"></i>
+                            <span id="inProgressTrend">0%</span>
+                        </div>
+                    </div>
+                    <div class="report-card-content">
+                        <span class="report-card-label">İcrada</span>
+                        <div class="report-card-value-group">
+                            <span class="report-card-value" id="inProgressTasksCount">0</span>
+                            <span class="report-card-subvalue" id="inProgressPercentage">0%</span>
+                        </div>
+                        <div class="progress-bar mini">
+                            <div class="progress-fill in-progress" id="inProgressProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
            <!-- Detallı Statistika Bölməsi -->

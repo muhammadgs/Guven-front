@@ -59,17 +59,33 @@ class ReportManager {
         this.elements.completedTasks = document.getElementById('completedTasksCount');
         this.elements.pendingTasks = document.getElementById('pendingTasksCount');
         this.elements.overdueTasks = document.getElementById('overdueTasksCount');
+        this.elements.refusedTasks = document.getElementById('refusedTasksCount');
+        this.elements.cancelledTasks = document.getElementById('cancelledTasksCount');
+        this.elements.approvalPendingTasks = document.getElementById('approvalPendingTasksCount');
+        this.elements.inProgressTasks = document.getElementById('inProgressTasksCount');
         this.elements.totalTrend = document.getElementById('totalTrend');
         this.elements.completedTrend = document.getElementById('completedTrend');
         this.elements.pendingTrend = document.getElementById('pendingTrend');
         this.elements.overdueTrend = document.getElementById('overdueTrend');
+        this.elements.refusedTrend = document.getElementById('refusedTrend');
+        this.elements.cancelledTrend = document.getElementById('cancelledTrend');
+        this.elements.approvalPendingTrend = document.getElementById('approvalPendingTrend');
+        this.elements.inProgressTrend = document.getElementById('inProgressTrend');
         this.elements.totalProgress = document.getElementById('totalProgress');
         this.elements.completedProgress = document.getElementById('completedProgress');
         this.elements.pendingProgress = document.getElementById('pendingProgress');
         this.elements.overdueProgress = document.getElementById('overdueProgress');
+        this.elements.refusedProgress = document.getElementById('refusedProgress');
+        this.elements.cancelledProgress = document.getElementById('cancelledProgress');
+        this.elements.approvalPendingProgress = document.getElementById('approvalPendingProgress');
+        this.elements.inProgressProgress = document.getElementById('inProgressProgress');
         this.elements.completedPercentage = document.getElementById('completedPercentage');
         this.elements.pendingPercentage = document.getElementById('pendingPercentage');
         this.elements.overduePercentage = document.getElementById('overduePercentage');
+        this.elements.refusedPercentage = document.getElementById('refusedPercentage');
+        this.elements.cancelledPercentage = document.getElementById('cancelledPercentage');
+        this.elements.approvalPendingPercentage = document.getElementById('approvalPendingPercentage');
+        this.elements.inProgressPercentage = document.getElementById('inProgressPercentage');
         this.elements.companyStats = document.getElementById('companyStatsList');
         this.elements.departmentStats = document.getElementById('departmentStatsList');
         this.elements.employeeStats = document.getElementById('employeeStatsList');
@@ -617,6 +633,9 @@ class ReportManager {
                 t.status === 'overdue' ||
                 (t.due_date && new Date(t.due_date) < now && t.status !== 'completed')
             ).length,
+            refused_tasks: 0,
+            cancelled_tasks: 0,
+            approval_pending_tasks: 0,
             active_employees: new Set(tasks.map(t => t.assigned_to).filter(id => id)).size,
             active_companies: new Set(tasks.map(t => t.company_id).filter(id => id)).size
         };
@@ -653,6 +672,13 @@ class ReportManager {
                 this.data.tasks.filter(t => t.status === 'overdue').length,
                 previousTasks.filter(t => t.status === 'overdue').length
             ),
+            in_progress_tasks: calcTrend(
+                this.data.tasks.filter(t => t.status === 'in_progress').length,
+                previousTasks.filter(t => t.status === 'in_progress').length
+            ),
+            refused_tasks: 0,
+            cancelled_tasks: 0,
+            approval_pending_tasks: 0,
             revenue: calcTrend(this.data.financial?.total_revenue || 0, 0),
             productivity: calcTrend(
                 (this.data.tasks.filter(t => t.status === 'completed').length / (currentCount || 1)) * 100,
@@ -673,10 +699,18 @@ class ReportManager {
             pending: general.pending_tasks || 0,
             in_progress: general.in_progress_tasks || 0,
             overdue: general.overdue_tasks || 0,
+            // Placeholder-ready fields for future report API metrics.
+            refused: general.refused_tasks || 0,
+            cancelled: general.cancelled_tasks || 0,
+            approvalPending: general.approval_pending_tasks || 0,
             totalTrend: trends.total_tasks || 0,
             completedTrend: trends.completed_tasks || 0,
             pendingTrend: trends.pending_tasks || 0,
             overdueTrend: trends.overdue_tasks || 0,
+            refusedTrend: trends.refused_tasks || 0,
+            cancelledTrend: trends.cancelled_tasks || 0,
+            approvalPendingTrend: trends.approval_pending_tasks || 0,
+            inProgressTrend: trends.in_progress_tasks || 0,
             totalRevenue: financial.total_revenue || 0,
             totalCost: financial.total_cost || 0,
             totalProfit: financial.total_profit || 0
@@ -688,6 +722,14 @@ class ReportManager {
             Math.round((this.stats.pending / this.stats.total) * 100) : 0;
         this.stats.overduePercentage = this.stats.total ?
             Math.round((this.stats.overdue / this.stats.total) * 100) : 0;
+        this.stats.refusedPercentage = this.stats.total ?
+            Math.round((this.stats.refused / this.stats.total) * 100) : 0;
+        this.stats.cancelledPercentage = this.stats.total ?
+            Math.round((this.stats.cancelled / this.stats.total) * 100) : 0;
+        this.stats.approvalPendingPercentage = this.stats.total ?
+            Math.round((this.stats.approvalPending / this.stats.total) * 100) : 0;
+        this.stats.inProgressPercentage = this.stats.total ?
+            Math.round((this.stats.in_progress / this.stats.total) * 100) : 0;
 
         const completedTasks = tasks.filter(t => t.completed_date);
         if (completedTasks.length > 0) {
@@ -745,6 +787,30 @@ class ReportManager {
             this.elements.overdueProgress.style.width = `${this.stats.overduePercentage}%`;
         }
 
+        if (this.elements.refusedTasks) {
+            this.elements.refusedTasks.textContent = this.stats.refused;
+            this.elements.refusedPercentage.textContent = `${this.stats.refusedPercentage}%`;
+            this.elements.refusedProgress.style.width = `${this.stats.refusedPercentage}%`;
+        }
+
+        if (this.elements.cancelledTasks) {
+            this.elements.cancelledTasks.textContent = this.stats.cancelled;
+            this.elements.cancelledPercentage.textContent = `${this.stats.cancelledPercentage}%`;
+            this.elements.cancelledProgress.style.width = `${this.stats.cancelledPercentage}%`;
+        }
+
+        if (this.elements.approvalPendingTasks) {
+            this.elements.approvalPendingTasks.textContent = this.stats.approvalPending;
+            this.elements.approvalPendingPercentage.textContent = `${this.stats.approvalPendingPercentage}%`;
+            this.elements.approvalPendingProgress.style.width = `${this.stats.approvalPendingPercentage}%`;
+        }
+
+        if (this.elements.inProgressTasks) {
+            this.elements.inProgressTasks.textContent = this.stats.in_progress;
+            this.elements.inProgressPercentage.textContent = `${this.stats.inProgressPercentage}%`;
+            this.elements.inProgressProgress.style.width = `${this.stats.inProgressPercentage}%`;
+        }
+
         if (this.elements.totalTrend) {
             this.elements.totalTrend.textContent = `${this.stats.totalTrend > 0 ? '+' : ''}${this.stats.totalTrend}%`;
             this.elements.totalTrend.className = `report-card-trend ${this.stats.totalTrend >= 0 ? 'positive' : 'negative'}`;
@@ -760,6 +826,22 @@ class ReportManager {
         if (this.elements.overdueTrend) {
             this.elements.overdueTrend.textContent = `${this.stats.overdueTrend > 0 ? '+' : ''}${this.stats.overdueTrend}%`;
             this.elements.overdueTrend.className = `report-card-trend ${this.stats.overdueTrend <= 0 ? 'positive' : 'negative'}`;
+        }
+        if (this.elements.refusedTrend) {
+            this.elements.refusedTrend.textContent = `${this.stats.refusedTrend > 0 ? '+' : ''}${this.stats.refusedTrend}%`;
+            this.elements.refusedTrend.className = `report-card-trend ${this.stats.refusedTrend <= 0 ? 'positive' : 'negative'}`;
+        }
+        if (this.elements.cancelledTrend) {
+            this.elements.cancelledTrend.textContent = `${this.stats.cancelledTrend > 0 ? '+' : ''}${this.stats.cancelledTrend}%`;
+            this.elements.cancelledTrend.className = `report-card-trend ${this.stats.cancelledTrend <= 0 ? 'positive' : 'negative'}`;
+        }
+        if (this.elements.approvalPendingTrend) {
+            this.elements.approvalPendingTrend.textContent = `${this.stats.approvalPendingTrend > 0 ? '+' : ''}${this.stats.approvalPendingTrend}%`;
+            this.elements.approvalPendingTrend.className = `report-card-trend ${this.stats.approvalPendingTrend <= 0 ? 'positive' : 'negative'}`;
+        }
+        if (this.elements.inProgressTrend) {
+            this.elements.inProgressTrend.textContent = `${this.stats.inProgressTrend > 0 ? '+' : ''}${this.stats.inProgressTrend}%`;
+            this.elements.inProgressTrend.className = `report-card-trend ${this.stats.inProgressTrend >= 0 ? 'positive' : 'negative'}`;
         }
 
         if (this.elements.avgCompletionTime) {
