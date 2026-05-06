@@ -193,10 +193,11 @@
 .report-card {
     background: var(--bg-secondary, #f8fafc);
     border-radius: 18px;
-    padding: 14px 14px 13px;
-    min-height: 112px;
+    padding: 16px 14px 14px;
+    min-height: 124px;
     display: flex;
     flex-direction: column;
+    gap: 9px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-color, #e2e8f0);
     position: relative;
@@ -257,11 +258,12 @@
 }
 
 .report-card-header {
+    order: 1;
     display: flex;
     justify-content: flex-start;
     align-items: center;
     gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 0;
     min-width: 0;
 }
 
@@ -340,18 +342,20 @@
 
 /* ===== KPI KARTI MƏZMUNU ===== */
 .report-card-content {
+    order: 2;
     position: relative;
     min-width: 0;
     margin-top: auto;
 }
 
 .report-card-label {
+    order: 0;
     font-size: 0.78rem;
     color: var(--primary-color, #2563eb);
     display: block;
     width: 100%;
     text-align: center;
-    margin-bottom: 11px;
+    margin-bottom: 0;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -391,7 +395,7 @@
     background: var(--border-color, #e2e8f0);
     border-radius: 10px;
     overflow: hidden;
-    margin-top: 7px;
+    margin-top: 0;
 }
 
 .progress-fill {
