@@ -193,7 +193,10 @@
 .report-card {
     background: var(--bg-secondary, #f8fafc);
     border-radius: 18px;
-    padding: 12px 14px;
+    padding: 14px 14px 13px;
+    min-height: 112px;
+    display: flex;
+    flex-direction: column;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-color, #e2e8f0);
     position: relative;
@@ -258,7 +261,7 @@
     justify-content: flex-start;
     align-items: center;
     gap: 10px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     min-width: 0;
 }
 
@@ -339,16 +342,20 @@
 .report-card-content {
     position: relative;
     min-width: 0;
+    margin-top: auto;
 }
 
 .report-card-label {
     font-size: 0.78rem;
-    color: var(--text-secondary, #64748b);
+    color: var(--primary-color, #2563eb);
     display: block;
-    margin-bottom: 0;
-    font-weight: 500;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
 }
 
 .report-card-value-group {
