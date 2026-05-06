@@ -1011,25 +1011,25 @@
                     </div>
                 </div>
 
-                <!-- Tamamlanan -->
-                <div class="report-card" data-type="completed">
+                <!-- Təsdiq gözləmə -->
+                <div class="report-card" data-type="approval-pending">
                     <div class="report-card-header">
-                        <div class="report-card-icon completed-bg">
-                            <i class="fas fa-check-circle"></i>
+                        <div class="report-card-icon approval-pending-bg">
+                            <i class="fas fa-user-clock"></i>
                         </div>
                         <div class="report-card-value-group">
-                            <span class="report-card-value" id="completedTasksCount">0</span>
-                            <span class="report-card-subvalue" id="completedPercentage">0%</span>
+                            <span class="report-card-value" id="approvalPendingTasksCount">0</span>
+                            <span class="report-card-subvalue" id="approvalPendingPercentage">0%</span>
                         </div>
-                        <div class="report-card-trend positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span id="completedTrend">+8%</span>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-minus"></i>
+                            <span id="approvalPendingTrend">0%</span>
                         </div>
                     </div>
                     <div class="report-card-content">
-                        <span class="report-card-label">Tamamlanan</span>
+                        <span class="report-card-label">Təsdiq gözləmə</span>
                         <div class="progress-bar mini">
-                            <div class="progress-fill success" id="completedProgress" style="width: 0%"></div>
+                            <div class="progress-fill approval-pending" id="approvalPendingProgress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -1057,48 +1057,48 @@
                     </div>
                 </div>
 
-                <!-- Müddəti keçən -->
-                <div class="report-card" data-type="overdue">
+                <!-- İcrada -->
+                <div class="report-card" data-type="in-progress">
                     <div class="report-card-header">
-                        <div class="report-card-icon overdue-bg">
-                            <i class="fas fa-exclamation-triangle"></i>
+                        <div class="report-card-icon in-progress-bg">
+                            <i class="fas fa-spinner"></i>
                         </div>
                         <div class="report-card-value-group">
-                            <span class="report-card-value" id="overdueTasksCount">0</span>
-                            <span class="report-card-subvalue" id="overduePercentage">0%</span>
+                            <span class="report-card-value" id="inProgressTasksCount">0</span>
+                            <span class="report-card-subvalue" id="inProgressPercentage">0%</span>
                         </div>
-                        <div class="report-card-trend negative">
-                            <i class="fas fa-arrow-up"></i>
-                            <span id="overdueTrend">+3%</span>
+                        <div class="report-card-trend positive">
+                            <i class="fas fa-minus"></i>
+                            <span id="inProgressTrend">0%</span>
                         </div>
                     </div>
                     <div class="report-card-content">
-                        <span class="report-card-label">Müddəti keçən</span>
+                        <span class="report-card-label">İcrada</span>
                         <div class="progress-bar mini">
-                            <div class="progress-fill danger" id="overdueProgress" style="width: 0%"></div>
+                            <div class="progress-fill in-progress" id="inProgressProgress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- İmtinalar -->
-                <div class="report-card" data-type="refused">
+                <!-- Tamamlanan -->
+                <div class="report-card" data-type="completed">
                     <div class="report-card-header">
-                        <div class="report-card-icon refused-bg">
-                            <i class="fas fa-ban"></i>
+                        <div class="report-card-icon completed-bg">
+                            <i class="fas fa-check-circle"></i>
                         </div>
                         <div class="report-card-value-group">
-                            <span class="report-card-value" id="refusedTasksCount">0</span>
-                            <span class="report-card-subvalue" id="refusedPercentage">0%</span>
+                            <span class="report-card-value" id="completedTasksCount">0</span>
+                            <span class="report-card-subvalue" id="completedPercentage">0%</span>
                         </div>
-                        <div class="report-card-trend negative">
-                            <i class="fas fa-minus"></i>
-                            <span id="refusedTrend">0%</span>
+                        <div class="report-card-trend positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="completedTrend">+8%</span>
                         </div>
                     </div>
                     <div class="report-card-content">
-                        <span class="report-card-label">İmtinalar</span>
+                        <span class="report-card-label">Tamamlanan</span>
                         <div class="progress-bar mini">
-                            <div class="progress-fill refused" id="refusedProgress" style="width: 0%"></div>
+                            <div class="progress-fill success" id="completedProgress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -1126,48 +1126,48 @@
                     </div>
                 </div>
 
-                <!-- Təsdiq gözləmə -->
-                <div class="report-card" data-type="approval-pending">
+                <!-- İmtinalar -->
+                <div class="report-card" data-type="refused">
                     <div class="report-card-header">
-                        <div class="report-card-icon approval-pending-bg">
-                            <i class="fas fa-user-clock"></i>
+                        <div class="report-card-icon refused-bg">
+                            <i class="fas fa-ban"></i>
                         </div>
                         <div class="report-card-value-group">
-                            <span class="report-card-value" id="approvalPendingTasksCount">0</span>
-                            <span class="report-card-subvalue" id="approvalPendingPercentage">0%</span>
+                            <span class="report-card-value" id="refusedTasksCount">0</span>
+                            <span class="report-card-subvalue" id="refusedPercentage">0%</span>
                         </div>
                         <div class="report-card-trend negative">
                             <i class="fas fa-minus"></i>
-                            <span id="approvalPendingTrend">0%</span>
+                            <span id="refusedTrend">0%</span>
                         </div>
                     </div>
                     <div class="report-card-content">
-                        <span class="report-card-label">Təsdiq gözləmə</span>
+                        <span class="report-card-label">İmtinalar</span>
                         <div class="progress-bar mini">
-                            <div class="progress-fill approval-pending" id="approvalPendingProgress" style="width: 0%"></div>
+                            <div class="progress-fill refused" id="refusedProgress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- İcrada -->
-                <div class="report-card" data-type="in-progress">
+                <!-- Müddəti keçən -->
+                <div class="report-card" data-type="overdue">
                     <div class="report-card-header">
-                        <div class="report-card-icon in-progress-bg">
-                            <i class="fas fa-spinner"></i>
+                        <div class="report-card-icon overdue-bg">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
                         <div class="report-card-value-group">
-                            <span class="report-card-value" id="inProgressTasksCount">0</span>
-                            <span class="report-card-subvalue" id="inProgressPercentage">0%</span>
+                            <span class="report-card-value" id="overdueTasksCount">0</span>
+                            <span class="report-card-subvalue" id="overduePercentage">0%</span>
                         </div>
-                        <div class="report-card-trend positive">
-                            <i class="fas fa-minus"></i>
-                            <span id="inProgressTrend">0%</span>
+                        <div class="report-card-trend negative">
+                            <i class="fas fa-arrow-up"></i>
+                            <span id="overdueTrend">+3%</span>
                         </div>
                     </div>
                     <div class="report-card-content">
-                        <span class="report-card-label">İcrada</span>
+                        <span class="report-card-label">Müddəti keçən</span>
                         <div class="progress-bar mini">
-                            <div class="progress-fill in-progress" id="inProgressProgress" style="width: 0%"></div>
+                            <div class="progress-fill danger" id="overdueProgress" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
