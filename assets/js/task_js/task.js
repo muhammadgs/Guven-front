@@ -698,6 +698,7 @@ class TaskManager {
 
             console.log(`✅ ${activeTasks.length} aktiv task göstərildi`);
             return activeTasks;
+            this.fetchAndUpdateTotalCount();
 
         } catch (error) {
             console.error('❌ Aktiv tasklar xətası:', error);
@@ -705,6 +706,33 @@ class TaskManager {
             return [];
         }
     }
+
+    async fetchAndUpdateTotalCount() {
+        try {
+            const userId = this.userData?.userId;
+            if (!userId) return;
+
+            const endpoint = `/tasks/detailed?page=1&limit=1&status=pending,in_progress,waiting,overdue,pending_approval,paused,approval_overdue&assigned_to=${userId}`;
+            const response = await this.apiRequest(endpoint, 'GET');
+
+            const total = response?.pagination?.total
+                ?? response?.raw?.pagination?.total
+                ?? response?.total
+                ?? response?.raw?.total
+                ?? 0;
+
+            const countEl = document.getElementById('countActive');
+            const totalEl = document.getElementById('activeTableTotalCount');
+            if (countEl) countEl.textContent = total;
+            if (totalEl) totalEl.textContent = total;
+
+            console.log(`✅ Ümumi say: ${total}`);
+            return total;
+        } catch(e) {
+            console.error('❌ fetchAndUpdateTotalCount xətası:', e);
+        }
+    }
+
     async loadExternalTasks(page = 1, append = false) {
         // ✅ Tamamilə ExternalTableManager-ə yönləndir (o özü cache istifadə edir)
         if (window.ExternalTableManager) {

@@ -264,16 +264,13 @@ function getRealCompanyIdFromToken() {
             disableButtons(true);
 
             const config = tableConfig[tableType];
-
             if (!config) {
-                console.warn(`⚠️ Bilinməyən cədvəl tipi: ${tableType}, default active istifadə olunur`);
                 return loadTasksToTable('active', limit);
             }
 
             showLoadingOverlay(`${getTableName(tableType)} - ${limit} task yüklənir...`);
 
             const userInfo = getCurrentUserInfo();
-
             if (!userInfo.userId) {
                 throw new Error('İstifadəçi məlumatı tapılmadı');
             }
@@ -281,6 +278,14 @@ function getRealCompanyIdFromToken() {
             const tasks = await fetchTasksByTableType(tableType, userInfo, limit, config);
 
             console.log(`✅ ${tableType} cədvəli üçün ${tasks.length} task yükləndi`);
+
+            // 🔥 SAYINI BİRBAŞA BURADAN YENİLƏ
+            if (tableType === 'active') {
+                const countEl = document.getElementById('countActive');
+                const totalEl = document.getElementById('activeTableTotalCount');
+                if (countEl) countEl.textContent = tasks.length;
+                if (totalEl) totalEl.textContent = tasks.length;
+            }
 
             if (tasks.length === 0) {
                 showEmptyTable(tableType, config);

@@ -218,11 +218,11 @@
                                 </div>
 
                                 <div class="newtask-form-group" id="newtaskParentGroup" style="display:none;">
-                                    <label class="newtask-form-label"><i class="fas fa-arrow-up"></i> Üst Şirkət</label>
+                                    <label class="newtask-form-label"><i class="fas fa-arrow-up"></i> Şirkət</label>
                                     <select id="newtaskParentSelect" class="newtask-select" required>
-                                        <option value="">Üst şirkət seçin</option>
+                                        <option value="">Şirkət seçin</option>
                                     </select>
-                                    <div class="newtask-form-text">Üst şirkətlərinizə task göndərin</div>
+                                    <div class="newtask-form-text">Şirkətlərinizə task göndərin</div>
                                 </div>
 
                                 <div class="newtask-form-group" id="newtaskPartnerGroup" style="display:none;">
@@ -414,7 +414,7 @@
             if (parentSelect) {
                 let list = response?.data?.parent_companies || response?.data || (Array.isArray(response) ? response : []);
                 if (list.length > 0) {
-                    let html = '<option value="">Üst şirkət seçin</option>';
+                    let html = '<option value="">Şirkət seçin</option>';
                     list.forEach(company => {
                         const id = company.company_id || company.id;
                         const name = company.company_name || company.name;
@@ -424,11 +424,11 @@
                     parentSelect.innerHTML = html;
                     parentCompanies = list;
                 } else {
-                    parentSelect.innerHTML = '<option value="">Üst şirkət tapılmadı</option>';
+                    parentSelect.innerHTML = '<option value="">Şirkət tapılmadı</option>';
                 }
             }
         } catch (error) {
-            console.error('❌ Üst şirkətlər xətası:', error);
+            console.error('❌ şirkətlər xətası:', error);
         }
     }
 
@@ -525,7 +525,7 @@
                     const name = s.company_name || s.name;
                     const id = s.id;
                     if (id && name) {
-                        html += `<option value="${id}" data-is-my="false">${name} 👇</option>`;
+                        html += `<option value="${id}" data-is-my="false">${name}</option>`;
                     }
                 });
             }
@@ -543,7 +543,7 @@
                 employees.forEach(emp => {
                     const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
                     if (name) {
-                        html += `<option value="${emp.id}">👤 ${name}</option>`;
+                        html += `<option value="${emp.id}">${name} 👤</option>`;
                     }
                 });
             }
@@ -558,7 +558,7 @@
                 departments.forEach(dept => {
                     const name = dept.department_name || dept.name;
                     if (name) {
-                        html += `<option value="${dept.id}">🏛️ ${name}</option>`;
+                        html += `<option value="${dept.id}">${name}</option>`;
                     }
                 });
             }
@@ -599,7 +599,7 @@
             if (parentGroup) parentGroup.style.display = 'block';
             if (otherExecutorGroup) otherExecutorGroup.style.display = 'block';
             if (modalTitleIcon) modalTitleIcon.className = 'fas fa-arrow-up';
-            if (modalTitleText) modalTitleText.textContent = 'Üst Şirkət Tapşırığı';
+            if (modalTitleText) modalTitleText.textContent = 'Şirkət Tapşırığı';
 
             const parentSelect = document.getElementById('newtaskParentSelect');
             if (parentSelect) {
@@ -1231,7 +1231,7 @@
             if (currentTaskType === 'internal') {
                 if (!document.getElementById('newtaskCompanySelect').value) { showNotification('Şirkət seçin', 'error'); return; }
             } else if (currentTaskType === 'parent') {
-                if (!document.getElementById('newtaskParentSelect').value) { showNotification('Üst şirkət seçin', 'error'); return; }
+                if (!document.getElementById('newtaskParentSelect').value) { showNotification('Şirkət seçin', 'error'); return; }
             } else if (currentTaskType === 'partner') {
                 if (!document.getElementById('newtaskPartnerSelect').value) { showNotification('Partnyor seçin', 'error'); return; }
             }

@@ -287,9 +287,9 @@
                     <i class="fas fa-arrow-up"></i>
                 </div>
                 <div class="card-content">
-                    <h3 class="card-title">Üst Şirkət</h3>
-                    <p class="card-description">Üst şirkətlərinizə tapşırıq göndərin</p>
-                    <div class="card-badge">Üst Qurum</div>
+                    <h3 class="card-title">Şirkət</h3>
+                    <p class="card-description">Şirkətlərinizə tapşırıq göndərin</p>
+                    <div class="card-badge">Qurum</div>
                 </div>
                 <div class="card-arrow">
                     <i class="fas fa-arrow-right"></i>
@@ -344,15 +344,15 @@
                             <div class="form-group" id="parentCompanyGroup" style="display: none;">
                                 <label class="form-label">
                                     <i class="fas fa-arrow-up"></i>
-                                    Üst Şirkət
+                                    Şirkət
                                 </label>
                                 <div class="select-wrapper">
                                     <select id="parentCompanySelect" name="parent_company_id" class="form-select">
-                                        <option value="">Üst şirkət seçin</option>
+                                        <option value="">Şirkət seçin</option>
                                     </select>
                                     <i class="fas fa-chevron-down select-icon"></i>
                                 </div>
-                                <div class="form-text">Üst şirkətlərinizə task göndərin</div>
+                                <div class="form-text">Şirkətlərinizə task göndərin</div>
                             </div>
 
                             <!-- Partnyor seçimi -->
@@ -560,20 +560,6 @@
                             <i class="fas fa-columns"></i>
                         </button>
 
-                        <!-- Prev Button -->
-                        <button class="table-action-btn" id="prevBtnList" title="Əvvəlki səhifə">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-
-                        <!-- SƏHİFƏ NÖMRƏLƏRİ - PREV VƏ NEXT ARASINDA -->
-                        <div class="pagination-numbers-container" id="activePaginationNumbers">
-                            <!-- JavaScript tərəfindən doldurulacaq -->
-                        </div>
-
-                        <!-- Next Button -->
-                        <button class="table-action-btn" id="nextBtnList" title="Növbəti səhifə">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
                     </div>
                     <!-- ACTIVE SECTION SELECT BUTTON -->
                     <div class="task-load-buttons external-load-buttons">
@@ -619,7 +605,7 @@
                                 </div>
                                 <div class="resizer"></div>
                             </th>
-                            <th data-min-width="180">
+                            <th data-min-width="100">
                                 <div class="table-header-cell">
                                     <span>Status</span>
                                 </div>
@@ -707,15 +693,6 @@
                         </button>
                         <button class="table-action-btn" id="externalColumnsBtn" title="Sütunları yönləndir">
                             <i class="fas fa-columns"></i>
-                        </button>
-                        <button class="table-action-btn" id="externalPrevBtn" title="Əvvəlki səhifə">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-
-                        <div class="pagination-numbers-container" id="externalPaginationNumbers"></div>
-
-                        <button class="table-action-btn" id="externalNextBtn" title="Növbəti səhifə">
-                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                     <!-- External Tasks Section -->
@@ -838,16 +815,6 @@
                     </div>
                     <button class="table-action-btn" id="partnerSortBtn" title="Sırala">
                         <i class="fas fa-sort-amount-down"></i>
-                    </button>
-                    <button class="table-action-btn" id="partnerPrevBtn" title="Əvvəlki səhifə">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-
-                    <!-- SƏHİFƏ NÖMRƏLƏRİ - PREV VƏ NEXT ARASINDA -->
-                    <div class="pagination-numbers-container" id="partnerPaginationNumbers"></div>
-
-                    <button class="table-action-btn" id="partnerNextBtn" title="Növbəti səhifə">
-                        <i class="fas fa-chevron-right"></i>
                     </button>
                     <button class="table-action-btn" id="partnerFilterContainer" title="Filter">
                         <i class="fas fa-filter"></i>
@@ -990,7 +957,7 @@
             <div class="report-cards-grid">
                 <!-- Ümumi tasklar -->
                 <div class="report-card" data-type="total">
-                    <span class="report-card-label">Ümumi tapşırıqlar</span>
+                    <span class="report-card-label">Ümumi</span>
                     <div class="report-card-header">
                         <div class="report-card-icon total-bg">
                             <i class="fas fa-tasks"></i>
@@ -1036,7 +1003,7 @@
 
                 <!-- Gözləmədə -->
                 <div class="report-card" data-type="pending">
-                    <span class="report-card-label">Gözləmədə</span>
+                    <span class="report-card-label">İcra gözləmə</span>
                     <div class="report-card-header">
                         <div class="report-card-icon pending-bg">
                             <i class="fas fa-clock"></i>
@@ -1059,7 +1026,7 @@
 
                 <!-- İcrada -->
                 <div class="report-card" data-type="in-progress">
-                    <span class="report-card-label">İcrada</span>
+                    <span class="report-card-label">İş gedir</span>
                     <div class="report-card-header">
                         <div class="report-card-icon in-progress-bg">
                             <i class="fas fa-spinner"></i>
@@ -1486,16 +1453,6 @@
                     <div class="table-actions">
                         <button class="table-action-btn" id="archiveSortBtn" title="Sırala">
                             <i class="fas fa-sort-amount-down"></i>
-                        </button>
-                        <button class="table-action-btn" id="archivePrevBtn" title="Əvvəlki səhifə">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-
-                        <!-- Archive səhifə nömrələri -->
-                        <div class="pagination-numbers-container" id="archivePaginationNumbers"></div>
-
-                        <button class="table-action-btn" id="archiveNextBtn" title="Növbəti səhifə">
-                            <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                     <div class="table-actions">

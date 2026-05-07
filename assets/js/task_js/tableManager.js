@@ -1664,34 +1664,17 @@ const TableManager = {
 
     updateTaskCount: async function() {
         const countElement = document.getElementById('countActive');
-        if (!countElement) return;
+        const tableTotalElement = document.getElementById('activeTableTotalCount');
 
-        // Sadəcə cədvəldəki row-ları say
         const rows = document.querySelectorAll('#tableBody tr[data-task-id]');
-        const visibleCount = rows.length;
+        const count = rows.length;
 
-        countElement.textContent = visibleCount;
+        if (countElement) countElement.textContent = count;
+        if (tableTotalElement) tableTotalElement.textContent = count;
 
-        const tableMetaElement = document.getElementById('activeTableTotalCount');
-        if (tableMetaElement) {
-            tableMetaElement.textContent = visibleCount;
-        }
-
-        if (typeof this.updateTableMeta === 'function') {
-            this.updateTableMeta('active', visibleCount);
-        }
-
-        console.log(`📊 Aktiv task sayı (cədvəldən): ${visibleCount}`);
-
-        // API sorğusu ETMƏ - sonsuz dövrənin qarşısını al
-        // Sadəcə əgər 0-dırsa, bir dəfə yenilə
-        if (visibleCount === 0 && window.taskManager) {
-            console.log('⚠️ Cədvəl boşdur, bir dəfə yenilənir...');
-            setTimeout(() => {
-                window.taskManager.loadActiveTasks(1, true);
-            }, 500);
-        }
+        return count;
     },
+
     // External task sayını yenilə (sadə versiya)
     updateExternalTaskCount: function() {
         console.log('🔍 updateExternalTaskCount çağırıldı');

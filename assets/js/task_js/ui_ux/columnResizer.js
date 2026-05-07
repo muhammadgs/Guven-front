@@ -567,26 +567,9 @@ function showResetMenu() {
     menu.style.left = rect.left + 'px';
 
     menu.innerHTML = `
-        <div style="padding: 8px 12px; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #1f2937;">
-            Sütunları Sıfırla
-        </div>
-        <button id="resetAllTablesBtn" style="
-            width: 100%;
-            padding: 10px 12px;
-            border: none;
-            background: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            color: #ef4444;
-            font-size: 14px;
-            border-radius: 6px;
-            margin-top: 5px;
-        ">
-            <i class="fas fa-trash"></i>
-            Bütün Cədvəlləri Sıfırla
+        <button id="resetAllTablesBtn" style="padding: 8px 12px; border-bottom: 1px solid #f3f4f6; font-weight: 600; color: #1f2937;">
         </button>
+        
     `;
 
     document.body.appendChild(menu);
@@ -607,14 +590,98 @@ function showResetMenu() {
 }
 
 function resetAllTables() {
+    // LocalStorage-dan sütun parametrlərini sil
     Object.keys(localStorage).forEach(key => {
         if (key.startsWith('super_settings_')) {
             localStorage.removeItem(key);
         }
     });
 
-    showNotification('Bütün parametrlər sıfırlandı, səhifə yenilənir...', 'info');
-    setTimeout(() => location.reload(), 1500);
+    // SessionStorage-dan task cache-lərini sil
+    Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('tc_')) {
+            sessionStorage.removeItem(key);
+        }
+    });
+
+    showNotification('Yenilənir...', 'info');
+
+    // Filtrləri sıfırla
+    if (window.taskManager) {
+        window.taskManager.currentFilters = {};
+        window.taskManager.currentFilterTable = 'active';
+    }
+
+    const filterBadge = document.getElementById('filterBadge');
+    if (filterBadge) filterBadge.style.display = 'none';
+
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.reset();
+        const activeRadio = document.querySelector('input[name="filter_table"][value="active"]');
+        if (activeRadio) activeRadio.checked = true;
+    }
+
+    // Active cədvəlini API-dən yenilə
+    setTimeout(async () => {
+        try {
+            // Token-dan userId al
+            const token = localStorage.getItem('guven_token');
+            let userId = null;
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    userId = payload.user_id || payload.sub;
+                } catch(e) {}
+            }
+            userId = userId || window.taskManager?.userData?.userId;
+
+            if (!userId) {
+                showNotification('İstifadəçi tapılmadı', 'error');
+                return;
+            }
+
+            const activeStatuses = 'pending,in_progress,overdue,pending_approval,waiting,paused,approval_overdue';
+            const endpoint = `/tasks/detailed?page=1&limit=100&status=${activeStatuses}&assigned_to=${userId}`;
+
+            const response = await makeApiRequest(endpoint, 'GET');
+
+            let tasks = [];
+            if (Array.isArray(response)) {
+                tasks = response;
+            } else if (response?.data && Array.isArray(response.data)) {
+                tasks = response.data;
+            } else if (response?.items && Array.isArray(response.items)) {
+                tasks = response.items;
+            }
+
+            // Cədvəli yenilə
+            if (window.TableManager && window.ActiveRowCreator) {
+                window.TableManager.renderTasksTable('active', tasks, false, 1);
+            }
+
+            // Sayları yenilə
+            const count = tasks.length;
+            const countEl = document.getElementById('countActive');
+            const totalEl = document.getElementById('activeTableTotalCount');
+            if (countEl) countEl.textContent = count;
+            if (totalEl) totalEl.textContent = count;
+
+            // Pagination sıfırla
+            if (window.taskManager?.pagination?.active) {
+                window.taskManager.pagination.active.page = 1;
+                window.taskManager.pagination.active.total = count;
+                window.taskManager.pagination.active.totalPages = Math.ceil(count / 20) || 1;
+                window.taskManager.updatePaginationUI('active');
+            }
+
+            showNotification(`✅ Cədvəl yeniləndi (${count} task)`, 'success');
+
+        } catch(e) {
+            console.error('❌ Reset xətası:', e);
+            showNotification('Xəta baş verdi', 'error');
+        }
+    }, 100);
 }
 
 // ==================== 6. NOTIFICATION ====================

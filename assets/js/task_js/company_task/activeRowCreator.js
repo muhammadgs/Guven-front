@@ -1,12 +1,8 @@
-// activeRowCreator.js - İŞ SAATİ COUNTDOWN + ŞİRKƏT ADI DÜZƏLİŞİ
-// Geri sayım: yalnız 09:00-18:00 arasında sayır
-// Tapşırıq TƏSDİQİ: istənilən vaxt işləyir (gecə də)
-// Backend: pending_approval → waiting → in_progress ↔ paused → completed
-
+// activeRowCreator.js - DÜZƏLİŞ 1: Edit düyməsi həm task yaradan, həm də icraçıya görünsün
 // ======================== İŞ SAATI HESABLAMA ========================
 const WorkHours = {
-    START: 9,   // 09:00
-    END: 18,    // 18:00
+    START: 9,
+    END: 18,
 
     getDayEnd: function(date) {
         const d = new Date(date);
@@ -14,46 +10,26 @@ const WorkHours = {
         return d;
     },
 
-    // Verilən an iş saatı içindəmi?
     isWorkTime: function(date) {
         const d = new Date(date);
         const totalMin = d.getHours() * 60 + d.getMinutes();
         return totalMin >= this.START * 60 && totalMin < this.END * 60;
     },
 
-    // Növbəti iş başlanğıcına qədər ms (sabah 09:00 və ya bugün 09:00)
     msUntilNextWorkStart: function(fromDate) {
         const now = new Date(fromDate);
         const totalMin = now.getHours() * 60 + now.getMinutes();
         const next = new Date(now);
 
         if (totalMin < this.START * 60) {
-            // Hələ başlamamış - bugün 09:00
             next.setHours(this.START, 0, 0, 0);
         } else {
-            // 18:00 keçib - sabah 09:00
             next.setDate(next.getDate() + 1);
             next.setHours(this.START, 0, 0, 0);
         }
         return next.getTime() - now.getTime();
     },
 
-    /**
-     * calcDeadline: fromDate-dən başlayaraq totalWorkMs qədər
-     * iş vaxtı keçdikdən sonra real deadline-ı qaytarır.
-     *
-     * Nümunələr:
-     *  - Saat 17:30, 2 iş saatı → sabah 10:30
-     *  - Saat 20:00, 2 iş saatı → sabah 11:00
-     *  - Saat 08:00, 2 iş saatı → bugün 11:00
-     *  - Saat 09:00, 2 iş saatı → bugün 11:00
-     *
-     * BUG DÜZƏLİŞİ: Köhnə versiyada saat 20:00-da yaranan tapşırıqda
-     * calcDeadline anında iş saatı blokuna girə bilmirdi (isWorkTime=false),
-     * amma msUntilNextWorkStart düzgün sabah 09:00-u qaytarırdı.
-     * İndi hər iterasiyada əvvəl iş saatı yoxlanılır, deyilsə növbəti
-     * iş başlanğıcına keçilir - sonsuz dövrə riski yoxdur (MAX_ITER=100).
-     */
     calcDeadline: function(from, totalWorkMs) {
         let remaining = totalWorkMs;
         let cursor = new Date(from);
@@ -72,13 +48,11 @@ const WorkHours = {
                     remaining = 0;
                 } else {
                     remaining -= availableMs;
-                    // Sabah 09:00-a keç
                     cursor = new Date(dayEnd);
                     cursor.setDate(cursor.getDate() + 1);
                     cursor.setHours(this.START, 0, 0, 0);
                 }
             } else {
-                // İş saatı dışındayıq - növbəti iş başlanğıcına keç
                 const msUntil = this.msUntilNextWorkStart(cursor);
                 cursor = new Date(cursor.getTime() + msUntil);
             }
@@ -87,10 +61,6 @@ const WorkHours = {
         return cursor;
     },
 
-    /**
-     * workMsBetween: İki vaxt arasında neçə ms iş vaxtı var?
-     * Countdown üçün qalıq iş vaxtını hesablar.
-     */
     workMsBetween: function(from, to) {
         if (from >= to) return 0;
         let total = 0;
@@ -134,22 +104,19 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
 
         const key = `confirm_${taskId}`;
 
-        // Köhnə timeri təmizlə
         if (this.countdowns[key]) {
             clearInterval(this.countdowns[key].interval);
             clearTimeout(this.countdowns[key].sleepTimeout);
         }
 
-        const TOTAL_WORK_MS = 2 * 60 * 60 * 1000; // 2 iş saatı
+        const TOTAL_WORK_MS = 2 * 60 * 60 * 1000;
         const storageKey = `task_confirm_work_deadline_${taskId}`;
 
-        // ── Deadline-ı müəyyən et ─────────────────────────────────────
         let realDeadline;
         const storedDeadline = localStorage.getItem(storageKey);
 
         if (storedDeadline) {
             realDeadline = new Date(parseInt(storedDeadline));
-            // Saxlanmış deadline keçibsə yenidən hesabla
             if (realDeadline <= new Date()) {
                 localStorage.removeItem(storageKey);
                 realDeadline = null;
@@ -172,7 +139,6 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
 
         const self = this;
 
-        // ── İş saatı dışında göstəriş və sleep ───────────────────────
         const showOutOfHours = (el, cd) => {
             if (cd.interval) { clearInterval(cd.interval); cd.interval = null; }
             if (cd.sleepTimeout) { clearTimeout(cd.sleepTimeout); }
@@ -200,18 +166,14 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
                     </span>
                 </div>`;
 
-            console.log(`🌙 Task ${taskId}: iş saatı dışı, ${Math.round(msUntil / 60000)} dəq sonra davam`);
-
             cd.sleepTimeout = setTimeout(() => {
                 const cd2 = self.countdowns[key];
                 if (!cd2) return;
-                console.log(`☀️ Task ${taskId}: iş saatı başladı`);
                 tick();
                 if (!cd2.interval) cd2.interval = setInterval(tick, 1000);
             }, msUntil);
         };
 
-        // ── Tick (hər saniyə) ─────────────────────────────────────────
         const tick = () => {
             const cd = self.countdowns[key];
             if (!cd) return;
@@ -221,7 +183,6 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
 
             const now = new Date();
 
-            // Deadline keçibmi?
             if (now >= cd.realDeadline) {
                 const delayHours = ((now - cd.realDeadline) / 3600000).toFixed(1);
                 self._markDelayed(taskId, delayHours);
@@ -233,13 +194,11 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
                 return;
             }
 
-            // İş saatı dışındayıqsa → durur
             if (!WorkHours.isWorkTime(now)) {
                 showOutOfHours(el, cd);
                 return;
             }
 
-            // Normal iş vaxtı countdown
             const remMs = WorkHours.workMsBetween(now, cd.realDeadline);
             const h = Math.floor(remMs / 3600000);
             const m = Math.floor((remMs % 3600000) / 60000);
@@ -263,12 +222,10 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
                 </div>`;
         };
 
-        // ── Başlat ────────────────────────────────────────────────────
         tick();
         if (WorkHours.isWorkTime(new Date())) {
             this.countdowns[key].interval = setInterval(tick, 1000);
         }
-        // İş saatı dışındayıqsa tick() içindəki showOutOfHours sleep yaradacaq
     },
 
     _markDelayed: function(taskId, delayHours) {
@@ -302,7 +259,6 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
         return { isDelayed: false, delayHours: 0 };
     },
 
-    // startWorkTimer funksiyasını DƏYİŞDİR (müdaxilə yox, sadəcə göstərmə)
     startWorkTimer: function(taskId, startedAt, totalPausedSeconds) {
         const key = `work_${taskId}`;
         if (this.workTimers[key]) clearInterval(this.workTimers[key].interval);
@@ -323,14 +279,12 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
             const t = this.workTimers[key];
             if (!t) return;
 
-            // Timer göstəricisi - HƏR KƏS ÜÇÜN İŞLƏYİR
             const el = document.querySelector(`[data-work-timer="${taskId}"]`);
             const lbl = document.querySelector(`[data-worked-label="${taskId}"]`);
             if (!el) return;
 
             let elapsed;
             if (t.isPaused) {
-                // Paused vəziyyətində vaxt dayanır
                 elapsed = t.pausedAt ? (t.pausedAt - t.startTime - t.pausedMs) : (Date.now() - t.startTime - t.pausedMs);
             } else {
                 elapsed = Math.max(0, Date.now() - t.startTime - t.pausedMs);
@@ -403,7 +357,7 @@ if (!document.getElementById('task-timer-styles')) {
         @keyframes pulse-urgent { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.8;transform:scale(1.03)} }
         @keyframes blink        { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes slideInRight { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
-        .confirm-actions { display:flex;gap:4px;margin-top:5px;flex-wrap:wrap; }
+        .confirm-actions { display:flex;gap:4px;margin-top:-1px;flex-wrap:wrap; }
         .btn-approve {
             background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
             padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;
@@ -433,16 +387,8 @@ if (!document.getElementById('task-timer-styles')) {
         .btn-pause-toggle:disabled { opacity:0.6;cursor:not-allowed;transform:none; }
         .btn-pause-toggle.resume-mode { background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 2px 5px rgba(16,185,129,0.3); }
         .timer-notification { position:fixed;bottom:80px;right:20px;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:10005;box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;gap:8px;animation:slideInRight 0.3s ease; }
-        /* Mənə aid olmayan tasklar üçün disabled düymə stili */
-        .btn-not-mine {
-            opacity: 0.5;
-            cursor: not-allowed;
-            filter: grayscale(0.2);
-        }
-        .btn-not-mine:hover {
-            transform: none !important;
-            box-shadow: none !important;
-        }
+        .btn-not-mine { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.2); }
+        .btn-not-mine:hover { transform: none !important; box-shadow: none !important; }
     `;
     document.head.appendChild(style);
 }
@@ -537,7 +483,7 @@ window.handleStartWork = async function(taskId) {
             const sec = row.querySelector('.status-section');
             if (sec) {
                 sec.innerHTML = `<div class="status-section" style="display:flex;flex-direction:column;gap:5px;">
-                    ${buildWorkingHTML(taskId, false, true, 0)}
+                    ${buildWorkingHTML(taskId, false, true, true, 0)}
                     <div style="display:flex;gap:3px;flex-wrap:wrap;"><button class="btn btn-sm btn-warning" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə"><i class="fa-solid fa-edit"></i></button></div>
                 </div>`;
                 setTimeout(() => window.TaskTimerSystem.startWorkTimer(taskId, startedAt, pausedSec), 150);
@@ -602,13 +548,13 @@ window.handlePauseToggle = async function(taskId) {
             const response = await makeApiRequest(`/tasks/${taskId}/pause`, 'POST', { reason: 'Fasilə' });
             if (!response || response.error) throw new Error(response?.error || 'Xəta');
             btn.classList.add('resume-mode');
-           btn.innerHTML = `
-                            <div style="position: relative; display: inline-flex; align-items: center; gap: 2px;">
-                                <i class="fa-solid fa-play" style="position: relative;"></i>
-                                <i class="fa-solid fa-pause" style="position: relative; font-size: 0.7em; margin-left: -6px;"></i>
-                            </div>
-                            <span style="margin-left: 4px;"></span>
-                        `;
+            btn.innerHTML = `
+                <div style="position: relative; display: inline-flex; align-items: center; gap: 2px;">
+                    <i class="fa-solid fa-play" style="position: relative;"></i>
+                    <i class="fa-solid fa-pause" style="position: relative; font-size: 0.7em; margin-left: -6px;"></i>
+                </div>
+                <span style="margin-left: 4px;"></span>
+            `;
             document.querySelector(`[data-work-timer-display="${taskId}"]`)?.classList.add('paused-mode');
             const stEl = document.querySelector(`[data-timer-status="${taskId}"]`);
             if (stEl) stEl.textContent = 'Fasilə';
@@ -624,12 +570,22 @@ window.handlePauseToggle = async function(taskId) {
 // ======================== HTML BUILDER-LƏR ========================
 
 /**
- * Təsdiq müddəti keçmiş task (approval_overdue)
- * - Hər kəs gecikmə vaxtını GÖRƏ BİLƏR
- * - Mənə aid deyilsə: GÖTÜR düyməsi (digər user ala bilər)
- * - Mənə aiddirsə: Təsdiq/İmtina düymələri
+ * 🔥 DÜZƏLİŞ: Edit düyməsini göstərmə məntiqi
+ * canEdit = isAssignedToMe (icraçı) YAXUD isCreatedByMe (yaradan)
  */
-function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe) {
+function _buildEditButton(taskId, canEdit) {
+    if (!canEdit) return '';
+    return `
+        <button class="btn-edit-task" data-edit-btn="${taskId}"
+                onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
+            <i class="fa-solid fa-pen"></i>
+        </button>
+    `;
+}
+
+function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe, isCreatedByMe) {
+    const canEdit = isAssignedToMe || isCreatedByMe;
+
     const overdueHtml = `
         <div data-confirm-timer="${taskId}">
             <div class="timer-delayed" style="background:#dc2626;">
@@ -639,34 +595,33 @@ function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe) {
         </div>
     `;
 
-    // Edit button - YALNIZ MƏNƏ AİD OLDUQDA
-    const editButton = isAssignedToMe ? `
-        <button class="btn-edit-task" data-edit-btn="${taskId}" 
-                onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
-            <i class="fa-solid fa-pen"></i>
-        </button>
-    ` : '';
-
-    // Mənə aiddirsə - təsdiq/imtina düymələri
     if (isAssignedToMe) {
         return `
             ${overdueHtml}
-            <div class="confirm-actions" style="margin-top:5px;">
+            <div class="confirm-actions" style="margin-top:-1px;">
                 <button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
                     <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
                 </button>
                 <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})">
                     <i class="fas fa-times"></i> İmtina
                 </button>
-                ${editButton}
+                ${_buildEditButton(taskId, canEdit)}
             </div>`;
     }
 
-    // Mənə AİD DEYİL - digər user götürə bilər
+    // Yaradan şəxs - sadəcə edit düyməsi görür
+    if (isCreatedByMe) {
+        return `
+            ${overdueHtml}
+            <div class="confirm-actions" style="margin-top:-1px;">
+                ${_buildEditButton(taskId, canEdit)}
+            </div>`;
+    }
+
     return `
         ${overdueHtml}
-        <div class="confirm-actions" style="margin-top:5px;">
-            <button class="btn-take-task" data-take-btn="${taskId}" 
+        <div class="confirm-actions" style="margin-top:-1px;">
+            <button class="btn-take-task" data-take-btn="${taskId}"
                     onclick="handleTakeOverdueTask(${taskId})"
                     style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;
                            padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;
@@ -676,12 +631,8 @@ function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe) {
         </div>`;
 }
 
-/**
- * Təsdiq gözləyən task (pending_approval)
- * - Hər kəs countdown-u GÖRƏ BİLƏR
- * - Düymələr YALNIZ task sahibinə
- */
-function buildPendingApprovalHTML(taskId, isAssignedToMe) {
+function buildPendingApprovalHTML(taskId, isAssignedToMe, isCreatedByMe) {
+    const canEdit = isAssignedToMe || isCreatedByMe;
     const delayInfo = window.TaskTimerSystem.getDelayInfo(taskId);
 
     setTimeout(() => {
@@ -689,7 +640,6 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe) {
             window.TaskTimerSystem.startConfirmationCountdown(taskId);
     }, 100);
 
-    // Countdown HTML - HƏR KƏS GÖRƏ BİLƏR
     let countdownHtml = '';
     if (delayInfo.isDelayed) {
         countdownHtml = `<div data-confirm-timer="${taskId}">
@@ -708,85 +658,83 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe) {
         </div>`;
     }
 
-    // Edit button - YALNIZ MƏNƏ AİD OLDUQDA
-    const editButton = isAssignedToMe ? `
-        <button class="btn-edit-task" data-edit-btn="${taskId}" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
-            <i class="fa-solid fa-pen"></i>
-        </button>
-    ` : '';
+    // İcraçı - bütün düymələr
+    if (isAssignedToMe) {
+        const approveBtn = delayInfo.isDelayed ?
+            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
+                <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
+            </button>` :
+            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
+                <i class="fas fa-check"></i> Təsdiq et
+            </button>`;
 
-    // Mənə aid deyilsə - YALNIZ COUNTDOWN (düyməsiz)
-    if (!isAssignedToMe) {
         return `<div class="pending-section">
             ${countdownHtml}
-            <div class="confirm-actions" style="margin-top:5px;">
-                <!-- Düymə yoxdur - sadəcə vaxt göstəricisi -->
+            <div class="confirm-actions" style="margin-top:-1px;">
+                ${approveBtn}
+                <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})">
+                    <i class="fas fa-times"></i> İmtina
+                </button>
+                ${_buildEditButton(taskId, canEdit)}
             </div>
         </div>`;
     }
 
-    // Mənə aiddirsə - COUNTDOWN + DÜYMƏLƏR
-    const approveBtn = delayInfo.isDelayed ?
-        `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
-            <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
-        </button>` :
-        `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
-            <i class="fas fa-check"></i> Təsdiq et
-        </button>`;
-
-    return `<div class="pending-section">
-        ${countdownHtml}
-        <div class="confirm-actions" style="margin-top:5px;">
-            ${approveBtn}
-            <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})">
-                <i class="fas fa-times"></i> İmtina
-            </button>
-            ${editButton}
-        </div>
-    </div>`;
-}
-
-/**
- * Təsdiqlənmiş gözləmə statusu (waiting)
- * - Hər kəs statusu GÖRƏ BİLƏR
- * - "Başla" düyməsi YALNIZ task sahibinə
- */
-function buildWaitingHTML(taskId, isAssignedToMe) {
-    const waitingHtml = `<span class="status-waiting-badge"><i class="fas fa-check-circle"></i>Gözləyir</span>`;
-
-    // Mənə aid deyilsə - YALNIZ STATUS
-    if (!isAssignedToMe) {
-        return `<div class="waiting-section">
-            ${waitingHtml}
-            <div style="margin-top:5px;"></div>
+    // 🔥 Yaradan şəxs - countdown + edit düyməsi
+    if (isCreatedByMe) {
+        return `<div class="pending-section">
+            ${countdownHtml}
+            <div class="confirm-actions" style="margin-top:-1px;">
+                ${_buildEditButton(taskId, canEdit)}
+            </div>
         </div>`;
     }
 
-    // Mənə aiddirsə - STATUS + BAŞLA DÜYMƏSİ + EDIT
-    const editButton = `
-        <button class="btn-edit-task" data-edit-btn="${taskId}" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
-            <i class="fa-solid fa-pen"></i>
-        </button>
-    `;
-
-    return `<div class="waiting-section">
-        ${waitingHtml}
-        <div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
-            <button class="btn-start-work" data-start-btn="${taskId}" onclick="handleStartWork(${taskId})">
-                <i class="fas fa-play"></i> Başla
-            </button>
-            ${editButton}
-        </div>
+    // Başqası - yalnız countdown
+    return `<div class="pending-section">
+        ${countdownHtml}
+        <div class="confirm-actions" style="margin-top:-1px;"></div>
     </div>`;
 }
 
-/**
- * İşlənən status (in_progress / paused)
- * - Hər kəs timer-ları görə bilər
- * - MÜDAXİLƏ butonları yalnız task sahibinə
- */
-function buildWorkingHTML(taskId, isPaused, isAssignedToMe, workedMinutes) {
-    // Timer HTML - HƏR KƏS GÖRƏ BİLƏR
+function buildWaitingHTML(taskId, isAssignedToMe, isCreatedByMe) {
+    const canEdit = isAssignedToMe || isCreatedByMe;
+
+    const waitingHtml = `<span class="status-waiting-badge" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:6px 16px;border-radius:24px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7;height:25px;min-width:120px;">
+        <i class="fas fa-clock" style="font-size:12px;"></i> Gözləyir
+    </span>`;
+
+    if (isAssignedToMe) {
+        return `<div class="waiting-section">
+            ${waitingHtml}
+            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
+                <button class="btn-start-work" data-start-btn="${taskId}" onclick="handleStartWork(${taskId})">
+                    <i class="fas fa-play"></i> Başla
+                </button>
+                ${_buildEditButton(taskId, canEdit)}
+            </div>
+        </div>`;
+    }
+
+    // 🔥 Yaradan şəxs - status + edit düyməsi
+    if (isCreatedByMe) {
+        return `<div class="waiting-section">
+            ${waitingHtml}
+            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
+                ${_buildEditButton(taskId, canEdit)}
+            </div>
+        </div>`;
+    }
+
+    return `<div class="waiting-section">
+        ${waitingHtml}
+        <div style="margin-top:-1px;"></div>
+    </div>`;
+}
+
+function buildWorkingHTML(taskId, isPaused, isAssignedToMe, isCreatedByMe, workedMinutes) {
+    const canEdit = isAssignedToMe || isCreatedByMe;
+
     const timerHtml = `
         <div class="work-timer-display ${isPaused ? 'paused-mode' : ''}" data-work-timer-display="${taskId}">
             <i class="fas fa-${isPaused ? 'pause' : 'spinner fa-spin'}" style="font-size:11px;"></i>
@@ -796,13 +744,8 @@ function buildWorkingHTML(taskId, isPaused, isAssignedToMe, workedMinutes) {
         </div>
     `;
 
-    // Timer başlat - HƏR KƏS ÜÇÜN (vaxtı görmək üçün)
-    // Timer sistemini hər kəs üçün başlat, amma butonlara müdaxilə etməsin
     setTimeout(() => {
-        // Timer-i başlat (yalnız göstərmək üçün)
         window.TaskTimerSystem.startWorkTimer(taskId, null, 0);
-
-        // Əgər paused statusdadırsa, UI-da göstər
         if (isPaused) {
             const wkey = `work_${taskId}`;
             if (window.TaskTimerSystem.workTimers[wkey]) {
@@ -811,41 +754,39 @@ function buildWorkingHTML(taskId, isPaused, isAssignedToMe, workedMinutes) {
         }
     }, 150);
 
-    // Mənə aid deyilsə - YALNIZ TIMER GÖRÜNSÜN, BUTON YOX
-    if (!isAssignedToMe) {
+    if (isAssignedToMe) {
+        const actionButton = `
+            <button class="btn-pause-toggle ${isPaused ? 'resume-mode' : ''}" data-pause-btn="${taskId}" onclick="handlePauseToggle(${taskId})">
+                ${isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>'}
+            </button>
+        `;
+
         return `<div class="working-section">
             ${timerHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
-                <!-- Buton yoxdur - sadəcə timer -->
+            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
+                ${actionButton}
+                ${_buildEditButton(taskId, canEdit)}
             </div>
         </div>`;
     }
 
-    // Mənə aiddirsə - TIMER + BUTONLAR
-    const actionButton = `
-        <button class="btn-pause-toggle ${isPaused ? 'resume-mode' : ''}" data-pause-btn="${taskId}" onclick="handlePauseToggle(${taskId})">
-            ${isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>'}
-        </button>
-    `;
+    // 🔥 Yaradan şəxs - timer + edit düyməsi (pause yox)
+    if (isCreatedByMe) {
+        return `<div class="working-section">
+            ${timerHtml}
+            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
+                ${_buildEditButton(taskId, canEdit)}
+            </div>
+        </div>`;
+    }
 
-    const editButton = `
-        <button class="btn-edit-task" data-edit-btn="${taskId}" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
-            <i class="fa-solid fa-pen"></i>
-        </button>
-    `;
-
+    // Başqası - yalnız timer
     return `<div class="working-section">
         ${timerHtml}
-        <div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
-            ${actionButton}
-            ${editButton}
-        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;"></div>
     </div>`;
 }
 
-
-
-// ======================== YENİ FUNKSİYA: Gecikmiş taskı götürmək ========================
 window.handleTakeOverdueTask = async function(taskId) {
     if (!confirm('Bu tapşırığı özünüzə götürmək istəyirsiniz? Təsdiq müddəti keçib.')) return;
 
@@ -857,8 +798,6 @@ window.handleTakeOverdueTask = async function(taskId) {
 
     try {
         if (typeof makeApiRequest !== 'function') throw new Error('makeApiRequest tapılmadı');
-
-        // Əvvəl task-ın məlumatlarını al
         const taskResp = await makeApiRequest(`/tasks/${taskId}`, 'GET', null, { silent: true });
         const task = taskResp?.data || taskResp;
 
@@ -866,15 +805,11 @@ window.handleTakeOverdueTask = async function(taskId) {
             throw new Error(`Bu task artıq statusu dəyişib: ${task.status}`);
         }
 
-        // Task-ı özünə götür (təsdiq et)
         const response = await makeApiRequest(`/tasks/${taskId}/approve`, 'POST', {});
-
         if (!response || response.error) throw new Error(response?.error || 'Xəta baş verdi');
 
-        // Timer-ları təmizlə
         window.TaskTimerSystem.clearConfirmation(taskId);
 
-        // Səhifəni yenilə
         if (window.taskManager) {
             await window.taskManager.loadActiveTasks(1, true);
         } else {
@@ -902,12 +837,8 @@ function showTimerNotification(msg, color) {
     setTimeout(() => n.remove(), 3500);
 }
 
-/**
- * Bitmiş/İmtina edilmiş task (completed/rejected)
- * - Hər kəs statusu GÖRƏ BİLƏR
- * - Edit düyməsi YALNIZ task sahibinə
- */
-function buildCompletedRejectedHTML(taskId, status, isAssignedToMe) {
+function buildCompletedRejectedHTML(taskId, status, isAssignedToMe, isCreatedByMe) {
+    const canEdit = isAssignedToMe || isCreatedByMe;
     const statusText = status === 'completed' ? 'Tamamlandı' : 'İmtina edildi';
     const statusIcon = status === 'completed' ? 'fa-check-circle' : 'fa-ban';
     const statusColor = status === 'completed' ? '#10b981' : '#ef4444';
@@ -916,40 +847,19 @@ function buildCompletedRejectedHTML(taskId, status, isAssignedToMe) {
         <i class="fas ${statusIcon}"></i> ${statusText}
     </span>`;
 
-    // Mənə aid deyilsə - YALNIZ STATUS
-    if (!isAssignedToMe) {
+    if (!canEdit) {
         return `<div>${statusHtml}</div>`;
     }
 
-    // Mənə aiddirsə - STATUS + EDIT
-    const editButton = `
-        <button class="btn-edit-task" data-edit-btn="${taskId}" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
-            <i class="fa-solid fa-pen"></i> Redaktə
-        </button>
-    `;
-
     return `<div>
         ${statusHtml}
-        <div style="margin-top:5px;">${editButton}</div>
+        <div style="margin-top:-1px;">${_buildEditButton(taskId, canEdit)}</div>
     </div>`;
 }
-
 
 // ======================== ANA MODUL ========================
 const ActiveRowCreator = {
 
-    /**
-     * ŞİRKƏT ADI ALMA - İKİ MƏRHƏLƏLİ:
-     *
-     * 1. _syncCompanyName: Dərhal (sinxron) - cərgə render olunarkən istifadə edilir
-     *    Prioritet: viewable_company_name → metadata → cache → company_name → "ID: X"
-     *
-     * 2. _resolveCompanyName: Asinxron - "ID: X" göstərilirsə arxa planda API çağırır,
-     *    cavab gəldikdə cərgənin company-name-cell-ini yeniləyir.
-     *
-     * BUG: Köhnə versiyada companyCache boşdursa dərhal "Şirkət ID: X" yazılır,
-     * heç vaxt yenilənmirdi. İndi asinxron yükləmə ilə həll olunur.
-     */
     _syncCompanyName: function(task) {
         if (task.viewable_company_name?.trim()) return task.viewable_company_name;
         if (task.metadata) {
@@ -975,11 +885,9 @@ const ActiveRowCreator = {
     },
 
     _resolveCompanyName: async function(task) {
-        // Sinxron yoxlama (artıq bilirsə dərhal qaytar)
         const sync = this._syncCompanyName(task);
         if (!sync.startsWith('Şirkət ID:') && sync !== 'Şirkət məlumatı yoxdur') return sync;
 
-        // API-dən yüklə
         const lookupId = task.viewable_company_id || task.company_id;
         if (!lookupId || typeof makeApiRequest !== 'function') return sync;
 
@@ -988,7 +896,6 @@ const ActiveRowCreator = {
             const data = res?.data || res;
             const name = data?.company_name || data?.name || '';
             if (name) {
-                // Cache-ə yaz - növbəti dəfə sinxron işləyəcək
                 if (!window.taskManager) window.taskManager = {};
                 if (!window.taskManager.companyCache) window.taskManager.companyCache = {};
                 window.taskManager.companyCache[lookupId] = name;
@@ -1009,7 +916,6 @@ const ActiveRowCreator = {
         const workTypeName = task.work_type_name || '-';
         const description = task.task_description || task.description || '';
 
-        // Şirkət adı: sinxron götür, "ID: X" isə asinxron yüklə
         let displayCompanyName = this._syncCompanyName(task);
         if (displayCompanyName.startsWith('Şirkət ID:') || displayCompanyName === 'Şirkət məlumatı yoxdur') {
             this._resolveCompanyName(task).then(name => {
@@ -1030,57 +936,60 @@ const ActiveRowCreator = {
         }
 
         const currentUserId = window.taskManager?.userData?.userId;
-        // 🔥 ƏSAS DƏYİŞİKLİK: task.assigned_to ilə currentUserId müqayisəsi
-        const isAssignedToMe = task.assigned_to == currentUserId;
 
+        // 🔥 DÜZƏLİŞ: Həm icraçı, həm də yaradan yoxla
+        const isAssignedToMe = task.assigned_to == currentUserId;
+        const isCreatedByMe = task.created_by == currentUserId;
 
         let initialCommentCount = task.comment_count || 0;
 
         const commentsBtn = `
-            <button class="btn btn-sm btn-outline-info" 
+            <button class="btn btn-sm btn-outline-info"
                     data-comment-btn="${task.id}"
                     onclick="TableManager.viewTaskComments(${task.id})"
                     style="position:relative; border-radius:20px; padding:4px 10px; display:inline-flex; align-items:center; gap:5px;">
                 <i class="fa-solid fa-comments" style="font-size:13px;"></i>
-                <span class="comment-count comment-count-badge" 
+                <span class="comment-count comment-count-badge"
                       data-task-id="${task.id}"
                       style="display:inline-flex; align-items:center; justify-content:center;
                              min-width:20px; height:20px; padding:0 5px; border-radius:10px;
-                             background: #f1f5f9;
-                             color: #94a3b8;
+                             background: #f1f5f9; color: #94a3b8;
                              font-size:11px; font-weight:700;
                              transition: background 0.3s, color 0.3s;">0</span>
             </button>
         `;
 
-        const detailsBtn  = `<button class="btn btn-sm btn-secondary" onclick="TableManager.viewTaskDetails(${task.id})" title="Detallar"><i class="fa-solid fa-eye"></i></button>`;
+        const detailsBtn = `<button class="btn btn-sm btn-secondary" onclick="TableManager.viewTaskDetails(${task.id})" title="Detallar"><i class="fa-solid fa-eye"></i></button>`;
 
         let statusBadgeHTML = '', statusButtonHTML = '';
-
 
         if (task.status === 'approval_overdue') {
             let delayHours = '?';
             if (task.approval_expires_at) {
                 const expiredAt = new Date(task.approval_expires_at);
-                const now = new Date();
                 delayHours = ((now - expiredAt) / 3600000).toFixed(1);
             }
-            statusBadgeHTML = buildApprovalOverdueHTML(task.id, delayHours, isAssignedToMe);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildApprovalOverdueHTML(task.id, delayHours, isAssignedToMe, isCreatedByMe);
 
         } else if (task.status === 'pending_approval') {
-            statusBadgeHTML = buildPendingApprovalHTML(task.id, isAssignedToMe);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildPendingApprovalHTML(task.id, isAssignedToMe, isCreatedByMe);
 
         } else if (task.status === 'waiting') {
-            statusBadgeHTML = buildWaitingHTML(task.id, isAssignedToMe);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildWaitingHTML(task.id, isAssignedToMe, isCreatedByMe);
 
         } else if (task.status === 'in_progress') {
-            statusBadgeHTML = buildWorkingHTML(task.id, false, isAssignedToMe, task.worked_minutes ?? null);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildWorkingHTML(task.id, false, isAssignedToMe, isCreatedByMe, task.worked_minutes ?? null);
             if (isAssignedToMe) {
                 setTimeout(() => window.TaskTimerSystem.startWorkTimer(task.id, task.started_at || task.started_date, task.total_paused_seconds || 0), 150);
             }
 
         } else if (task.status === 'paused') {
-            statusBadgeHTML = buildWorkingHTML(task.id, true, isAssignedToMe, task.worked_minutes ?? null);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildWorkingHTML(task.id, true, isAssignedToMe, isCreatedByMe, task.worked_minutes ?? null);
             if (isAssignedToMe) {
                 setTimeout(() => {
                     window.TaskTimerSystem.startWorkTimer(task.id, task.started_at || task.started_date, task.total_paused_seconds || 0);
@@ -1090,23 +999,24 @@ const ActiveRowCreator = {
             }
 
         } else if (task.status === 'completed') {
-            statusBadgeHTML = buildCompletedRejectedHTML(task.id, 'completed', isAssignedToMe);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildCompletedRejectedHTML(task.id, 'completed', isAssignedToMe, isCreatedByMe);
 
         } else if (task.status === 'rejected') {
-            statusBadgeHTML = buildCompletedRejectedHTML(task.id, 'rejected', isAssignedToMe);
+            // 🔥 isCreatedByMe əlavə edildi
+            statusBadgeHTML = buildCompletedRejectedHTML(task.id, 'rejected', isAssignedToMe, isCreatedByMe);
 
         } else if (task.status === 'pending' || task.status === 'overdue') {
-            // Köhnə statuslar üçün fallback
             if (isOverdue) {
-                statusBadgeHTML = `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> GECİKMƏ</span>`;
-                if (isAssignedToMe) {
+                statusBadgeHTML = `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Gecikmə</span>`;
+                if (isAssignedToMe || isCreatedByMe) {
                     statusButtonHTML = `<button class="btn btn-sm btn-warning" onclick="TableManager.startTaskWithNotification(${task.id})"><i class="fa-solid fa-hand-paper"></i></button>`;
                 }
             } else {
                 statusBadgeHTML = `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Gözləyir</span>`;
                 if (isAssignedToMe) {
-                    statusButtonHTML = `<button class="btn btn-sm btn-success" onclick="TableManager.startTaskWithNotification(${task.id}")><i class="fa-solid fa-play"></i></button>`;
-                } else {
+                    statusButtonHTML = `<button class="btn btn-sm btn-success" onclick="TableManager.startTaskWithNotification(${task.id})"><i class="fa-solid fa-play"></i></button>`;
+                } else if (!isCreatedByMe) {
                     statusButtonHTML = `<button class="btn btn-sm btn-info" onclick="TableManager.takeTaskFromOthers(${task.id})"><i class="fa-solid fa-user-plus"></i> Özünə götür</button>`;
                 }
             }
@@ -1122,29 +1032,13 @@ const ActiveRowCreator = {
             dueDateTitle = '✅ Deadline bugün';
         }
 
-        // ===== FAYL HİSSƏSİ - YENİ VERSİYA (Debug ilə) =====
         let fileColumnHTML = '<span class="text-muted" style="color:#94a3b8;">-</span>';
         let attachments = [];
 
-        // 🔥 DEBUG: Task məlumatlarını yoxla
-        console.log(`🔍 TASK ${task.id} FAYL MƏLUMATLARI:`, {
-            file_uuids: task.file_uuids,
-            file_uuids_type: typeof task.file_uuids,
-            attachments: task.attachments,
-            has_file_uuids: !!task.file_uuids,
-            status: task.status
-        });
-
-        // 1. Əvvəlcə file_uuids-i yoxla (backend-dən gələn əsas sahə)
         if (task.file_uuids) {
             let uuids = [];
-
-            // PostgreSQL array formatını parse et: "{uuid1,uuid2}"
             if (typeof task.file_uuids === 'string') {
-                let cleanStr = task.file_uuids
-                    .replace(/^\{/, '')
-                    .replace(/\}$/, '')
-                    .trim();
+                let cleanStr = task.file_uuids.replace(/^\{/, '').replace(/\}$/, '').trim();
                 if (cleanStr) {
                     uuids = cleanStr.split(',').map(u =>
                         u.trim().replace(/^"(.*)"$/, '$1')
@@ -1154,37 +1048,23 @@ const ActiveRowCreator = {
                 uuids = task.file_uuids;
             }
 
-            console.log(`📎 Task ${task.id}: ${uuids.length} UUID tapıldı:`, uuids);
-
             if (uuids.length > 0) {
                 attachments = uuids.map(uuid => ({
-                    file_id: uuid,
-                    uuid: uuid,
-                    id: uuid,
+                    file_id: uuid, uuid: uuid, id: uuid,
                     filename: `fayl_${uuid.substring(0, 8)}`,
                     original_filename: `Fayl ${uuid.substring(0, 8)}`,
-                    mime_type: '',
-                    is_audio_recording: true  // Audio olduğunu bildir
+                    mime_type: '', is_audio_recording: true
                 }));
             }
         }
 
-        // 2. Əgər file_uuids boşdursa, attachments-i yoxla
         if (attachments.length === 0 && task.attachments) {
             try {
-                attachments = Array.isArray(task.attachments)
-                    ? task.attachments
-                    : JSON.parse(task.attachments);
-                console.log(`📎 Task ${task.id}: ${attachments.length} fayl attachments-dən tapıldı`);
-            } catch(e) {
-                console.warn(`Attachments parse xətası (task ${task.id}):`, e);
-            }
+                attachments = Array.isArray(task.attachments) ? task.attachments : JSON.parse(task.attachments);
+            } catch(e) {}
         }
 
-        // 3. Fayl göstəricisini yarat
         if (attachments.length > 0) {
-            console.log(`✅ Task ${task.id}: ${attachments.length} fayl göstəriləcək`);
-
             const getIcon = f => {
                 const mt = f.mime_type || '';
                 const fn = (f.filename || f.original_filename || '').toLowerCase();
@@ -1221,8 +1101,6 @@ const ActiveRowCreator = {
                     <i class="fas fa-chevron-down" style="font-size:10px;color:#94a3b8;"></i>
                 </div>`;
             }
-        } else {
-            console.log(`ℹ️ Task ${task.id}: heç bir fayl tapılmadı`);
         }
 
         setTimeout(() => {
@@ -1230,7 +1108,6 @@ const ActiveRowCreator = {
                 window.CommentTracker.initForTasks([task.id]);
             }
         }, 300);
-
 
         return `<tr data-task-id="${task.id}" style="transition:all 0.2s;">
             <td style="text-align:center;font-weight:500;color:#64748b;">${serialNumber}</td>
@@ -1275,6 +1152,7 @@ const ActiveRowCreator = {
             </div>`;
         } catch(e) { return d; }
     },
+
     escapeHtml: function(t) {
         if (!t) return '';
         const div = document.createElement('div');
@@ -1321,15 +1199,10 @@ if (typeof TableManager !== 'undefined') {
 if (typeof window !== 'undefined') {
     window.ActiveRowCreator = ActiveRowCreator;
     window.WorkHours = WorkHours;
-    console.log('✅ ActiveRowCreator yükləndi');
-    console.log('   ⏰ Countdown: yalnız 09:00-18:00 arası sayır, gecə "İş saatı bitti" göstərir');
-    console.log('   ✅ Təsdiq düyməsi: istənilən vaxt işləyir');
-    console.log('   🏢 Şirkət adı: sinxron + asinxron (API fallback ilə)');
-    console.log('   🔐 Mənə aid olmayan tasklar üçün düymələr disabled olur');
+    console.log('✅ ActiveRowCreator yükləndi (edit düyməsi: yaradan + icraçı)');
 }
 
-// ======================== AÇIQLAMA HOVER POPUP (SADƏ VƏ YIĞCAM) ========================
-
+// ======================== AÇIQLAMA HOVER POPUP ========================
 if (!document.getElementById('desc-hover-style')) {
     const style = document.createElement('style');
     style.id = 'desc-hover-style';
@@ -1355,7 +1228,6 @@ if (!document.getElementById('desc-hover-style')) {
 }
 
 let activeTip = null;
-let tipTimer = null;
 
 function showTip(el, text) {
     if (activeTip) activeTip.remove();
@@ -1370,12 +1242,8 @@ function showTip(el, text) {
     let top = rect.bottom + 6;
     let left = rect.left;
 
-    if (top + tip.offsetHeight > window.innerHeight - 10) {
-        top = rect.top - tip.offsetHeight - 6;
-    }
-    if (left + tip.offsetWidth > window.innerWidth - 10) {
-        left = window.innerWidth - tip.offsetWidth - 10;
-    }
+    if (top + tip.offsetHeight > window.innerHeight - 10) top = rect.top - tip.offsetHeight - 6;
+    if (left + tip.offsetWidth > window.innerWidth - 10) left = window.innerWidth - tip.offsetWidth - 10;
     if (left < 5) left = 5;
 
     tip.style.top = Math.max(5, top) + 'px';

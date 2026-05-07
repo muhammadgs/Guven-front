@@ -1,7 +1,7 @@
 // apiService.js - OPTİMLƏŞDİRİLMİŞ VERSİYA
 // Bütün endpointlar üçün cache dəstəyi, dublikat sorğular yoxdur
 
-const API_BASE = "http://vps.guvenfinans.az:8008";
+const API_BASE = "https://guvenfinans.az/proxy.php";
 
 // ============ URL QURMA ============
 function buildUrl(endpoint) {

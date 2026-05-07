@@ -653,13 +653,16 @@ class EmployeesService {
                 </td>
                 <td class="py-4 px-6">
                     <div class="flex space-x-2">
-                        <button class="view-employee-btn px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100" data-id="${emp.id}">
+                        <button class="view-employee-btn px-3 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100" data-id="${emp.id}" title="Bax">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button class="edit-employee-btn px-3 py-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100" data-id="${emp.id}">
+                        <button class="edit-employee-btn px-3 py-2 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100" data-id="${emp.id}" title="Redaktə et">
                             <i class="fa-solid fa-edit"></i>
                         </button>
-                        <button class="delete-employee-btn px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100" data-id="${emp.id}">
+                        <button class="assign-companies-btn px-3 py-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100" data-id="${emp.id}" title="Şirkət təyin et">
+                            <i class="fa-solid fa-building-user"></i>
+                        </button>
+                        <button class="delete-employee-btn px-3 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-100" data-id="${emp.id}" title="Sil">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -705,10 +708,234 @@ class EmployeesService {
             btn.addEventListener('click', (e) => this.openEditEmployeeModal(e.currentTarget.dataset.id));
         });
 
+        // ✅ ASSIGN COMPANIES BUTTONS - YENİ ƏLAVƏ EDİLDİ
+        document.querySelectorAll('.assign-companies-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const employeeId = e.currentTarget.dataset.id;
+                console.log('🏢 Şirkət təyin et düyməsi klikləndi, işçi ID:', employeeId);
+                this.openAssignCompaniesModal(employeeId);
+            });
+        });
+
         // Delete buttons
         document.querySelectorAll('.delete-employee-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.deleteEmployee(e.currentTarget.dataset.id));
         });
+    }
+
+    /**
+     * İşçiyə şirkət təyin etmə modalını aç
+     */
+    async openAssignCompaniesModal(employeeId) {
+        try {
+            // İşçi məlumatlarını yüklə
+            const employee = await this.getEmployeeById(employeeId);
+            const employeeName = `${employee.first_name || ''} ${employee.last_name || ''}`.trim() || 'İşçi';
+
+            this.closeModals();
+
+            // Loading göstər
+            const loadingHtml = `
+                <div id="assignCompaniesModal" class="fixed inset-0 z-[200] overflow-y-auto bg-black bg-opacity-50">
+                    <div class="flex items-center justify-center min-h-screen px-4">
+                        <div class="bg-white rounded-2xl p-8 text-center">
+                            <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-blue border-t-transparent"></div>
+                            <p class="mt-4 text-gray-600">Şirkət siyahısı yüklənir...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', loadingHtml);
+
+            // ✅ DÜZƏLDİLƏN SORĞU - query params yox, birbaşa GET
+            const myCompaniesResponse = await this.api.get('/users/my-companies');
+
+            // Loading modalını sil
+            document.getElementById('assignCompaniesModal')?.remove();
+
+            if (!myCompaniesResponse || !myCompaniesResponse.success) {
+                this.showError(myCompaniesResponse?.error || 'Şirkət siyahısı yüklənmədi');
+                return;
+            }
+
+            const availableCompanies = myCompaniesResponse.companies || [];
+
+            // İşçinin təyin olunduğu şirkətləri yüklə
+            const assignedResponse = await this.api.get(`/users/${employeeId}/assigned-companies`);
+            const assignedCodes = assignedResponse.assigned_company_codes || [];
+
+            if (availableCompanies.length === 0) {
+                this.showError('Təyin edə biləcəyiniz şirkət tapılmadı');
+                return;
+            }
+
+            const modalHTML = `
+                <div id="assignCompaniesModal" class="fixed inset-0 z-[200] overflow-y-auto bg-black bg-opacity-50">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center">
+                        <div class="inline-block w-full max-w-2xl my-8 text-left align-middle transition-all transform bg-white shadow-2xl rounded-3xl overflow-hidden">
+                            <div class="bg-white border-b border-gray-200 px-8 py-6">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-12 w-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                                            <i class="fa-solid fa-building-user text-purple-600"></i>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-xl font-bold text-gray-900">Şirkət Təyinatı</h3>
+                                            <p class="text-gray-600 text-sm">
+                                                ${employeeName}
+                                                <span class="text-gray-400">(ID: ${employee.id})</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button id="closeAssignModalBtn" class="h-10 w-10 rounded-full bg-gray-100 hover:bg-gray-200">
+                                        <i class="fa-solid fa-times text-gray-600"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="px-8 py-6">
+                                <div class="bg-blue-50 rounded-xl p-4 mb-6">
+                                    <p class="text-sm text-blue-800">
+                                        <i class="fa-solid fa-info-circle mr-2"></i>
+                                        Aşağıdakı şirkətlərdən bir və ya bir neçəsini seçin. 
+                                        İşçi seçilən şirkətlərdə xidmət göstərə biləcək.
+                                    </p>
+                                </div>
+                                
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-3">Mövcud Şirkətlər:</label>
+                                    <div id="companiesChecklist" class="space-y-2 max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-4">
+                                        ${availableCompanies.map(company => {
+                                            const isChecked = assignedCodes.includes(company.company_code);
+                                            const typeLabel = company.relationship_type === 'own' ? 'Əsas şirkət' : 'Alt şirkət';
+                                            const typeClass = company.relationship_type === 'own' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
+                                            return `
+                                                <label class="flex items-center p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition">
+                                                    <input type="checkbox" 
+                                                           class="company-checkbox h-5 w-5 text-brand-blue rounded border-gray-300"
+                                                           value="${company.company_code}"
+                                                           data-name="${company.company_name}"
+                                                           data-type="${company.relationship_type}"
+                                                           ${isChecked ? 'checked' : ''}>
+                                                    <div class="ml-3 flex-1">
+                                                        <div class="flex items-center">
+                                                            <span class="font-medium text-gray-900">${company.company_name}</span>
+                                                            <span class="ml-2 text-xs px-2 py-0.5 rounded-full ${typeClass}">
+                                                                ${typeLabel}
+                                                            </span>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 mt-0.5">${company.company_code}</div>
+                                                    </div>
+                                                </label>
+                                            `;
+                                        }).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm text-gray-600">Seçilən şirkət sayı:</span>
+                                        <span id="selectedCount" class="text-lg font-bold text-brand-blue">${assignedCodes.length}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end gap-3 pt-4">
+                                    <button type="button" id="cancelAssignBtn" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50">
+                                        Ləğv et
+                                    </button>
+                                    <button type="button" id="saveAssignBtn" class="px-6 py-3 bg-brand-blue text-white rounded-xl hover:bg-blue-600 flex items-center gap-2">
+                                        <i class="fa-solid fa-save"></i> Yadda saxla
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // Seçim sayını yenilə
+            const updateSelectedCount = () => {
+                const checked = document.querySelectorAll('#companiesChecklist .company-checkbox:checked');
+                const countSpan = document.getElementById('selectedCount');
+                if (countSpan) countSpan.textContent = checked.length;
+            };
+
+            // Checkbox eventləri
+            document.querySelectorAll('#companiesChecklist .company-checkbox').forEach(cb => {
+                cb.addEventListener('change', updateSelectedCount);
+            });
+
+            // Bağlama düymələri
+            const closeBtn = document.getElementById('closeAssignModalBtn');
+            const cancelBtn = document.getElementById('cancelAssignBtn');
+            const saveBtn = document.getElementById('saveAssignBtn');
+            const modal = document.getElementById('assignCompaniesModal');
+
+            if (closeBtn) closeBtn.addEventListener('click', () => this.closeModals());
+            if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModals());
+
+            if (saveBtn) {
+                saveBtn.addEventListener('click', async () => {
+                    const selected = [];
+                    document.querySelectorAll('#companiesChecklist .company-checkbox:checked').forEach(cb => {
+                        selected.push(cb.value);
+                    });
+
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saxlanılır...';
+
+                    try {
+                        // URLSearchParams ilə query string yarat
+                        const params = new URLSearchParams();
+                        selected.forEach(code => params.append('company_codes', code));
+
+                        const response = await this.api.post(`/users/${employeeId}/assign-companies?${params.toString()}`);
+
+                        if (response.success) {
+                            this.showSuccess(`${selected.length} şirkət təyin edildi`);
+                            this.closeModals();
+
+                            // İşçilər siyahısını yenilə
+                            await this.loadEmployees();
+                        } else {
+                            this.showError(response.message || 'Xəta baş verdi');
+                        }
+
+                    } catch (error) {
+                        console.error('❌ Xəta:', error);
+                        this.showError('Xəta: ' + (error.response?.data?.detail || error.message));
+                    } finally {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Yadda saxla';
+                    }
+                });
+            }
+
+            // Overlay klik
+            if (modal) {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) this.closeModals();
+                });
+            }
+
+            // Escape düyməsi
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    this.closeModals();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+
+        } catch (error) {
+            console.error('❌ Şirkət siyahısı yüklənmədi:', error);
+            document.getElementById('assignCompaniesModal')?.remove();
+            this.showError('Şirkət siyahısı yüklənmədi: ' + error.message);
+        }
     }
 
     /**

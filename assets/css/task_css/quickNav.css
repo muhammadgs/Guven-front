@@ -751,7 +751,7 @@ body {
     border-radius: 40px;
     border: 1px solid rgba(226, 232, 240, 0.8);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-    margin-top: 5px;
+    margin-top: -2px;
 }
 
 .status-dot {
@@ -1608,15 +1608,7 @@ body .wave-nav-container:not(.minimized) .wave-icon {
     font-size: 27px !important;
 }
 
-/* Böyük vəziyyətdə yazılar/count səliqəli */
-body .wave-nav-container:not(.minimized) .wave-text {
-    min-height: 38px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 8px !important;
-    flex-wrap: nowrap !important;
-}
+
 
 body .wave-nav-container:not(.minimized) .wave-title {
     margin: 0 !important;
@@ -1993,6 +1985,75 @@ body .wave-nav-container.minimized .wave-item.active-item:hover {
 /* Cache düyməsi linear vəziyyətdə mərkəzi pozmasın */
 body .wave-nav-container.minimized .wave-nav-extra {
     display: none !important;
+}
+/* ========================================
+   BÜTÜN STATUS BADGE-LƏRİNİ STANDARTLAŞDIR
+   ======================================== */
+
+/* Bütün status badge elementləri üçün vahid qaydalar */
+.status-section .status-waiting-badge,
+.status-section .status-badge,
+.status-section [class*="status-"]:is(.status-waiting-badge, .status-badge, .status-pending, .status-completed, .status-rejected, .status-in_progress, .status-paused),
+.pending-section .confirm-countdown,
+.confirm-countdown.normal,
+.confirm-countdown.warning,
+.confirm-countdown.urgent,
+.timer-delayed,
+.waiting-section .status-waiting-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 6px 16px !important;  /* Eyni padding */
+    border-radius: 24px !important; /* Eyni border-radius */
+    font-size: 13px !important;     /* Eyni font ölçüsü */
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    height: 25px !important;        /* SABİT HÜNDÜRLÜK */
+    min-width: 120px !important;    /* SABİT MİNİMUM EN */
+    width: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Status-waiting-badge xüsusi rəngləri */
+.status-waiting-badge {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+    color: #065f46 !important;
+    border: 1px solid #6ee7b7 !important;
+}
+
+/* Status-badge-pending xüsusi rəngləri */
+.status-badge.status-pending {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fbbf24 !important;
+}
+
+/* Countdown timer-lar üçün */
+.confirm-countdown.normal {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+}
+
+.confirm-countdown.warning {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    border: 1px solid #fbbf24 !important;
+}
+
+.confirm-countdown.urgent {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+    border: 1px solid #f87171 !important;
+}
+
+/* Gecikmiş badge üçün */
+.timer-delayed {
+    background: #dc2626 !important;
+    color: white !important;
+    border: 1px solid #f87171 !important;
 }
 
 /* Kiçik ekranlarda aralıqları azalt */

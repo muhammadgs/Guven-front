@@ -2023,3 +2023,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 10000);
 })();
+
+// main.js faylında, CompaniesService yaradıldıqdan sonra əlavə edin
+
+// companiesService yaradıldıqdan sonra
+if (window.companiesService) {
+    // Bir az gözlə, companies yüklənsin
+    setTimeout(() => {
+        const companiesSection = document.getElementById('companiesSection');
+        if (companiesSection && companiesSection.style.display !== 'none') {
+            window.companiesService.initDetailPanel();
+        }
+    }, 1000);
+}
