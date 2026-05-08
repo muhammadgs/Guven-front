@@ -1114,3 +1114,76 @@ html body .task-manager-section-active .wave-item {
     }
 }
 
+
+/* =====================================================================
+   SELECTED TASK DASHBOARD LAYOUT
+   Keep the landing menu spacious, but once a task section is selected the
+   nav and the active content become normal stacked dashboard siblings.
+   ===================================================================== */
+html body.task-page-selected #waveNav,
+html body .task-page-selected #waveNav,
+html body #waveNav.has-selection,
+html body #waveNav.minimized,
+html body.task-manager-section-active #waveNav,
+html body .task-manager-section-active #waveNav {
+    position: relative !important;
+    inset: auto !important;
+    transform: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    display: block !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    margin: 24px auto 24px !important;
+    padding: 0 !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+}
+
+html body.task-page-selected #waveNav #waveNavContent,
+html body .task-page-selected #waveNav #waveNavContent,
+html body #waveNav.has-selection #waveNavContent,
+html body #waveNav.minimized #waveNavContent,
+html body.task-manager-section-active #waveNav #waveNavContent,
+html body .task-manager-section-active #waveNav #waveNavContent {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+html body.task-page-selected #waveNav .wave-nav-items,
+html body .task-page-selected #waveNav .wave-nav-items,
+html body #waveNav.has-selection .wave-nav-items,
+html body #waveNav.minimized .wave-nav-items,
+html body.task-manager-section-active #waveNav .wave-nav-items,
+html body .task-manager-section-active #waveNav .wave-nav-items {
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 8px 4px 16px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+
+html body.task-page-selected .task-section-active.table-card,
+html body .task-page-selected .task-section-active.table-card,
+html body.task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .task-section-active.table-card {
+    margin-top: 0 !important;
+}
+
+html body.task-page-selected #newTaskCreateSection.task-section-active,
+html body .task-page-selected #newTaskCreateSection.task-section-active,
+html body.task-manager-section-active #newTaskCreateSection.task-section-active,
+html body .task-manager-section-active #newTaskCreateSection.task-section-active,
+html body.task-page-selected #reportTableSection.task-section-active,
+html body .task-page-selected #reportTableSection.task-section-active,
+html body.task-manager-section-active #reportTableSection.task-section-active,
+html body .task-manager-section-active #reportTableSection.task-section-active {
+    margin-top: 0 !important;
+}
