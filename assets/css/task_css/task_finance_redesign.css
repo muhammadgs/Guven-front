@@ -1187,3 +1187,284 @@ html body.task-manager-section-active #reportTableSection.task-section-active,
 html body .task-manager-section-active #reportTableSection.task-section-active {
     margin-top: 0 !important;
 }
+
+/* =====================================================================
+   COLLAPSED TASK NAV ALIGNMENT + ACTIVE WIDTH ANIMATION
+   The compact task nav and task content cards share the same responsive
+   width contract so their left/right edges stay locked at any zoom level.
+   ===================================================================== */
+:root {
+    --task-content-max-width: 1640px;
+    --task-content-inline-gutter: clamp(16px, 2.5vw, 40px);
+    --task-collapsed-nav-gap: clamp(18px, 1.35vw, 24px);
+    --task-collapsed-nav-height: 88px;
+    --task-collapsed-nav-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+html body .table-card,
+html body.task-page-selected .task-section-active.table-card,
+html body .task-page-selected .task-section-active.table-card,
+html body.task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .task-section-active.table-card,
+html body #waveNav.minimized,
+html body #waveNav.has-selection,
+html body.task-page-selected #waveNav,
+html body .task-page-selected #waveNav,
+html body.task-manager-section-active #waveNav,
+html body .task-manager-section-active #waveNav {
+    width: min(100%, calc(100vw - var(--task-content-inline-gutter) - var(--task-content-inline-gutter))) !important;
+    max-width: var(--task-content-max-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+html body #waveNav.minimized,
+html body #waveNav.has-selection,
+html body.task-page-selected #waveNav,
+html body .task-page-selected #waveNav,
+html body.task-manager-section-active #waveNav,
+html body .task-manager-section-active #waveNav {
+    margin-top: 24px !important;
+    margin-bottom: 22px !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+
+html body #waveNav.minimized #waveNavContent,
+html body #waveNav.has-selection #waveNavContent,
+html body.task-page-selected #waveNav #waveNavContent,
+html body .task-page-selected #waveNav #waveNavContent,
+html body.task-manager-section-active #waveNav #waveNavContent,
+html body .task-manager-section-active #waveNav #waveNavContent {
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+}
+
+html body #waveNav.minimized .wave-nav-items,
+html body #waveNav.has-selection .wave-nav-items,
+html body.task-page-selected #waveNav .wave-nav-items,
+html body .task-page-selected #waveNav .wave-nav-items,
+html body.task-manager-section-active #waveNav .wave-nav-items,
+html body .task-manager-section-active #waveNav .wave-nav-items {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    gap: var(--task-collapsed-nav-gap) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html body #waveNav.minimized .wave-nav-items::-webkit-scrollbar,
+html body #waveNav.has-selection .wave-nav-items::-webkit-scrollbar,
+html body.task-page-selected #waveNav .wave-nav-items::-webkit-scrollbar,
+html body .task-page-selected #waveNav .wave-nav-items::-webkit-scrollbar,
+html body.task-manager-section-active #waveNav .wave-nav-items::-webkit-scrollbar,
+html body .task-manager-section-active #waveNav .wave-nav-items::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+}
+
+html body #waveNav.minimized .wave-item,
+html body #waveNav.has-selection .wave-item,
+html body.task-page-selected #waveNav .wave-item,
+html body .task-page-selected #waveNav .wave-item,
+html body.task-manager-section-active #waveNav .wave-item,
+html body .task-manager-section-active #waveNav .wave-item {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: clamp(145px, 10vw, 180px) !important;
+    max-width: none !important;
+    height: var(--task-collapsed-nav-height) !important;
+    min-height: var(--task-collapsed-nav-height) !important;
+    max-height: none !important;
+    padding: 18px clamp(18px, 1.45vw, 24px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+    border: 1px solid #e2ebf4 !important;
+    background: rgba(255, 255, 255, .94) !important;
+    box-shadow: 0 10px 24px rgba(28, 62, 95, .08) !important;
+    transform: none !important;
+    transition:
+        flex-grow 220ms var(--task-collapsed-nav-ease),
+        flex-basis 220ms var(--task-collapsed-nav-ease),
+        width 220ms var(--task-collapsed-nav-ease),
+        min-width 220ms var(--task-collapsed-nav-ease),
+        background-color 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        transform 180ms ease !important;
+}
+
+html body #waveNav.minimized .wave-item.selected,
+html body #waveNav.minimized .wave-item.active-item,
+html body #waveNav.has-selection .wave-item.selected,
+html body #waveNav.has-selection .wave-item.active-item,
+html body.task-page-selected #waveNav .wave-item.selected,
+html body.task-page-selected #waveNav .wave-item.active-item,
+html body .task-page-selected #waveNav .wave-item.selected,
+html body .task-page-selected #waveNav .wave-item.active-item,
+html body.task-manager-section-active #waveNav .wave-item.selected,
+html body.task-manager-section-active #waveNav .wave-item.active-item,
+html body .task-manager-section-active #waveNav .wave-item.selected,
+html body .task-manager-section-active #waveNav .wave-item.active-item {
+    flex: 1.75 1 0 !important;
+    width: auto !important;
+    min-width: clamp(220px, 16vw, 270px) !important;
+    max-width: none !important;
+    background: linear-gradient(180deg, rgba(245, 255, 254, .98), rgba(235, 250, 249, .94)) !important;
+    border-color: rgba(66, 187, 183, .78) !important;
+    box-shadow: 0 14px 30px rgba(41, 163, 158, .18), 0 0 0 4px rgba(66, 187, 183, .07) !important;
+    transform: none !important;
+}
+
+html body #waveNav.minimized .wave-item-content,
+html body #waveNav.has-selection .wave-item-content,
+html body.task-page-selected #waveNav .wave-item-content,
+html body .task-page-selected #waveNav .wave-item-content,
+html body.task-manager-section-active #waveNav .wave-item-content,
+html body .task-manager-section-active #waveNav .wave-item-content {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 16px !important;
+}
+
+html body #waveNav.minimized .wave-text,
+html body #waveNav.has-selection .wave-text,
+html body.task-page-selected #waveNav .wave-text,
+html body .task-page-selected #waveNav .wave-text,
+html body.task-manager-section-active #waveNav .wave-text,
+html body .task-manager-section-active #waveNav .wave-text {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+html body #waveNav.minimized .wave-title,
+html body #waveNav.has-selection .wave-title,
+html body.task-page-selected #waveNav .wave-title,
+html body .task-page-selected #waveNav .wave-title,
+html body.task-manager-section-active #waveNav .wave-title,
+html body .task-manager-section-active #waveNav .wave-title {
+    display: block !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: clamp(15px, 1.05vw, 17px) !important;
+    line-height: 1.15 !important;
+}
+
+html body #waveNav.minimized .wave-icon,
+html body #waveNav.has-selection .wave-icon,
+html body.task-page-selected #waveNav .wave-icon,
+html body .task-page-selected #waveNav .wave-icon,
+html body.task-manager-section-active #waveNav .wave-icon,
+html body .task-manager-section-active #waveNav .wave-icon {
+    flex: 0 0 48px !important;
+}
+
+html body #waveNav.minimized .wave-item:hover,
+html body #waveNav.has-selection .wave-item:hover,
+html body.task-page-selected #waveNav .wave-item:hover,
+html body .task-page-selected #waveNav .wave-item:hover,
+html body.task-manager-section-active #waveNav .wave-item:hover,
+html body .task-manager-section-active #waveNav .wave-item:hover {
+    transform: translateY(-2px) !important;
+}
+
+@media (max-width: 1200px) {
+    html body #waveNav.minimized .wave-nav-items,
+    html body #waveNav.has-selection .wave-nav-items,
+    html body.task-page-selected #waveNav .wave-nav-items,
+    html body .task-page-selected #waveNav .wave-nav-items,
+    html body.task-manager-section-active #waveNav .wave-nav-items,
+    html body .task-manager-section-active #waveNav .wave-nav-items {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        padding-bottom: 2px !important;
+        scroll-padding-inline: 2px !important;
+    }
+
+    html body #waveNav.minimized .wave-item,
+    html body #waveNav.has-selection .wave-item,
+    html body.task-page-selected #waveNav .wave-item,
+    html body .task-page-selected #waveNav .wave-item,
+    html body.task-manager-section-active #waveNav .wave-item,
+    html body .task-manager-section-active #waveNav .wave-item {
+        flex: 0 0 190px !important;
+        width: 190px !important;
+        min-width: 190px !important;
+    }
+
+    html body #waveNav.minimized .wave-item.selected,
+    html body #waveNav.minimized .wave-item.active-item,
+    html body #waveNav.has-selection .wave-item.selected,
+    html body #waveNav.has-selection .wave-item.active-item,
+    html body.task-page-selected #waveNav .wave-item.selected,
+    html body.task-page-selected #waveNav .wave-item.active-item,
+    html body .task-page-selected #waveNav .wave-item.selected,
+    html body .task-page-selected #waveNav .wave-item.active-item,
+    html body.task-manager-section-active #waveNav .wave-item.selected,
+    html body.task-manager-section-active #waveNav .wave-item.active-item,
+    html body .task-manager-section-active #waveNav .wave-item.selected,
+    html body .task-manager-section-active #waveNav .wave-item.active-item {
+        flex: 0 0 260px !important;
+        width: 260px !important;
+        min-width: 260px !important;
+    }
+}
+
+@media (max-width: 640px) {
+    :root {
+        --task-content-inline-gutter: 10px;
+        --task-collapsed-nav-gap: 12px;
+        --task-collapsed-nav-height: 82px;
+    }
+
+    html body #waveNav.minimized .wave-item,
+    html body #waveNav.has-selection .wave-item,
+    html body.task-page-selected #waveNav .wave-item,
+    html body .task-page-selected #waveNav .wave-item,
+    html body.task-manager-section-active #waveNav .wave-item,
+    html body .task-manager-section-active #waveNav .wave-item {
+        flex-basis: 172px !important;
+        width: 172px !important;
+        min-width: 172px !important;
+        padding: 16px !important;
+    }
+
+    html body #waveNav.minimized .wave-item.selected,
+    html body #waveNav.minimized .wave-item.active-item,
+    html body #waveNav.has-selection .wave-item.selected,
+    html body #waveNav.has-selection .wave-item.active-item,
+    html body.task-page-selected #waveNav .wave-item.selected,
+    html body.task-page-selected #waveNav .wave-item.active-item,
+    html body .task-page-selected #waveNav .wave-item.selected,
+    html body .task-page-selected #waveNav .wave-item.active-item,
+    html body.task-manager-section-active #waveNav .wave-item.selected,
+    html body.task-manager-section-active #waveNav .wave-item.active-item,
+    html body .task-manager-section-active #waveNav .wave-item.selected,
+    html body .task-manager-section-active #waveNav .wave-item.active-item {
+        flex-basis: 232px !important;
+        width: 232px !important;
+        min-width: 232px !important;
+    }
+}
