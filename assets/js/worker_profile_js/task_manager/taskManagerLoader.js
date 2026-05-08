@@ -86,6 +86,7 @@ const TaskManagerLoader = {
         console.log('🎯 TaskManagerLoader: Naviqasiya gücləndirilir...');
 
         if (window.__taskNavManagedByCircular) {
+            this.initTaskDockMagnification();
             console.log('ℹ️ Circular nav state manager aktivdir, əlavə handler bağlanmadı');
             return;
         }
@@ -133,9 +134,69 @@ const TaskManagerLoader = {
             });
         }
 
+        this.initTaskDockMagnification();
         console.log('✅ Naviqasiya gücləndirildi');
     },
 
+
+
+    initTaskDockMagnification: function() {
+        if (typeof window.initTaskDockMagnification === 'function') {
+            window.initTaskDockMagnification();
+            return;
+        }
+
+        const nav = document.getElementById('waveNav');
+        const row = nav?.querySelector('.wave-nav-items');
+
+        if (!nav || !row) return;
+        if (row.dataset.dockMagnificationBound === 'true') return;
+
+        row.dataset.dockMagnificationBound = 'true';
+
+        const getItems = () => Array.from(row.querySelectorAll('.wave-item'));
+
+        function resetDock() {
+            getItems().forEach(item => {
+                item.style.setProperty('--dock-scale', '1');
+                item.style.setProperty('--dock-y', '0px');
+            });
+        }
+
+        row.addEventListener('pointermove', event => {
+            const isCollapsed =
+                nav.classList.contains('minimized') ||
+                nav.classList.contains('has-selection');
+
+            if (!isCollapsed) {
+                resetDock();
+                return;
+            }
+
+            const maxDistance = 230;
+            const maxScaleBoost = 0.24;
+            const maxLift = 10;
+
+            getItems().forEach(item => {
+                const rect = item.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const distance = Math.abs(event.clientX - centerX);
+                const influence = Math.max(0, 1 - distance / maxDistance);
+                const easedInfluence = influence * influence * (3 - 2 * influence);
+                const scale = 1 + easedInfluence * maxScaleBoost;
+                const y = -easedInfluence * maxLift;
+
+                item.style.setProperty('--dock-scale', scale.toFixed(3));
+                item.style.setProperty('--dock-y', `${y.toFixed(1)}px`);
+            });
+        });
+
+        row.addEventListener('pointerleave', resetDock);
+        row.addEventListener('pointercancel', resetDock);
+        row.addEventListener('blur', resetDock, true);
+
+        resetDock();
+    },
 
 
     getTaskManagerRoot: function() {
@@ -169,6 +230,8 @@ const TaskManagerLoader = {
             waveNav.classList.remove('minimized', 'collapsed', 'has-selection', 'is-selected', 'pinned', 'centered', 'expanded', 'fullscreen');
             waveNav.removeAttribute('data-active-target');
         }
+
+        this.initTaskDockMagnification();
 
         navItems.forEach(item => {
             item.classList.remove('selected', 'active-item', 'is-active');
@@ -205,6 +268,7 @@ const TaskManagerLoader = {
             waveNav.setAttribute('data-active-target', target);
         }
 
+        this.initTaskDockMagnification();
         this.adjustPanelState(target);
         this.showTargetSection(target, sections);
     },
@@ -745,7 +809,8 @@ const TaskManagerLoader = {
             '../assets/js/task_js/tableManager.js',
             '../assets/js/task_js/taskEditModul.js',
             '../assets/js/task_js/websocketManager.js',
-            '../assets/js/task_js/task.js'
+            '../assets/js/task_js/task.js',
+            '../assets/js/task_js/circularNav.js'
         ];
 
         let loadedCount = 0;

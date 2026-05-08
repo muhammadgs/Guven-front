@@ -4,6 +4,64 @@
  * @lastModified 2024-01-16
  */
 
+function initTaskDockMagnification() {
+    const nav = document.getElementById('waveNav');
+    const row = nav?.querySelector('.wave-nav-items');
+
+    if (!nav || !row) return;
+    if (row.dataset.dockMagnificationBound === 'true') return;
+
+    row.dataset.dockMagnificationBound = 'true';
+
+    const getItems = () => Array.from(row.querySelectorAll('.wave-item'));
+
+    function resetDock() {
+        getItems().forEach(item => {
+            item.style.setProperty('--dock-scale', '1');
+            item.style.setProperty('--dock-y', '0px');
+        });
+    }
+
+    row.addEventListener('pointermove', event => {
+        const isCollapsed =
+            nav.classList.contains('minimized') ||
+            nav.classList.contains('has-selection');
+
+        if (!isCollapsed) {
+            resetDock();
+            return;
+        }
+
+        const items = getItems();
+        const maxDistance = 230;
+        const maxScaleBoost = 0.24;
+        const maxLift = 10;
+
+        items.forEach(item => {
+            const rect = item.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const distance = Math.abs(event.clientX - centerX);
+
+            const influence = Math.max(0, 1 - distance / maxDistance);
+            const easedInfluence = influence * influence * (3 - 2 * influence);
+
+            const scale = 1 + easedInfluence * maxScaleBoost;
+            const y = -easedInfluence * maxLift;
+
+            item.style.setProperty('--dock-scale', scale.toFixed(3));
+            item.style.setProperty('--dock-y', `${y.toFixed(1)}px`);
+        });
+    });
+
+    row.addEventListener('pointerleave', resetDock);
+    row.addEventListener('pointercancel', resetDock);
+    row.addEventListener('blur', resetDock, true);
+
+    resetDock();
+}
+
+window.initTaskDockMagnification = initTaskDockMagnification;
+
 function initializeCircularNav() {
     'use strict';
 
@@ -20,6 +78,7 @@ function initializeCircularNav() {
     }
 
     if (waveNav.dataset.circularNavBound === 'true') {
+        initTaskDockMagnification();
         window.__taskNavManagedByCircular = true;
         console.log('ℹ️ WaveNav artıq initialize edilib');
         return;
@@ -109,6 +168,7 @@ function initializeCircularNav() {
             waveNav.classList.remove('pinned', 'centered', 'expanded', 'fullscreen', 'collapsed', 'is-selected');
             waveNav.classList.add('minimized', 'has-selection');
             if (target) waveNav.setAttribute('data-active-target', target);
+            initTaskDockMagnification();
         }
     }
 
@@ -117,6 +177,7 @@ function initializeCircularNav() {
         if (waveNav) {
             waveNav.classList.remove('minimized', 'collapsed', 'has-selection', 'is-selected', 'pinned', 'centered', 'expanded', 'fullscreen');
             waveNav.removeAttribute('data-active-target');
+            initTaskDockMagnification();
         }
     }
 
@@ -186,6 +247,7 @@ function initializeCircularNav() {
 
     // ===== İLKİN YÜKLƏMƏ =====
     setTaskManagerInitialState();
+    initTaskDockMagnification();
     window.__taskNavManagedByCircular = true;
 
 
