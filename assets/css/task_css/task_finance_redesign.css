@@ -436,6 +436,10 @@ html body .wave-nav-container.minimized .wave-nav-content,
 html body .task-manager-section-active .wave-nav-content {
     display: block !important;
     width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: visible !important;
+    overflow-y: hidden !important;
 }
 
 html body .wave-nav-container.minimized .wave-nav-items,
@@ -448,10 +452,13 @@ html body .task-manager-section-active .wave-nav-items {
     gap: clamp(24px, 2vw, 32px) !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 6px 4px 10px !important;
+    padding: 8px 4px 14px !important;
+    height: auto !important;
+    max-height: none !important;
     overflow-x: auto !important;
-    overflow-y: visible !important;
-    scrollbar-width: thin;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
     scroll-padding-inline: 4px;
 }
 
@@ -461,7 +468,8 @@ html body .task-manager-section-active .wave-item {
     width: 190px !important;
     max-width: none !important;
     min-height: 92px !important;
-    height: 92px !important;
+    height: auto !important;
+    max-height: none !important;
     padding: 18px 26px !important;
     border-radius: 16px !important;
     flex: 0 0 190px !important;
@@ -750,7 +758,8 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
     html body .task-manager-section-active .wave-nav-items {
         display: flex !important;
         overflow-x: auto !important;
-        padding: 2px 2px 12px !important;
+        overflow-y: hidden !important;
+        padding: 8px 2px 14px !important;
         scroll-snap-type: x proximity;
     }
     html body .wave-nav-container.minimized .wave-item,
@@ -770,7 +779,7 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
     html body .wave-nav-container.minimized,
     html body .task-manager-section-active .wave-nav-container { width: calc(100vw - 24px) !important; margin-top: 16px !important; }
     html body .wave-nav-container.minimized .wave-item,
-    html body .task-manager-section-active .wave-item { min-width: 178px !important; height: 78px !important; }
+    html body .task-manager-section-active .wave-item { min-width: 178px !important; min-height: 78px !important; height: auto !important; }
     html body .wave-nav-container.minimized .wave-title,
     html body .task-manager-section-active .wave-title { font-size: 15px !important; }
     html body .table-card:not(.new-task-section):not(.report-section) { width: calc(100vw - 20px) !important; min-height: 430px !important; }
@@ -977,6 +986,70 @@ html body .wave-nav-container.fullscreen.minimized {
 html body .wave-nav-container.minimized .wave-nav-items,
 html body .task-manager-section-active .wave-nav-items {
     gap: clamp(24px, 2vw, 32px) !important;
+}
+
+
+/* Fix collapsed task nav scrollbar issue: keep the compact row visually clean. */
+html body #waveNav.minimized,
+html body .task-manager-section-active #waveNav,
+html body .wave-nav-container.minimized,
+html body .task-manager-section-active .wave-nav-container,
+html body .task-manager-section-active .task-nav-container,
+html body .task-manager-section-active .task-menu-wrapper,
+html body .task-manager-section-active .task-finance-nav,
+html body .task-manager-section-active .task-finance-shell {
+    height: auto !important;
+    max-height: none !important;
+    overflow-y: hidden !important;
+}
+
+html body #waveNav.minimized,
+html body .task-manager-section-active #waveNav,
+html body .wave-nav-container.minimized,
+html body .task-manager-section-active .wave-nav-container {
+    overflow-x: visible !important;
+    padding: 0 0 4px !important;
+}
+
+html body #waveNav.minimized #waveNavContent,
+html body .task-manager-section-active #waveNavContent,
+html body .wave-nav-container.minimized .wave-nav-content,
+html body .task-manager-section-active .wave-nav-content {
+    height: auto !important;
+    max-height: none !important;
+    overflow-x: visible !important;
+    overflow-y: hidden !important;
+}
+
+html body #waveNav.minimized .wave-nav-items,
+html body .task-manager-section-active #waveNav .wave-nav-items,
+html body .wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active .wave-nav-items {
+    height: auto !important;
+    max-height: none !important;
+    padding: 8px 4px 16px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+html body #waveNav.minimized .wave-nav-items::-webkit-scrollbar,
+html body .task-manager-section-active #waveNav .wave-nav-items::-webkit-scrollbar,
+html body .wave-nav-container.minimized .wave-nav-items::-webkit-scrollbar,
+html body .task-manager-section-active .wave-nav-items::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+}
+
+html body #waveNav.minimized .wave-item,
+html body .task-manager-section-active #waveNav .wave-item,
+html body .wave-nav-container.minimized .wave-item,
+html body .task-manager-section-active .wave-item {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 @media (max-width: 1280px) {
