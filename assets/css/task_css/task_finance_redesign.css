@@ -408,8 +408,8 @@ html body .wave-nav-container.minimized,
 html body .task-manager-section-active .wave-nav-container,
 html body .wave-nav-container.pinned.minimized,
 html body .wave-nav-container.fullscreen.minimized {
-    width: min(94vw, 1600px) !important;
-    max-width: 1600px !important;
+    width: min(95vw, 1640px) !important;
+    max-width: 1640px !important;
     margin: 28px auto 22px !important;
     padding: 0 !important;
     min-height: 0 !important;
@@ -440,25 +440,36 @@ html body .task-manager-section-active .wave-nav-content {
 
 html body .wave-nav-container.minimized .wave-nav-items,
 html body .task-manager-section-active .wave-nav-items {
-    display: grid !important;
-    grid-template-columns: repeat(6, minmax(135px, 1fr)) !important;
-    gap: 24px !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    grid-template-columns: none !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: clamp(24px, 2vw, 32px) !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
+    padding: 6px 4px 10px !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    scrollbar-width: thin;
+    scroll-padding-inline: 4px;
 }
 
 html body .wave-nav-container.minimized .wave-item,
 html body .task-manager-section-active .wave-item {
-    min-height: 86px !important;
-    height: 86px !important;
-    padding: 14px 20px !important;
-    border-radius: 15px !important;
-    flex: none !important;
+    min-width: 190px !important;
+    width: 190px !important;
+    max-width: none !important;
+    min-height: 92px !important;
+    height: 92px !important;
+    padding: 18px 26px !important;
+    border-radius: 16px !important;
+    flex: 0 0 190px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
+    text-align: left !important;
+    overflow: visible !important;
     background: rgba(255,255,255,.94) !important;
     border: 1px solid #e2ebf4 !important;
     box-shadow: 0 10px 24px rgba(28, 62, 95, 0.08) !important;
@@ -469,28 +480,36 @@ html body .task-manager-section-active .wave-item::after { display: none !import
 
 html body .wave-nav-container.minimized .wave-item-content,
 html body .task-manager-section-active .wave-item-content {
+    width: 100% !important;
     display: flex !important;
     flex-direction: row !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
-    gap: 18px !important;
+    gap: 16px !important;
+    min-width: 0 !important;
 }
 
 html body .wave-nav-container.minimized .wave-icon,
 html body .task-manager-section-active .wave-icon {
+    position: static !important;
     width: 48px !important;
     height: 48px !important;
     min-width: 48px !important;
+    flex: 0 0 48px !important;
     margin: 0 !important;
     font-size: 21px !important;
 }
 
 html body .wave-nav-container.minimized .wave-title,
 html body .task-manager-section-active .wave-title {
+    display: inline-block !important;
+    min-width: 0 !important;
     color: #63728b !important;
     font-size: 17px !important;
     font-weight: 800 !important;
     white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
 }
 
 html body .wave-nav-container.minimized .wave-description,
@@ -957,7 +976,7 @@ html body .wave-nav-container.fullscreen.minimized {
 
 html body .wave-nav-container.minimized .wave-nav-items,
 html body .task-manager-section-active .wave-nav-items {
-    gap: 18px !important;
+    gap: clamp(24px, 2vw, 32px) !important;
 }
 
 @media (max-width: 1280px) {
