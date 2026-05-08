@@ -757,3 +757,268 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
     html body .table-card:not(.new-task-section):not(.report-section) { width: calc(100vw - 20px) !important; min-height: 430px !important; }
     html body .table-card .table-header { padding: 14px !important; }
 }
+
+/* =====================================================================
+   TASK LANDING CORRECTION - remove outer shell and let content breathe
+   The #waveNav wrapper is a layout region only; premium surfaces belong to
+   real controls (cards, compact nav buttons, and table cards).
+   ===================================================================== */
+html body {
+    background: linear-gradient(180deg, #fbfdff 0%, #f7fbff 100%) !important;
+}
+
+html body::before {
+    display: none !important;
+    content: none !important;
+}
+
+html body .wave-nav-container:not(.minimized),
+html body .wave-nav-container.centered:not(.minimized),
+html body .wave-nav-container.pinned:not(.minimized),
+html body .wave-nav-container.fullscreen:not(.minimized),
+html body .wave-nav-container.expanded:not(.minimized) {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: min(100%, calc(100vw - 56px)) !important;
+    max-width: none !important;
+    min-height: 70vh !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: clamp(34px, 4vw, 48px) clamp(28px, 5vw, 64px) !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    backdrop-filter: none !important;
+}
+
+html body .wave-nav-container:not(.minimized)::before,
+html body .wave-nav-container:not(.minimized)::after,
+html body .wave-nav-container.centered:not(.minimized)::before,
+html body .wave-nav-container.centered:not(.minimized)::after,
+html body .wave-nav-container.fullscreen:not(.minimized)::before,
+html body .wave-nav-container.fullscreen:not(.minimized)::after {
+    display: none !important;
+    content: none !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-nav-content,
+html body .wave-nav-container.centered:not(.minimized) .wave-nav-content,
+html body .wave-nav-container.fullscreen:not(.minimized) .wave-nav-content {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+        "hero hero"
+        "cards cache" !important;
+    align-content: center !important;
+    align-items: center !important;
+    gap: clamp(30px, 4vw, 52px) clamp(28px, 4vw, 44px) !important;
+    width: 100% !important;
+    max-width: 1480px !important;
+    min-height: 70vh !important;
+    margin: 0 auto !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-hero {
+    grid-area: hero !important;
+    width: 100% !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-breadcrumb {
+    margin-bottom: clamp(30px, 4vw, 50px) !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-hero-body {
+    grid-template-columns: auto minmax(360px, 1fr) minmax(280px, 500px) !important;
+    gap: clamp(26px, 3vw, 46px) !important;
+    min-height: 190px !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-hero-icon {
+    width: clamp(112px, 8vw, 132px) !important;
+    height: clamp(112px, 8vw, 132px) !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-hero-copy h1 {
+    font-size: clamp(48px, 5vw, 72px) !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-hero-copy p {
+    max-width: 680px !important;
+    font-size: clamp(19px, 1.55vw, 24px) !important;
+    line-height: 1.35 !important;
+}
+
+html body .wave-nav-container:not(.minimized) .task-finance-illustration {
+    height: 200px !important;
+    min-width: 280px !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-nav-items,
+html body .wave-nav-container.centered:not(.minimized) .wave-nav-items,
+html body .wave-nav-container.fullscreen:not(.minimized) .wave-nav-items {
+    grid-area: cards !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(220px, 260px)) !important;
+    grid-auto-rows: minmax(158px, auto) !important;
+    gap: 32px 36px !important;
+    justify-content: end !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 852px !important;
+    margin: 0 0 0 auto !important;
+    padding: 0 !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-item,
+html body .wave-nav-container.centered:not(.minimized) .wave-item,
+html body .wave-nav-container.fullscreen:not(.minimized) .wave-item {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 220px !important;
+    max-width: 260px !important;
+    min-height: 158px !important;
+    max-height: none !important;
+    padding: 24px 22px 22px !important;
+    border-radius: 20px !important;
+    overflow: visible !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-item-content {
+    gap: 13px !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-icon {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+    min-height: 68px !important;
+    margin: 0 auto 2px !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-text {
+    display: block !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-title {
+    font-size: 19px !important;
+    white-space: nowrap !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-description {
+    font-size: 16px !important;
+    line-height: 1.32 !important;
+    white-space: normal !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-count {
+    position: absolute !important;
+    right: 16px !important;
+    bottom: 16px !important;
+    min-width: 40px !important;
+    height: 32px !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+}
+
+html body .wave-nav-container:not(.minimized) .wave-nav-extra {
+    grid-area: cache !important;
+    position: static !important;
+    transform: none !important;
+    align-self: start !important;
+    justify-self: start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+html body .wave-nav-container:not(.minimized) .cache-clear-btn {
+    min-width: 218px !important;
+    min-height: 70px !important;
+    justify-content: center !important;
+}
+
+html body .wave-nav-container.minimized,
+html body .task-manager-section-active .wave-nav-container,
+html body .wave-nav-container.pinned.minimized,
+html body .wave-nav-container.fullscreen.minimized {
+    width: min(95vw, 1640px) !important;
+    max-width: 1640px !important;
+    margin: 24px auto 18px !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+html body .wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active .wave-nav-items {
+    gap: 18px !important;
+}
+
+@media (max-width: 1280px) {
+    html body .wave-nav-container:not(.minimized) .wave-nav-content {
+        grid-template-columns: 1fr !important;
+        grid-template-areas:
+            "hero"
+            "cards"
+            "cache" !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .wave-nav-items {
+        justify-content: center !important;
+        margin: 0 auto !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .wave-nav-extra {
+        justify-self: center !important;
+        align-self: center !important;
+    }
+}
+
+@media (max-width: 980px) {
+    html body .wave-nav-container:not(.minimized) {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        min-height: auto !important;
+        padding: 28px 18px !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .wave-nav-content {
+        min-height: auto !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .task-finance-hero-body {
+        grid-template-columns: 1fr !important;
+        text-align: left !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .task-finance-illustration {
+        display: none !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .wave-nav-items {
+        grid-template-columns: repeat(2, minmax(190px, 1fr)) !important;
+        max-width: 620px !important;
+        gap: 22px !important;
+    }
+
+    html body .wave-nav-container:not(.minimized) .wave-item {
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+}
+
+@media (max-width: 560px) {
+    html body .wave-nav-container:not(.minimized) .wave-nav-items {
+        grid-template-columns: 1fr !important;
+    }
+}
+
