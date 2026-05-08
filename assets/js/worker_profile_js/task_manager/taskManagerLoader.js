@@ -91,70 +91,130 @@ const TaskManagerLoader = {
         }
 
         const waveNav = document.getElementById('waveNav');
-        const navItems = document.querySelectorAll('.wave-item');
-        const sections = {
-            new: document.getElementById('newTableSection'),
-            active: document.getElementById('activeTableSection'),
-            external: document.getElementById('externalTableSection'),
-            partner: document.getElementById('partnerTableSection'),
-            report: document.getElementById('reportTableSection'),
-            archive: document.getElementById('archiveTableSection')
-        };
+        const sections = this.getTaskManagerSections();
 
         // Yeni stillər əlavə et
         this.addNavigationStyles();
 
-        // Hər bir item-ə klik hadisəsi əlavə et
-        navItems.forEach(item => {
-            item.addEventListener('click', function(e) {
+        // İlkin ekran: heç bir bölmə göstərilməsin, yalnız mərkəzi 6-li menyu qalsın
+        this.resetTaskMenuToLanding(sections);
+
+        if (waveNav && waveNav.dataset.navBound !== 'true') {
+            waveNav.dataset.navBound = 'true';
+            waveNav.addEventListener('click', function(e) {
+                const item = e.target.closest('.wave-item');
+
+                if (!item || !waveNav.contains(item)) {
+                    if (waveNav.classList.contains('minimized')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    return;
+                }
+
                 e.preventDefault();
                 e.stopPropagation();
 
-                const target = this.getAttribute('data-target');
+                const target = item.getAttribute('data-target');
+                const navIsCollapsed = waveNav.classList.contains('minimized') ||
+                    waveNav.classList.contains('has-selection');
+                const alreadyActive = waveNav.getAttribute('data-active-target') === target ||
+                    item.classList.contains('selected') ||
+                    item.classList.contains('active-item');
+
                 console.log('🎯 Klik edildi:', target);
 
-                // Bütün item-lərdən selected class-ını sil
-                navItems.forEach(i => i.classList.remove('selected', 'active-item'));
-
-                // Bu item-ə selected class-ı əlavə et
-                this.classList.add('selected', 'active-item');
-
-                // Panel vəziyyətini tənzimlə
-                TaskManagerLoader.adjustPanelState(target);
-
-                // Bölmələri göstər/gizlət
-                TaskManagerLoader.showTargetSection(target, sections);
-            });
-        });
-
-        // Panelə klik hadisəsi (minimized vəziyyətdə)
-        if (waveNav) {
-            waveNav.addEventListener('click', function(e) {
-                if (this.classList.contains('minimized') && !e.target.closest('.wave-item')) {
-                    this.classList.remove('minimized');
-
-                    const activeItem = document.querySelector('.wave-item.selected');
-                    if (activeItem) {
-                        const target = activeItem.getAttribute('data-target');
-                        TaskManagerLoader.adjustPanelState(target);
-                    }
+                if (alreadyActive && navIsCollapsed) {
+                    TaskManagerLoader.resetTaskMenuToLanding(sections);
+                    return;
                 }
+
+                TaskManagerLoader.activateTaskMenuItem(item, sections);
             });
         }
-
-        // İlkin ekran: heç bir bölmə göstərilməsin, yalnız mərkəzi 6-li menyu qalsın
-        this.hideAllTaskManagerSections(sections);
 
         console.log('✅ Naviqasiya gücləndirildi');
     },
 
 
 
+    getTaskManagerRoot: function() {
+        return document.querySelector('.task-manager-container') ||
+            document.getElementById('taskManagerSection') ||
+            document.body;
+    },
+
+    getTaskManagerSections: function() {
+        return {
+            new: document.getElementById('newTaskCreateSection') || document.getElementById('newTableSection'),
+            active: document.getElementById('activeTableSection'),
+            external: document.getElementById('externalTableSection'),
+            partner: document.getElementById('partnerTableSection'),
+            report: document.getElementById('reportTableSection'),
+            archive: document.getElementById('archiveTableSection')
+        };
+    },
+
+    resetTaskMenuToLanding: function(sections = this.getTaskManagerSections()) {
+        const waveNav = document.getElementById('waveNav');
+        const navItems = document.querySelectorAll('.wave-item');
+        const root = this.getTaskManagerRoot();
+
+        if (root) {
+            root.classList.add('task-manager-initial');
+            root.classList.remove('task-manager-section-active');
+        }
+
+        if (waveNav) {
+            waveNav.classList.remove('minimized', 'collapsed', 'has-selection', 'is-selected', 'pinned', 'centered', 'expanded', 'fullscreen');
+            waveNav.removeAttribute('data-active-target');
+        }
+
+        navItems.forEach(item => {
+            item.classList.remove('selected', 'active-item', 'is-active');
+            item.setAttribute('aria-selected', 'false');
+        });
+
+        this.hideAllTaskManagerSections(sections);
+        this.collapseContent();
+        localStorage.removeItem('lastSelectedTarget');
+    },
+
+    activateTaskMenuItem: function(item, sections = this.getTaskManagerSections()) {
+        const target = item.getAttribute('data-target');
+        const waveNav = document.getElementById('waveNav');
+        const navItems = document.querySelectorAll('.wave-item');
+        const root = this.getTaskManagerRoot();
+
+        if (root) {
+            root.classList.remove('task-manager-initial');
+            root.classList.add('task-manager-section-active');
+        }
+
+        navItems.forEach(navItem => {
+            const isActive = navItem.getAttribute('data-target') === target;
+            navItem.classList.toggle('selected', isActive);
+            navItem.classList.toggle('active-item', isActive);
+            navItem.classList.toggle('is-active', isActive);
+            navItem.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        if (waveNav) {
+            waveNav.classList.remove('pinned', 'centered', 'expanded', 'fullscreen', 'collapsed', 'is-selected');
+            waveNav.classList.add('minimized', 'has-selection');
+            waveNav.setAttribute('data-active-target', target);
+        }
+
+        this.adjustPanelState(target);
+        this.showTargetSection(target, sections);
+    },
+
     hideTaskManagerSection: function(section) {
         if (!section) return;
 
-        section.classList.remove('task-section-active', 'active-section', 'fade-in');
+        section.classList.remove('task-section-active', 'active-section', 'fade-in', 'active', 'is-active', 'show');
         section.classList.add('task-section-hidden');
+        section.hidden = true;
         section.style.display = 'none';
     },
 
@@ -169,6 +229,7 @@ const TaskManagerLoader = {
         if (!section) return;
 
         const isTaskTableCard = section.classList.contains('table-card') && !section.classList.contains('new-task-section');
+        section.hidden = false;
         section.classList.remove('task-section-hidden');
         section.classList.add('task-section-active', 'active-section');
         section.style.display = isTaskTableCard ? 'flex' : 'block';
@@ -196,8 +257,9 @@ const TaskManagerLoader = {
         if (!waveNav) return;
 
         // Köhnə fullscreen/expanded/pinned dalğa effektlərini neytrallaşdır.
-        waveNav.classList.remove('pinned', 'centered', 'expanded', 'fullscreen');
-        waveNav.classList.add('minimized');
+        waveNav.classList.remove('pinned', 'centered', 'expanded', 'fullscreen', 'collapsed', 'is-selected');
+        waveNav.classList.add('minimized', 'has-selection');
+        if (target) waveNav.setAttribute('data-active-target', target);
         this.collapseContent();
 
         localStorage.setItem('lastSelectedTarget', target);
