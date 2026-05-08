@@ -1114,3 +1114,59 @@ html body .task-manager-section-active .wave-item {
     }
 }
 
+
+/* Compact selected task layout: keep the active panel close to the collapsed nav. */
+html body #waveNav.minimized,
+html body #waveNav.has-selection,
+html body .task-manager-section-active #waveNav,
+html body .task-manager-section-active .wave-nav-container {
+    margin-bottom: 20px !important;
+    padding-bottom: 4px !important;
+}
+
+html body #waveNav.minimized #waveNavContent,
+html body #waveNav.has-selection #waveNavContent,
+html body .task-manager-section-active #waveNavContent,
+html body .task-manager-section-active .wave-nav-content {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+html body #waveNav.minimized .wave-nav-items,
+html body #waveNav.has-selection .wave-nav-items,
+html body .task-manager-section-active #waveNav .wave-nav-items,
+html body .task-manager-section-active .wave-nav-items {
+    margin-bottom: 0 !important;
+    padding-bottom: 8px !important;
+}
+
+html body .task-manager-section-active .task-section-active,
+html body .task-manager-section-active .task-content-section.active,
+html body .task-manager-section-active .task-content-section.is-active,
+html body .task-manager-section-active #newTaskCreateSection.task-section-active,
+html body .task-manager-section-active #activeTableSection.task-section-active,
+html body .task-manager-section-active #externalTableSection.task-section-active,
+html body .task-manager-section-active #partnerTableSection.task-section-active,
+html body .task-manager-section-active #reportTableSection.task-section-active,
+html body .task-manager-section-active #archiveTableSection.task-section-active {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+html body .task-manager-section-active #activeTableSection.task-section-active,
+html body .task-manager-section-active #externalTableSection.task-section-active,
+html body .task-manager-section-active #partnerTableSection.task-section-active,
+html body .task-manager-section-active #archiveTableSection.task-section-active {
+    --task-section-top-gap: 24px;
+    height: calc(100vh - var(--task-nav-height, 10px) - var(--task-section-top-gap) - var(--task-bottom-gap, 1px)) !important;
+    max-height: calc(100vh - var(--task-nav-height, 10px) - var(--task-section-top-gap) - var(--task-bottom-gap, 1px)) !important;
+    min-height: min(460px, calc(100vh - var(--task-nav-height, 10px) - var(--task-section-top-gap) - var(--task-bottom-gap, 1px))) !important;
+}
+
+html body .task-manager-section-active .task-table-container,
+html body .task-manager-section-active .tasks-table-wrapper,
+html body .task-manager-section-active .task-list-container,
+html body .task-manager-section-active .task-content-card,
+html body .task-manager-section-active .table-card {
+    margin-top: 0 !important;
+}

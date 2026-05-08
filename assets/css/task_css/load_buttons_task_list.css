@@ -160,7 +160,7 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 /* ===== Task Manager active table sections: fill remaining viewport cleanly ===== */
 :root {
   --task-nav-height: 10px;
-  --task-section-top-gap: 100px;
+  --task-section-top-gap: 24px;
   --task-bottom-gap: 1px;
 }
 
