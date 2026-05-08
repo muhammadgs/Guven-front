@@ -190,50 +190,17 @@ const TaskManagerLoader = {
         this.showTaskManagerSection(sections[target]);
     },
 
-    // YENİ: Panel vəziyyətini tənzimlə - TAM EKRAN VERSİYASI
+    // FINANCE REDESIGN: Panel vəziyyəti - seçilmiş bölmədə kompakt horizontal SaaS row qalır.
     adjustPanelState: function(target) {
         const waveNav = document.getElementById('waveNav');
         if (!waveNav) return;
 
-        // Bütün panel class-larını təmizlə
-        waveNav.classList.remove('pinned', 'centered', 'minimized', 'expanded', 'fullscreen');
+        // Köhnə fullscreen/expanded/pinned dalğa effektlərini neytrallaşdır.
+        waveNav.classList.remove('pinned', 'centered', 'expanded', 'fullscreen');
+        waveNav.classList.add('minimized');
+        this.collapseContent();
 
-        // Panelə pinned class-ı əlavə et (yuxarı yapışsın)
-        waveNav.classList.add('pinned');
-
-        // Yeni task yaradılarkən minimized olsun
-        if (target === 'new') {
-            waveNav.classList.add('minimized');
-        }
-
-        // Eyni item-ə təkrar klik olub-olmadığını yoxla
-        const lastTarget = localStorage.getItem('lastSelectedTarget');
-
-        if (lastTarget === target && !waveNav.classList.contains('just-pinned')) {
-            // Eyni item-ə təkrar klik - panel TAM EKRANA oturur
-            waveNav.classList.remove('pinned');
-            waveNav.classList.add('fullscreen', 'expanded');
-
-            // Məzmunu böyüt
-            this.expandContent();
-
-            // 3 saniyə sonra pinned vəziyyətinə qayıt
-            setTimeout(() => {
-                if (waveNav.classList.contains('fullscreen')) {
-                    waveNav.classList.remove('fullscreen', 'expanded');
-                    waveNav.classList.add('pinned');
-                    this.collapseContent();
-                }
-            }, 3000);
-        }
-
-        // Son seçilmiş target-i yadda saxla
         localStorage.setItem('lastSelectedTarget', target);
-        waveNav.classList.add('just-pinned');
-
-        setTimeout(() => {
-            waveNav.classList.remove('just-pinned');
-        }, 100);
     },
 
     // YENİ: Məzmunu böyüt (tam ekran effekti)
@@ -854,6 +821,7 @@ const TaskManagerLoader = {
             '../assets/css/task_css/partnerTaskEditModule.css',
             '../assets/css/task_css/load_buttons_task_list.css',
             '../assets/css/task_css/task_details_modal.css',
+            '../assets/css/task_css/task_finance_redesign.css',
             '../assets/css/task_css/report/userReportModal.css',
             '../assets/css/task_css/report/enhancedModals.css'
         ];
@@ -908,42 +876,42 @@ const TaskManagerLoader = {
                             <div class="wave-item" data-target="new">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-plus-circle"></i></div>
-                                    <span class="wave-title">Yeni task</span>
+                                    <span class="wave-title">Yeni</span><span class="wave-description">Yeni tapşırıq yaradın</span>
                                     <span class="wave-count" id="countNew">24</span>
                                 </div>
                             </div>
                             <div class="wave-item active-item" data-target="active">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-tasks"></i></div>
-                                    <span class="wave-title">Aktiv İşlər</span>
+                                    <span class="wave-title">Daxili</span><span class="wave-description">Daxili tapşırıqlar</span>
                                     <span class="wave-count" id="countActive">12</span>
                                 </div>
                             </div>
                             <div class="wave-item" data-target="external">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-building"></i></div>
-                                    <span class="wave-title">Digər Şirkətlər</span>
+                                    <span class="wave-title">Şirkət</span><span class="wave-description">Şirkət tapşırıqları</span>
                                     <span class="wave-count" id="countExternal">8</span>
                                 </div>
                             </div>
                             <div class="wave-item" data-target="partner">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-handshake"></i></div>
-                                    <span class="wave-title">Partnyorlar</span>
+                                    <span class="wave-title">Partnyor</span><span class="wave-description">Partnyor tapşırıqları</span>
                                     <span class="wave-count" id="countPartner">6</span>
                                 </div>
                             </div>
                             <div class="wave-item" data-target="report">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-chart-bar"></i></div>
-                                    <span class="wave-title">Hesabat</span>
+                                    <span class="wave-title">Hesabat</span><span class="wave-description">Hesabatlar və statistikalar</span>
                                     <span class="wave-count" id="countReport">15</span>
                                 </div>
                             </div>
                             <div class="wave-item" data-target="archive">
                                 <div class="wave-item-content">
                                     <div class="wave-icon"><i class="fas fa-archive"></i></div>
-                                    <span class="wave-title">Arxiv</span>
+                                    <span class="wave-title">Arxiv</span><span class="wave-description">Arxivləşdirilmiş tapşırıqlar</span>
                                     <span class="wave-count" id="countArchive">42</span>
                                 </div>
                             </div>

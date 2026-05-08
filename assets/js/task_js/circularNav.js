@@ -7,7 +7,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
-    console.log('🌊 WaveNav yükləndi - v1.0.8 (Toggle funksiyası əlavə olundu)');
+    console.log('🌊 WaveNav yükləndi - v1.0.9 (Finance redesign compact nav)');
 
     // ===== ELEMENTLƏRİ SEÇ =====
     const waveNav = document.getElementById('waveNav');
@@ -110,23 +110,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const target = this.dataset.target;
             console.log('🔘 Klik:', target, 'Son klik:', lastClickedItem ? lastClickedItem.dataset.target : 'yoxdur');
 
-            // ƏGƏR EYNİ İTEM-Ə TƏKRAR KLİK OLUNUB SA
+            // FINANCE REDESIGN: repeated clicks keep the compact SaaS row active.
+            // The old interaction expanded/restored the game-like wave panel; ESC still returns to initial state.
             if(lastClickedItem === this) {
-                console.log('🔄 Eyni item-ə təkrar klik - panel geri qayıdır');
-
-                // Seçimi təmizlə
-                removeSelected();
-
-                // Panel normala qayıt (mərkəzdə görünsün)
-                restorePanel();
-
-                // Bütün bölmələri gizlət (sadəcə panel qalsın)
-                hideAllSections();
-
-                // Son klikləni sıfırla
-                lastClickedItem = null;
-                activeItem = null;
-
+                console.log('🔄 Eyni item-ə təkrar klik - kompakt panel aktiv saxlanılır');
+                this.classList.add('selected');
+                activeItem = this;
+                showSection(target);
+                minimizePanel();
                 return;
             }
 
@@ -189,11 +180,11 @@ document.addEventListener('DOMContentLoaded', function() {
     activeItem = null;
     lastClickedItem = null;
 
-    console.log('✅ Panel hazır - Toggle funksiyası aktiv');
+    console.log('✅ Panel hazır - Finance redesign kompakt naviqasiya aktiv');
     console.log('📌 İstifadə:');
-    console.log('   - Eyni item-ə təkrar klik → panel geri qayıdır');
+    console.log('   - Eyni item-ə təkrar klik → kompakt panel aktiv qalır');
     console.log('   - ESC düyməsi → panel normala qayıdır');
-    console.log('   - Panelə klik → panel açılır');
+    console.log('   - Panel boşluğuna klik → seçim dəyişmir');
 });
 // Panel və başlıq arasında əlaqə
 document.addEventListener('DOMContentLoaded', function() {
