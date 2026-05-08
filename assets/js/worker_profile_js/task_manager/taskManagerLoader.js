@@ -162,7 +162,7 @@ const TaskManagerLoader = {
 
         if (root) {
             root.classList.add('task-manager-initial');
-            root.classList.remove('task-manager-section-active');
+            root.classList.remove('task-manager-section-active', 'task-page-selected');
         }
 
         if (waveNav) {
@@ -188,7 +188,7 @@ const TaskManagerLoader = {
 
         if (root) {
             root.classList.remove('task-manager-initial');
-            root.classList.add('task-manager-section-active');
+            root.classList.add('task-manager-section-active', 'task-page-selected');
         }
 
         navItems.forEach(navItem => {

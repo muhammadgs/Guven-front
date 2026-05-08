@@ -52,14 +52,14 @@ function initializeCircularNav() {
     function setTaskManagerInitialState() {
         const root = getTaskManagerRoot();
         root.classList.add('task-manager-initial');
-        root.classList.remove('task-manager-section-active');
+        root.classList.remove('task-manager-section-active', 'task-page-selected');
         hideAllSections();
     }
 
     function setTaskManagerActiveState() {
         const root = getTaskManagerRoot();
         root.classList.remove('task-manager-initial');
-        root.classList.add('task-manager-section-active');
+        root.classList.add('task-manager-section-active', 'task-page-selected');
     }
 
     function hideSection(section) {
