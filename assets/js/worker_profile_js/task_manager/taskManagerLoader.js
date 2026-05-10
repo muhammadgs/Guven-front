@@ -154,42 +154,80 @@ const TaskManagerLoader = {
 
         row.dataset.dockMagnificationBound = 'true';
 
+        let rafId = null;
+        let latestClientX = null;
+
         const getItems = () => Array.from(row.querySelectorAll('.wave-item'));
 
+        function isCollapsedMode() {
+            return nav.classList.contains('minimized') ||
+                nav.classList.contains('has-selection');
+        }
+
         function resetDock() {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+            }
+
+            latestClientX = null;
+
             getItems().forEach(item => {
                 item.style.setProperty('--dock-scale', '1');
                 item.style.setProperty('--dock-y', '0px');
+                item.style.setProperty('--dock-shadow', '0px');
+                item.style.setProperty('--dock-shadow-alpha', '0');
             });
         }
 
-        row.addEventListener('pointermove', event => {
-            const isCollapsed =
-                nav.classList.contains('minimized') ||
-                nav.classList.contains('has-selection');
+        function smoothstep(value) {
+            return value * value * (3 - 2 * value);
+        }
 
-            if (!isCollapsed) {
+        function renderDock() {
+            rafId = null;
+
+            if (latestClientX == null || !isCollapsedMode()) {
                 resetDock();
                 return;
             }
 
-            const maxDistance = 230;
-            const maxScaleBoost = 0.24;
-            const maxLift = 10;
+            const maxDistance = 280;
+            const maxScaleBoost = 0.27;
+            const maxLift = 13;
+            const maxShadow = 10;
+            const maxShadowAlpha = 0.055;
 
             getItems().forEach(item => {
                 const rect = item.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
-                const distance = Math.abs(event.clientX - centerX);
-                const influence = Math.max(0, 1 - distance / maxDistance);
-                const easedInfluence = influence * influence * (3 - 2 * influence);
-                const scale = 1 + easedInfluence * maxScaleBoost;
-                const y = -easedInfluence * maxLift;
+                const distance = Math.abs(latestClientX - centerX);
+                const raw = Math.max(0, 1 - distance / maxDistance);
+                const influence = smoothstep(raw);
+                const scale = 1 + influence * maxScaleBoost;
+                const y = -influence * maxLift;
+                const shadow = influence * maxShadow;
+                const shadowAlpha = influence * maxShadowAlpha;
 
                 item.style.setProperty('--dock-scale', scale.toFixed(3));
-                item.style.setProperty('--dock-y', `${y.toFixed(1)}px`);
+                item.style.setProperty('--dock-y', `${y.toFixed(2)}px`);
+                item.style.setProperty('--dock-shadow', `${shadow.toFixed(2)}px`);
+                item.style.setProperty('--dock-shadow-alpha', shadowAlpha.toFixed(3));
             });
-        });
+        }
+
+        row.addEventListener('pointermove', event => {
+            if (!isCollapsedMode()) {
+                resetDock();
+                return;
+            }
+
+            latestClientX = event.clientX;
+
+            if (!rafId) {
+                rafId = requestAnimationFrame(renderDock);
+            }
+        }, { passive: true });
 
         row.addEventListener('pointerleave', resetDock);
         row.addEventListener('pointercancel', resetDock);
