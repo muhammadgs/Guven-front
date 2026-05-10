@@ -1592,16 +1592,20 @@ html body .task-manager-section-active #waveNav .wave-item.active-item {
     background: rgba(255, 255, 255, 0.92) !important;
     border: 1px solid rgba(214, 228, 241, 0.95) !important;
     box-shadow:
-        0 14px 34px rgba(15, 35, 65, 0.08),
+        0 calc(14px + var(--dock-shadow, 0px))
+          calc(34px + var(--dock-shadow, 0px))
+          rgba(15, 35, 65, calc(0.08 + var(--dock-shadow-alpha, 0))),
         inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
 
-    transform: translateY(var(--dock-y, 0px)) scale(var(--dock-scale, 1)) !important;
+    transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
     transform-origin: center bottom !important;
+    transform-style: preserve-3d !important;
+    backface-visibility: hidden !important;
     transition:
-        transform 220ms cubic-bezier(.22, 1, .36, 1),
+        transform 165ms cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
         background-color 180ms ease,
-        border-color 180ms ease,
-        box-shadow 180ms ease !important;
+        border-color 180ms ease !important;
 
     overflow: visible !important;
     will-change: transform !important;
@@ -1614,9 +1618,11 @@ html body .task-manager-section-active #waveNav .wave-item:hover {
     border-color: rgba(66, 187, 183, 0.46) !important;
     background: rgba(255, 255, 255, 0.98) !important;
     box-shadow:
-        0 20px 42px rgba(15, 35, 65, 0.12),
+        0 calc(16px + var(--dock-shadow, 0px))
+          calc(36px + var(--dock-shadow, 0px))
+          rgba(15, 35, 65, calc(0.09 + var(--dock-shadow-alpha, 0))),
         inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
-    transform: translateY(var(--dock-y, 0px)) scale(var(--dock-scale, 1)) !important;
+    transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
 }
 
 html body #waveNav.minimized .wave-item.selected,
@@ -1628,9 +1634,11 @@ html body .task-manager-section-active #waveNav .wave-item.active-item {
     background: linear-gradient(180deg, rgba(235, 255, 253, 0.96), rgba(255, 255, 255, 0.96)) !important;
     border-color: rgba(45, 191, 183, 0.65) !important;
     box-shadow:
-        0 18px 40px rgba(20, 150, 145, 0.14),
+        0 calc(16px + var(--dock-shadow, 0px))
+          calc(38px + var(--dock-shadow, 0px))
+          rgba(20, 150, 145, calc(0.12 + var(--dock-shadow-alpha, 0))),
         inset 0 0 0 1px rgba(45, 191, 183, 0.18) !important;
-    transform: translateY(var(--dock-y, 0px)) scale(var(--dock-scale, 1)) !important;
+    transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
 }
 
 html body #waveNav.minimized .wave-item::after,
