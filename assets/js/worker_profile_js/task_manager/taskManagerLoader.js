@@ -192,8 +192,8 @@ const TaskManagerLoader = {
                 return;
             }
 
-            const maxDistance = 280;
-            const maxScaleBoost = 0.27;
+            const maxDistance = 220;
+            const maxScaleBoost = 0.31;
             const maxLift = 13;
             const maxShadow = 10;
             const maxShadowAlpha = 0.055;
