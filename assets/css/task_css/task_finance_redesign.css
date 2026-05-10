@@ -856,6 +856,19 @@ html body .wave-nav-container:not(.minimized) .task-finance-hero {
     width: 100% !important;
 }
 
+/* Initial task landing: remove the breadcrumb without affecting the compact selected dock. */
+html body:not(.task-page-selected):not(.task-manager-section-active) #waveNav:not(.minimized):not(.has-selection) .task-finance-breadcrumb,
+html body .task-manager-initial #waveNav:not(.minimized):not(.has-selection) .task-finance-breadcrumb {
+    display: none !important;
+}
+
+@media (min-width: 981px) {
+    html body:not(.task-page-selected):not(.task-manager-section-active) #waveNav:not(.minimized):not(.has-selection),
+    html body .task-manager-initial #waveNav:not(.minimized):not(.has-selection) {
+        top: calc(50% - 44px) !important;
+    }
+}
+
 html body .wave-nav-container:not(.minimized) .task-finance-breadcrumb {
     margin-bottom: clamp(30px, 4vw, 50px) !important;
 }
