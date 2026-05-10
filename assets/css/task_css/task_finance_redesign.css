@@ -19,6 +19,7 @@
     --finance-shadow: 0 22px 60px rgba(25, 56, 92, 0.10);
     --finance-shadow-soft: 0 12px 32px rgba(31, 83, 122, 0.08);
     --tm-section-gap: 178px;
+    --task-collapsed-dock-shift: 10px;
 }
 
 html body {
@@ -1530,7 +1531,8 @@ html body .task-manager-section-active #waveNav .wave-nav-content {
     height: auto !important;
     max-height: none !important;
     overflow: visible !important;
-    transform: none !important;
+    /* Shift the collapsed dock row toward the table without changing layout flow. */
+    transform: translateY(var(--task-collapsed-dock-shift)) !important;
 }
 
 html body #waveNav.minimized .wave-nav-items,
