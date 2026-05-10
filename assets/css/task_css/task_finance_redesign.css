@@ -1474,7 +1474,7 @@ html body .task-manager-section-active #waveNav .wave-item:hover {
    Equal-size rounded-square icon tiles with transform-only magnification.
    ===================================================================== */
 :root {
-    --tm-section-gap: 226px;
+    --tm-section-gap: 178px;
 }
 
 html body #waveNav.minimized,
@@ -1485,8 +1485,8 @@ html body .task-manager-section-active #waveNav,
 html body .task-manager-section-active .wave-nav-container {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 auto 24px !important;
-    padding: 18px 0 30px !important;
+    margin: 0 auto 12px !important;
+    padding: 8px 0 8px !important;
     min-height: 0 !important;
     background: transparent !important;
     border: 0 !important;
@@ -1544,11 +1544,11 @@ html body .task-manager-section-active #waveNav .wave-nav-items {
     gap: 22px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 132px !important;
+    min-height: 116px !important;
     height: auto !important;
     max-height: none !important;
     margin: 0 auto !important;
-    padding: 18px 22px 22px !important;
+    padding: 8px 22px 8px !important;
     overflow: visible !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
@@ -1804,15 +1804,15 @@ html body .task-manager-section-active #waveNav .wave-nav-extra {
 }
 
 @media (max-width: 900px) {
-    :root { --tm-section-gap: 206px; }
+    :root { --tm-section-gap: 178px; }
 
     html body #waveNav.minimized .wave-nav-items,
     html body #waveNav.has-selection .wave-nav-items,
     html body .task-manager-section-active #waveNav .wave-nav-items {
         justify-content: flex-start !important;
         gap: 18px !important;
-        min-height: 118px !important;
-        padding: 16px 16px 20px !important;
+        min-height: 108px !important;
+        padding: 8px 16px 8px !important;
         overflow-x: auto !important;
         overflow-y: visible !important;
         scrollbar-width: none !important;
