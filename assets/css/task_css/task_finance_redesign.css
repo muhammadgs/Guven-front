@@ -1485,7 +1485,7 @@ html body .task-manager-section-active #waveNav,
 html body .task-manager-section-active .wave-nav-container {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 auto 12px !important;
+    margin: 0 auto 24px !important;
     padding: 8px 0 8px !important;
     min-height: 0 !important;
     background: transparent !important;
