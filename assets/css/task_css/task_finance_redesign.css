@@ -1894,3 +1894,56 @@ html body .task-manager-section-active #waveNav .wave-text {
     gap: 0 !important;
     text-align: center !important;
 }
+
+/* =====================================================================
+   FLUID SELECTED TASK CONTENT WIDTH
+   The table sections are direct page children, so the selected-state card
+   must own the full responsive page width instead of inheriting the older
+   centered 1640px content contract used by the compact dock.
+   ===================================================================== */
+:root {
+    --task-page-x-padding: clamp(16px, 2.5vw, 40px);
+}
+
+html body.task-page-selected > .task-section-active.table-card,
+html body.task-manager-section-active > .task-section-active.table-card,
+html body.task-page-selected > #activeTableSection.task-section-active,
+html body.task-page-selected > #externalTableSection.task-section-active,
+html body.task-page-selected > #partnerTableSection.task-section-active,
+html body.task-page-selected > #archiveTableSection.task-section-active,
+html body.task-manager-section-active > #activeTableSection.task-section-active,
+html body.task-manager-section-active > #externalTableSection.task-section-active,
+html body.task-manager-section-active > #partnerTableSection.task-section-active,
+html body.task-manager-section-active > #archiveTableSection.task-section-active {
+    width: calc(100vw - (var(--task-page-x-padding) * 2)) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+}
+
+html body.task-page-selected > .task-section-active.table-card .table-wrapper,
+html body.task-manager-section-active > .task-section-active.table-card .table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+}
+
+html body.task-page-selected > .task-section-active.table-card .data-table,
+html body.task-page-selected > .task-section-active.table-card .excel-table,
+html body.task-manager-section-active > .task-section-active.table-card .data-table,
+html body.task-manager-section-active > .task-section-active.table-card .excel-table {
+    width: max-content !important;
+    min-width: 100% !important;
+}
+
+@media (max-width: 720px) {
+    :root {
+        --task-page-x-padding: 10px;
+    }
+}
