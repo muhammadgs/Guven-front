@@ -1960,3 +1960,29 @@ html body.task-manager-section-active > .task-section-active.table-card .excel-t
         --task-page-x-padding: 10px;
     }
 }
+
+/* Report section keeps the fixed header visible while the report body scrolls. */
+html body.task-page-selected > #reportTableSection.task-section-active.table-card.report-section,
+html body.task-manager-section-active > #reportTableSection.task-section-active.table-card.report-section {
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100vh - var(--tm-section-gap)) !important;
+    max-height: calc(100vh - var(--tm-section-gap)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+html body.task-page-selected > #reportTableSection.task-section-active.table-card.report-section > .table-header,
+html body.task-manager-section-active > #reportTableSection.task-section-active.table-card.report-section > .table-header {
+    flex: 0 0 auto !important;
+}
+
+html body.task-page-selected > #reportTableSection.task-section-active.table-card.report-section > .report-scroll-content,
+html body.task-manager-section-active > #reportTableSection.task-section-active.table-card.report-section > .report-scroll-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
