@@ -180,7 +180,8 @@ function initializeCircularNav() {
         section.style.display = isTaskTableCard ? 'flex' : 'block';
 
         if (target === 'report') {
-            section.scrollTop = 0;
+            const reportScrollContent = section.querySelector('.report-scroll-content');
+            (reportScrollContent || section).scrollTop = 0;
         }
     }
 
