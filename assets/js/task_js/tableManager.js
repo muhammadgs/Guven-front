@@ -1662,16 +1662,27 @@ const TableManager = {
         `;
     },
 
-    updateTaskCount: async function() {
+    updateTaskCount: async function(apiCount = null) {
         const countElement = document.getElementById('countActive');
         const tableTotalElement = document.getElementById('activeTableTotalCount');
 
-        const rows = document.querySelectorAll('#tableBody tr[data-task-id]');
-        const count = rows.length;
+        // 🔥 Əvvəlcə localStorage-dan oxu (birinci koddakı kimi)
+        let count = localStorage.getItem('tasksCount');
+
+        if (count !== null) {
+            count = parseInt(count);
+        } else if (apiCount !== null) {
+            count = apiCount;
+        } else {
+            // Fallback: cədvəldəki row-ları say
+            const rows = document.querySelectorAll('#tableBody tr[data-task-id]');
+            count = rows.length;
+        }
 
         if (countElement) countElement.textContent = count;
         if (tableTotalElement) tableTotalElement.textContent = count;
 
+        console.log(`📊 Task sayı (API-dən): ${count}`);
         return count;
     },
 

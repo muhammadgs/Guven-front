@@ -763,9 +763,15 @@ class EmployeesService {
             const availableCompanies = myCompaniesResponse.companies || [];
 
             // İşçinin təyin olunduğu şirkətləri yüklə
-            const assignedResponse = await this.api.get(`/users/${employeeId}/assigned-companies`);
-            const assignedCodes = assignedResponse.assigned_company_codes || [];
-
+            let assignedCodes = [];
+            try {
+                const assignedResponse = await this.api.get(`/users/${employeeId}/assigned-companies`);
+                console.log('📋 Assigned response:', assignedResponse);
+                assignedCodes = assignedResponse.assigned_company_codes || [];
+                console.log('📋 Assigned codes:', assignedCodes);
+            } catch(e) {
+                console.warn('⚠️ Assigned companies yüklənmədi:', e);
+            }
             if (availableCompanies.length === 0) {
                 this.showError('Təyin edə biləcəyiniz şirkət tapılmadı');
                 return;
@@ -878,42 +884,49 @@ class EmployeesService {
             if (closeBtn) closeBtn.addEventListener('click', () => this.closeModals());
             if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModals());
 
-            if (saveBtn) {
-                saveBtn.addEventListener('click', async () => {
-                    const selected = [];
-                    document.querySelectorAll('#companiesChecklist .company-checkbox:checked').forEach(cb => {
-                        selected.push(cb.value);
-                    });
-
-                    saveBtn.disabled = true;
-                    saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saxlanılır...';
-
-                    try {
-                        // URLSearchParams ilə query string yarat
-                        const params = new URLSearchParams();
-                        selected.forEach(code => params.append('company_codes', code));
-
-                        const response = await this.api.post(`/users/${employeeId}/assign-companies?${params.toString()}`);
-
-                        if (response.success) {
-                            this.showSuccess(`${selected.length} şirkət təyin edildi`);
-                            this.closeModals();
-
-                            // İşçilər siyahısını yenilə
-                            await this.loadEmployees();
-                        } else {
-                            this.showError(response.message || 'Xəta baş verdi');
-                        }
-
-                    } catch (error) {
-                        console.error('❌ Xəta:', error);
-                        this.showError('Xəta: ' + (error.response?.data?.detail || error.message));
-                    } finally {
-                        saveBtn.disabled = false;
-                        saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Yadda saxla';
-                    }
+            saveBtn.addEventListener('click', async () => {
+                const selected = [];
+                document.querySelectorAll('#companiesChecklist .company-checkbox:checked').forEach(cb => {
+                    selected.push(cb.value);
                 });
-            }
+
+                if (selected.length === 0) {
+                    this.showError('Ən azı bir şirkət seçin');
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saxlanılır...';
+
+                try {
+                    const params = new URLSearchParams();
+                    selected.forEach(code => params.append('company_codes', code));
+
+                    const response = await this.api.post(
+                        `/users/${employeeId}/assign-companies?${params.toString()}`
+                    );
+
+                    console.log('✅ Assign response:', response); // nə gəldiyin gör
+
+                    // ✅ FIX: response.success yox, sadəcə response-u yoxla
+                    if (response && (response.success === true || response.user_id)) {
+                        // Əvvəl modalı bağla
+                        document.getElementById('assignCompaniesModal')?.remove();
+
+                        this.showSuccess(`${selected.length} şirkət təyin edildi`);
+                        await this.loadEmployees();
+                    } else {
+                        this.showError(response?.message || response?.detail || 'Xəta baş verdi');
+                    }
+
+                } catch (error) {
+                    console.error('❌ Assign xətası:', error);
+                    this.showError('Xəta: ' + error.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fa-solid fa-save"></i> Yadda saxla';
+                }
+            });
 
             // Overlay klik
             if (modal) {
@@ -1330,15 +1343,15 @@ class EmployeesService {
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ad *</label>
-                                                <input type="text" required id="editFirstName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.first_name || employee.ceo_name || ''}">
+                                                <input type="text" required id="editFirstName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.first_name || employee.ceo_name || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Soyad *</label>
-                                                <input type="text" required id="editLastName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.last_name || employee.ceo_lastname || ''}">
+                                                <input type="text" required id="editLastName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.last_name || employee.ceo_lastname || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Ata adı</label>
-                                                <input type="text" id="editFatherName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.father_name || ''}">
+                                                <input type="text" id="editFatherName" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.father_name || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Doğum tarixi</label>
@@ -1360,15 +1373,15 @@ class EmployeesService {
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                                                <input type="email" required id="editEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.email || employee.ceo_email || ''}">
+                                                <input type="email" required id="editEmail" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.email || employee.ceo_email || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
-                                                <input type="tel" id="editPhone" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.phone || employee.ceo_phone || ''}">
+                                                <input type="tel" id="editPhone" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.phone || employee.ceo_phone || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">FİN Kod</label>
-                                                <input type="text" id="editFinCode" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.fin_code || ''}">
+                                                <input type="text" id="editFinCode" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.fin_code || '')}">
                                             </div>
                                         </div>
                                     </div>
@@ -1377,15 +1390,15 @@ class EmployeesService {
                                         <h4 class="text-lg font-semibold text-purple-800 mb-4">İş Məlumatları</h4>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-sm font-medium text-gray-700 mb-2">Departament *</label>
-                                                <select required id="editDepartment" class="w-full px-4 py-3 border border-gray-300 rounded-xl">
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Departament</label>
+                                                <select id="editDepartment" class="w-full px-4 py-3 border border-gray-300 rounded-xl">
                                                     <option value="">Seçin</option>
                                                     ${departmentOptions}
                                                 </select>
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">Vəzifə</label>
-                                                <input type="text" id="editPosition" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${employee.position || ''}">
+                                                <input type="text" id="editPosition" class="w-full px-4 py-3 border border-gray-300 rounded-xl" value="${this.escapeHtml(employee.position || '')}">
                                             </div>
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">İşə başlama tarixi</label>
@@ -1415,13 +1428,171 @@ class EmployeesService {
                 </div>
             `;
 
+            // ✅ BURADA HTML-İ DOM-A ƏLAVƏ ET
             document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            // ✅ İndi event-ləri bağla (elementlər artıq DOM-da var)
             this.bindEditEmployeeEvents();
 
         } catch (error) {
             console.error('❌ Xəta:', error);
-            this.showError('İşçi məlumatları yüklənmədi');
+            this.showError('İşçi məlumatları yüklənmədi: ' + error.message);
         }
+    }
+
+    /**
+     * Redaktə form eventləri - DÜZƏLDİLDİ
+     */
+    bindEditEmployeeEvents(originalEmployeeData) {
+        const closeBtn = document.getElementById('closeEditEmployeeModalBtn');
+        const cancelBtn = document.getElementById('cancelEditEmployeeBtn');
+        const modal = document.getElementById('editEmployeeModal');
+        const form = document.getElementById('editEmployeeForm');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closeModals());
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.closeModals());
+        }
+
+        // Overlay kliklə bağlama
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeModals();
+                }
+            });
+        }
+
+        // Escape düyməsi
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeModals();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+
+        if (form) {
+            // Köhnə event listener-ları təmizləmək üçün clone
+            const newForm = form.cloneNode(true);
+            form.parentNode.replaceChild(newForm, form);
+
+            newForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const employeeId = document.getElementById('editEmployeeId')?.value;
+                if (!employeeId) return;
+
+                const submitBtn = newForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saxlanılır...';
+                }
+
+                try {
+                    // ✅ Əvvəlcə İŞÇİNİN HAZIRKI MƏLUMATLARINI YENİDƏN YÜKLƏ
+                    const currentEmployee = await this.getEmployeeById(employeeId);
+
+                    // ✅ YALNIZ DƏYİŞƏN FIELD-LƏRİ GÖNDƏR
+                    const data = {};
+
+                    const firstName = document.getElementById('editFirstName')?.value;
+                    if (firstName && firstName !== (currentEmployee.first_name || currentEmployee.ceo_name || ''))
+                        data.first_name = firstName;
+
+                    const lastName = document.getElementById('editLastName')?.value;
+                    if (lastName && lastName !== (currentEmployee.last_name || currentEmployee.ceo_lastname || ''))
+                        data.last_name = lastName;
+
+                    const fatherName = document.getElementById('editFatherName')?.value;
+                    if (fatherName !== (currentEmployee.father_name || ''))
+                        data.father_name = fatherName;
+
+                    const birthDate = document.getElementById('editBirthDate')?.value;
+                    if (birthDate !== (currentEmployee.birth_date || ''))
+                        data.birth_date = birthDate;
+
+                    const gender = document.getElementById('editGender')?.value;
+                    if (gender !== (currentEmployee.gender || ''))
+                        data.gender = gender;
+
+                    const email = document.getElementById('editEmail')?.value;
+                    if (email !== (currentEmployee.email || currentEmployee.ceo_email || ''))
+                        data.email = email;
+
+                    const phone = document.getElementById('editPhone')?.value;
+                    if (phone !== (currentEmployee.phone || currentEmployee.ceo_phone || ''))
+                        data.phone = phone;
+
+                    const finCode = document.getElementById('editFinCode')?.value;
+                    if (finCode !== (currentEmployee.fin_code || ''))
+                        data.fin_code = finCode;
+
+                    const departmentId = document.getElementById('editDepartment')?.value;
+                    if (departmentId != (currentEmployee.department_id || ''))
+                        data.department_id = parseInt(departmentId) || null;
+
+                    const position = document.getElementById('editPosition')?.value;
+                    if (position !== (currentEmployee.position || ''))
+                        data.position = position;
+
+                    const hireDate = document.getElementById('editHireDate')?.value;
+                    if (hireDate !== (currentEmployee.hire_date || ''))
+                        data.hire_date = hireDate;
+
+                    const isActive = document.getElementById('editIsActive')?.checked || false;
+                    if (isActive !== currentEmployee.is_active)
+                        data.is_active = isActive;
+
+                    console.log('📤 Göndərilən data (yalnız dəyişənlər):', data);
+
+                    // Heç bir field dəyişməyibsə, xəta göstərmə
+                    if (Object.keys(data).length === 0) {
+                        this.showSuccess('Heç bir dəyişiklik edilmədi');
+                        this.closeModals();
+                        return;
+                    }
+
+                    // ✅ PATCH istifadə et
+                    await this.api.patch(`/users/${employeeId}`, data);
+
+                    this.showSuccess('Məlumatlar yeniləndi');
+                    this.closeModals();
+                    await this.loadEmployees();
+
+                } catch (error) {
+                    console.error('❌ Update xətası:', error);
+                    let errorMsg = error.message;
+                    if (error.response?.data?.detail) {
+                        errorMsg = error.response.data.detail;
+                    } else if (error.response?.data?.message) {
+                        errorMsg = error.response.data.message;
+                    }
+                    this.showError('Xəta: ' + errorMsg);
+                } finally {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Yadda saxla';
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * HTML special characters escape et (XSS qarşısını almaq üçün)
+     */
+    escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     bindAddEmployeeEvents() {
@@ -1429,8 +1600,14 @@ class EmployeesService {
         const cancelBtn = document.getElementById('cancelAddEmployeeBtn');
         const modal = document.getElementById('addEmployeeModal');
 
-        if (closeBtn) closeBtn.addEventListener('click', () => this.closeModals());
-        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModals());
+        // ✅ İNDİ:
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            document.getElementById('assignCompaniesModal')?.remove();
+        });
+        if (cancelBtn) cancelBtn.addEventListener('click', () => {
+            document.getElementById('assignCompaniesModal')?.remove();
+        });
+
 
         // Escape düyməsi ilə bağlama
         const escHandler = (e) => {
@@ -1545,61 +1722,7 @@ class EmployeesService {
         }
     }
 
-    /**
-     * Redaktə form eventləri
-     */
-    bindEditEmployeeEvents() {
-        const closeBtn = document.getElementById('closeEditEmployeeModalBtn');
-        const cancelBtn = document.getElementById('cancelEditEmployeeBtn');
 
-        if (closeBtn) closeBtn.addEventListener('click', () => this.closeModals());
-        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModals());
-
-        const form = document.getElementById('editEmployeeForm');
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const employeeId = document.getElementById('editEmployeeId')?.value;
-                if (!employeeId) return;
-
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saxlanılır...';
-                }
-
-                try {
-                    const data = {
-                        first_name: document.getElementById('editFirstName').value,
-                        last_name: document.getElementById('editLastName').value,
-                        father_name: document.getElementById('editFatherName').value,
-                        birth_date: document.getElementById('editBirthDate').value,
-                        gender: document.getElementById('editGender').value,
-                        email: document.getElementById('editEmail').value,
-                        phone: document.getElementById('editPhone').value,
-                        fin_code: document.getElementById('editFinCode').value,
-                        department_id: document.getElementById('editDepartment').value,
-                        position: document.getElementById('editPosition').value,
-                        hire_date: document.getElementById('editHireDate').value,
-                        is_active: document.getElementById('editIsActive').checked
-                    };
-
-                    await this.api.put(`/users/${employeeId}`, data);
-                    this.showSuccess('Məlumatlar yeniləndi');
-                    this.closeModals();
-                    await this.loadEmployees();
-                } catch (error) {
-                    this.showError('Xəta: ' + error.message);
-                } finally {
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fa-solid fa-save"></i> Yadda saxla';
-                    }
-                }
-            });
-        }
-    }
 
     /**
      * İşçi sil
@@ -1668,9 +1791,11 @@ class EmployeesService {
     closeModals() {
         const addModal = document.getElementById('addEmployeeModal');
         const editModal = document.getElementById('editEmployeeModal');
+        const assignModal = document.getElementById('assignCompaniesModal'); // ✅ ƏLAVƏ ET
 
         if (addModal) addModal.remove();
         if (editModal) editModal.remove();
+        if (assignModal) assignModal.remove(); // ✅ ƏLAVƏ ET
     }
 
     showSuccess(message) {

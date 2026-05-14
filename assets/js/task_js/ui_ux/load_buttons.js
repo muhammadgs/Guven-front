@@ -279,13 +279,7 @@ function getRealCompanyIdFromToken() {
 
             console.log(`✅ ${tableType} cədvəli üçün ${tasks.length} task yükləndi`);
 
-            // 🔥 SAYINI BİRBAŞA BURADAN YENİLƏ
-            if (tableType === 'active') {
-                const countEl = document.getElementById('countActive');
-                const totalEl = document.getElementById('activeTableTotalCount');
-                if (countEl) countEl.textContent = tasks.length;
-                if (totalEl) totalEl.textContent = tasks.length;
-            }
+
 
             if (tasks.length === 0) {
                 showEmptyTable(tableType, config);

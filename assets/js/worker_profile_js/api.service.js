@@ -4,7 +4,7 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = "http://vps.guvenfinans.az:8008";
+        this.baseUrl = "https://guvenfinans.az/proxy.php";
         this.token = this.loadToken();
     }
 

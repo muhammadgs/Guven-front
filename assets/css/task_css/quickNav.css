@@ -1935,7 +1935,7 @@ body .wave-nav-container.minimized .wave-item.selected,
 body .wave-nav-container.minimized .wave-item.active-item {
     width: 88px !important;
     height: 78px !important;
-    min-width: 308px !important;
+    min-width: 88px !important;
     max-width: 88px !important;
     min-height: 88px !important;
     max-height: 98px !important;

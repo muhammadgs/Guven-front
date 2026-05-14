@@ -475,9 +475,7 @@ class CompaniesService {
         return companiesSection;
     }
 
-    /**
-     * ŞİRKƏT MƏLUMATLARINI YÜKLƏ
-     */
+    // DÜZƏLDİLMİŞ loadCompanies() metodu
     async loadCompanies() {
         try {
             console.log('📥 Şirkət məlumatları yüklənir...');
@@ -502,84 +500,141 @@ class CompaniesService {
                 console.log('ℹ️ localStorage oxuma xətası:', e);
             }
 
-            // API service varsa, məlumatları gətir
-            if (this.apiService && userCompanyCode) {
-                try {
-                    // 1. Alt şirkətləri gətir
-                    console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/sub-companies`);
-                    const subResponse = await this.apiService.get(`/companies/${userCompanyCode}/sub-companies`);
+            if (!userCompanyCode) {
+                console.warn('⚠️ User company code tapılmadı');
+                this.companies = [];
+                this.filteredCompanies = [];
+                return [];
+            }
 
-                    if (subResponse && subResponse.sub_companies) {
-                        companies = subResponse.sub_companies.map(c => ({
-                            ...c,
-                            relationship_type: 'child',
-                            is_child: true
-                        }));
-                    }
+            if (!this.apiService) {
+                console.warn('⚠️ API service tapılmadı');
+                this.companies = [];
+                this.filteredCompanies = [];
+                return [];
+            }
 
-                    // 2. Rəsmi alt şirkətləri gətir
-                    try {
-                        const subsidiariesResponse = await this.apiService.get(`/companies/${userCompanyCode}/real-subsidiaries`);
+            // ========== 1. ALT ŞİRKƏTLƏR (sub-companies) ==========
+            try {
+                console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/sub-companies`);
+                const subResponse = await this.apiService.get(`/companies/${userCompanyCode}/sub-companies`);
 
-                        if (subsidiariesResponse && subsidiariesResponse.success && subsidiariesResponse.subsidiaries) {
-                            const subsidiaryCodes = new Set(subsidiariesResponse.subsidiaries.map(s => s.child_company_code));
-
-                            companies = companies.map(company => {
-                                if (subsidiaryCodes.has(company.company_code)) {
-                                    return {
-                                        ...company,
-                                        is_official_subsidiary: true
-                                    };
-                                }
-                                return company;
-                            });
-                        }
-                    } catch (relError) {
-                        console.log('ℹ️ Rəsmi alt şirkətlər yüklənə bilmədi:', relError.message);
-                    }
-
-                    // 3. Üst şirkətləri gətir (əgər varsa)
-                    try {
-                        console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/parent-companies`);
-                        const parentResponse = await this.apiService.get(`/companies/${userCompanyCode}/parent-companies`);
-
-                        if (parentResponse && parentResponse.success && parentResponse.parent_companies) {
-                            const parentCompanies = parentResponse.parent_companies.map(p => ({
-                                ...p,
-                                company_code: p.parent_company_code,
-                                relationship_type: 'parent',
-                                is_parent: true
-                            }));
-
-                            // Mövcud companies-ə parent şirkətləri əlavə et
-                            companies = [...companies, ...parentCompanies];
-                        }
-                    } catch (parentError) {
-                        console.log('ℹ️ Üst şirkətlər yüklənə bilmədi:', parentError.message);
-                    }
-
-                } catch (apiError) {
-                    console.error('❌ API xətası:', apiError);
+                if (subResponse && subResponse.sub_companies) {
+                    const subCompanies = subResponse.sub_companies.map(c => ({
+                        ...c,
+                        relationship_type: 'child',
+                        is_child: true,
+                        company_code: c.company_code || c.code,
+                        company_name: c.company_name || c.name || 'Adsız şirkət'
+                    }));
+                    companies = [...companies, ...subCompanies];
+                    console.log(`✅ ${subCompanies.length} alt şirkət yükləndi`);
                 }
+            } catch (subError) {
+                console.log('ℹ️ Alt şirkətlər yüklənə bilmədi:', subError.message);
             }
 
-            this.companies = companies;
-            console.log(`✅ ${this.companies.length} şirkət yükləndi (${this.companies.filter(c => c.is_child).length} alt, ${this.companies.filter(c => c.is_parent).length} üst)`);
+            // ========== 2. RƏSMİ ALT ŞİRKƏTLƏR (real-subsidiaries) ==========
+            try {
+                console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/real-subsidiaries`);
+                const subsidiariesResponse = await this.apiService.get(`/companies/${userCompanyCode}/real-subsidiaries`);
 
-            // Parent və Child şirkətləri ayır
+                if (subsidiariesResponse && subsidiariesResponse.success && subsidiariesResponse.subsidiaries) {
+                    const subsidiaryCodes = new Set(subsidiariesResponse.subsidiaries.map(s => s.child_company_code));
+
+                    companies = companies.map(company => {
+                        if (subsidiaryCodes.has(company.company_code)) {
+                            return {
+                                ...company,
+                                is_official_subsidiary: true
+                            };
+                        }
+                        return company;
+                    });
+                    console.log(`✅ ${subsidiaryCodes.size} rəsmi alt şirkət işarələndi`);
+                }
+            } catch (relError) {
+                console.log('ℹ️ Rəsmi alt şirkətlər yüklənə bilmədi:', relError.message);
+            }
+
+            // ========== 3. ÜST ŞİRKƏTLƏR (parent-companies) ==========
+            try {
+                console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/parent-companies`);
+                const parentResponse = await this.apiService.get(`/companies/${userCompanyCode}/parent-companies`);
+
+                if (parentResponse && parentResponse.success && parentResponse.parent_companies) {
+                    const parentCompanies = parentResponse.parent_companies.map(p => ({
+                        ...p,
+                        company_code: p.parent_company_code,
+                        relationship_type: 'parent',
+                        is_parent: true,
+                        company_name: p.company_name || p.name || 'Adsız şirkət'
+                    }));
+                    companies = [...companies, ...parentCompanies];
+                    console.log(`✅ ${parentCompanies.length} üst şirkət yükləndi`);
+                }
+            } catch (parentError) {
+                console.log('ℹ️ Üst şirkətlər yüklənə bilmədi:', parentError.message);
+            }
+
+            // ========== ƏSAS ŞİRKƏTİ FULL ENDPOINT-İLƏ GƏTİR ==========
+            // QEYD: Sadəcə şirkət məlumatları üçün ayrıca endpoint yoxdur,
+            // amma /full endpoint-i var!
+            try {
+                console.log(`🌐 API çağırışı: /companies/${userCompanyCode}/full`);
+                const fullResponse = await this.apiService.get(`/companies/${userCompanyCode}/full`);
+
+                if (fullResponse) {
+                    const mainCompany = {
+                        ...fullResponse,
+                        company_code: userCompanyCode,
+                        relationship_type: 'main',
+                        is_main: true,
+                        is_active: fullResponse.is_active !== false,
+                        employee_count: fullResponse.employee_count || 0
+                    };
+                    // Əsas şirkəti başa əlavə et (ən üstə)
+                    companies.unshift(mainCompany);
+                    console.log('✅ Əsas şirkət yükləndi:', mainCompany.company_name);
+                }
+            } catch (fullError) {
+                console.log('ℹ️ Əsas şirkət məlumatları yüklənə bilmədi:', fullError.message);
+
+                // Əgər /full işləmirsə, heç olmasa əsas şirkəti əlavə et
+                companies.unshift({
+                    company_code: userCompanyCode,
+                    company_name: userCompanyCode,
+                    relationship_type: 'main',
+                    is_main: true,
+                    is_active: true,
+                    employee_count: 0
+                });
+            }
+
+            // Təkrarlanan şirkətləri sil (eyni company_code)
+            const uniqueCompanies = new Map();
+            companies.forEach(company => {
+                const code = company.company_code;
+                if (code && !uniqueCompanies.has(code)) {
+                    uniqueCompanies.set(code, company);
+                }
+            });
+            this.companies = Array.from(uniqueCompanies.values());
+
+            console.log(`✅ CƏMİ ${this.companies.length} şirkət yükləndi:`);
+            console.log(`   - Əsas: ${this.companies.filter(c => c.is_main).length}`);
+            console.log(`   - Üst: ${this.companies.filter(c => c.is_parent).length}`);
+            console.log(`   - Alt: ${this.companies.filter(c => c.is_child).length}`);
+
+            this.filteredCompanies = [...this.companies];
             this.separateCompaniesByRelationship();
-
-            // Kartda sayı göstər
-            const countText = document.getElementById('companiesCountText');
-            if (countText) {
-                countText.textContent = `${this.companies.length} bağlı şirkət tapıldı`;
-            }
 
             return this.companies;
 
         } catch (error) {
             console.error('❌ Şirkət məlumatları yüklənmədi:', error);
             this.companies = [];
+            this.filteredCompanies = [];
             return [];
         }
     }
@@ -1142,12 +1197,12 @@ class CompaniesService {
         }
 
         document.querySelectorAll('.view-company-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const companyCode = btn.dataset.companyCode;
-                this.viewCompany(companyCode);
-            });
+           btn.addEventListener('click', (e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               const companyCode = btn.dataset.companyCode;
+               this.viewCompany(companyCode);
+           });
         });
 
         document.querySelectorAll('.edit-company-btn').forEach(btn => {
@@ -1215,461 +1270,645 @@ class CompaniesService {
         }
     }
 
-    /**
-     * ŞİRKƏT DETALLARINA BAX - DÜZGÜN VERSİYA
-     */
+    // ── YENİ viewCompany() ───────────────────────────────────────
     async viewCompany(companyCode) {
-        try {
-            console.log('🔥 viewCompany ÇAĞIRILDI!', companyCode);
+        console.log('🔥 viewCompany:', companyCode);
 
-            // Şirkəti lokal siyahıdan tap
-            let company = this.companies.find(c => c.company_code === companyCode);
-            console.log('📦 Lokal şirkət (əvvəl):', company);
+        // ✅ Cari baxılan şirkətin kodunu saxla (employees tab üçün)
+        this.activeCode = companyCode;
 
-            // ============ API-DAN TAM MƏLUMATLARI GƏTİR ============
-            if (this.apiService && companyCode) {
-                try {
-                    // 1. ƏSAS MƏLUMATLAR
-                    console.log(`🌐 API çağırışı: /companies/${companyCode}/full`);
-                    const fullResponse = await this.apiService.get(`/companies/${companyCode}/full`);
-                    console.log('📦 /full cavabı:', fullResponse);
-
-                    if (fullResponse) {
-                        company = {
-                            ...(company || {}),
-                            ...fullResponse
-                        };
-                    }
-
-                    // 2. CEO MƏLUMATLARI (əgər yoxdursa)
-                    if (!company.ceo_name && !company.ceo_info) {
-                        try {
-                            console.log(`🌐 CEO axtarılır: /users/company/${companyCode}/admin`);
-                            const adminResponse = await this.apiService.get(`/users/company/${companyCode}/admin`);
-                            console.log('📦 Admin cavabı:', adminResponse);
-
-                            if (adminResponse) {
-                                company.ceo_info = {
-                                    ceo_name: adminResponse.ceo_name || adminResponse.name,
-                                    ceo_email: adminResponse.ceo_email || adminResponse.email,
-                                    ceo_phone: adminResponse.ceo_phone || adminResponse.phone
-                                };
-                            }
-                        } catch (adminError) {
-                            console.log('ℹ️ Admin məlumatı tapılmadı');
-                        }
-                    }
-
-                    // 3. ASAN İMZA MƏLUMATLARI (əgər yoxdursa)
-                    if (!company.asan_imza_number && !company.asan_imza_info) {
-                        try {
-                            console.log(`🌐 ASAN İmza axtarılır: /asan-imza/company/${companyCode}`);
-                            const asanResponse = await this.apiService.get(`/asan-imza/company/${companyCode}`);
-                            console.log('📦 ASAN cavabı:', asanResponse);
-
-                            if (asanResponse) {
-                                company.asan_imza_info = {
-                                    asan_imza_number: asanResponse.asan_imza_number,
-                                    asan_id: asanResponse.asan_id,
-                                    pin1: asanResponse.pin1,
-                                    pin2: asanResponse.pin2,
-                                    puk: asanResponse.puk
-                                };
-                            }
-                        } catch (asanError) {
-                            console.log('ℹ️ ASAN İmza məlumatı tapılmadı');
-                        }
-                    }
-
-                } catch (apiError) {
-                    console.log('ℹ️ API xətası, lokal məlumat istifadə olunur:', apiError);
-                }
-            }
-
-            if (!company) {
-                alert('❌ Şirkət tapılmadı');
-                return;
-            }
-
-            console.log('✅ Son company məlumatı:', company);
-
-            // BÜTÜN BÖLMƏLƏRİ GİZLƏ
-            const sections = [
-                'dashboardSection',
-                'profileSection',
-                'companiesSection',
-                'companyDetailsSection',
-                'filesSection'
-            ];
-
-            sections.forEach(id => {
-                const section = document.getElementById(id);
-                if (section) {
-                    section.style.display = 'none';
-                }
-            });
-
-            // companyDetailsSection-i GÖSTƏR
-            const detailsSection = document.getElementById('companyDetailsSection');
-            if (detailsSection) {
-                detailsSection.style.display = 'block';
-            }
-
-            // Məlumatları companyDetailsContent-ə yaz
-            const detailsContent = document.getElementById('companyDetailsContent');
-            if (detailsContent) {
-                detailsContent.innerHTML = this.formatCompanyDetails(company);
-            }
-
-            // Geri düyməsinə event listener əlavə et
-            const backBtn = document.getElementById('backToCompaniesBtn');
-            if (backBtn) {
-                const newBackBtn = backBtn.cloneNode(true);
-                backBtn.parentNode.replaceChild(newBackBtn, backBtn);
-
-                newBackBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    this.showCompaniesSection();
-                });
-            }
-
-        } catch (error) {
-            console.error('❌ Xəta:', error);
-            alert('Şirkət detalları göstərilmədi: ' + error.message);
-        }
-    }
-
-    formatCompanyDetails(company) {
-        // KÖMƏKÇİ FUNKSİYA
-        const getValue = (possibleKeys, defaultValue = '—') => {
-            if (!company) return defaultValue;
-
-            // Əvvəlcə birbaşa yoxla
-            for (const key of possibleKeys) {
-                const value = company[key];
-                if (value !== null && value !== undefined && value !== '') {
-                    return value;
-                }
-            }
-
-            // Sonra nested obyektlərdə yoxla
-            if (company.ceo_info) {
-                for (const key of possibleKeys) {
-                    const value = company.ceo_info[key];
-                    if (value !== null && value !== undefined && value !== '') {
-                        return value;
-                    }
-                }
-            }
-
-            if (company.asan_imza_info) {
-                for (const key of possibleKeys) {
-                    const value = company.asan_imza_info[key];
-                    if (value !== null && value !== undefined && value !== '') {
-                        return value;
-                    }
-                }
-            }
-
-            return defaultValue;
-        };
-
-        const formatValue = (value) => {
-            if (value === null || value === undefined || value === '') return '—';
-            return value;
-        };
-
-        const formatDate = (dateString) => {
-            if (!dateString) return '—';
-            try {
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) return '—';
-                return date.toLocaleDateString('az-AZ', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            } catch {
-                return '—';
-            }
-        };
-
-        const formatCurrency = (value) => {
-            if (!value || value === '—') return '—';
-            // Əgər rəqəm deyilsə, olduğu kimi qaytar
-            if (isNaN(value)) return value;
-
-            return new Intl.NumberFormat('az-AZ', {
-                style: 'currency',
-                currency: 'AZN',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
-        };
-
-        // ƏSAS MƏLUMATLAR - Mümkün olan bütün field adları
-        const companyName = getValue(['company_name', 'name', 'companyName', 'title']);
-        const companyCode = getValue(['company_code', 'code', 'companyCode']);
-        const voen = getValue(['voen', 'vat_number', 'vat', 'tax_id', 'tin']);
-        const isActive = company.is_active || company.isActive || company.status === 'active' || company.status === true;
-        const employeeCount = getValue(['employee_count', 'total_employees', 'employees', 'employeeCount', 'totalEmployees'], 0);
-        const regDate = getValue(['registration_date', 'created_at', 'createdAt', 'registered_date', 'created']);
-        const address = getValue(['address', 'full_address', 'street_address', 'location']);
-        const city = getValue(['city', 'region', 'district', 'area', 'city_name']);
-
-        // FƏALİYYƏT SAHƏSİ (Default dəyərlər)
-        const industry = getValue(['industry_sector', 'activity_field', 'industry', 'sector', 'business_type']) || '—';
-        const legalForm = getValue(['company_structure', 'legal_form', 'legal_type', 'legal_structure', 'company_type']) || '—';
-
-        // ƏLAQƏ MƏLUMATLARI
-        const phone = getValue(['phone', 'phone_number', 'contact_phone', 'telephone', 'mobile']);
-        const email = getValue(['email', 'email_address', 'contact_email', 'mail']);
-        const website = getValue(['company_website', 'website', 'web_site', 'web', 'url']);
-
-        // CEO MƏLUMATLARI
-        const ceoName = getValue(['ceo_name', 'ceo', 'director', 'director_name', 'responsible_person', 'contact_person', 'ceoName', 'ceo_info.ceo_name']);
-        const ceoEmail = getValue(['ceo_email', 'ceoEmail', 'director_email', 'ceo_email_address', 'ceo_info.ceo_email']);
-        const ceoPhone = getValue(['ceo_phone', 'ceoPhone', 'director_phone', 'ceo_phone_number', 'ceo_info.ceo_phone']);
-
-        // MALİYYƏ MƏLUMATLARI (Default dəyərlər)
-        const capital = getValue(['capital', 'authorized_capital', 'fund', 'initial_capital', 'share_capital']) || '—';
-        const turnover = getValue(['annual_turnover', 'turnover', 'revenue', 'annual_revenue']) || '—';
-        const bankName = getValue(['bank_name', 'bank', 'banking_institution', 'bankName']) || '—';
-        const bankAccount = getValue(['bank_account', 'account_number', 'iban', 'bankAccount']) || '—';
-
-        // ASAN İMZA MƏLUMATLARI
-        const asanImza = getValue(['asan_imza_number', 'asan_imza', 'imza_number', 'e_signature', 'asanImza', 'asan_imza_info.asan_imza_number']);
-        const asanId = getValue(['asan_id', 'id_card', 'identity_card', 'id_number', 'asanId', 'asan_imza_info.asan_id']);
-        const pin1 = getValue(['pin1', 'pin_code1', 'pin_1', 'pinCode1', 'asan_imza_info.pin1']);
-        const pin2 = getValue(['pin2', 'pin_code2', 'pin_2', 'pinCode2', 'asan_imza_info.pin2']);
-        const puk = getValue(['puk', 'puk_code', 'puk_number', 'pukCode', 'asan_imza_info.puk']);
-
-        // VERGİ MƏLUMATLARI (Default dəyərlər)
-        const reportingYear = getValue(['reporting_year', 'fiscal_year', 'tax_year']) || new Date().getFullYear();
-        const taxRate = company.tax_rate || company.taxRate || company.tax;
-        const vatRegistered = company.vat_registered || company.vatRegistered || company.vat === 'yes' || company.vat === true;
-
-        // QEYDLƏR
-        const notes = getValue(['description', 'notes', 'comment', 'remarks']);
-
-        console.log('📊 Formatlanmış məlumatlar:', {
-            companyName, companyCode, voen, isActive, employeeCount, address,
-            ceoName, ceoEmail, ceoPhone,
-            asanImza, asanId
+        // Bütün bölmələri gizlət
+        ['dashboardSection','profileSection','companiesSection','companyDetailsSection','filesSection'].forEach(id => {
+            const s = document.getElementById(id);
+            if (s) s.style.display = 'none';
         });
 
+        // companyDetailsSection tap/yarat
+        let sec = document.getElementById('companyDetailsSection');
+        if (!sec) {
+            sec = document.createElement('section');
+            sec.id = 'companyDetailsSection';
+            const main = document.querySelector('main .overflow-y-auto') || document.querySelector('main > div') || document.querySelector('main');
+            if (main) main.appendChild(sec);
+        }
+        sec.style.display = 'block';
+        sec.innerHTML = `
+            <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#7DB6FF;">
+                        <i class="fa-solid fa-building" style="margin-right:6px;"></i>Şirkət Detalları
+                    </span>
+                </div>
+                <button id="backToCompaniesBtn"
+                    style="padding:8px 18px;background:#EAF3FF;color:#7DB6FF;border:none;border-radius:10px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;font-weight:500;transition:all .15s;"
+                    onmouseover="this.style.background='#7DB6FF';this.style.color='#fff';"
+                    onmouseout="this.style.background='#EAF3FF';this.style.color='#7DB6FF';">
+                    <i class="fa-solid fa-arrow-left"></i> Geri
+                </button>
+            </div>
+            <div id="cdpRoot" style="min-height:400px;">
+                <div style="text-align:center;padding:60px;color:#9ca3af;font-size:14px;">
+                    <div style="width:20px;height:20px;border:2px solid #7DB6FF;border-top-color:transparent;border-radius:50%;animation:cdpSpin .8s linear infinite;margin:0 auto 12px;"></div>
+                    Məlumatlar yüklənir...
+                </div>
+            </div>
+            <style>@keyframes cdpSpin{to{transform:rotate(360deg)}}</style>
+        `;
+
+        document.getElementById('backToCompaniesBtn').addEventListener('click', () => {
+            sec.style.display = 'none';
+            this.showCompaniesSection();
+        });
+
+        // Şirkəti tap
+        let company = this.companies.find(c => c.company_code === companyCode) || { company_code: companyCode };
+
+        // API-dən tam məlumatları gətir
+        try {
+            if (this.apiService) {
+                const full = await this.apiService.get(`/companies/${companyCode}/full`);
+                if (full) company = { ...company, ...full };
+            }
+        } catch(e) { console.warn('Full load:', e); }
+
+        // Paneli render et
+        document.getElementById('cdpRoot').innerHTML = this._cdpPanel(company, companyCode);
+        this._cdpBindTabs(company, companyCode);
+    }
+
+
+    // ── _cdpPanel() — sinifin sonuna əlavə edin ─────────────────
+    _cdpPanel(company, companyCode) {
+        const c = company;
+        const isActive = c.is_active !== false;
+        const colors = this._cdpColor(companyCode);
+        const initials = this._cdpInitials(c.company_name || companyCode);
+        const f = v => (v !== null && v !== undefined && v !== '') ? v : '—';
+        const regDate = c.registration_date ? new Date(c.registration_date).toLocaleDateString('az-AZ') : '—';
+
         return `
-            <div class="p-6">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-6 pb-4 border-b">
-                    <div class="flex items-center gap-4">
-                        <div class="h-16 w-16 rounded-xl bg-gradient-to-br from-brand-blue to-blue-500 flex items-center justify-center shadow-lg">
-                            <i class="fa-solid fa-building text-3xl text-white"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-900">${formatValue(companyName)}</h2>
-                            <p class="text-gray-600 flex items-center gap-2 mt-1">
-                                <i class="fa-solid fa-hashtag text-xs"></i>
-                                ${formatValue(companyCode)}
-                            </p>
-                        </div>
+    <style>
+    .cdp-tab{padding:10px 20px;font-size:13px;font-weight:400;color:#6b7280;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit;}
+    .cdp-tab.on{color:#185FA5;border-bottom-color:#185FA5;font-weight:500;}
+    .cdp-tab:hover{color:#111;}
+    .cdp-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:.5px solid #e5e7eb;font-size:13px;}
+    .cdp-row:last-child{border-bottom:none;}
+    .cdp-row .l{color:#6b7280;flex-shrink:0;margin-right:10px;}
+    .cdp-row .r{font-weight:500;color:#111;text-align:right;word-break:break-word;max-width:55%;}
+    .cdp-sec{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px;}
+    .cdp-box{border:.5px solid #e5e7eb;border-radius:10px;padding:0 14px;}
+    .cdp-stat{background:#f9fafb;border-radius:8px;padding:12px 14px;}
+    .cdp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:.5px solid #e5e7eb;border-radius:8px;margin-bottom:6px;}
+    .cdp-ok{font-size:11px;padding:2px 9px;border-radius:10px;background:#EAF3DE;color:#3B6D11;}
+    .cdp-pend{font-size:11px;padding:2px 9px;border-radius:10px;background:#FAEEDA;color:#854F0B;}
+    .cdp-add{display:flex;align-items:center;gap:7px;padding:9px 14px;font-size:13px;border:.5px dashed #d1d5db;border-radius:8px;background:none;color:#6b7280;cursor:pointer;width:100%;margin-top:10px;font-family:inherit;transition:all .12s;}
+    .cdp-add:hover{background:#f9fafb;color:#111;border-style:solid;}
+    .cdp-empty{text-align:center;padding:32px;color:#9ca3af;font-size:13px;}
+    .cdp-up{border:.5px dashed #d1d5db;border-radius:8px;padding:20px;text-align:center;margin-top:12px;cursor:pointer;}
+    .cdp-up:hover{background:#f9fafb;}
+    </style>
+     
+    <!-- Başlıq kart -->
+    <div style="background:#fff;border:.5px solid #e5e7eb;border-radius:12px;padding:20px 24px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+            <div style="width:52px;height:52px;border-radius:12px;background:${colors.bg};color:${colors.fg};display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;flex-shrink:0;">${initials}</div>
+            <div style="flex:1;min-width:0;">
+                <div style="font-size:18px;font-weight:500;color:#111;word-break:break-word;">${f(c.company_name)}</div>
+                <div style="font-size:12px;color:#6b7280;margin-top:3px;">${companyCode}${c.voen ? ' · VÖEN: ' + c.voen : ''}</div>
+            </div>
+            <span style="font-size:12px;padding:4px 12px;border-radius:10px;background:${isActive?'#EAF3DE':'#FCEBEB'};color:${isActive?'#3B6D11':'#A32D2D'};flex-shrink:0;">${isActive?'Aktiv':'Deaktiv'}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+            <div class="cdp-stat"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">İşçi sayı</div><div style="font-size:20px;font-weight:500;color:#111;">${c.employee_count||c.total_employees||0}</div></div>
+            <div class="cdp-stat"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Əlaqə növü</div><div style="font-size:13px;font-weight:500;color:#111;">${c.is_parent?'Üst şirkət':c.is_child?'Alt şirkət':'—'}</div></div>
+            <div class="cdp-stat"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Qeydiyyat</div><div style="font-size:13px;font-weight:500;color:#111;">${regDate}</div></div>
+            <div class="cdp-stat"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Sənaye</div><div style="font-size:12px;font-weight:500;color:#111;word-break:break-word;">${f(c.industry_sector||c.industry)}</div></div>
+        </div>
+    </div>
+     
+    <!-- Tab panel -->
+    <div style="background:#fff;border:.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
+        <div style="display:flex;border-bottom:.5px solid #e5e7eb;padding:0 8px;overflow-x:auto;" id="cdpTabBar">
+            <button class="cdp-tab on" data-tab="info"><i class="fa-solid fa-circle-info" style="font-size:12px;margin-right:5px;"></i>Məlumatlar</button>
+            <button class="cdp-tab" data-tab="services"><i class="fa-solid fa-handshake" style="font-size:12px;margin-right:5px;"></i>Xidmətlər</button>
+            <button class="cdp-tab" data-tab="employees"><i class="fa-solid fa-users" style="font-size:12px;margin-right:5px;"></i>Əməkdaşlar</button>
+            <button class="cdp-tab" data-tab="files"><i class="fa-solid fa-folder-open" style="font-size:12px;margin-right:5px;"></i>Fayllar</button>
+        </div>
+        <div id="cdpBody" style="padding:20px 24px;min-height:280px;"></div>
+    </div>
+    <div id="cdpModal"></div>
+        `;
+    }
+
+    _cdpBindTabs(company, companyCode) {
+        this._cdpRenderInfo(company);
+        // Xidmətləri avtomatik yüklə (göstərməsə də, cache üçün)
+        this._cdpRenderServices(companyCode).catch(e => console.warn('Services load:', e));
+
+        document.querySelectorAll('.cdp-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.cdp-tab').forEach(b => b.classList.remove('on'));
+                btn.classList.add('on');
+                const tab = btn.dataset.tab;
+                if (tab === 'info') this._cdpRenderInfo(company);
+                if (tab === 'services') this._cdpRenderServices(companyCode);
+                if (tab === 'employees') this._cdpRenderEmployees();
+                if (tab === 'files') this._cdpRenderFiles(companyCode);
+            });
+        });
+    }
+
+    _cdpRenderInfo(c) {
+        const f = v => (v !== null && v !== undefined && v !== '') ? v : '—';
+        const row = (l,v) => `<div class="cdp-row"><span class="l">${l}</span><span class="r">${f(v)}</span></div>`;
+        const sec = t => `<div class="cdp-sec">${t}</div>`;
+        const box = inner => `<div class="cdp-box">${inner}</div>`;
+        const body = document.getElementById('cdpBody');
+        if (!body) return;
+        body.innerHTML = `
+    ${sec('Şirkət məlumatları')}
+    ${box(row('VÖEN',c.voen)+row('Hüquqi forma',c.company_structure||c.legal_form)+row('Fəaliyyət sahəsi',c.industry_sector||c.industry)+row('Ünvan',c.address)+row('Vebsayt',c.company_website||c.website))}
+    ${sec('Əlaqə')}
+    ${box(row('Telefon',c.phone)+row('Email',c.email)+row('Bank',c.bank_name||c.bank)+row('Hesab',c.bank_account))}
+    ${sec('Rəhbər')}
+    ${box(row('Ad Soyad',c.ceo_name||''+(c.ceo_info?.ceo_name||''))+row('Email',c.ceo_email||c.ceo_info?.ceo_email)+row('Telefon',c.ceo_phone||c.ceo_info?.ceo_phone))}
+    ${sec('Maliyyə')}
+    ${box(row('Kapital',c.capital)+row('Dövriyyə',c.annual_turnover||c.turnover)+row('Vergi oranı',c.tax_rate?c.tax_rate+'%':null)+row('ƏDV statusu',c.vat_registered?'ƏDV-li':'ƏDV-siz'))}
+        `;
+    }
+
+    async _cdpRenderServices(companyCode) {
+        console.log('🔍 _cdpRenderServices çağırıldı, companyCode:', companyCode);
+
+        const body = document.getElementById('cdpBody');
+        if (!body) {
+            console.error('❌ cdpBody elementi tapılmadı!');
+            return;
+        }
+
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Yüklənir...</div>';
+
+        // ============ 1. ŞİRKƏT MƏLUMATLARINI YÜKLƏ ============
+        let companyInfo = {};
+        try {
+            if (this.apiService) {
+                const fullResponse = await this.apiService.get(`/companies/${companyCode}/full`);
+                if (fullResponse) {
+                    companyInfo = fullResponse;
+                    console.log('✅ Şirkət məlumatları yükləndi:', companyInfo);
+                }
+            }
+        } catch(e) {
+            console.warn('Şirkət məlumatları yüklənə bilmədi:', e);
+        }
+
+        // ============ 2. ASAN İMZA MƏLUMATLARINI YÜKLƏ ============
+        let asanImzalar = [];
+        try {
+            if (this.apiService) {
+                console.log(`🌐 API çağırışı: /asan-imza/company/${companyCode}`);
+                const res = await this.apiService.get(`/asan-imza/company/${companyCode}`);
+                console.log('📦 API cavabı:', res);
+
+                if (res && res.success && res.asan_imzalar) {
+                    asanImzalar = res.asan_imzalar;
+                    console.log(`✅ ${asanImzalar.length} ASAN İmza tapıldı`);
+                }
+            }
+        } catch(e) {
+            console.error('❌ ASAN İmza yükləmə xətası:', e);
+        }
+
+        // ============ 3. TELEFON VƏ EMAIL MƏLUMATLARINI AL (ceo_info-dan) ============
+        const phoneValue = companyInfo.ceo_info?.ceo_phone ||
+                           companyInfo.phone ||
+                           companyInfo.telephone ||
+                           companyInfo.contact_phone ||
+                           '—';
+
+        const emailValue = companyInfo.ceo_info?.ceo_email ||
+                           companyInfo.email ||
+                           companyInfo.ceo_email ||
+                           '—';
+
+        const ceoName = companyInfo.ceo_info?.ceo_name || '';
+        const ceoLastname = companyInfo.ceo_info?.ceo_lastname || '';
+        const ceoFullName = (ceoName + ' ' + ceoLastname).trim() || '—';
+
+        console.log('📞 Telefon:', phoneValue);
+        console.log('✉️ Email:', emailValue);
+        console.log('👨‍💼 CEO:', ceoFullName);
+
+        // ============ 4. ŞİRKƏT MƏLUMATLARI HTML ============
+        const companyHtml = `
+            <div style="background: white; border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin-bottom: 24px;">
+                <h3 style="font-size: 16px; font-weight: 600; color: #1f2937; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-building" style="color: #185FA5;"></i> Şirkət Məlumatları
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">🏢 Şirkət adı</div>
+                        <div style="font-weight: 600; color: #111; font-size: 14px;">${companyInfo.company_name || companyInfo.name || '—'}</div>
                     </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">🔑 Şirkət kodu</div>
+                        <div style="font-weight: 600; color: #111; font-size: 14px;">${companyInfo.company_code || companyCode}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">📊 VÖEN</div>
+                        <div style="font-weight: 600; color: #111;">${companyInfo.voen || '—'}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">👥 İşçi sayı</div>
+                        <div style="font-weight: 600; color: #111;">${companyInfo.employee_count || companyInfo.total_employees || 0}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">📞 Telefon</div>
+                        <div style="font-weight: 600; color: #111; direction: ltr; font-family: monospace;">${phoneValue}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">✉️ Email</div>
+                        <div style="font-weight: 600; color: #111;">${emailValue}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px; grid-column: span 2;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">📍 Ünvan</div>
+                        <div style="font-weight: 500; color: #111;">${companyInfo.address || companyInfo.company_address || '—'}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">📅 Qeydiyyat</div>
+                        <div style="font-weight: 500; color: #111;">${companyInfo.registration_date ? new Date(companyInfo.registration_date).toLocaleDateString('az-AZ') : '—'}</div>
+                    </div>
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">⭐ Status</div>
+                        <div style="font-weight: 500; color: ${companyInfo.is_active !== false ? '#10b981' : '#ef4444'};">${companyInfo.is_active !== false ? '✅ Aktiv' : '❌ Deaktiv'}</div>
+                    </div>
+                    ${ceoFullName !== '—' ? `
+                    <div style="background: #f8fafc; padding: 12px; border-radius: 12px; grid-column: span 2;">
+                        <div style="color: #6b7280; font-size: 11px; margin-bottom: 4px;">👨‍💼 Rəhbər</div>
+                        <div style="font-weight: 500; color: #111;">${ceoFullName}</div>
+                    </div>
+                    ` : ''}
                 </div>
-    
-                <!-- Statistik kartlar -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 border border-blue-100">
-                        <div class="text-sm text-gray-600 mb-1">Status</div>
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full ${isActive ? 'bg-green-500' : 'bg-red-500'}"></span>
-                            <span class="font-semibold">${isActive ? 'Aktiv' : 'Deaktiv'}</span>
-                        </div>
-                    </div>
-                    <div class="bg-gradient-to-br from-green-50 to-white rounded-xl p-4 border border-green-100">
-                        <div class="text-sm text-gray-600 mb-1">İşçi sayı</div>
-                        <div class="text-xl font-bold">${formatValue(employeeCount)}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-purple-50 to-white rounded-xl p-4 border border-purple-100">
-                        <div class="text-sm text-gray-600 mb-1">Qeydiyyat</div>
-                        <div class="text-sm font-medium">${formatDate(regDate)}</div>
-                    </div>
-                    <div class="bg-gradient-to-br from-amber-50 to-white rounded-xl p-4 border border-amber-100">
-                        <div class="text-sm text-gray-600 mb-1">VÖEN</div>
-                        <div class="text-sm font-mono font-medium">${formatValue(voen)}</div>
-                    </div>
+            </div>
+        `;
+
+        // ============ 5. ASAN İMZA HTML ============
+        let asanHtml = '';
+        if (asanImzalar.length === 0) {
+            asanHtml = `
+                <div style="text-align:center;padding:40px;color:#9ca3af;">
+                    <i class="fa-regular fa-file-lines" style="font-size:32px;margin-bottom:12px;display:block;"></i>
+                    Hələ ASAN İmza əlavə edilməyib
                 </div>
-    
-                <!-- Əsas məlumatlar - 3 sütunlu -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Sütun 1: Şirkət məlumatları -->
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-building text-brand-blue"></i>
-                                Şirkət məlumatları
-                            </h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Fəaliyyət sahəsi:</span>
-                                    <span class="font-medium">${formatValue(industry)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Hüquqi forma:</span>
-                                    <span class="font-medium">${formatValue(legalForm)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Ünvan:</span>
-                                    <span class="font-medium text-right">${formatValue(address)}</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-gray-600">Şəhər/Bölgə:</span>
-                                    <span class="font-medium">${formatValue(city)}</span>
-                                </div>
+                <button id="cdpAddAsanBtn" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg, #185FA5 0%, #0E3D6B 100%);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:600;">
+                    <i class="fa-solid fa-plus-circle"></i> Yeni ASAN İmza Əlavə Et
+                </button>
+            `;
+        } else {
+            const items = asanImzalar.map((imza, index) => {
+                const isActive = imza.is_active === true;
+                const statusColor = isActive ? '#10b981' : '#ef4444';
+                const statusText = isActive ? 'Aktiv' : 'Deaktiv';
+
+                return `
+                    <div class="asan-imza-card" data-imza-index="${index}" style="background:white;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <i class="fa-solid fa-id-card" style="color:#185FA5;font-size:18px;"></i>
+                                <span style="font-weight:600;">${imza.asan_imza_number || 'ASAN İmza'}</span>
                             </div>
+                            <span style="background:${statusColor}20;color:${statusColor};padding:4px 12px;border-radius:20px;font-size:12px;">${statusText}</span>
                         </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+                            <div><span style="color:#6b7280;">🆔 ASAN ID:</span> ${imza.asan_id || '—'}</div>
+                            <div><span style="color:#6b7280;">🔐 PIN1:</span> ${imza.pin1 || '—'}</div>
+                            <div><span style="color:#6b7280;">🔐 PIN2:</span> ${imza.pin2 || '—'}</div>
+                            <div><span style="color:#6b7280;">🔒 PUK:</span> ${imza.puk || '—'}</div>
+                        </div>
+                        <div style="margin-top:10px;font-size:11px;color:#9ca3af;">
+                            <i class="fa-regular fa-calendar"></i> ${imza.created_at ? new Date(imza.created_at).toLocaleDateString('az-AZ') : '-'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            asanHtml = `
+                <div style="margin-bottom:16px;">
+                    <h3 style="font-size:16px;font-weight:600;color:#1f2937;">📋 ASAN İmza Sertifikatları (${asanImzalar.length})</h3>
+                </div>
+                <div id="asanImzaList">${items}</div>
+                <button id="cdpAddAsanBtn" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg, #185FA5 0%, #0E3D6B 100%);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:600;">
+                    <i class="fa-solid fa-plus-circle"></i> Yeni ASAN İmza Əlavə Et
+                </button>
+                <style>
+                    .asan-imza-card:hover { background:#f8fafc !important; border-color:#185FA5 !important; transform:translateX(4px); }
+                </style>
+            `;
+        }
+
+        // ============ 6. BİRLƏŞDİRİLMİŞ HTML ============
+        body.innerHTML = companyHtml + asanHtml;
+
+        // Klik eventləri
+        document.querySelectorAll('.asan-imza-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const index = parseInt(card.dataset.imzaIndex);
+                const selectedImza = asanImzalar[index];
+                if (selectedImza) {
+                    this._showImzaDetailsModal(selectedImza);
+                }
+            });
+        });
+
+        const addBtn = document.getElementById('cdpAddAsanBtn');
+        if (addBtn) addBtn.addEventListener('click', () => this._cdpAsanImzaModal(companyCode));
+    }
+
+
+
+    _infoRow(label, value) {
+        const displayValue = (value && value !== 'null' && value !== 'undefined') ? value : '—';
+        return `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:12px;color:#6b7280;">${label}</span>
+                <span style="font-size:12px;font-weight:500;color:#111;">${displayValue}</span>
+            </div>
+        `;
+    }
+    _cdpAsanImzaModal(companyCode) {
+        const m = document.getElementById('cdpModal');
+        if (!m) return;
+
+        m.innerHTML = `
+            <div style="position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:10000;" id="asanAddOverlay">
+                <div style="background:#fff;border-radius:16px;width:400px;max-width:90vw;">
+                    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;">
+                        <h3 style="margin:0;">Yeni ASAN İmza</h3>
+                        <button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;font-size:20px;cursor:pointer;">&times;</button>
+                    </div>
+                    <div style="padding:20px 24px;">
+                        <label style="display:block;margin-bottom:5px;font-size:12px;">Sertifikat nömrəsi *</label>
+                        <input id="asanNumber" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;" placeholder="ASAN-2024-001">
                         
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-user-tie text-brand-blue"></i>
-                                Rəhbər məlumatları
-                            </h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Ad:</span>
-                                    <span class="font-medium">${formatValue(ceoName)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Email:</span>
-                                    <span class="font-medium">${formatValue(ceoEmail)}</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-gray-600">Telefon:</span>
-                                    <span class="font-medium">${formatValue(ceoPhone)}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- Sütun 2: Əlaqə və ünvan -->
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-phone text-brand-blue"></i>
-                                Əlaqə məlumatları
-                            </h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Telefon:</span>
-                                    <span class="font-medium">${formatValue(phone)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Email:</span>
-                                    <span class="font-medium">${formatValue(email)}</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-gray-600">Vebsayt:</span>
-                                    <span class="font-medium">${formatValue(website)}</span>
-                                </div>
-                            </div>
-                        </div>
+                        <label style="display:block;margin-bottom:5px;font-size:12px;">ASAN ID</label>
+                        <input id="asanId" type="text" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;">
                         
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-coins text-brand-blue"></i>
-                                Maliyyə məlumatları
-                            </h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="p-2">
-                                    <div class="text-xs text-gray-500">Kapital</div>
-                                    <div class="font-semibold">${formatCurrency(capital)}</div>
-                                </div>
-                                <div class="p-2">
-                                    <div class="text-xs text-gray-500">Dövriyyə</div>
-                                    <div class="font-semibold">${formatCurrency(turnover)}</div>
-                                </div>
-                                <div class="p-2">
-                                    <div class="text-xs text-gray-500">Bank</div>
-                                    <div class="font-semibold text-sm">${formatValue(bankName)}</div>
-                                </div>
-                                <div class="p-2">
-                                    <div class="text-xs text-gray-500">Hesab</div>
-                                    <div class="font-semibold text-sm">${formatValue(bankAccount)}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-    
-                    <!-- Sütun 3: Asan İmza -->
-                    <div class="space-y-4">
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-id-card text-brand-blue"></i>
-                                Asan İmza məlumatları
-                            </h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Asan İmza:</span>
-                                    <span class="font-medium">${formatValue(asanImza)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Asan ID:</span>
-                                    <span class="font-medium">${formatValue(asanId)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">PIN1/PIN2:</span>
-                                    <span class="font-medium">${formatValue(pin1)} / ${formatValue(pin2)}</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-gray-600">PUK:</span>
-                                    <span class="font-medium">${formatValue(puk)}</span>
-                                </div>
-                            </div>
-                        </div>
+                        <label style="display:block;margin-bottom:5px;font-size:12px;">PIN1</label>
+                        <input id="pin1" type="password" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;">
                         
-                        <div class="bg-gray-50 rounded-xl p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <i class="fa-solid fa-scale-balanced text-brand-blue"></i>
-                                Vergi məlumatları
-                            </h4>
-                            <div class="space-y-2">
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Hesabat ili:</span>
-                                    <span class="font-medium">${formatValue(reportingYear)}</span>
-                                </div>
-                                <div class="flex justify-between py-1 border-b border-gray-200">
-                                    <span class="text-gray-600">Vergi oranı:</span>
-                                    <span class="font-medium">${taxRate ? taxRate + '%' : '—'}</span>
-                                </div>
-                                <div class="flex justify-between py-1">
-                                    <span class="text-gray-600">ƏDV statusu:</span>
-                                    <span class="font-medium">${vatRegistered ? 'ƏDV-li' : 'ƏDV-siz'}</span>
-                                </div>
-                            </div>
+                        <label style="display:block;margin-bottom:5px;font-size:12px;">PIN2</label>
+                        <input id="pin2" type="password" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:12px;">
+                        
+                        <label style="display:block;margin-bottom:5px;font-size:12px;">PUK</label>
+                        <input id="puk" type="password" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-bottom:20px;">
+                        
+                        <div style="display:flex;gap:10px;">
+                            <button onclick="document.getElementById('cdpModal').innerHTML=''" style="flex:1;padding:10px;background:#e5e7eb;border:none;border-radius:8px;">Ləğv</button>
+                            <button id="saveAsanBtn" style="flex:1;padding:10px;background:#185FA5;color:white;border:none;border-radius:8px;">Əlavə Et</button>
                         </div>
-                    </div>
-                </div>
-    
-                <!-- Qeydlər -->
-                ${notes && notes !== '—' ? `
-                <div class="mt-6 bg-gray-50 rounded-xl p-4">
-                    <h4 class="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-note-sticky text-brand-blue"></i>
-                        Qeydlər
-                    </h4>
-                    <p class="text-gray-600">${formatValue(notes)}</p>
-                </div>
-                ` : ''}
-    
-                <!-- Tarixçə -->
-                <div class="mt-6 text-sm text-gray-500 border-t pt-4">
-                    <div class="flex justify-between">
-                        <span>Yaradılma: ${formatDate(company.created_at || company.createdAt || company.created)}</span>
-                        <span>Son yenilənmə: ${formatDate(company.updated_at || company.updatedAt || company.updated)}</span>
                     </div>
                 </div>
             </div>
         `;
+
+        document.getElementById('asanAddOverlay')?.addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) m.innerHTML = '';
+        });
+
+        document.getElementById('saveAsanBtn')?.addEventListener('click', async () => {
+            const asanNumber = document.getElementById('asanNumber')?.value.trim();
+            if (!asanNumber) {
+                alert('Sertifikat nömrəsi daxil edin!');
+                return;
+            }
+
+            try {
+                // Şirkətə aid istifadəçiləri tap
+                const usersRes = await this.apiService.get(`/users/company/${companyCode}`);
+                const users = usersRes?.users || (Array.isArray(usersRes) ? usersRes : []);
+
+                if (users.length === 0) {
+                    alert(`"${companyCode}" şirkətinə aid istifadəçi tapılmadı!`);
+                    return;
+                }
+
+                await this.apiService.post('/asan-imza/', {
+                    user_id: users[0].id,
+                    asan_imza_number: asanNumber,
+                    asan_id: document.getElementById('asanId')?.value.trim() || null,
+                    pin1: document.getElementById('pin1')?.value.trim() || null,
+                    pin2: document.getElementById('pin2')?.value.trim() || null,
+                    puk: document.getElementById('puk')?.value.trim() || null,
+                    is_active: true
+                });
+
+                alert('✅ ASAN İmza əlavə edildi!');
+                m.innerHTML = '';
+                this._cdpRenderServices(companyCode);
+            } catch(e) {
+                alert('Xəta: ' + (e.message || 'Əlavə edilə bilmədi'));
+            }
+        });
     }
+
+
+    async _cdpRenderEmployees() {
+        const body = document.getElementById('cdpBody');
+        if (!body) return;
+        
+        const targetCompanyCode = this.activeCode;
+
+        if (!targetCompanyCode) {
+            body.innerHTML = '<div class="cdp-empty">Şirkət kodu tapılmadı</div>';
+            return;
+        }
+
+        console.log(`👥 Əməkdaşlar yüklənir (şirkət: ${targetCompanyCode})...`);
+        body.innerHTML = '<div style="text-align:center;padding:40px;">Yüklənir...</div>';
+
+        let allUsers = [];
+
+        try {
+            if (this.apiService) {
+                // 1. Şirkətin ÖZ işçiləri (company_code = targetCompanyCode)
+                const ownResponse = await this.apiService.get(`/users/company/${targetCompanyCode}`);
+                let ownUsers = Array.isArray(ownResponse) ? ownResponse : (ownResponse?.users || []);
+
+                // 2. Təyin edilmiş işçilər (assigned_company_codes-da targetCompanyCode olanlar)
+                const assignedResponse = await this.apiService.get(`/users/by-assigned-company/${targetCompanyCode}/users`);
+                let assignedUsers = [];
+                if (assignedResponse && assignedResponse.success) {
+                    assignedUsers = assignedResponse.users || [];
+                } else if (Array.isArray(assignedResponse)) {
+                    assignedUsers = assignedResponse;
+                }
+
+                // Birləşdir və təkrarları sil
+                const userMap = new Map();
+                ownUsers.forEach(u => userMap.set(u.id, u));
+                assignedUsers.forEach(u => {
+                    if (!userMap.has(u.id)) userMap.set(u.id, { ...u, _is_assigned: true });
+                });
+
+                allUsers = Array.from(userMap.values());
+                console.log(`✅ Cəmi ${allUsers.length} işçi (öz: ${ownUsers.length}, təyin: ${assignedUsers.length})`);
+            }
+        } catch(e) {
+            console.error('❌ İşçilər yüklənərkən xəta:', e);
+        }
+
+        if (allUsers.length === 0) {
+            body.innerHTML = `<div class="cdp-empty">
+                <i class="fa-solid fa-users" style="font-size:26px;margin-bottom:8px;"></i>
+                "${targetCompanyCode}" şirkətinə aid işçi tapılmadı
+            </div>`;
+            return;
+        }
+
+        // Render işçiləri...
+        const colors = [['#B5D4F4','#185FA5'],['#9FE1CB','#0F6E56'],['#CECBF6','#533AB7']];
+        const items = allUsers.map((user, idx) => {
+            const [bg, fg] = colors[idx % colors.length];
+            const fullName = [user.ceo_name, user.ceo_lastname].filter(Boolean).join(' ') || 'İstifadəçi';
+            const isAssigned = user._is_assigned ? '<span style="font-size:9px;margin-left:6px;background:#EAF3DE;color:#3B6D11;padding:2px 6px;border-radius:10px;">Təyin</span>' : '';
+
+            return `<div class="cdp-item">
+                <div style="width:34px;height:34px;border-radius:50%;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;">${this._cdpInitials(fullName)}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:500;">${fullName} ${isAssigned}</div>
+                    <div style="font-size:11px;color:#6b7280;">${user.position || 'İşçi'} · ${user.ceo_email || ''}</div>
+                </div>
+            </div>`;
+        }).join('');
+
+        body.innerHTML = `<div class="cdp-sec">Əməkdaşlar (${allUsers.length})</div>${items}`;
+    }
+
+    async _cdpRenderFiles(companyCode) {
+        const body = document.getElementById('cdpBody');
+        if (!body) return;
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Yüklənir...</div>';
+
+        let list = [];
+        try {
+            if (this.apiService) {
+                const res = await this.apiService.get(`/company-files/${companyCode}`);
+                const d = res && (res.data||res);
+                list = d?.files || (Array.isArray(d)?d:[]);
+            }
+        } catch(e) { console.warn('Files:', e); }
+
+        const extColor = name => {
+            const ext = ((name||'').split('.').pop()||'').toUpperCase();
+            const m = {PDF:['#F7C1C1','#A32D2D'],DOC:['#B5D4F4','#185FA5'],DOCX:['#B5D4F4','#185FA5'],XLS:['#C0DD97','#3B6D11'],XLSX:['#C0DD97','#3B6D11'],PNG:['#CECBF6','#533AB7'],JPG:['#CECBF6','#533AB7'],JPEG:['#CECBF6','#533AB7']};
+            return {ext:ext||'FILE',bg:(m[ext]||['#D3D1C7','#5F5E5A'])[0],fg:(m[ext]||['#D3D1C7','#5F5E5A'])[1]};
+        };
+        const fmtSize = b => { if(!b)return'—'; if(b<1024)return b+'B'; if(b<1048576)return Math.round(b/1024)+'KB'; return(b/1048576).toFixed(1)+'MB'; };
+
+        const items = list.length ? list.map(f => {
+            const {ext,bg,fg} = extColor(f.file_name||f.name||f.filename);
+            return `<div class="cdp-item">
+                <div style="width:32px;height:32px;border-radius:8px;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;">${ext}</div>
+                <div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:500;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.file_name||f.name||f.filename||'—'}</div><div style="font-size:11px;color:#6b7280;margin-top:1px;">${f.created_at?new Date(f.created_at).toLocaleDateString('az-AZ'):''}</div></div>
+                <span style="font-size:11px;color:#6b7280;flex-shrink:0;">${fmtSize(f.file_size||f.size)}</span>
+            </div>`;
+        }).join('') : `<div class="cdp-empty"><i class="fa-solid fa-folder-open" style="font-size:26px;margin-bottom:8px;display:block;"></i>Hələ fayl yoxdur</div>`;
+
+        body.innerHTML = `
+    <div class="cdp-sec">Ortaq fayllar (${list.length})</div>
+    ${items}
+    <div class="cdp-up" id="cdpUpload"><i class="fa-solid fa-cloud-arrow-up" style="font-size:20px;color:#9ca3af;margin-bottom:6px;display:block;"></i><p style="font-size:13px;color:#6b7280;">Fayl yükləmək üçün klikləyin</p></div>
+        `;
+        document.getElementById('cdpUpload')?.addEventListener('click', () => this._cdpFileModal(companyCode));
+    }
+
+    _cdpServiceModal(companyCode) {
+        const m = document.getElementById('cdpModal');
+        if (!m) return;
+        m.innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;" id="cdpOvr">
+      <div style="background:#fff;border-radius:12px;padding:24px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h4 style="font-size:15px;font-weight:500;color:#111;margin:0;">Yeni xidmət əlavə et</h4>
+            <button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;">&times;</button>
+        </div>
+        <div style="background:#FAEEDA;border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:12px;color:#854F0B;"><i class="fa-solid fa-circle-info" style="margin-right:5px;"></i>Əlavə etdikdən sonra qarşı tərəf təsdiqləməlidir</div>
+        <label style="font-size:12px;font-weight:500;color:#6b7280;display:block;margin-bottom:4px;">Xidmət adı *</label>
+        <input id="cdpSN" type="text" placeholder="məs. Mühasibat xidməti" style="width:100%;padding:9px 12px;font-size:13px;border:.5px solid #d1d5db;border-radius:8px;margin-bottom:10px;box-sizing:border-box;font-family:inherit;color:#111;" />
+        <label style="font-size:12px;font-weight:500;color:#6b7280;display:block;margin-bottom:4px;">Dövr</label>
+        <select id="cdpSP" style="width:100%;padding:9px 12px;font-size:13px;border:.5px solid #d1d5db;border-radius:8px;margin-bottom:10px;font-family:inherit;color:#111;">
+            <option>Aylıq</option><option>Rüblük</option><option>İllik</option><option>Birdəfəlik</option>
+        </select>
+        <label style="font-size:12px;font-weight:500;color:#6b7280;display:block;margin-bottom:4px;">Başlama tarixi</label>
+        <input id="cdpSD" type="date" style="width:100%;padding:9px 12px;font-size:13px;border:.5px solid #d1d5db;border-radius:8px;margin-bottom:16px;box-sizing:border-box;font-family:inherit;color:#111;" />
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('cdpModal').innerHTML=''" style="padding:9px 18px;font-size:13px;background:none;border:.5px solid #d1d5db;border-radius:8px;cursor:pointer;color:#6b7280;font-family:inherit;">Ləğv et</button>
+            <button id="cdpSave" style="padding:9px 18px;font-size:13px;font-weight:500;background:#185FA5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-paper-plane" style="margin-right:6px;"></i>Göndər</button>
+        </div>
+      </div>
+    </div>`;
+        document.getElementById('cdpOvr').addEventListener('click', e => { if(e.target===e.currentTarget) m.innerHTML=''; });
+        document.getElementById('cdpSave').addEventListener('click', async () => {
+            const name = document.getElementById('cdpSN')?.value.trim();
+            if (!name) { document.getElementById('cdpSN').style.borderColor='#E24B4A'; return; }
+            try {
+                if (this.apiService) await this.apiService.post('/services/company-service', {
+                    service_name: name,
+                    service_period: document.getElementById('cdpSP')?.value,
+                    start_date: document.getElementById('cdpSD')?.value || null,
+                    company_code: companyCode,
+                    provider_company_code: this.userCompanyCode,
+                });
+            } catch(e) { console.warn(e); }
+            m.innerHTML = '';
+            this._cdpRenderServices(companyCode);
+            document.querySelectorAll('.cdp-tab').forEach(b => b.classList.toggle('on', b.dataset.tab==='services'));
+        });
+    }
+
+    _cdpFileModal(companyCode) {
+        const m = document.getElementById('cdpModal');
+        if (!m) return;
+        m.innerHTML = `
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:9999;" id="cdpOvr">
+      <div style="background:#fff;border-radius:12px;padding:24px;width:340px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <h4 style="font-size:15px;font-weight:500;color:#111;margin:0;">Fayl yüklə</h4>
+            <button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:18px;line-height:1;">&times;</button>
+        </div>
+        <input id="cdpFI" type="file" style="width:100%;font-size:13px;margin-bottom:16px;color:#111;" />
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button onclick="document.getElementById('cdpModal').innerHTML=''" style="padding:9px 18px;font-size:13px;background:none;border:.5px solid #d1d5db;border-radius:8px;cursor:pointer;color:#6b7280;font-family:inherit;">Ləğv et</button>
+            <button id="cdpFSave" style="padding:9px 18px;font-size:13px;font-weight:500;background:#185FA5;color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:inherit;"><i class="fa-solid fa-cloud-arrow-up" style="margin-right:6px;"></i>Yüklə</button>
+        </div>
+      </div>
+    </div>`;
+        document.getElementById('cdpOvr').addEventListener('click', e => { if(e.target===e.currentTarget) m.innerHTML=''; });
+        document.getElementById('cdpFSave').addEventListener('click', async () => {
+            const file = document.getElementById('cdpFI')?.files?.[0];
+            if (!file) return;
+            if (window.fileService?.uploadFile) {
+                try { await window.fileService.uploadFile(file, companyCode); } catch(e) { console.warn(e); }
+            }
+            m.innerHTML = '';
+            this._cdpRenderFiles(companyCode);
+            document.querySelectorAll('.cdp-tab').forEach(b => b.classList.toggle('on', b.dataset.tab==='files'));
+        });
+    }
+
+    _cdpInitials(name) {
+        if (!name) return '?';
+        const w = name.trim().split(/\s+/);
+        return (w.length>=2 ? w[0][0]+w[1][0] : name.substring(0,2)).toUpperCase();
+    }
+
+    _cdpColor(code) {
+        const p=[['#E6F1FB','#185FA5'],['#E1F5EE','#0F6E56'],['#EEEDFE','#533AB7'],['#FAEEDA','#854F0B'],['#FAECE7','#993C1D'],['#EAF3DE','#3B6D11']];
+        let h=0; for(let i=0;i<(code||'').length;i++) h=(h*31+code.charCodeAt(i))&0xFFFFFF;
+        const c=p[Math.abs(h)%p.length]; return {bg:c[0],fg:c[1]};
+    }
+
+
     /**
      * ŞİRKƏTİ REDAKTƏ ET
      */
