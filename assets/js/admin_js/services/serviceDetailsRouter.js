@@ -2,26 +2,11 @@
   'use strict';
 
   var CATEGORY_META = {
-    muhasibatliq: {
-      title: 'Mühasibatlıq xidmətləri',
-      description: 'Maliyyə uçotu, hesabatlılıq və audit proseslərinizi peşəkar şəkildə idarə edirik.'
-    },
-    vergi: {
-      title: 'Vergi xidmətləri',
-      description: 'Vergi planlaması, qeydiyyat və hesabatların düzgün, vaxtında icrasını təmin edirik.'
-    },
-    'insan-resurslari': {
-      title: 'İnsan Resursları',
-      description: 'Kadr idarəçiliyi və HR proseslərini sistemli və hüquqi tələblərə uyğun qururuq.'
-    },
-    huquqi: {
-      title: 'Hüquqi xidmətlər',
-      description: 'Müqavilələr, korporativ hüquq və hüquqi müşayiət üzrə etibarlı dəstək təqdim edirik.'
-    },
-    ikt: {
-      title: 'İKT',
-      description: 'İT infrastruktur, texniki dəstək və rəqəmsal həllər ilə biznesinizi gücləndiririk.'
-    }
+    muhasibatliq: { title: 'Mühasibatlıq xidmətləri', illustrationClass: 'illustration-accounting' },
+    vergi: { title: 'Vergi xidmətləri', illustrationClass: 'illustration-tax' },
+    'insan-resurslari': { title: 'İnsan Resursları', illustrationClass: 'illustration-hr' },
+    huquqi: { title: 'Hüquqi xidmətlər', illustrationClass: 'illustration-legal' },
+    ikt: { title: 'İKT', illustrationClass: 'illustration-ikt' }
   };
 
   var SYNONYMS = {
@@ -31,15 +16,6 @@
     huquqi: ['huquqi', 'hüquqi', 'legal', 'law'],
     ikt: ['ikt', 'it', 'informationtechnology', 'information technology', 'texnologiya']
   };
-
-  function esc(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
 
   function normalize(text) {
     return String(text || '')
@@ -73,6 +49,7 @@
   function getServiceList() {
     var raw = localStorage.getItem('guvenfinans-active-services') || localStorage.getItem('guvenfinans-services');
     if (!raw) return [];
+
     try {
       var data = JSON.parse(raw);
       return Array.isArray(data) ? data : [];
@@ -81,27 +58,28 @@
     }
   }
 
-  function toPublicServices(list, slug) {
+  function toPublicItems(list, slug) {
     return list
-      .filter(function (item) { return item && item.active !== false; })
-      .map(function (item) {
-        var name = item.title || item.name || 'Adsız xidmət';
-        var description = item.description || item.desc || item.text || '';
-        if (!description && Array.isArray(item.items)) description = item.items.join(' • ');
-        var cat = item.category_slug || item.category || item.service_category || name;
+      .filter(function (service) { return service && service.active !== false; })
+      .map(function (service) {
+        var serviceName = service.name || service.title || '';
+        var category = service.category_slug || service.category || service.service_category || serviceName;
+        var items = Array.isArray(service.items) ? service.items : [];
         return {
-          name: name,
-          description: description,
-          order: Number(item.order),
-          slug: categorySlugFromValue(cat || name)
+          slug: categorySlugFromValue(category),
+          items: items.filter(function (item) { return typeof item === 'string' && item.trim(); }),
+          order: Number(service.order)
         };
       })
-      .filter(function (item) { return item.slug === slug; })
+      .filter(function (service) { return service.slug === slug; })
       .sort(function (a, b) {
         var ao = Number.isFinite(a.order) ? a.order : 9999;
         var bo = Number.isFinite(b.order) ? b.order : 9999;
         return ao - bo;
-      });
+      })
+      .reduce(function (acc, service) {
+        return acc.concat(service.items);
+      }, []);
   }
 
   function getRouteSlug() {
@@ -114,50 +92,110 @@
     buttons.forEach(function (btn) {
       var card = btn.closest('.service-card');
       if (!card) return;
+
       var title = (card.querySelector('.service-title') || {}).textContent || '';
       var slug = categorySlugFromValue(title);
       if (!slug) return;
+
       btn.setAttribute('href', 'index.html?service=' + slug);
       btn.removeAttribute('data-scroll-target');
       btn.dataset.serviceSlug = slug;
     });
   }
 
+  function setDetailMode(active) {
+    document.body.classList.toggle('service-detail-mode', !!active);
+  }
+
+  function createBackButton() {
+    var backBtn = document.createElement('button');
+    backBtn.className = 'service-detail-back';
+    backBtn.type = 'button';
+    backBtn.textContent = '← Bütün xidmətlərə qayıt';
+
+    backBtn.addEventListener('click', function () {
+      var url = new URL(window.location.href);
+      url.searchParams.delete('service');
+      window.location.href = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + '#xidmetler';
+    });
+
+    return backBtn;
+  }
+
   function renderDetail(slug) {
     var meta = CATEGORY_META[slug];
     if (!meta) return;
+
     var main = document.getElementById('main');
     if (!main) return;
-    var services = toPublicServices(getServiceList(), slug);
-    var cards = services.map(function (s) {
-      return '<article class="service-detail-card"><h3>' + esc(s.name) + '</h3><p>' + esc(s.description || 'Bu xidmət üçün təsvir əlavə edilməyib.') + '</p></article>';
-    }).join('');
 
-    main.innerHTML = '<section class="service-detail-view"><div class="container">'
-      + '<a class="service-detail-back" href="index.html#xidmetler">← Bütün xidmətlərə qayıt</a>'
-      + '<p class="service-breadcrumb">Ana səhifə / Xidmətlər / ' + esc(meta.title) + '</p>'
-      + '<div class="service-detail-hero"><h1>' + esc(meta.title) + '</h1><p>' + esc(meta.description) + '</p><span>' + services.length + ' xidmət</span></div>'
-      + (services.length ? '<div class="service-detail-grid">' + cards + '</div>' : '<div class="service-detail-empty">Bu sahə üzrə xidmət əlavə edilməyib</div>')
-      + '<div class="service-detail-cta"><h3>Peşəkar dəstəyə ehtiyacınız var?</h3><a href="index.html#konsultasiya">Müraciət et</a></div>'
-      + '</div></section>';
+    var items = toPublicItems(getServiceList(), slug);
 
-    if (!document.getElementById('service-detail-style')) {
-      var style = document.createElement('style');
-      style.id = 'service-detail-style';
-      style.textContent = '.service-detail-view{padding:40px 0;background:#f7f9fc}.service-breadcrumb{color:#6b7280;margin:10px 0}.service-detail-hero{background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08)}.service-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:20px}.service-detail-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}.service-detail-empty{margin-top:20px;background:#fff3cd;padding:16px;border-radius:12px}.service-detail-back{display:inline-block;margin-bottom:8px}.service-detail-cta{margin-top:24px;background:#0f172a;color:#fff;padding:22px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}.service-detail-cta a{background:#22c55e;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none}@media(max-width:768px){.service-detail-cta{flex-direction:column;align-items:flex-start}}';
-      document.head.appendChild(style);
+    var section = document.createElement('section');
+    section.className = 'service-detail-view';
+
+    var container = document.createElement('div');
+    container.className = 'container service-detail-container';
+
+    container.appendChild(createBackButton());
+
+    var panel = document.createElement('div');
+    panel.className = 'service-detail-panel';
+
+    var content = document.createElement('div');
+    content.className = 'service-detail-content';
+
+    var title = document.createElement('h1');
+    title.className = 'service-detail-title';
+    title.textContent = meta.title;
+    content.appendChild(title);
+
+    if (items.length) {
+      var list = document.createElement('ul');
+      list.className = 'service-detail-list';
+      items.forEach(function (item) {
+        var li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
+      content.appendChild(list);
+    } else {
+      var empty = document.createElement('p');
+      empty.className = 'service-detail-empty';
+      empty.textContent = 'Bu sahə üzrə xidmət əlavə edilməyib';
+      content.appendChild(empty);
     }
+
+    var artwork = document.createElement('div');
+    artwork.className = 'service-detail-artwork ' + (meta.illustrationClass || '');
+    artwork.setAttribute('aria-hidden', 'true');
+
+    panel.appendChild(content);
+    panel.appendChild(artwork);
+    container.appendChild(panel);
+    section.appendChild(container);
+
+    main.innerHTML = '';
+    main.appendChild(section);
+    setDetailMode(true);
   }
 
   function initRoute() {
     ensureCardLinks();
     var slug = getRouteSlug();
-    if (slug) renderDetail(slug);
+
+    if (slug) {
+      renderDetail(slug);
+    } else {
+      setDetailMode(false);
+    }
   }
 
   window.addEventListener('DOMContentLoaded', initRoute);
   window.addEventListener('popstate', initRoute);
   window.addEventListener('storage', function (e) {
-    if (e.key === 'guvenfinans-active-services' || e.key === 'guvenfinans-services') initRoute();
+    if (e.key === 'guvenfinans-active-services' || e.key === 'guvenfinans-services') {
+      initRoute();
+    }
   });
 })();
