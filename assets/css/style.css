@@ -1494,16 +1494,37 @@ body.loaded #site-shell {
 [data-password-match-status].bad { color:#B91C1C; }
 
 /* Service detail virtual page */
+body.service-detail-mode {
+  min-height: 100vh;
+}
+
+body.service-detail-mode #site-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 body.service-detail-mode #main-header {
   display: none;
 }
 
 body.service-detail-mode .main {
   padding-top: 0;
+  flex: 1;
+  display: flex;
+}
+
+body.service-detail-mode .site-footer {
+  margin-top: auto;
 }
 
 .service-detail-view {
-  background: #eaf3ff;
+  flex: 1;
+  background-color: #eaf3ff;
+  background-image: url('../images/2 7.svg');
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
   padding: 48px 0 56px;
 }
 
@@ -1518,8 +1539,9 @@ body.service-detail-mode .main {
   border-radius: 999px;
   background: #0d4f95;
   color: #fff;
+  font-family: 'Cal Sans', 'Poppins', sans-serif;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 400;
   padding: 10px 20px;
   width: fit-content;
   cursor: pointer;
@@ -1534,7 +1556,9 @@ body.service-detail-mode .main {
 
 .service-detail-title {
   margin: 0;
+  font-family: 'Cal Sans', 'Poppins', sans-serif;
   font-size: clamp(30px, 3.2vw, 48px);
+  font-weight: 400;
   line-height: 1.15;
   color: #123b68;
 }
@@ -1547,8 +1571,9 @@ body.service-detail-mode .main {
 .service-detail-list li,
 .service-detail-empty {
   color: #0f2742;
+  font-family: 'Cal Sans', 'Poppins', sans-serif;
   font-size: clamp(16px, 1.6vw, 22px);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.45;
   margin-bottom: 10px;
 }
