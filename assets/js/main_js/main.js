@@ -518,6 +518,34 @@ function loadDefaultServices() {
     renderServicesOnPage(defaultServices);
 }
 
+function escapeServiceHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getPublicServiceKey(service) {
+    if (window.PublicServiceDetails?.getServiceKey) {
+        return window.PublicServiceDetails.getServiceKey(service);
+    }
+
+    return String(service.id || service.slug || service.key || service.name || service.title || '');
+}
+
+function getPublicServiceSlug(service) {
+    if (window.PublicServiceDetails?.slugify) {
+        return window.PublicServiceDetails.slugify(service.slug || service.name || service.title || getPublicServiceKey(service));
+    }
+
+    return String(service.slug || service.name || service.title || getPublicServiceKey(service))
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 function renderServicesOnPage(services) {
     console.log('🎨 Xidmətlər render edilir:', services.length);
 
@@ -527,28 +555,47 @@ function renderServicesOnPage(services) {
         return;
     }
 
-    let html = '';
+    const activeServices = Array.isArray(services)
+        ? services.filter(service => service && service.active !== false).sort((a, b) => (a.order || 0) - (b.order || 0))
+        : [];
 
-    services.forEach(service => {
-        let itemsHtml = '';
-        service.items.forEach(item => {
-            itemsHtml += `<li>${item}</li>`;
-        });
+    if (activeServices.length === 0) {
+        servicesGrid.innerHTML = '<p class="empty-msg">Aktiv xidmət tapılmadı</p>';
+        return;
+    }
 
-        html += `
-            <article class="service-card">
-                <h3 class="service-title">${service.name}</h3>
+    const html = activeServices.map(service => {
+        const serviceKey = getPublicServiceKey(service);
+        const serviceSlug = getPublicServiceSlug(service);
+        const items = Array.isArray(service.items) ? service.items : [];
+        const itemsHtml = items.slice(0, 4).map(item => {
+            const title = typeof item === 'string' ? item : (item.title || item.name || item.service_name || 'Xidmət');
+            return `<li>${escapeServiceHtml(title)}</li>`;
+        }).join('');
+
+        return `
+            <article class="service-card" data-service-id="${escapeServiceHtml(serviceKey)}" data-service-slug="${escapeServiceHtml(serviceSlug)}">
+                <h3 class="service-title">${escapeServiceHtml(service.name || service.title || 'Xidmət')}</h3>
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="#${service.target}" data-scroll-target="${service.target}" class="service-btn">
-                    ${service.cta}
+                <a href="#xidmetler/${escapeServiceHtml(serviceSlug)}"
+                   class="service-btn"
+                   data-service-detail-trigger
+                   data-service-key="${escapeServiceHtml(serviceKey)}"
+                   data-service-slug="${escapeServiceHtml(serviceSlug)}">
+                    ${escapeServiceHtml(service.cta || 'Ətraflı...')}
                 </a>
             </article>
         `;
-    });
+    }).join('');
 
     servicesGrid.innerHTML = html;
+
+    if (window.PublicServiceDetails?.refreshServices) {
+        window.PublicServiceDetails.refreshServices();
+    }
+
     console.log('✅ Xidmətlər render edildi');
 }
 
