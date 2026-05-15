@@ -579,7 +579,7 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="#xidmetler/${escapeServiceHtml(serviceSlug)}"
+                <a href="index.html?service=${escapeServiceHtml(serviceSlug)}"
                    class="service-btn"
                    data-service-detail-trigger
                    data-service-key="${escapeServiceHtml(serviceKey)}"
