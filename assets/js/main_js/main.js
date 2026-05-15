@@ -435,7 +435,7 @@ function setupProfileButtons() {
 function loadServicesFromStorage() {
     console.log('🔄 Ana səhifə xidmətləri yüklənir...');
 
-    const savedServices = localStorage.getItem('guvenfinans-active-services') || localStorage.getItem('guvenfinans-services');
+    const savedServices = localStorage.getItem('guvenfinans-active-services');
     console.log('LocalStorage məlumatı:', savedServices);
 
     if (savedServices) {
@@ -454,8 +454,68 @@ function loadServicesFromStorage() {
 }
 
 function loadDefaultServices() {
-    console.warn('Aktiv xidmət mənbəyi tapılmadı; admin paneldə xidmət əlavə edilənədək boş vəziyyət göstərilir.');
-    renderServicesOnPage([]);
+    const defaultServices = [
+        {
+            id: 1,
+            name: "Mühasibatlıq xidmətləri",
+            items: [
+                "Mühasibatlığın qurulması və idarə edilməsi",
+                "Müəssisələr üçün balansın hazırlanması və hesabatların verilməsi",
+                "Əmək haqqının hesablanması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 2,
+            name: "Vergi xidmətləri",
+            items: [
+                "VÖEN alınması və qeydiyyat işləri",
+                "ƏDV qeydiyyatı və qeydiyyatın ləğvi",
+                "Bank rekvizitlərinin alınması",
+                "Kassa aparatlarının qurulması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 3,
+            name: "İnsan Resursları",
+            items: [
+                "Kadr inzibatçılığı və sənədləşməsi üzrə məsləhət",
+                "Sənədlərin ekspertizası və rəy"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 4,
+            name: "Hüquqi xidmətlər",
+            items: [
+                "Şirkət iclaslarında iştirak və hüquqi müşayiət",
+                "Müqavilələrin hazırlanması və yoxlanması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 5,
+            name: "İKT",
+            items: [
+                "IT Texniki dəstək (Help desk)",
+                "Şəbəkə sisteminin çəkilişi və qurulması",
+                "Analoq telefon sisteminin quraşdırılması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        }
+    ];
+
+    // Save to localStorage
+    localStorage.setItem('guvenfinans-active-services', JSON.stringify(defaultServices));
+
+    // Render et
+    renderServicesOnPage(defaultServices);
 }
 
 function escapeServiceHtml(value) {
@@ -476,10 +536,6 @@ function getPublicServiceKey(service) {
 }
 
 function getPublicServiceSlug(service) {
-    if (window.PublicServiceDetails?.getServiceSlug) {
-        return window.PublicServiceDetails.getServiceSlug(service);
-    }
-
     if (window.PublicServiceDetails?.slugify) {
         return window.PublicServiceDetails.slugify(service.slug || service.name || service.title || getPublicServiceKey(service));
     }
@@ -523,7 +579,7 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="/services/${escapeServiceHtml(serviceSlug)}"
+                <a href="#xidmetler/${escapeServiceHtml(serviceSlug)}"
                    class="service-btn"
                    data-service-detail-trigger
                    data-service-key="${escapeServiceHtml(serviceKey)}"
