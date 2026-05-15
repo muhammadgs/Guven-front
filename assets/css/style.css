@@ -1492,3 +1492,103 @@ body.loaded #site-shell {
 .is-disabled { opacity: .6; cursor: not-allowed; }
 [data-password-match-status].ok { color:#047857; }
 [data-password-match-status].bad { color:#B91C1C; }
+
+/* Service detail virtual page */
+body.service-detail-mode #main-header {
+  display: none;
+}
+
+body.service-detail-mode .main {
+  padding-top: 0;
+}
+
+.service-detail-view {
+  background: #eaf3ff;
+  padding: 48px 0 56px;
+}
+
+.service-detail-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.service-detail-back {
+  border: 0;
+  border-radius: 999px;
+  background: #0d4f95;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 20px;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.service-detail-panel {
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 280px);
+  gap: 32px;
+  align-items: center;
+}
+
+.service-detail-title {
+  margin: 0;
+  font-size: clamp(30px, 3.2vw, 48px);
+  line-height: 1.15;
+  color: #123b68;
+}
+
+.service-detail-list {
+  margin: 24px 0 0;
+  padding-left: 26px;
+}
+
+.service-detail-list li,
+.service-detail-empty {
+  color: #0f2742;
+  font-size: clamp(16px, 1.6vw, 22px);
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 10px;
+}
+
+.service-detail-artwork {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 36% 64% 52% 48% / 38% 41% 59% 62%;
+  background:
+    radial-gradient(circle at 24% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 42%),
+    radial-gradient(circle at 70% 70%, rgba(163, 206, 255, 0.9), rgba(96, 166, 244, 0.2) 58%),
+    linear-gradient(145deg, rgba(198, 225, 255, 0.95), rgba(143, 193, 248, 0.85));
+}
+
+@media (max-width: 900px) {
+  .service-detail-panel {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .service-detail-artwork {
+    max-width: 220px;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .service-detail-view {
+    padding: 32px 0 42px;
+  }
+
+  .service-detail-back {
+    font-size: 14px;
+  }
+
+  .service-detail-list {
+    margin-top: 16px;
+  }
+
+  .service-detail-artwork {
+    display: none;
+  }
+}
