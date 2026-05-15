@@ -1,5 +1,0 @@
-# Route dedicated service detail URLs back to the SPA shell.
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule ^services/([A-Za-z0-9_-]+)/?$ /index.html [L]
-</IfModule>
