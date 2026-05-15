@@ -15,7 +15,7 @@
     let companyInfoData = null;
 
     // API Configuration
-    const API_BASE = '/proxy.php'; // PHP proxy endpoint
+    const API_BASE = 'http://vps.guvenfinans.az:8008'; // PHP proxy endpoint
     const API_VERSION = '/api/v1';
 
     // Preloader'ı gizlə
