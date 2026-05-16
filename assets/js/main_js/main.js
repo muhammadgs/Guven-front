@@ -518,17 +518,6 @@ function loadDefaultServices() {
     renderServicesOnPage(defaultServices);
 }
 
-
-function mapServiceNameToSlug(name) {
-    const value = String(name || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i');
-    if (value.includes('muhasib') || value.includes('account')) return 'muhasibatliq';
-    if (value.includes('vergi') || value.includes('tax')) return 'vergi';
-    if (value.includes('insan') || value.includes('hr') || value.includes('human')) return 'insan-resurslari';
-    if (value.includes('huquq') || value.includes('legal') || value.includes('law')) return 'huquqi';
-    if (value.includes('ikt') || value.includes(' it') || value.includes('information')) return 'ikt';
-    return '';
-}
-
 function renderServicesOnPage(services) {
     console.log('🎨 Xidmətlər render edilir:', services.length);
 
@@ -552,7 +541,7 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="${mapServiceNameToSlug(service.name) ? `index.html?service=${mapServiceNameToSlug(service.name)}` : `#${service.target}`}" ${mapServiceNameToSlug(service.name) ? '' : `data-scroll-target="${service.target}"`} class="service-btn" data-service-slug="${mapServiceNameToSlug(service.name)}">
+                <a href="#${service.target}" data-scroll-target="${service.target}" class="service-btn">
                     ${service.cta}
                 </a>
             </article>
