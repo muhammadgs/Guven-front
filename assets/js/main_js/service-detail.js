@@ -39,19 +39,20 @@
         if (typeof item === 'string') {
             var clean = item.trim();
             if (!clean) return null;
-            return { heading: clean, body: clean };
+            return { heading: clean, body: clean, order: 0 };
         }
         if (!item || typeof item !== 'object') return null;
 
-        var heading = item.title || item.name || item.text || '';
-        var body = item.description || item.content || item.text || heading || '';
+        var heading = item.title || item.name || item.text || item.description || item.content || '';
+        var body = item.description || item.content || '';
+        var order = Number(item.order ?? item.order_num ?? item.sort_order ?? 0);
         heading = String(heading || '').trim();
         body = String(body || '').trim();
 
         if (!heading && !body) return null;
         if (!heading) heading = body;
         if (!body) body = heading;
-        return { heading: heading, body: body };
+        return { heading: heading, body: body, order: Number.isFinite(order) ? order : 0 };
     }
 
     function renderService(service) {
@@ -63,6 +64,7 @@
         els.items.innerHTML = '';
 
         var items = Array.isArray(service.items) ? service.items.map(normalizeItem).filter(Boolean) : [];
+        items.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
         if (!items.length) {
             els.items.innerHTML = '<div class="service-empty-box">Bu xidmət üzrə məlumatlar tezliklə əlavə olunacaq.</div>';
         } else {
@@ -106,23 +108,34 @@
 
         var service = null;
 
+        var apiFailedCompletely = false;
         if (api && typeof api.getBySlug === 'function') {
             try {
                 var detail = await api.getBySlug(slug);
-                if (detail && detail.success && detail.data && detail.data.name) service = detail.data;
-            } catch (e) {}
+                if (detail && detail.success && detail.data && detail.data.name) {
+                    service = detail.data;
+                } else if (detail && detail.offline) {
+                    apiFailedCompletely = true;
+                }
+            } catch (e) {
+                apiFailedCompletely = true;
+            }
         }
 
-        if (!service && api && typeof api.getPublic === 'function') {
+        if (!service && !apiFailedCompletely && api && typeof api.getPublic === 'function') {
             try {
                 var listResult = await api.getPublic();
                 if (listResult && listResult.success) {
                     service = findServiceBySlug(listResult.data, slug);
+                } else {
+                    apiFailedCompletely = true;
                 }
-            } catch (e) {}
+            } catch (e) {
+                apiFailedCompletely = true;
+            }
         }
 
-        if (!service) {
+        if (!service && apiFailedCompletely) {
             service = findServiceBySlug(readLocalServices(), slug);
         }
 

@@ -460,14 +460,31 @@ function getServiceDetailPage(service) {
     return slugMap[normalized] || 'index.html#xidmetler';
 }
 
-async function loadServicesFromStorage() {
+function readOfflineServicesCache() {
+    const keys = ['guvenfinans-active-services', 'guvenfinans-services'];
+    for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && Array.isArray(parsed.data)) return parsed.data;
+        } catch (error) {
+            console.warn(`⚠️ ${key} cache parse xətası:`, error);
+        }
+    }
+    return [];
+}
+
+async function loadServicesFromApi() {
     console.log('🔄 Ana səhifə xidmətləri yüklənir...');
 
     try {
         if (window.ApiMainService && window.ApiMainService.services) {
             const apiResult = await window.ApiMainService.services.getPublic();
-            if (apiResult && apiResult.success && Array.isArray(apiResult.data) && apiResult.data.length) {
+            if (apiResult && apiResult.success && Array.isArray(apiResult.data)) {
                 localStorage.setItem('guvenfinans-active-services', JSON.stringify(apiResult.data));
+                localStorage.removeItem('guvenfinans-services');
                 renderServicesOnPage(apiResult.data);
                 return;
             }
@@ -476,18 +493,14 @@ async function loadServicesFromStorage() {
         console.warn('⚠️ API-dən xidmətlər alınmadı:', error);
     }
 
-    const savedServices = localStorage.getItem('guvenfinans-active-services');
-    if (savedServices) {
-        try {
-            const services = JSON.parse(savedServices);
-            renderServicesOnPage(services);
-            return;
-        } catch (error) {
-            console.error('❌ JSON parse xətası:', error);
-        }
+    const cached = readOfflineServicesCache();
+    if (cached.length > 0) {
+        console.warn('⚠️ API əlçatan deyil, offline cache istifadə olunur.');
+        renderServicesOnPage(cached);
+        return;
     }
 
-    loadDefaultServices();
+    renderServicesOnPage([]);
 }
 
 function loadDefaultServices() {
@@ -556,7 +569,8 @@ function loadDefaultServices() {
 }
 
 function renderServicesOnPage(services) {
-    console.log('🎨 Xidmətlər render edilir:', services.length);
+    const list = Array.isArray(services) ? services : [];
+    console.log('🎨 Xidmətlər render edilir:', list.length);
 
     const servicesGrid = document.querySelector('.services-grid');
     if (!servicesGrid) {
@@ -564,12 +578,28 @@ function renderServicesOnPage(services) {
         return;
     }
 
-    let html = '';
+    servicesGrid.innerHTML = '';
+    if (!list.length) {
+        servicesGrid.innerHTML = '<article class="service-card"><h3 class="service-title">Xidmət yoxdur</h3></article>';
+        return;
+    }
 
-    services.forEach(service => {
+    let html = '';
+    list.forEach(service => {
+        const normalizedItems = (Array.isArray(service.items) ? service.items : [])
+            .map((item) => {
+                if (typeof item === 'string') return { text: item.trim(), order: 0 };
+                if (!item || typeof item !== 'object') return null;
+                const text = String(item.title || item.name || item.text || item.description || item.content || '').trim();
+                const order = Number(item.order ?? item.order_num ?? item.sort_order ?? 0);
+                return text ? { text, order: Number.isFinite(order) ? order : 0 } : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => a.order - b.order);
+
         let itemsHtml = '';
-        (Array.isArray(service.items) ? service.items : []).forEach(item => {
-            itemsHtml += `<li>${item}</li>`;
+        normalizedItems.forEach((item) => {
+            itemsHtml += `<li>${item.text}</li>`;
         });
 
         html += `
@@ -1214,11 +1244,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Xidmətləri yüklə
-    if (typeof loadServicesFromStorage === 'function') {
-        loadServicesFromStorage();
+    if (typeof loadServicesFromApi === 'function') {
+        loadServicesFromApi();
     } else {
-        console.warn('loadServicesFromStorage tapılmadı');
-        loadDefaultServices(); // main.js-də bu funksiya olmalıdır
+        console.warn('loadServicesFromApi tapılmadı');
+        renderServicesOnPage([]);
     }
 
     // Partnyorları yüklə

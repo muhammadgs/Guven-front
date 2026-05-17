@@ -291,35 +291,49 @@ const ApiMainService = (function() {
 
     // ==================== XİDMƏT ENDPOINTLƏRİ ====================
     const services = {
+        normalizeAzSlug: (value) => String(value || '')
+            .toLowerCase()
+            .replace(/[əƏ]/g, 'e')
+            .replace(/[ıİI]/g, 'i')
+            .replace(/[öÖ]/g, 'o')
+            .replace(/[üÜ]/g, 'u')
+            .replace(/[şŞ]/g, 's')
+            .replace(/[çÇ]/g, 'c')
+            .replace(/[ğĞ]/g, 'g')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, ''),
+
+        normalizeServiceItems: (rawItems) => {
+            const sourceList = Array.isArray(rawItems) ? rawItems : [];
+            return sourceList.map((item) => {
+                if (typeof item === 'string') {
+                    const title = item.trim();
+                    return title ? { title, description: '', order: 0, original: item } : null;
+                }
+                if (!item || typeof item !== 'object') return null;
+                const title = String(item.title || item.name || item.text || item.description || item.content || '').trim();
+                const description = String(item.description || item.content || '').trim();
+                const order = Number(item.order ?? item.order_num ?? item.sort_order ?? 0);
+                if (!title && !description) return null;
+                return {
+                    title: title || description,
+                    description,
+                    order: Number.isFinite(order) ? order : 0,
+                    original: item
+                };
+            }).filter(Boolean);
+        },
+
         normalizeService: (raw) => {
             if (!raw || typeof raw !== 'object') return null;
 
-            const normalizeSlug = (value) => String(value || '')
-                .toLowerCase()
-                .replace(/[əƏ]/g, 'e')
-                .replace(/[ıİI]/g, 'i')
-                .replace(/[öÖ]/g, 'o')
-                .replace(/[üÜ]/g, 'u')
-                .replace(/[şŞ]/g, 's')
-                .replace(/[çÇ]/g, 'c')
-                .replace(/[ğĞ]/g, 'g')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-+|-+$/g, '');
-
             const itemSource = raw.items || raw.service_items || raw.details || raw.children || raw.sub_services || [];
-            const sourceList = Array.isArray(itemSource) ? itemSource : [];
-            const items = sourceList.map((item) => {
-                if (typeof item === 'string') return item.trim();
-                if (!item || typeof item !== 'object') return '';
-                const title = item.title || item.name || item.text || '';
-                const content = item.description || item.content || item.text || title || '';
-                const text = `${title}`.trim() || `${content}`.trim();
-                return text || '';
-            }).filter(Boolean);
+            const items = services.normalizeServiceItems(itemSource);
 
             const name = raw.name || raw.title || raw.service_name || '';
             const description = raw.description || raw.text || raw.content || '';
-            const slug = raw.slug || normalizeSlug(name);
+            const slug = raw.slug || services.normalizeAzSlug(name);
+            const order = Number(raw.order ?? raw.sort_order ?? raw.order_num ?? 0);
 
             return {
                 id: raw.id || null,
@@ -327,7 +341,7 @@ const ApiMainService = (function() {
                 slug: slug,
                 description: description,
                 items: items,
-                order: raw.order ?? raw.sort_order ?? 0,
+                order: Number.isFinite(order) ? order : 0,
                 active: raw.active ?? raw.is_active ?? true,
                 original: raw
             };
@@ -344,6 +358,8 @@ const ApiMainService = (function() {
                 else if (payload && Array.isArray(payload.items)) rawServices = payload.items;
 
                 const normalized = rawServices.map((item) => services.normalizeService(item)).filter(Boolean);
+                localStorage.setItem('guvenfinans-active-services', JSON.stringify(normalized));
+                localStorage.removeItem('guvenfinans-services');
                 return { success: true, data: normalized, status: result.status };
             }
 
@@ -351,25 +367,50 @@ const ApiMainService = (function() {
                 const saved = localStorage.getItem('guvenfinans-active-services');
                 const parsed = saved ? JSON.parse(saved) : [];
                 const normalized = Array.isArray(parsed) ? parsed.map((item) => services.normalizeService(item)).filter(Boolean) : [];
-                return { success: normalized.length > 0, data: normalized };
+                if (normalized.length > 0) {
+                    return { success: false, data: normalized, offline: true, status: result.status, error: result.error };
+                }
+                return { success: false, data: [], status: result.status, error: result.error };
             } catch (e) {
-                return { success: false, data: [] };
+                return { success: false, data: [], status: result.status, error: result.error };
             }
         },
 
         getBySlug: async (slug) => {
             const result = await apiFetch(`/services/public/${encodeURIComponent(slug)}`);
-            if (!result.success) return result;
+            if (result.success) {
+                const payload = result.data;
+                const rawService = (payload && typeof payload === 'object' && !Array.isArray(payload))
+                    ? (payload.data || payload.service || payload)
+                    : null;
 
-            const payload = result.data;
-            let rawService = null;
-            if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-                rawService = payload.data || payload.service || payload;
+                const normalized = services.normalizeService(rawService);
+                if (!normalized) return { success: false, data: null, status: result.status };
+
+                try {
+                    const saved = localStorage.getItem('guvenfinans-active-services');
+                    const parsed = saved ? JSON.parse(saved) : [];
+                    const list = Array.isArray(parsed) ? parsed.map((item) => services.normalizeService(item)).filter(Boolean) : [];
+                    const normalizedSlug = services.normalizeAzSlug(normalized.slug || normalized.name);
+                    const nextList = list.filter((item) => services.normalizeAzSlug(item.slug || item.name) !== normalizedSlug);
+                    nextList.push(normalized);
+                    localStorage.setItem('guvenfinans-active-services', JSON.stringify(nextList));
+                    localStorage.removeItem('guvenfinans-services');
+                } catch (e) {}
+
+                return { success: true, data: normalized, status: result.status };
             }
 
-            const normalized = services.normalizeService(rawService);
-            if (!normalized) return { success: false, data: null, status: result.status };
-            return { success: true, data: normalized, status: result.status };
+            const listResult = await services.getPublic();
+            if (listResult && Array.isArray(listResult.data)) {
+                const target = services.normalizeAzSlug(slug);
+                const fromList = listResult.data.find((item) =>
+                    services.normalizeAzSlug(item.slug || item.name) === target
+                ) || null;
+                if (fromList) return { success: true, data: fromList, status: listResult.status, offline: !!listResult.offline };
+            }
+
+            return { success: false, data: null, status: result.status, error: result.error };
         }
     };
 
