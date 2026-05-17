@@ -290,18 +290,62 @@ const ApiMainService = (function() {
     };
 
     // ==================== XİDMƏT ENDPOINTLƏRİ ====================
+    function normalizeService(raw) {
+        if (!raw || typeof raw !== 'object') return null;
+        const images = Array.isArray(raw.images) ? raw.images : Array.isArray(raw.service_images) ? raw.service_images : [];
+        const cover = raw.coverImage || raw.cover_image || raw.cover || (images.find((img) => img && (img.is_cover || img.isCover)) || null);
+        return {
+            id: raw.id || raw.service_id || null,
+            name: raw.name || raw.title || 'Adsız xidmət',
+            slug: raw.slug || raw.service_slug || '',
+            description: raw.description || raw.short_description || raw.text || '',
+            items: raw.items || raw.service_items || raw.details || [],
+            order: raw.order || raw.sort_order || 0,
+            active: raw.active !== false && raw.status !== 'inactive',
+            coverImage: cover,
+            images: images,
+            original: raw
+        };
+    }
+
+    function extractServiceList(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (payload && Array.isArray(payload.data)) return payload.data;
+        if (payload && Array.isArray(payload.services)) return payload.services;
+        return [];
+    }
+
+    function extractServiceDetail(payload) {
+        if (!payload) return null;
+        if (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) return payload.data;
+        if (payload.service && typeof payload.service === 'object') return payload.service;
+        if (typeof payload === 'object' && !Array.isArray(payload)) return payload;
+        return null;
+    }
+
     const services = {
         getPublic: async () => {
+            const result = await apiFetch('/services/public');
+            if (result.success) {
+                const list = extractServiceList(result.data).map(normalizeService).filter(Boolean);
+                return { success: true, data: list, total: list.length };
+            }
+
             const saved = localStorage.getItem('guvenfinans-active-services');
             if (saved) {
-                try {
-                    return { success: true, data: JSON.parse(saved) };
-                } catch (e) {
-                    return { success: false, data: [] };
-                }
+                try { return { success: true, data: JSON.parse(saved).map(normalizeService).filter(Boolean) }; } catch (e) {}
             }
             return { success: false, data: [] };
-        }
+        },
+        getBySlug: async (slug) => {
+            const result = await apiFetch(`/services/public/${encodeURIComponent(slug)}`);
+            if (result.success) {
+                const detail = normalizeService(extractServiceDetail(result.data));
+                if (detail) return { success: true, data: detail };
+            }
+            return result;
+        },
+        normalizeService
     };
 
     // ==================== PUBLIC API ====================
