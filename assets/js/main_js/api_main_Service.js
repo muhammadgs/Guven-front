@@ -291,16 +291,81 @@ const ApiMainService = (function() {
 
     // ==================== XİDMƏT ENDPOINTLƏRİ ====================
     const services = {
+        normalizeService: (raw) => {
+            if (!raw || typeof raw !== 'object') return null;
+
+            const normalizeItem = (item) => {
+                if (typeof item === 'string') {
+                    const text = item.trim();
+                    return text ? text : null;
+                }
+                if (!item || typeof item !== 'object') return null;
+                const clean = {
+                    title: String(item.title || item.name || item.text || '').trim(),
+                    description: String(item.description || item.content || '').trim()
+                };
+                if (!clean.title && !clean.description) return null;
+                return clean;
+            };
+
+            const rawItems = raw.items || raw.service_items || raw.details || raw.children || raw.sub_services || [];
+            const normalizedItems = Array.isArray(rawItems) ? rawItems.map(normalizeItem).filter(Boolean) : [];
+
+            return {
+                id: raw.id || raw.service_id || null,
+                name: String(raw.name || raw.title || raw.service_name || '').trim(),
+                slug: String(raw.slug || '').trim(),
+                description: String(raw.description || raw.text || raw.content || '').trim(),
+                items: normalizedItems,
+                order: Number(raw.order || raw.sort_order || 0) || 0,
+                active: typeof raw.active === 'boolean' ? raw.active : (typeof raw.is_active === 'boolean' ? raw.is_active : true),
+                original: raw
+            };
+        },
+
         getPublic: async () => {
+            const result = await apiFetch('/services/public');
+
+            if (result.success) {
+                const payload = result.data;
+                let list = [];
+
+                if (Array.isArray(payload)) list = payload;
+                else if (payload && Array.isArray(payload.data)) list = payload.data;
+                else if (payload && Array.isArray(payload.services)) list = payload.services;
+                else if (payload && Array.isArray(payload.items)) list = payload.items;
+
+                const normalized = list.map(services.normalizeService).filter(Boolean);
+                return { success: true, data: normalized };
+            }
+
             const saved = localStorage.getItem('guvenfinans-active-services');
             if (saved) {
                 try {
-                    return { success: true, data: JSON.parse(saved) };
+                    const parsed = JSON.parse(saved);
+                    const normalized = (Array.isArray(parsed) ? parsed : []).map(services.normalizeService).filter(Boolean);
+                    return { success: true, data: normalized };
                 } catch (e) {
-                    return { success: false, data: [] };
+                    return { success: true, data: [] };
                 }
             }
-            return { success: false, data: [] };
+
+            return { success: true, data: [] };
+        },
+
+        getBySlug: async (slug) => {
+            const result = await apiFetch(`/services/public/${encodeURIComponent(slug)}`);
+            if (!result.success) return result;
+
+            const payload = result.data;
+            const raw = (payload && payload.data && typeof payload.data === 'object') ? payload.data
+                : (payload && payload.service && typeof payload.service === 'object') ? payload.service
+                : (payload && typeof payload === 'object') ? payload
+                : null;
+
+            const normalized = services.normalizeService(raw);
+            if (!normalized) return { success: false, data: null, error: 'Xidmət məlumatı tapılmadı' };
+            return { success: true, data: normalized };
         }
     };
 

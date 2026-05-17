@@ -432,25 +432,77 @@ function setupProfileButtons() {
 
 // ==================== XİDMƏTLƏR FUNKSİYALARI ====================
 
+const SERVICE_DETAIL_PAGES = {
+    'muhasibatliq-xidmetleri': 'service-muhasibatliq-xidmetleri.html',
+    'vergi-xidmetleri': 'service-vergi-xidmetleri.html',
+    'insan-resurslari': 'service-insan-resurslari.html',
+    'huquqi-xidmetler': 'service-huquqi-xidmetler.html',
+    'ikt': 'service-ikt.html'
+};
+
+function normalizeAzServiceSlug(value) {
+    return String(value || '')
+        .replace(/[Əə]/g, 'e')
+        .replace(/[Iİıi]/g, 'i')
+        .replace(/[Öö]/g, 'o')
+        .replace(/[Üü]/g, 'u')
+        .replace(/[Şş]/g, 's')
+        .replace(/[Çç]/g, 'c')
+        .replace(/[Ğğ]/g, 'g')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
+function getServiceDetailLink(service) {
+    const slug = normalizeAzServiceSlug(service && (service.slug || service.name));
+    return SERVICE_DETAIL_PAGES[slug] || 'index.html#xidmetler';
+}
+
 function loadServicesFromStorage() {
     console.log('🔄 Ana səhifə xidmətləri yüklənir...');
 
-    const savedServices = localStorage.getItem('guvenfinans-active-services');
-    console.log('LocalStorage məlumatı:', savedServices);
+    if (window.ApiMainService && window.ApiMainService.services && typeof window.ApiMainService.services.getPublic === 'function') {
+        window.ApiMainService.services.getPublic().then(function (result) {
+            if (result && result.success && Array.isArray(result.data) && result.data.length) {
+                localStorage.setItem('guvenfinans-active-services', JSON.stringify(result.data));
+                renderServicesOnPage(result.data);
+                return;
+            }
 
+            const savedServices = localStorage.getItem('guvenfinans-active-services');
+            if (savedServices) {
+                try {
+                    renderServicesOnPage(JSON.parse(savedServices));
+                    return;
+                } catch (error) {
+                    console.error('❌ JSON parse xətası:', error);
+                }
+            }
+            loadDefaultServices();
+        }).catch(function () {
+            const savedServices = localStorage.getItem('guvenfinans-active-services');
+            if (savedServices) {
+                try {
+                    renderServicesOnPage(JSON.parse(savedServices));
+                    return;
+                } catch (e) {}
+            }
+            loadDefaultServices();
+        });
+        return;
+    }
+
+    const savedServices = localStorage.getItem('guvenfinans-active-services');
     if (savedServices) {
         try {
-            const services = JSON.parse(savedServices);
-            console.log('✅ Xidmətlər yükləndi:', services.length);
-            renderServicesOnPage(services);
+            renderServicesOnPage(JSON.parse(savedServices));
+            return;
         } catch (error) {
             console.error('❌ JSON parse xətası:', error);
-            loadDefaultServices();
         }
-    } else {
-        console.log('📂 Default xidmətlər yüklənir');
-        loadDefaultServices();
     }
+    loadDefaultServices();
 }
 
 function loadDefaultServices() {
@@ -541,8 +593,8 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="#${service.target}" data-scroll-target="${service.target}" class="service-btn">
-                    ${service.cta}
+                <a href="${getServiceDetailLink(service)}" class="service-btn">
+                    ${service.cta || 'Ətraflı...'}
                 </a>
             </article>
         `;
