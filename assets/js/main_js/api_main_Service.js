@@ -290,31 +290,51 @@ const ApiMainService = (function() {
     };
 
     // ==================== XİDMƏT ENDPOINTLƏRİ ====================
+    function normalizeAzServiceSlug(value) {
+        return String(value || '')
+            .replace(/[Əə]/g, 'e')
+            .replace(/[Iİıi]/g, 'i')
+            .replace(/[Öö]/g, 'o')
+            .replace(/[Üü]/g, 'u')
+            .replace(/[Şş]/g, 's')
+            .replace(/[Çç]/g, 'c')
+            .replace(/[Ğğ]/g, 'g')
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
     const services = {
+        normalizeItem: (item, index = 0) => {
+            if (!item || (typeof item !== 'object' && typeof item !== 'string' && typeof item !== 'number')) return null;
+
+            const source = (typeof item === 'object') ? item : { text: String(item) };
+            const title = String(
+                source.title || source.name || source.text || source.description || source.content ||
+                source.item_text || source.service_item || source.service_text || source.value || source.label || ''
+            ).trim();
+            const description = String(source.description || source.content || source.detail || '').trim();
+            const order = Number(source.order ?? source.order_num ?? source.sort_order ?? source.position ?? index) || 0;
+
+            if (!title && !description) return null;
+            return { title, description, order, original: item };
+        },
+
         normalizeService: (raw) => {
             if (!raw || typeof raw !== 'object') return null;
 
-            const normalizeItem = (item) => {
-                if (typeof item === 'string') {
-                    const text = item.trim();
-                    return text ? text : null;
-                }
-                if (!item || typeof item !== 'object') return null;
-                const clean = {
-                    title: String(item.title || item.name || item.text || '').trim(),
-                    description: String(item.description || item.content || '').trim()
-                };
-                if (!clean.title && !clean.description) return null;
-                return clean;
-            };
-
             const rawItems = raw.items || raw.service_items || raw.details || raw.children || raw.sub_services || [];
-            const normalizedItems = Array.isArray(rawItems) ? rawItems.map(normalizeItem).filter(Boolean) : [];
+            const normalizedItems = Array.isArray(rawItems)
+                ? rawItems.map((item, index) => services.normalizeItem(item, index)).filter(Boolean)
+                : [];
+
+            const name = String(raw.name || raw.title || raw.service_name || '').trim();
+            const slug = normalizeAzServiceSlug(raw.slug || name);
 
             return {
                 id: raw.id || raw.service_id || null,
-                name: String(raw.name || raw.title || raw.service_name || '').trim(),
-                slug: String(raw.slug || '').trim(),
+                name,
+                slug,
                 description: String(raw.description || raw.text || raw.content || '').trim(),
                 items: normalizedItems,
                 order: Number(raw.order || raw.sort_order || 0) || 0,
@@ -336,6 +356,7 @@ const ApiMainService = (function() {
                 else if (payload && Array.isArray(payload.items)) list = payload.items;
 
                 const normalized = list.map(services.normalizeService).filter(Boolean);
+                localStorage.setItem('guvenfinans-active-services', JSON.stringify(normalized));
                 return { success: true, data: normalized };
             }
 
@@ -354,7 +375,8 @@ const ApiMainService = (function() {
         },
 
         getBySlug: async (slug) => {
-            const result = await apiFetch(`/services/public/${encodeURIComponent(slug)}`);
+            const normalizedSlug = normalizeAzServiceSlug(slug);
+            const result = await apiFetch(`/services/public/${encodeURIComponent(normalizedSlug)}`);
             if (!result.success) return result;
 
             const payload = result.data;
@@ -369,7 +391,7 @@ const ApiMainService = (function() {
         }
     };
 
-    // ==================== PUBLIC API ====================
+// ==================== PUBLIC API ====================
     return {
         config: CONFIG,
         test: testConnection,

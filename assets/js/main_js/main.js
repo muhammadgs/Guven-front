@@ -432,14 +432,6 @@ function setupProfileButtons() {
 
 // ==================== XİDMƏTLƏR FUNKSİYALARI ====================
 
-const SERVICE_DETAIL_PAGES = {
-    'muhasibatliq-xidmetleri': 'service-muhasibatliq-xidmetleri.html',
-    'vergi-xidmetleri': 'service-vergi-xidmetleri.html',
-    'insan-resurslari': 'service-insan-resurslari.html',
-    'huquqi-xidmetler': 'service-huquqi-xidmetler.html',
-    'ikt': 'service-ikt.html'
-};
-
 function normalizeAzServiceSlug(value) {
     return String(value || '')
         .replace(/[Əə]/g, 'e')
@@ -456,7 +448,8 @@ function normalizeAzServiceSlug(value) {
 
 function getServiceDetailLink(service) {
     const slug = normalizeAzServiceSlug(service && (service.slug || service.name));
-    return SERVICE_DETAIL_PAGES[slug] || 'index.html#xidmetler';
+    if (!slug) return 'index.html#xidmetler';
+    return `service-detail.html?slug=${encodeURIComponent(slug)}`;
 }
 
 function loadServicesFromStorage() {
