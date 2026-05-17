@@ -570,6 +570,49 @@ function loadDefaultServices() {
     renderServicesOnPage(defaultServices);
 }
 
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getServiceItemText(item) {
+    if (!item) return '';
+
+    if (typeof item === 'string' || typeof item === 'number') {
+        return String(item).trim();
+    }
+
+    if (typeof item !== 'object') return '';
+
+    return String(
+        item.title ||
+        item.name ||
+        item.text ||
+        item.description ||
+        item.content ||
+        item.item_text ||
+        item.service_item ||
+        item.service_text ||
+        item.value ||
+        item.label ||
+        ''
+    ).trim();
+}
+
+function getServiceItemOrder(item, index) {
+    if (!item || typeof item !== 'object') return index;
+
+    const order = item.order ?? item.order_num ?? item.sort_order ?? item.position;
+    const parsed = Number(order);
+
+    return Number.isFinite(parsed) ? parsed : index;
+}
+
 function renderServicesOnPage(services) {
     console.log('🎨 Xidmətlər render edilir:', services.length);
 
@@ -582,19 +625,29 @@ function renderServicesOnPage(services) {
     let html = '';
 
     services.forEach(service => {
-        let itemsHtml = '';
-        service.items.forEach(item => {
-            itemsHtml += `<li>${item}</li>`;
-        });
+        const rawItems = Array.isArray(service.items) ? service.items : [];
+
+        const visibleItems = rawItems
+            .map((item, index) => ({ item, index }))
+            .sort((a, b) => getServiceItemOrder(a.item, a.index) - getServiceItemOrder(b.item, b.index))
+            .map(({ item }) => getServiceItemText(item))
+            .filter(Boolean);
+
+        const itemsHtml = visibleItems.length
+            ? visibleItems.map(text => `<li>${escapeHtml(text)}</li>`).join('')
+            : '<li class="service-empty-item">Məlumat tezliklə əlavə olunacaq</li>';
+
+        const serviceName = escapeHtml(service.name || 'Xidmət');
+        const ctaText = escapeHtml(service.cta || 'Ətraflı...');
 
         html += `
             <article class="service-card">
-                <h3 class="service-title">${service.name}</h3>
+                <h3 class="service-title">${serviceName}</h3>
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
                 <a href="${getServiceDetailLink(service)}" class="service-btn">
-                    ${service.cta || 'Ətraflı...'}
+                    ${ctaText}
                 </a>
             </article>
         `;
