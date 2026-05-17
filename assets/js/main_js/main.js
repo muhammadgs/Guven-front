@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ==================== SAYTI BAŞLAT ====================
     // DOM tam yükləndikdə saytı başlat
-    if (typeof initializePage === 'function') initializePage();
+    initializePage();
 });
 
 // ==================== AUTHENTICATION FUNKSİYALARI ====================
@@ -432,79 +432,124 @@ function setupProfileButtons() {
 
 // ==================== XİDMƏTLƏR FUNKSİYALARI ====================
 
-function normalizeServiceSlug(value) {
-    return (value || '')
-        .toString()
-        .toLowerCase()
-        .replace(/[əƏ]/g, 'e').replace(/[ıIİ]/g, 'i').replace(/[öÖ]/g, 'o').replace(/[üÜ]/g, 'u')
-        .replace(/[şŞ]/g, 's').replace(/[çÇ]/g, 'c').replace(/[ğĞ]/g, 'g')
-        .trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-}
-
-function mapServiceToDetailPage(service) {
-    const map = {
-        'muhasibatliq-xidmetleri': 'service-muhasibatliq-xidmetleri.html',
-        'vergi-xidmetleri': 'service-vergi-xidmetleri.html',
-        'insan-resurslari': 'service-insan-resurslari.html',
-        'huquqi-xidmetler': 'service-huquqi-xidmetler.html',
-        'ikt': 'service-ikt.html'
-    };
-    const slug = normalizeServiceSlug(service.slug || service.name);
-    return map[slug] || map[normalizeServiceSlug(service.name)] || 'index.html#xidmetler';
-}
-
-async function loadServicesFromStorage() {
+function loadServicesFromStorage() {
     console.log('🔄 Ana səhifə xidmətləri yüklənir...');
-    if (window.ApiMainService && window.ApiMainService.services) {
-        try {
-            const result = await window.ApiMainService.services.getPublic();
-            if (result.success && Array.isArray(result.data) && result.data.length) {
-                renderServicesOnPage(result.data);
-                localStorage.setItem('guvenfinans-active-services', JSON.stringify(result.data));
-                return;
-            }
-        } catch (error) {
-            console.error('❌ Services API xətası:', error);
-        }
-    }
 
     const savedServices = localStorage.getItem('guvenfinans-active-services');
+    console.log('LocalStorage məlumatı:', savedServices);
+
     if (savedServices) {
         try {
             const services = JSON.parse(savedServices);
+            console.log('✅ Xidmətlər yükləndi:', services.length);
             renderServicesOnPage(services);
-            return;
         } catch (error) {
             console.error('❌ JSON parse xətası:', error);
+            loadDefaultServices();
         }
+    } else {
+        console.log('📂 Default xidmətlər yüklənir');
+        loadDefaultServices();
     }
-    loadDefaultServices();
 }
 
 function loadDefaultServices() {
     const defaultServices = [
-        { id: 1, name: "Mühasibatlıq xidmətləri", slug: 'muhasibatliq-xidmetleri', items: ["Mühasibatlığın qurulması və idarə edilməsi", "Müəssisələr üçün balansın hazırlanması və hesabatların verilməsi", "Əmək haqqının hesablanması"], cta: "Ətraflı..." },
-        { id: 2, name: "Vergi xidmətləri", slug: 'vergi-xidmetleri', items: ["VÖEN alınması və qeydiyyat işləri", "ƏDV qeydiyyatı və qeydiyyatın ləğvi", "Bank rekvizitlərinin alınması", "Kassa aparatlarının qurulması"], cta: "Ətraflı..." },
-        { id: 3, name: "İnsan Resursları", slug: 'insan-resurslari', items: ["Kadr inzibatçılığı və sənədləşməsi üzrə məsləhət", "Sənədlərin ekspertizası və rəy"], cta: "Ətraflı..." },
-        { id: 4, name: "Hüquqi xidmətlər", slug: 'huquqi-xidmetler', items: ["Şirkət iclaslarında iştirak və hüquqi müşayiət", "Müqavilələrin hazırlanması və yoxlanması"], cta: "Ətraflı..." },
-        { id: 5, name: "İKT", slug: 'ikt', items: ["IT Texniki dəstək (Help desk)", "Şəbəkə sisteminin çəkilişi və qurulması", "Analoq telefon sisteminin quraşdırılması"], cta: "Ətraflı..." }
+        {
+            id: 1,
+            name: "Mühasibatlıq xidmətləri",
+            items: [
+                "Mühasibatlığın qurulması və idarə edilməsi",
+                "Müəssisələr üçün balansın hazırlanması və hesabatların verilməsi",
+                "Əmək haqqının hesablanması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 2,
+            name: "Vergi xidmətləri",
+            items: [
+                "VÖEN alınması və qeydiyyat işləri",
+                "ƏDV qeydiyyatı və qeydiyyatın ləğvi",
+                "Bank rekvizitlərinin alınması",
+                "Kassa aparatlarının qurulması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 3,
+            name: "İnsan Resursları",
+            items: [
+                "Kadr inzibatçılığı və sənədləşməsi üzrə məsləhət",
+                "Sənədlərin ekspertizası və rəy"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 4,
+            name: "Hüquqi xidmətlər",
+            items: [
+                "Şirkət iclaslarında iştirak və hüquqi müşayiət",
+                "Müqavilələrin hazırlanması və yoxlanması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        },
+        {
+            id: 5,
+            name: "İKT",
+            items: [
+                "IT Texniki dəstək (Help desk)",
+                "Şəbəkə sisteminin çəkilişi və qurulması",
+                "Analoq telefon sisteminin quraşdırılması"
+            ],
+            cta: "Ətraflı...",
+            target: "konsultasiya"
+        }
     ];
+
+    // Save to localStorage
     localStorage.setItem('guvenfinans-active-services', JSON.stringify(defaultServices));
+
+    // Render et
     renderServicesOnPage(defaultServices);
 }
 
 function renderServicesOnPage(services) {
-    const servicesGrid = document.querySelector('.services-grid');
-    if (!servicesGrid) return;
+    console.log('🎨 Xidmətlər render edilir:', services.length);
 
-    const html = (services || []).map((service) => {
-        const items = Array.isArray(service.items) ? service.items : [];
-        const itemsHtml = items.map((item) => `<li>${typeof item === 'string' ? item : (item.title || item.name || item.text || item.description || '')}</li>`).join('');
-        const detailHref = mapServiceToDetailPage(service);
-        return `<article class="service-card"><h3 class="service-title">${service.name || 'Xidmət'}</h3><ul class="service-list">${itemsHtml}</ul><a href="${detailHref}" class="service-btn" aria-label="${service.name || 'Xidmət'} haqqında ətraflı">${service.cta || 'Ətraflı...'}</a></article>`;
-    }).join('');
+    const servicesGrid = document.querySelector('.services-grid');
+    if (!servicesGrid) {
+        console.error('❌ services-grid tapılmadı');
+        return;
+    }
+
+    let html = '';
+
+    services.forEach(service => {
+        let itemsHtml = '';
+        service.items.forEach(item => {
+            itemsHtml += `<li>${item}</li>`;
+        });
+
+        html += `
+            <article class="service-card">
+                <h3 class="service-title">${service.name}</h3>
+                <ul class="service-list">
+                    ${itemsHtml}
+                </ul>
+                <a href="#${service.target}" data-scroll-target="${service.target}" class="service-btn">
+                    ${service.cta}
+                </a>
+            </article>
+        `;
+    });
 
     servicesGrid.innerHTML = html;
+    console.log('✅ Xidmətlər render edildi');
 }
 
 // ==================== PARTNYORLAR FUNKSİYALARI ====================

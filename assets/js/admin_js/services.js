@@ -3,139 +3,73 @@
 let currentServiceId = null;
 let servicesData = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadServices();
-});
+async function loadServices(status = null) {
+    console.log('🎯 Xidmətlər yüklənir...');
 
-function loadServices() {
-    // Əvvəlcə localStorage-dan yüklə
-    const savedServices = localStorage.getItem('guvenfinans-services');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-    if (savedServices) {
-        servicesData = JSON.parse(savedServices);
-    } else {
-        // Default xidmətlər
-        servicesData = [
-            {
-                id: 1,
-                name: "Mühasibatlıq xidmətləri",
-                items: [
-                    "Mühasibatlığın qurulması və idarə edilməsi",
-                    "Müəssisələr üçün balansın hazırlanması və hesabatların verilməsi",
-                    "Əmək haqqının hesablanması"
-                ],
-                order: 1,
-                cta: "Ətraflı...",
-                target: "konsultasiya",
-                active: true
-            },
-            {
-                id: 2,
-                name: "Vergi xidmətləri",
-                items: [
-                    "VÖEN alınması və qeydiyyat işləri",
-                    "ƏDV qeydiyyatı və qeydiyyatın ləğvi",
-                    "Bank rekvizitlərinin alınması",
-                    "Kassa aparatlarının qurulması"
-                ],
-                order: 2,
-                cta: "Ətraflı...",
-                target: "konsultasiya",
-                active: true
-            },
-            {
-                id: 3,
-                name: "İnsan Resursları",
-                items: [
-                    "Kadr inzibatçılığı və sənədləşməsi üzrə məsləhət",
-                    "Sənədlərin ekspertizası və rəy"
-                ],
-                order: 3,
-                cta: "Ətraflı...",
-                target: "konsultasiya",
-                active: true
-            },
-            {
-                id: 4,
-                name: "Hüquqi xidmətlər",
-                items: [
-                    "Şirkət iclaslarında iştirak və hüquqi müşayiət",
-                    "Müqavilələrin hazırlanması və yoxlanması"
-                ],
-                order: 4,
-                cta: "Ətraflı...",
-                target: "konsultasiya",
-                active: true
-            },
-            {
-                id: 5,
-                name: "İKT",
-                items: [
-                    "IT Texniki dəstək (Help desk)",
-                    "Şəbəkə sisteminin çəkilişi və qurulması",
-                    "Analoq telefon sisteminin quraşdırılması"
-                ],
-                order: 5,
-                cta: "Ətraflı...",
-                target: "konsultasiya",
-                active: true
+    try {
+        let endpoint = '/services/';
+        if (status) endpoint += `?status=${status}`;
+
+        const result = await makeApiRequest(endpoint, 'GET', null, true);
+
+        if (result && result.success && result.data) {
+            servicesData = result.data.map(service => ({
+                id: service.id,
+                name: service.name,
+                items: service.items ? service.items.map(item => item.text) : [],
+                order: service.order_num || 0,
+                cta: service.cta_text || 'Ətraflı...',
+                target: service.cta_target || 'konsultasiya',
+                active: service.status === 'active'
+            }));
+
+            localStorage.setItem('guvenfinans-services', JSON.stringify(servicesData));
+            renderServicesTable();
+            console.log(`✅ ${servicesData.length} xidmət yükləndi`);
+        } else {
+            const saved = localStorage.getItem('guvenfinans-services');
+            if (saved && JSON.parse(saved).length > 0) {
+                servicesData = JSON.parse(saved);
+                renderServicesTable();
             }
-        ];
-
-        saveServicesToStorage();
+        }
+    } catch (error) {
+        console.error('Xəta:', error);
+    } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
-
-    renderServicesTable();
-    updateMainPageServices();
 }
 
 function renderServicesTable() {
     const tbody = document.getElementById('servicesListBody');
-
     if (!tbody) return;
 
     if (servicesData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center">Xidmət yoxdur</td>
-            </tr>
-        `;
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Xidmət yoxdur</td></tr>';
         return;
     }
 
-    // Sıraya görə sırala
     servicesData.sort((a, b) => a.order - b.order);
-
     let html = '';
 
     servicesData.forEach((service, index) => {
+        const statusClass = service.active ? 'badge-success' : 'badge-danger';
+        const statusText = service.active ? 'Aktiv' : 'Deaktiv';
+
         html += `
-            <tr data-service-id="${service.id}">
+            <tr>
                 <td>${index + 1}</td>
-                <td><strong>${service.name}</strong></td>
+                <td><strong>${escapeHtml(service.name)}</strong></td>
                 <td>${service.items.length}</td>
                 <td>${service.order}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
                 <td>
-                    <span class="badge ${service.active ? 'badge-success' : 'badge-danger'}">
-                        ${service.active ? 'Aktiv' : 'Deaktiv'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editService(${service.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="previewService(${service.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="moveService(${service.id}, 'up')" ${index === 0 ? 'disabled' : ''}>
-                        <i class="fas fa-arrow-up"></i>
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="moveService(${service.id}, 'down')" ${index === servicesData.length - 1 ? 'disabled' : ''}>
-                        <i class="fas fa-arrow-down"></i>
-                    </button>
+                    <button class="action-btn edit" onclick="editService(${service.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete" onclick="deleteService(${service.id})"><i class="fas fa-trash"></i></button>
+                    <button class="action-btn ${service.active ? 'warning' : 'success'}" onclick="toggleServiceStatus(${service.id})"><i class="fas ${service.active ? 'fa-ban' : 'fa-check'}"></i></button>
                 </td>
             </tr>
         `;
@@ -146,7 +80,6 @@ function renderServicesTable() {
 
 function showAddServiceModal() {
     currentServiceId = null;
-    document.getElementById('serviceModalTitle').textContent = 'Yeni Xidmət Əlavə Et';
     document.getElementById('serviceId').value = '';
     document.getElementById('serviceName').value = '';
     document.getElementById('serviceOrder').value = servicesData.length + 1;
@@ -154,24 +87,19 @@ function showAddServiceModal() {
     document.getElementById('serviceTarget').value = 'konsultasiya';
     document.getElementById('serviceIsActive').checked = true;
 
-    // Maddələr container-ini təmizlə
     const container = document.getElementById('serviceItemsContainer');
-    container.innerHTML = `
-        <div class="service-item-input">
-            <div class="form-row">
-                <div class="form-col" style="flex: 1;">
-                    <input type="text" class="form-control service-item" 
-                           placeholder="Xidmət maddəsini daxil edin">
-                </div>
-                <div class="form-col" style="width: 100px;">
-                    <button type="button" class="btn btn-danger" onclick="removeServiceItem(this)" disabled>
-                        <i class="fas fa-trash"></i>
-                    </button>
+    if (container) {
+        container.innerHTML = `
+            <div class="service-item-input" style="margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" class="form-control service-item" placeholder="Xidmət maddəsini daxil edin" style="flex: 1;">
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)" disabled><i class="fas fa-trash"></i></button>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    }
 
+    document.querySelector('#serviceModal .modal-title').textContent = 'Yeni Xidmət';
     openModal('serviceModal');
 }
 
@@ -180,7 +108,6 @@ function editService(id) {
     if (!service) return;
 
     currentServiceId = id;
-    document.getElementById('serviceModalTitle').textContent = 'Xidməti Redaktə Et';
     document.getElementById('serviceId').value = service.id;
     document.getElementById('serviceName').value = service.name;
     document.getElementById('serviceOrder').value = service.order;
@@ -188,58 +115,27 @@ function editService(id) {
     document.getElementById('serviceTarget').value = service.target;
     document.getElementById('serviceIsActive').checked = service.active;
 
-    // Maddələri yüklə
     const container = document.getElementById('serviceItemsContainer');
-    container.innerHTML = '';
-
-    service.items.forEach((item, index) => {
-        container.innerHTML += `
-            <div class="service-item-input">
-                <div class="form-row">
-                    <div class="form-col" style="flex: 1;">
-                        <input type="text" class="form-control service-item" 
-                               value="${item}" placeholder="Xidmət maddəsini daxil edin">
-                    </div>
-                    <div class="form-col" style="width: 100px;">
-                        <button type="button" class="btn btn-danger" onclick="removeServiceItem(this)" ${index === 0 ? 'disabled' : ''}>
-                            <i class="fas fa-trash"></i>
-                        </button>
+    if (container) {
+        container.innerHTML = '';
+        service.items.forEach((item, index) => {
+            container.innerHTML += `
+                <div class="service-item-input" style="margin-bottom: 10px;">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control service-item" value="${escapeHtml(item)}" placeholder="Xidmət maddəsi" style="flex: 1;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)" ${index === 0 ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
 
+    document.querySelector('#serviceModal .modal-title').textContent = 'Xidməti Redaktə Et';
     openModal('serviceModal');
 }
 
-function addServiceItem() {
-    const container = document.getElementById('serviceItemsContainer');
-    container.innerHTML += `
-        <div class="service-item-input">
-            <div class="form-row">
-                <div class="form-col" style="flex: 1;">
-                    <input type="text" class="form-control service-item" 
-                           placeholder="Xidmət maddəsini daxil edin">
-                </div>
-                <div class="form-col" style="width: 100px;">
-                    <button type="button" class="btn btn-danger" onclick="removeServiceItem(this)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function removeServiceItem(button) {
-    const itemInput = button.closest('.service-item-input');
-    if (itemInput) {
-        itemInput.remove();
-    }
-}
-
-function saveService() {
+// ============ ƏSAS FUNKSİYA - HTML "saveService" çağırır ============
+async function saveService() {
     const serviceId = document.getElementById('serviceId').value;
     const name = document.getElementById('serviceName').value.trim();
     const order = parseInt(document.getElementById('serviceOrder').value) || 1;
@@ -250,207 +146,238 @@ function saveService() {
     // Maddələri topla
     const itemInputs = document.querySelectorAll('.service-item');
     const items = [];
-    itemInputs.forEach(input => {
-        if (input.value.trim()) {
-            items.push(input.value.trim());
+    itemInputs.forEach((input, idx) => {
+        const text = input.value.trim();
+        if (text) {
+            items.push({
+                text: text,
+                order_num: idx
+            });
         }
     });
 
+    // Validasiya
     if (!name) {
         alert('Xidmət adı daxil edin!');
         return;
     }
 
     if (items.length === 0) {
-        alert('Ən azı bir xidmət maddəsi əlavə edin!');
+        alert('Ən azı bir maddə əlavə edin!');
         return;
     }
 
-    if (serviceId) {
-        // Redaktə et
-        const index = servicesData.findIndex(s => s.id == serviceId);
-        if (index !== -1) {
-            servicesData[index] = {
-                id: parseInt(serviceId),
-                name,
-                items,
-                order,
-                cta,
-                target,
-                active
-            };
+    // Slug yarat
+    const slug = name.toLowerCase()
+        .replace(/[ğ]/g, 'g')
+        .replace(/[ü]/g, 'u')
+        .replace(/[ş]/g, 's')
+        .replace(/[ı]/g, 'i')
+        .replace(/[ö]/g, 'o')
+        .replace(/[ç]/g, 'c')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+    // API-ə göndəriləcək məlumat
+    const serviceData = {
+        name: name,
+        slug: slug,
+        description: name,
+        content: "",
+        image_url: null,
+        icon: "fa-chart-bar",
+        order_num: order,
+        status: active ? "active" : "inactive",
+        is_featured: false,
+        cta_text: cta,
+        cta_target: target,
+        items: items
+    };
+
+    console.log("📤 Göndərilən məlumat:", JSON.stringify(serviceData, null, 2));
+
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
+
+    try {
+        let result;
+
+        if (serviceId) {
+            console.log(`📝 Yenilənir ID: ${serviceId}`);
+            result = await makeApiRequest(`/services/${serviceId}`, 'PUT', serviceData, true);
+        } else {
+            console.log("➕ Yeni xidmət yaradılır...");
+            result = await makeApiRequest('/services/', 'POST', serviceData, true);
         }
-    } else {
-        // Yeni xidmət yarat
-        const newId = servicesData.length > 0 ? Math.max(...servicesData.map(s => s.id)) + 1 : 1;
-        servicesData.push({
-            id: newId,
-            name,
-            items,
-            order,
-            cta,
-            target,
-            active
-        });
+
+        console.log("📥 Cavab:", result);
+
+        if (result && (result.success === true || result.data)) {
+            alert(serviceId ? 'Xidmət yeniləndi!' : 'Xidmət yaradıldı!');
+            closeModal('serviceModal');
+            await loadServices();
+        } else {
+            const errorMsg = result?.error || result?.detail || 'Xidmət saxlanılmadı';
+            alert(`Xəta: ${errorMsg}`);
+        }
+
+    } catch (error) {
+        console.error("❌ Xəta:", error);
+        alert(`Xəta: ${error.message}`);
+    } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
+}
 
-    // Sıraya görə sırala
-    servicesData.sort((a, b) => a.order - b.order);
-
-    // Yenidən assign et
-    servicesData.forEach((service, index) => {
-        service.order = index + 1;
-    });
-
-    saveServicesToStorage();
-    renderServicesTable();
-    updateMainPageServices();
-    closeModal('serviceModal');
-
-    showNotification('Xidmət uğurla yadda saxlanıldı!', 'success');
+// HTML bəzən saveServiceItem çağıra bilər - ehtiyat
+async function saveServiceItem() {
+    await saveService();
 }
 
 function deleteService(id) {
     const service = servicesData.find(s => s.id == id);
     if (!service) return;
-
     currentServiceId = id;
-    document.getElementById('deleteServiceMessage').textContent =
-        `"${service.name}" xidmətini silmək istədiyinizə əminsiniz? Bu əməliyyat geri qaytarıla bilməz.`;
-
+    const msg = document.getElementById('deleteServiceMessage');
+    if (msg) msg.textContent = `"${service.name}" silmək istədiyinizə əminsiniz?`;
     openModal('deleteServiceModal');
 }
 
-function confirmDeleteService() {
-    servicesData = servicesData.filter(s => s.id != currentServiceId);
+async function confirmDeleteService() {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-    // Sıra nömrələrini yenilə
-    servicesData.forEach((service, index) => {
-        service.order = index + 1;
-    });
+    try {
+        const result = await makeApiRequest(`/services/${currentServiceId}`, 'DELETE', null, true);
 
-    saveServicesToStorage();
-    renderServicesTable();
-    updateMainPageServices();
-    closeModal('deleteServiceModal');
-
-    showNotification('Xidmət uğurla silindi!', 'success');
-}
-
-function moveService(id, direction) {
-    const index = servicesData.findIndex(s => s.id == id);
-    if (index === -1) return;
-
-    if (direction === 'up' && index > 0) {
-        // Yuxarı hərəkət
-        [servicesData[index], servicesData[index - 1]] = [servicesData[index - 1], servicesData[index]];
-    } else if (direction === 'down' && index < servicesData.length - 1) {
-        // Aşağı hərəkət
-        [servicesData[index], servicesData[index + 1]] = [servicesData[index + 1], servicesData[index]];
+        if (result && (result.success === true || result.status === 204)) {
+            alert('Xidmət silindi!');
+            closeModal('deleteServiceModal');
+            await loadServices();
+        } else {
+            alert('Xidmət silinərkən xəta!');
+        }
+    } catch (error) {
+        console.error("❌ Xəta:", error);
+        alert(`Xəta: ${error.message}`);
+    } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
     }
-
-    // Sıra nömrələrini yenilə
-    servicesData.forEach((service, idx) => {
-        service.order = idx + 1;
-    });
-
-    saveServicesToStorage();
-    renderServicesTable();
-    updateMainPageServices();
 }
 
-function previewService(id) {
-    const service = servicesData.find(s => s.id == id);
-    if (!service) return;
+// HTML confirmDeleteServiceItem çağıra bilər - ehtiyat
+async function confirmDeleteServiceItem() {
+    await confirmDeleteService();
+}
 
-    const preview = document.getElementById('servicePreview');
+async function toggleServiceStatus(id) {
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-    let itemsHtml = '';
-    service.items.forEach(item => {
-        itemsHtml += `<li>${item}</li>`;
-    });
+    try {
+        const result = await makeApiRequest(`/services/${id}/toggle-status`, 'PATCH', null, true);
 
-    preview.innerHTML = `
-        <div class="service-card preview-card">
-            <h3 class="service-title">${service.name}</h3>
-            <ul class="service-list">
-                ${itemsHtml}
-            </ul>
-            <a href="#${service.target}" class="service-btn">${service.cta}</a>
-            <div class="service-meta">
-                <span class="meta-item"><i class="fas fa-sort-numeric-up"></i> Sıra: ${service.order}</span>
-                <span class="meta-item"><i class="fas fa-circle ${service.active ? 'text-success' : 'text-danger'}"></i> ${service.active ? 'Aktiv' : 'Deaktiv'}</span>
-            </div>
-        </div>
-    `;
+        if (result && (result.success === true || result.data)) {
+            alert('Status dəyişdirildi!');
+            await loadServices();
+        } else {
+            alert('Status dəyişdirilmədi!');
+        }
+    } catch (error) {
+        console.error("❌ Xəta:", error);
+        alert(`Xəta: ${error.message}`);
+    } finally {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
+    }
 }
 
 function searchServices() {
-    const searchTerm = document.getElementById('serviceSearch').value.toLowerCase();
-
-    if (!searchTerm) {
-        renderServicesTable();
-        return;
-    }
-
-    const filteredServices = servicesData.filter(service =>
-        service.name.toLowerCase().includes(searchTerm)
-    );
-
+    const term = document.getElementById('serviceSearch')?.value.toLowerCase() || '';
     const tbody = document.getElementById('servicesListBody');
+    if (!tbody) return;
 
-    if (filteredServices.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center">Axtarışa uyğun xidmət tapılmadı</td>
-            </tr>
-        `;
+    if (!term) { renderServicesTable(); return; }
+
+    const filtered = servicesData.filter(s => s.name.toLowerCase().includes(term));
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Tapılmadı</td></tr>';
         return;
     }
 
     let html = '';
-
-    filteredServices.forEach((service, index) => {
-        const originalIndex = servicesData.findIndex(s => s.id === service.id);
-
+    filtered.forEach((service, index) => {
+        const statusClass = service.active ? 'badge-success' : 'badge-danger';
         html += `
-            <tr data-service-id="${service.id}">
-                <td>${originalIndex + 1}</td>
-                <td><strong>${service.name}</strong></td>
+            <tr>
+                <td>${index + 1}</td>
+                <td><strong>${escapeHtml(service.name)}</strong></td>
                 <td>${service.items.length}</td>
                 <td>${service.order}</td>
+                <td><span class="badge ${statusClass}">${service.active ? 'Aktiv' : 'Deaktiv'}</span></td>
                 <td>
-                    <span class="badge ${service.active ? 'badge-success' : 'badge-danger'}">
-                        ${service.active ? 'Aktiv' : 'Deaktiv'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="editService(${service.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteService(${service.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="previewService(${service.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <button class="action-btn edit" onclick="editService(${service.id})"><i class="fas fa-edit"></i></button>
+                    <button class="action-btn delete" onclick="deleteService(${service.id})"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `;
     });
-
     tbody.innerHTML = html;
 }
 
-function saveServicesToStorage() {
-    localStorage.setItem('guvenfinans-services', JSON.stringify(servicesData));
+function addServiceItem() {
+    const container = document.getElementById('serviceItemsContainer');
+    if (container) {
+        const newItem = document.createElement('div');
+        newItem.className = 'service-item-input';
+        newItem.style.marginBottom = '10px';
+        newItem.innerHTML = `
+            <div style="display: flex; gap: 10px;">
+                <input type="text" class="form-control service-item" placeholder="Yeni maddə" style="flex: 1;">
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        container.appendChild(newItem);
+    }
 }
 
-function updateMainPageServices() {
-    // Ana səhifədəki xidmətləri yenilə
-    const activeServices = servicesData
-        .filter(s => s.active)
-        .sort((a, b) => a.order - b.order);
-
-    localStorage.setItem('guvenfinans-active-services', JSON.stringify(activeServices));
+function removeServiceItem(btn) {
+    const container = document.getElementById('serviceItemsContainer');
+    if (container && container.children.length > 1) {
+        btn.closest('.service-item-input').remove();
+    } else {
+        alert('Ən azı bir maddə olmalıdır!');
+    }
 }
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return text.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// Global funksiyalar
+window.loadServices = loadServices;
+window.showAddServiceModal = showAddServiceModal;
+window.editService = editService;
+window.saveService = saveService;        // HTML bunu çağırır
+window.saveServiceItem = saveServiceItem; // ehtiyat
+window.deleteService = deleteService;
+window.confirmDeleteService = confirmDeleteService;
+window.confirmDeleteServiceItem = confirmDeleteServiceItem;
+window.toggleServiceStatus = toggleServiceStatus;
+window.searchServices = searchServices;
+window.addServiceItem = addServiceItem;
+window.removeServiceItem = removeServiceItem;
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('services.js yükləndi');
+    const servicesPage = document.getElementById('contentServicesPage');
+    if (servicesPage && !servicesPage.classList.contains('hidden')) {
+        loadServices();
+    }
+});
