@@ -17,6 +17,11 @@
             .replace(/^-+|-+$/g, '');
     }
 
+    function getSlugFromPage() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('slug') || document.body.dataset.serviceSlug || '';
+    }
+
     function getEls() {
         return {
             status: document.getElementById('service-detail-status'),
@@ -33,17 +38,19 @@
         status.textContent = message;
     }
 
-    function normalizeItem(item) {
-        if (typeof item === 'string') {
-            const text = item.trim();
-            if (!text) return null;
-            return { heading: text, body: '' };
-        }
-        if (!item || typeof item !== 'object') return null;
-        const heading = String(item.title || item.name || item.text || '').trim();
-        const body = String(item.description || item.content || '').trim();
+    function getItemText(item) {
+        if (!item) return '';
+        if (typeof item === 'string' || typeof item === 'number') return String(item).trim();
+        if (typeof item !== 'object') return '';
+        return String(item.title || item.name || item.text || item.description || item.content || item.item_text || item.service_item || item.service_text || item.value || item.label || '').trim();
+    }
+
+    function normalizeItem(item, index) {
+        const heading = getItemText(item);
+        const body = (item && typeof item === 'object') ? String(item.description || item.content || '').trim() : '';
+        const order = (item && typeof item === 'object') ? Number(item.order ?? item.order_num ?? item.sort_order ?? item.position ?? index) || index : index;
         if (!heading && !body) return null;
-        return { heading: heading || 'Xidmət detalı', body };
+        return { heading: heading || 'Xidmət detalı', body, order };
     }
 
     function renderService(service) {
@@ -51,7 +58,9 @@
         title.textContent = service.name || 'Xidmət';
         desc.textContent = service.description || FALLBACK_DESCRIPTION;
 
-        const normalizedItems = Array.isArray(service.items) ? service.items.map(normalizeItem).filter(Boolean) : [];
+        const normalizedItems = Array.isArray(service.items)
+            ? service.items.map((item, index) => normalizeItem(item, index)).filter(Boolean).sort((a, b) => a.order - b.order)
+            : [];
 
         if (!normalizedItems.length) {
             items.innerHTML = '<div class="service-empty">Bu xidmət üzrə məlumatlar tezliklə əlavə olunacaq.</div>';
@@ -75,7 +84,7 @@
     }
 
     async function init() {
-        const slug = (document.body && document.body.dataset && document.body.dataset.serviceSlug) || '';
+        const slug = normalizeAzSlug(getSlugFromPage());
         if (!slug) {
             renderState('error', 'Xidmət açarı tapılmadı.');
             return;
@@ -109,8 +118,6 @@
 
         if (!service) {
             renderState('error', 'Xidmət məlumatı tapılmadı.');
-            const { items } = getEls();
-            items.innerHTML = '<a class="service-back-link" href="index.html#xidmetler">Bütün xidmətlərə qayıt</a>';
             return;
         }
 
