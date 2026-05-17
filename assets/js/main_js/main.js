@@ -432,75 +432,25 @@ function setupProfileButtons() {
 
 // ==================== XİDMƏTLƏR FUNKSİYALARI ====================
 
-
-function normalizeAzSlug(input) {
-    return String(input || '')
-        .toLowerCase()
-        .replace(/[əƏ]/g, 'e')
-        .replace(/[ıİI]/g, 'i')
-        .replace(/[öÖ]/g, 'o')
-        .replace(/[üÜ]/g, 'u')
-        .replace(/[şŞ]/g, 's')
-        .replace(/[çÇ]/g, 'c')
-        .replace(/[ğĞ]/g, 'g')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-}
-
-function getServiceDetailPage(service) {
-    const slugMap = {
-        'muhasibatliq-xidmetleri': 'service-muhasibatliq-xidmetleri.html',
-        'vergi-xidmetleri': 'service-vergi-xidmetleri.html',
-        'insan-resurslari': 'service-insan-resurslari.html',
-        'huquqi-xidmetler': 'service-huquqi-xidmetler.html',
-        'ikt': 'service-ikt.html'
-    };
-
-    const normalized = normalizeAzSlug((service && (service.slug || service.name)) || '');
-    return slugMap[normalized] || 'index.html#xidmetler';
-}
-
-function readOfflineServicesCache() {
-    const keys = ['guvenfinans-active-services', 'guvenfinans-services'];
-    for (const key of keys) {
-        const raw = localStorage.getItem(key);
-        if (!raw) continue;
-        try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed;
-            if (parsed && Array.isArray(parsed.data)) return parsed.data;
-        } catch (error) {
-            console.warn(`⚠️ ${key} cache parse xətası:`, error);
-        }
-    }
-    return [];
-}
-
-async function loadServicesFromApi() {
+function loadServicesFromStorage() {
     console.log('🔄 Ana səhifə xidmətləri yüklənir...');
 
-    try {
-        if (window.ApiMainService && window.ApiMainService.services) {
-            const apiResult = await window.ApiMainService.services.getPublic();
-            if (apiResult && apiResult.success && Array.isArray(apiResult.data)) {
-                localStorage.setItem('guvenfinans-active-services', JSON.stringify(apiResult.data));
-                localStorage.removeItem('guvenfinans-services');
-                renderServicesOnPage(apiResult.data);
-                return;
-            }
+    const savedServices = localStorage.getItem('guvenfinans-active-services');
+    console.log('LocalStorage məlumatı:', savedServices);
+
+    if (savedServices) {
+        try {
+            const services = JSON.parse(savedServices);
+            console.log('✅ Xidmətlər yükləndi:', services.length);
+            renderServicesOnPage(services);
+        } catch (error) {
+            console.error('❌ JSON parse xətası:', error);
+            loadDefaultServices();
         }
-    } catch (error) {
-        console.warn('⚠️ API-dən xidmətlər alınmadı:', error);
+    } else {
+        console.log('📂 Default xidmətlər yüklənir');
+        loadDefaultServices();
     }
-
-    const cached = readOfflineServicesCache();
-    if (cached.length > 0) {
-        console.warn('⚠️ API əlçatan deyil, offline cache istifadə olunur.');
-        renderServicesOnPage(cached);
-        return;
-    }
-
-    renderServicesOnPage([]);
 }
 
 function loadDefaultServices() {
@@ -514,7 +464,7 @@ function loadDefaultServices() {
                 "Əmək haqqının hesablanması"
             ],
             cta: "Ətraflı...",
-            target: "service-muhasibatliq-xidmetleri.html"
+            target: "konsultasiya"
         },
         {
             id: 2,
@@ -526,7 +476,7 @@ function loadDefaultServices() {
                 "Kassa aparatlarının qurulması"
             ],
             cta: "Ətraflı...",
-            target: "service-vergi-xidmetleri.html"
+            target: "konsultasiya"
         },
         {
             id: 3,
@@ -536,7 +486,7 @@ function loadDefaultServices() {
                 "Sənədlərin ekspertizası və rəy"
             ],
             cta: "Ətraflı...",
-            target: "service-insan-resurslari.html"
+            target: "konsultasiya"
         },
         {
             id: 4,
@@ -546,7 +496,7 @@ function loadDefaultServices() {
                 "Müqavilələrin hazırlanması və yoxlanması"
             ],
             cta: "Ətraflı...",
-            target: "service-huquqi-xidmetler.html"
+            target: "konsultasiya"
         },
         {
             id: 5,
@@ -557,7 +507,7 @@ function loadDefaultServices() {
                 "Analoq telefon sisteminin quraşdırılması"
             ],
             cta: "Ətraflı...",
-            target: "service-ikt.html"
+            target: "konsultasiya"
         }
     ];
 
@@ -569,8 +519,7 @@ function loadDefaultServices() {
 }
 
 function renderServicesOnPage(services) {
-    const list = Array.isArray(services) ? services : [];
-    console.log('🎨 Xidmətlər render edilir:', list.length);
+    console.log('🎨 Xidmətlər render edilir:', services.length);
 
     const servicesGrid = document.querySelector('.services-grid');
     if (!servicesGrid) {
@@ -578,28 +527,12 @@ function renderServicesOnPage(services) {
         return;
     }
 
-    servicesGrid.innerHTML = '';
-    if (!list.length) {
-        servicesGrid.innerHTML = '<article class="service-card"><h3 class="service-title">Xidmət yoxdur</h3></article>';
-        return;
-    }
-
     let html = '';
-    list.forEach(service => {
-        const normalizedItems = (Array.isArray(service.items) ? service.items : [])
-            .map((item) => {
-                if (typeof item === 'string') return { text: item.trim(), order: 0 };
-                if (!item || typeof item !== 'object') return null;
-                const text = String(item.title || item.name || item.text || item.description || item.content || '').trim();
-                const order = Number(item.order ?? item.order_num ?? item.sort_order ?? 0);
-                return text ? { text, order: Number.isFinite(order) ? order : 0 } : null;
-            })
-            .filter(Boolean)
-            .sort((a, b) => a.order - b.order);
 
+    services.forEach(service => {
         let itemsHtml = '';
-        normalizedItems.forEach((item) => {
-            itemsHtml += `<li>${item.text}</li>`;
+        service.items.forEach(item => {
+            itemsHtml += `<li>${item}</li>`;
         });
 
         html += `
@@ -608,8 +541,8 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="${getServiceDetailPage(service)}" class="service-btn">
-                    ${service.cta || "Ətraflı..."}
+                <a href="#${service.target}" data-scroll-target="${service.target}" class="service-btn">
+                    ${service.cta}
                 </a>
             </article>
         `;
@@ -1244,11 +1177,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Xidmətləri yüklə
-    if (typeof loadServicesFromApi === 'function') {
-        loadServicesFromApi();
+    if (typeof loadServicesFromStorage === 'function') {
+        loadServicesFromStorage();
     } else {
-        console.warn('loadServicesFromApi tapılmadı');
-        renderServicesOnPage([]);
+        console.warn('loadServicesFromStorage tapılmadı');
+        loadDefaultServices(); // main.js-də bu funksiya olmalıdır
     }
 
     // Partnyorları yüklə
