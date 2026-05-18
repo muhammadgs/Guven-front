@@ -25,7 +25,7 @@
   z-index: 2;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 46px 64px 0;
+  padding: 46px 0px 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
@@ -71,12 +71,12 @@
   z-index: 2;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 110px 64px 120px;
+  padding: 110px 40px 120px;
 }
 
 .service-detail-hero {
   width: min(560px, 100%);
-  margin-left: 70px;
+  margin-left: 20px;
 }
 
 #service-detail-title {
