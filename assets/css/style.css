@@ -1263,6 +1263,7 @@ body.loaded #site-shell {
     display: flex;
     flex-wrap: wrap;
     justify-content: center; /* Bu, aşağıda qalan kartları ortalayır */
+    align-items: stretch;
     gap: 24px;
 }
 
@@ -1270,6 +1271,9 @@ body.loaded #site-shell {
 .service-card {
     flex: 0 0 100%;
     max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     /* Kartın vizual stilləri */
     border: 1px solid #E5E7EB;
     background: #F9FAFB;
@@ -1309,14 +1313,15 @@ body.loaded #site-shell {
     color: #111827;
 }
 .service-list {
-    margin: 16px 0 0 18px;
+    margin: 16px 0 24px 18px;
     padding: 0;
     color: #4B5563;
     line-height: 1.7;
 }
 .service-btn {
     display: inline-block;
-    margin-top: 18px;
+    margin-top: auto;
+    align-self: flex-start;
     border-radius: 2.5rem;
     background: #2563EB;
     color: #fff;
