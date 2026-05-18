@@ -626,8 +626,10 @@ function renderServicesOnPage(services) {
             .map(({ item }) => getServiceItemText(item))
             .filter(Boolean);
 
-        const itemsHtml = visibleItems.length
-            ? visibleItems.map(text => `<li>${escapeHtml(text)}</li>`).join('')
+        const previewItems = visibleItems.slice(0, 3);
+
+        const itemsHtml = previewItems.length
+            ? previewItems.map(text => `<li>${escapeHtml(text)}</li>`).join('')
             : '<li class="service-empty-item">Məlumat tezliklə əlavə olunacaq</li>';
 
         const serviceName = escapeHtml(service.name || 'Xidmət');
