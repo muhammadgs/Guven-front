@@ -72,12 +72,22 @@
             }).join('');
         }
 
-        const richDescription = normalizeEditorHtml(service.content || service.full_description || service.description_html || '');
-        const plainDescription = String(service.description || '').trim();
-        if (richDescription) {
-            desc.innerHTML = sanitizeRichHtml(richDescription);
-        } else if (plainDescription) {
-            desc.innerHTML = '<p>' + escapeHtml(plainDescription) + '</p>';
+        const rawDescription =
+            service.descriptionHtml ||
+            service.content ||
+            service.fullDescription ||
+            service.full_description ||
+            service.description_html ||
+            service.description ||
+            '';
+        const normalizedDescription = normalizeEditorHtml(rawDescription);
+
+        if (normalizedDescription) {
+            if (containsHtmlTags(normalizedDescription)) {
+                desc.innerHTML = sanitizeRichHtml(normalizedDescription);
+            } else {
+                desc.innerHTML = '<p>' + escapeHtml(normalizedDescription) + '</p>';
+            }
         } else {
             desc.innerHTML = '';
         }
@@ -94,6 +104,10 @@
         const clean = String(html || '').trim();
         if (!clean || clean === '<p><br></p>') return '';
         return clean;
+    }
+
+    function containsHtmlTags(value) {
+        return /<[^>]+>/.test(String(value || ''));
     }
 
     function stripHtml(html) {
