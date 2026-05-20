@@ -77,18 +77,28 @@ async function loadServices(status = null) {
         const result = await makeApiRequest(endpoint, 'GET', null, true);
 
         if (result && result.success && result.data) {
-            servicesData = result.data.map(service => ({
-                id: service.id,
-                name: service.name,
-                items: service.items ? service.items.map(item => item.text || item.title || item.name || item.description || '') : [],
-                order: service.order_num || service.order || 0,
-                cta: service.cta_text || 'Ətraflı...',
-                target: service.cta_target || 'konsultasiya',
-                active: service.status === 'active',
-                description: service.description || '',
-                content: service.content || service.full_description || service.description || '',
-                fullDescription: service.content || service.full_description || service.description || ''
-            }));
+            servicesData = result.data.map(service => {
+                const descriptionHtml =
+                    service.description_html ||
+                    service.content ||
+                    service.full_description ||
+                    service.description ||
+                    '';
+
+                return {
+                    id: service.id,
+                    name: service.name,
+                    items: service.items ? service.items.map(item => item.text || item.title || item.name || item.description || '') : [],
+                    order: service.order_num || service.order || 0,
+                    cta: service.cta_text || 'Ətraflı...',
+                    target: service.cta_target || 'konsultasiya',
+                    active: service.status === 'active',
+                    description: service.description || '',
+                    content: descriptionHtml,
+                    fullDescription: descriptionHtml,
+                    descriptionHtml: descriptionHtml
+                };
+            });
 
             localStorage.setItem('guvenfinans-services', JSON.stringify(servicesData));
             renderServicesTable();
@@ -200,7 +210,12 @@ function editService(id) {
 
     document.querySelector('#serviceModal .modal-title').textContent = 'Xidməti Redaktə Et';
     openModal('serviceModal');
-    const descriptionHtml = service.content || service.fullDescription || service.description || '';
+    const descriptionHtml =
+        service.descriptionHtml ||
+        service.content ||
+        service.fullDescription ||
+        service.description ||
+        '';
     setTimeout(() => {
         initServiceDescriptionEditor();
         setServiceDescriptionHtml(descriptionHtml);
@@ -216,6 +231,12 @@ async function saveService() {
     const target = document.getElementById('serviceTarget').value.trim();
     const active = document.getElementById('serviceIsActive').checked;
     const descriptionHtml = normalizeEditorHtml(getServiceDescriptionHtml());
+    const hiddenDescription = document.getElementById('serviceDescription');
+    if (hiddenDescription) {
+        hiddenDescription.value = descriptionHtml;
+    }
+    const cleanDescriptionHtml = descriptionHtml || '';
+    const cleanDescriptionText = stripHtml(cleanDescriptionHtml);
 
     // Maddələri topla
     const itemInputs = document.querySelectorAll('.service-item');
@@ -256,9 +277,11 @@ async function saveService() {
     const serviceData = {
         name: name,
         slug: slug,
-        description: stripHtml(descriptionHtml) || name,
-        content: descriptionHtml,
-        full_description: descriptionHtml,
+        description: cleanDescriptionHtml,
+        content: cleanDescriptionHtml,
+        full_description: cleanDescriptionHtml,
+        description_html: cleanDescriptionHtml,
+        description_text: cleanDescriptionText,
         image_url: null,
         icon: "fa-chart-bar",
         order_num: order,
@@ -269,6 +292,8 @@ async function saveService() {
         items: items
     };
 
+    console.log('📝 Service description HTML:', cleanDescriptionHtml);
+    console.log('📝 Service description text:', cleanDescriptionText);
     console.log("📤 Göndərilən məlumat:", JSON.stringify(serviceData, null, 2));
 
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -291,6 +316,11 @@ async function saveService() {
             alert(serviceId ? 'Xidmət yeniləndi!' : 'Xidmət yaradıldı!');
             closeModal('serviceModal');
             await loadServices();
+            const savedService = servicesData.find(s => String(s.id) === String(serviceId || result.data?.id));
+            console.log('✅ Saved service after reload:', savedService);
+            if (!savedService || !(savedService.description || savedService.content || savedService.fullDescription || savedService.descriptionHtml)) {
+                console.warn('Backend did not return saved service description. Check API schema for service description field.');
+            }
         } else {
             const errorMsg = result?.error || result?.detail || 'Xidmət saxlanılmadı';
             alert(`Xəta: ${errorMsg}`);

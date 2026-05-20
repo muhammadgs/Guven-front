@@ -331,12 +331,22 @@ const ApiMainService = (function() {
             const name = String(raw.name || raw.title || raw.service_name || '').trim();
             const slug = normalizeAzServiceSlug(raw.slug || name);
 
+            const richDescription =
+                raw.description_html ||
+                raw.content ||
+                raw.full_description ||
+                raw.long_description ||
+                raw.description ||
+                '';
+
             return {
                 id: raw.id || raw.service_id || null,
                 name,
                 slug,
-                description: String(raw.description || raw.text || '').trim(),
-                content: String(raw.content || raw.full_description || raw.long_description || raw.description_html || raw.description || raw.text || '').trim(),
+                description: String(raw.description || '').trim(),
+                content: String(richDescription || '').trim(),
+                descriptionHtml: String(richDescription || '').trim(),
+                fullDescription: String(richDescription || '').trim(),
                 items: normalizedItems,
                 order: Number(raw.order || raw.sort_order || 0) || 0,
                 active: typeof raw.active === 'boolean' ? raw.active : (typeof raw.is_active === 'boolean' ? raw.is_active : true),
