@@ -1,8 +1,6 @@
 (function () {
     'use strict';
 
-    const FALLBACK_DESCRIPTION = 'Bu xidmət üzrə peşəkar dəstək təqdim edirik.';
-
     function normalizeAzSlug(value) {
         return String(value || '')
             .replace(/[Əə]/g, 'e')
@@ -26,8 +24,9 @@
         return {
             status: document.getElementById('service-detail-status'),
             title: document.getElementById('service-detail-title'),
-            desc: document.getElementById('service-detail-description'),
-            items: document.getElementById('service-detail-items')
+            items: document.getElementById('service-detail-items'),
+            descriptionSection: document.getElementById('service-detail-description-section'),
+            description: document.getElementById('service-detail-description')
         };
     }
 
@@ -95,7 +94,7 @@
     }
 
     function renderService(service) {
-        const { title, desc, items } = getEls();
+        const { title, items } = getEls();
         title.textContent = service.name || 'Xidmət';
 
         const normalizedItems = Array.isArray(service.items)
@@ -113,34 +112,37 @@
             }).join('');
         }
 
-        const rawDescription = getServiceRichDescription(service);
-        console.log('DESCRIPTION THAT WILL BE RENDERED:', rawDescription);
-        const normalizedDescription = normalizeEditorHtml(rawDescription);
+        renderServiceDescription(service);
+        renderState('success', 'Məlumatlar yeniləndi.');
+    }
 
-        if (normalizedDescription) {
-            if (containsHtmlTags(normalizedDescription)) {
-                desc.innerHTML = sanitizeRichHtml(normalizedDescription);
-            } else {
-                desc.innerHTML = '<p>' + escapeHtml(normalizedDescription) + '</p>';
-            }
-            desc.style.display = 'block';
-            desc.classList.remove('hidden');
-        } else {
-            desc.innerHTML = '';
-            desc.style.display = 'none';
-            desc.classList.add('hidden');
-            console.warn('Service description is missing on detail page. Public API response probably does not expose DB description.', {
-                service,
-                original: service.original
-            });
+    function renderServiceDescription(service) {
+        const { descriptionSection, description } = getEls();
+        if (!descriptionSection || !description) return;
+
+        const rawDescription = normalizeEditorHtml(getServiceRichDescription(service));
+
+        console.log('DESCRIPTION THAT WILL BE INSERTED INTO HTML:', rawDescription);
+
+        if (!rawDescription) {
+            description.innerHTML = '';
+            descriptionSection.hidden = true;
+            console.warn('No service description returned from public API for this service:', service);
+            return;
         }
 
-        desc.querySelectorAll('a').forEach((a) => {
+        if (containsHtmlTags(rawDescription)) {
+            description.innerHTML = sanitizeRichHtml(rawDescription);
+        } else {
+            description.innerHTML = '<p>' + escapeHtml(rawDescription) + '</p>';
+        }
+
+        description.querySelectorAll('a').forEach((a) => {
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
         });
 
-        renderState('success', 'Məlumatlar yeniləndi.');
+        descriptionSection.hidden = false;
     }
 
     function normalizeEditorHtml(html) {

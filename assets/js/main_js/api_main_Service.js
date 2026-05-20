@@ -377,8 +377,6 @@ const ApiMainService = (function() {
                 slug,
                 description: richDescription,
                 content: richDescription,
-                description_html: richDescription,
-                full_description: richDescription,
                 descriptionHtml: richDescription,
                 fullDescription: richDescription,
                 items: normalizedItems,
@@ -424,15 +422,14 @@ const ApiMainService = (function() {
             const result = await apiFetch(`/services/public/${encodeURIComponent(normalizedSlug)}`);
             if (!result.success) return result;
 
-            const payload = result.data;
-            const raw = unwrapServicePayload(payload);
-
+            const raw = unwrapServicePayload(result.data);
             const normalized = services.normalizeService(raw);
             if (!normalized) return { success: false, data: null, error: 'Xidmət məlumatı tapılmadı' };
 
-            console.log('PUBLIC SERVICE DETAIL RAW:', result.data);
-            console.log('PUBLIC SERVICE DETAIL UNWRAPPED:', raw);
-            console.log('PUBLIC SERVICE DETAIL NORMALIZED:', normalized);
+            console.log('PUBLIC DETAIL RAW RESPONSE:', result.data);
+            console.log('PUBLIC DETAIL UNWRAPPED SERVICE:', raw);
+            console.log('PUBLIC DETAIL NORMALIZED SERVICE:', normalized);
+            console.log('PUBLIC DETAIL DESCRIPTION VALUE:', normalized?.descriptionHtml || normalized?.content || normalized?.description);
 
             if (!extractServiceDescription(raw || {})) {
                 console.warn('Public service API does not return description. Backend/public serializer must expose description/content.');

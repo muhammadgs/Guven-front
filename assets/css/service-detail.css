@@ -87,10 +87,30 @@
   color: #050B1F;
 }
 
+.service-detail-description-section {
+  margin-top: 42px;
+  width: min(760px, 100%);
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 28px;
+  padding: 26px 30px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.service-detail-description-section[hidden] {
+  display: none !important;
+}
+
+.service-detail-description-label {
+  margin-bottom: 14px;
+  font-family: 'Cal Sans', 'Poppins', sans-serif;
+  font-size: 24px;
+  color: #050B1F;
+}
+
 .service-detail-description {
   display: block;
-  margin-top: 38px;
-  width: min(760px, 100%);
   color: #050B1F;
   font-family: 'Poppins', sans-serif;
   font-weight: 300;
@@ -100,10 +120,6 @@
 
 .service-detail-description:empty {
   display: none;
-}
-
-.hidden {
-  display: none !important;
 }
 
 .service-detail-description h2,
@@ -120,6 +136,15 @@
 .service-detail-description ul,
 .service-detail-description ol {
   margin: 0 0 18px 24px;
+}
+
+.service-detail-description li {
+  margin-bottom: 8px;
+}
+
+.service-detail-description strong,
+.service-detail-description b {
+  font-weight: 700;
 }
 
 .service-detail-description a {
