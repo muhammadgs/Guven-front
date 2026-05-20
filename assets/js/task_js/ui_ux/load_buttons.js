@@ -303,23 +303,31 @@ function getRealCompanyIdFromToken() {
 
 
     // ==================== CƏDVƏL TİPİNƏ GÖRƏ TASKLARI YÜKLƏ ====================
+    // load_buttons.js - fetchTasksByTableType funksiyasında ACTIVE hissəsini DƏYİŞİN
+
     async function fetchTasksByTableType(tableType, userInfo, limit, config) {
 
-        // ===== ACTIVE =====
+        // ===== ACTIVE - DÜZƏLDİLMİŞ VERSİYA =====
         if (tableType === 'active') {
             const queryParams = new URLSearchParams({
                 page: 1,
                 limit: limit,
                 status: config.apiStatus,
-                assigned_to: userInfo.userId
+                // 🔥 assigned_to-ni GÖNDƏRMƏ - bütün taskları gətir
+                // include_all_companies: 'true'  // İstəyə görə əlavə edin
             });
+
+            // 🔥 assigned_to filtri SİLİNDİ
+            // 🔥 Əgər bütün şirkətlərin tasklarını istəyirsinizsə, include_all_companies əlavə edin:
+            // queryParams.append('include_all_companies', 'true');
+
             const apiUrl = `/tasks/detailed?${queryParams.toString()}`;
             console.log(`📡 ${tableType} API: ${apiUrl}`);
             const response = await makeApiRequest(apiUrl, 'GET');
             return parseTasksResponse(response);
         }
 
-        // ===== EXTERNAL =====
+        // ===== EXTERNAL ===== (dəyişmir)
         if (tableType === 'external') {
             console.log(`📡 ${tableType} API: /tasks-external/`);
             const response = await window.taskManager.apiRequest('/tasks-external/', 'GET');
@@ -338,7 +346,7 @@ function getRealCompanyIdFromToken() {
             return tasks.slice(0, limit);
         }
 
-        // ===== PARTNER =====
+        // ===== PARTNER ===== (dəyişmir)
         if (tableType === 'partner') {
             const queryParams = new URLSearchParams({
                 page: 1,
@@ -368,7 +376,7 @@ function getRealCompanyIdFromToken() {
             return tasks;
         }
 
-        // ===== ARCHIVE =====
+        // ===== ARCHIVE ===== (dəyişmir)
         if (tableType === 'archive') {
             const activeArchiveTab = document.querySelector('.archive-tab-btn.active');
             let archiveType = 'internal';
@@ -390,10 +398,7 @@ function getRealCompanyIdFromToken() {
             let response = null;
             let tasks = [];
 
-            // 🔥🔥🔥 BURADA YENİ FUNKSİYADAN İSTİFADƏ EDİN! 🔥🔥🔥
-            const realCompanyId = getRealCompanyIdFromToken();
-            console.log('🎯 ARCHIVE SORĞUSU ÜÇÜN COMPANY_ID:', realCompanyId);
-
+            // 🔥 Burada da include_all_companies əlavə edə bilərsiniz
             if (archiveType === 'external') {
                 apiUrl = `/task-archive/external?page=1&limit=${limit}`;
                 console.log(`📡 External Archive API: ${apiUrl}`);
@@ -405,13 +410,12 @@ function getRealCompanyIdFromToken() {
                 response = await makeApiRequest(apiUrl, 'GET');
             }
             else {
-                // 🔥 MÜTLƏQ realCompanyId GEDİR!
-                const queryParams = new URLSearchParams({
-                    page: 1,
-                    limit: limit,
-                    company_id: realCompanyId
-                });
-                apiUrl = `/task-archive/?${queryParams.toString()}`;
+                // Internal archive - company_id GÖNDƏRMƏ (bütün tasklar)
+                const realCompanyId = getRealCompanyIdFromToken();
+                console.log('🎯 ARCHIVE SORĞUSU ÜÇÜN COMPANY_ID:', realCompanyId);
+
+                // 🔥 include_all_companies parametri əlavə edildi
+                apiUrl = `/task-archive/?page=1&limit=${limit}&include_all_companies=true`;
                 console.log(`📡 Internal Archive API: ${apiUrl}`);
                 response = await makeApiRequest(apiUrl, 'GET');
             }

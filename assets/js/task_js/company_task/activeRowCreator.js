@@ -1032,7 +1032,7 @@ const ActiveRowCreator = {
             dueDateTitle = '✅ Deadline bugün';
         }
 
-        let fileColumnHTML = '<span class="text-muted" style="color:#94a3b8;">-</span>';
+        let fileColumnHTML = '<span class="text-muted">-</span>';
         let attachments = [];
 
         if (task.file_uuids) {
@@ -1057,6 +1057,7 @@ const ActiveRowCreator = {
                 }));
             }
         }
+
 
         if (attachments.length === 0 && task.attachments) {
             try {

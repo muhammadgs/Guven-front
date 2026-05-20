@@ -1225,15 +1225,25 @@
 
     async function handleSubmit() {
         try {
+            // ========== 1. VALİDASİYALAR ==========
             const form = document.getElementById('newtaskForm');
             if (!form.checkValidity()) { form.reportValidity(); return; }
 
             if (currentTaskType === 'internal') {
-                if (!document.getElementById('newtaskCompanySelect').value) { showNotification('Şirkət seçin', 'error'); return; }
+                if (!document.getElementById('newtaskCompanySelect').value) {
+                    showNotification('Şirkət seçin', 'error');
+                    return;
+                }
             } else if (currentTaskType === 'parent') {
-                if (!document.getElementById('newtaskParentSelect').value) { showNotification('Şirkət seçin', 'error'); return; }
+                if (!document.getElementById('newtaskParentSelect').value) {
+                    showNotification('Şirkət seçin', 'error');
+                    return;
+                }
             } else if (currentTaskType === 'partner') {
-                if (!document.getElementById('newtaskPartnerSelect').value) { showNotification('Partnyor seçin', 'error'); return; }
+                if (!document.getElementById('newtaskPartnerSelect').value) {
+                    showNotification('Partnyor seçin', 'error');
+                    return;
+                }
             }
 
             const departmentId = document.getElementById('newtaskDepartmentSelect').value;
@@ -1256,130 +1266,184 @@
 
             const isVisible = document.getElementById('newtaskIsVisible').checked;
 
-            let targetCompanyId = null;
-            if (currentTaskType === 'internal') {
-                targetCompanyId = parseInt(document.getElementById('newtaskCompanySelect').value);
+            // ========== 2. BÜTÜN FAYLLARI TOPLA ==========
+            const allFiles = [];
+
+            // File input-dan fayllar
+            const fileInput = document.getElementById('newtaskFileInput');
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                Array.from(fileInput.files).forEach(f => allFiles.push(f));
             }
 
-            let parentCompanyId = null, parentCompanyName = '';
-            if (currentTaskType === 'parent') {
-                parentCompanyId = parseInt(document.getElementById('newtaskParentSelect').value);
-                const pSel = document.getElementById('newtaskParentSelect');
-                if (pSel?.selectedIndex > 0) {
-                    parentCompanyName = pSel.options[pSel.selectedIndex].text
-                        .replace(/⬆️|✅|⏳/g, '').trim();
+            // modalSelectedFiles (drag-drop, PrtScn)
+            if (window.modalSelectedFiles && window.modalSelectedFiles.length > 0) {
+                window.modalSelectedFiles.forEach(f => {
+                    const isDuplicate = allFiles.some(af => af.name === f.name && af.size === f.size);
+                    if (!isDuplicate) allFiles.push(f);
+                });
+            }
+
+            // Audio data (əgər varsa)
+            const audioDataInput = document.getElementById('newtaskAudioData');
+            const audioFilenameInput = document.getElementById('newtaskAudioFilename');
+
+            if (audioDataInput?.value && audioFilenameInput?.value) {
+                const alreadyAdded = allFiles.some(f => f.name === audioFilenameInput.value);
+                if (!alreadyAdded) {
+                    try {
+                        let base64Data = audioDataInput.value;
+                        if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
+                        const byteCharacters = atob(base64Data);
+                        const byteArray = new Uint8Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteArray[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
+                        const audioFile = new File([audioBlob], audioFilenameInput.value, { type: 'audio/webm' });
+                        allFiles.push(audioFile);
+                    } catch (err) {
+                        console.error('Audio xətası:', err);
+                    }
                 }
             }
 
-            let partnerCompanyId = null, partnerName = '';
-            if (currentTaskType === 'partner') {
-                partnerCompanyId = parseInt(document.getElementById('newtaskPartnerSelect').value);
-                const partSel = document.getElementById('newtaskPartnerSelect');
-                if (partSel?.selectedIndex > 0) {
-                    partnerName = partSel.options[partSel.selectedIndex].text
+            console.log(`📎 ${allFiles.length} fayl yüklənəcək`);
+
+            // ========== 3. BÜTÜN FAYLLARI YÜKLƏ (SIRAYLA) ==========
+            if (allFiles.length > 0) {
+                showNotification(`${allFiles.length} fayl yüklənir...`, 'info');
+            }
+
+            const uploadedUuids = [];
+
+            for (let i = 0; i < allFiles.length; i++) {
+                const file = allFiles[i];
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const isAudio = file.type.startsWith('audio/') ||
+                                   file.name.includes('recording') ||
+                                   file.name.includes('.webm');
+
+                    formData.append('category', isAudio ? 'audio_recording' : 'company_file');
+                    if (isAudio) formData.append('is_audio_recording', 'true');
+
+                    console.log(`📤 Fayl yüklənir (${i+1}/${allFiles.length}): ${file.name}`);
+
+                    const uploadResponse = await makeApiRequest('/files/simple-upload', 'POST', formData, true);
+
+                    const fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id;
+                    if (fileUuid) {
+                        uploadedUuids.push(fileUuid);
+                        console.log(`✅ ${file.name} -> ${fileUuid}`);
+                    } else {
+                        console.error(`❌ ${file.name} UUID alınmadı!`);
+                    }
+                } catch (fileErr) {
+                    console.error(`❌ ${file.name} xətası:`, fileErr);
+                }
+            }
+
+            console.log(`📦 Yüklənmiş UUID-lər: ${uploadedUuids.length} ədəd`, uploadedUuids);
+
+            // ========== 4. TASK MƏLUMATLARINI HAZIRLA ==========
+            let targetCompanyId = null;
+            let targetCompanyName = '';
+            let selectedCompanyName = '';
+
+            if (currentTaskType === 'internal') {
+                const companySelect = document.getElementById('newtaskCompanySelect');
+                if (companySelect?.selectedIndex > 0) {
+                    targetCompanyId = parseInt(companySelect.value);
+                    selectedCompanyName = companySelect.options[companySelect.selectedIndex].text;
+                }
+            } else if (currentTaskType === 'parent') {
+                const parentSelect = document.getElementById('newtaskParentSelect');
+                if (parentSelect?.selectedIndex > 0) {
+                    targetCompanyId = parseInt(parentSelect.value);
+                    selectedCompanyName = parentSelect.options[parentSelect.selectedIndex].text
+                        .replace(/⬆️|✅|⏳/g, '').trim();
+                }
+            } else if (currentTaskType === 'partner') {
+                const partnerSelect = document.getElementById('newtaskPartnerSelect');
+                if (partnerSelect?.selectedIndex > 0) {
+                    targetCompanyId = parseInt(partnerSelect.value);
+                    selectedCompanyName = partnerSelect.options[partnerSelect.selectedIndex].text
                         .replace(/🤝|✅|⏳/g, '').trim();
                 }
             }
 
+            // ========== 5. TASK YARAT (YÜKLƏNMİŞ UUID-LƏR İLƏ) ==========
             showNotification('Tapşırıq yaradılır...', 'info');
 
-            let endpoint = '', apiData = {};
+            let endpoint = '';
+            let apiData = {};
+
+            const metadata = {
+                display_company_name: selectedCompanyName,
+                target_company_name: selectedCompanyName,
+                original_company_name: selectedCompanyName,
+                company_name: selectedCompanyName,
+                company_id: targetCompanyId,
+                created_by_company: window.taskManager?.userData?.companyName || window.taskManager?.userData?.companyCode,
+                created_by_company_id: window.taskManager?.userData?.companyId,
+                target_company_id: targetCompanyId,
+                created_by_user_id: window.taskManager?.userData?.userId,
+                created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name,
+                created_at: new Date().toISOString(),
+                task_type: currentTaskType,
+                due_date: dueDate
+            };
+
+            const baseData = {
+                task_title: " ",
+                task_description: description,
+                assigned_to: assignedTo || otherExecutorId,
+                priority: "medium",
+                status: "pending_approval",
+                due_date: dueDate,
+                progress_percentage: 0,
+                is_billable: false,
+                department_id: parseInt(departmentId),
+                work_type_id: parseInt(taskTypeId),
+                created_by: window.taskManager?.userData?.userId,
+                creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
+                metadata: JSON.stringify(metadata),
+                file_uuids: uploadedUuids  // 🔥 BURADA - YÜKLƏNMİŞ UUID-LƏR
+            };
 
             if (currentTaskType === 'internal') {
-                const companySelect = document.getElementById('newtaskCompanySelect');
-                let selectedCompanyName = '';
-                let selectedCompanyId = targetCompanyId;
-                if (companySelect?.selectedIndex > 0) {
-                    selectedCompanyName = companySelect.options[companySelect.selectedIndex].text;
-                    if (companySelect.value) selectedCompanyId = parseInt(companySelect.value);
-                }
-
-                const metadata = {
-                    display_company_name: selectedCompanyName,
-                    target_company_name: selectedCompanyName,
-                    original_company_name: selectedCompanyName,
-                    company_name: selectedCompanyName,
-                    company_id: selectedCompanyId,
-                    created_by_company: window.taskManager?.userData?.companyName || window.taskManager?.userData?.companyCode,
-                    created_by_company_id: window.taskManager?.userData?.companyId,
-                    target_company_id: selectedCompanyId,
-                    created_by_user_id: window.taskManager?.userData?.userId,
-                    created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name,
-                    created_at: new Date().toISOString(),
-                    task_type: 'internal',
-                    due_date: dueDate
-                };
-
                 endpoint = '/tasks/';
                 apiData = {
-                    task_title: " ",
-                    task_description: description,
-                    assigned_to: assignedTo || otherExecutorId,
-                    priority: "medium",
-                    status: "pending",
-                    due_date: dueDate,
-                    progress_percentage: 0,
-                    is_billable: false,
-                    company_id: selectedCompanyId,
+                    ...baseData,
+                    company_id: targetCompanyId,
                     company_name: selectedCompanyName,
-                    department_id: parseInt(departmentId),
-                    work_type_id: parseInt(taskTypeId),
-                    is_visible_to_other_companies: isVisible,
-                    created_by: window.taskManager?.userData?.userId,
-                    creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
-                    metadata: JSON.stringify(metadata)
+                    is_company_viewable: isVisible,
+                    viewable_company_id: isVisible ? targetCompanyId : null
                 };
             } else if (currentTaskType === 'parent') {
                 endpoint = '/tasks-external/';
                 apiData = {
-                    company_id: window.taskManager?.userData?.companyId || 51,
-                    task_title: " ",
-                    task_description: description,
-                    assigned_to: assignedTo || otherExecutorId,
-                    department_id: parseInt(departmentId),
-                    priority: "medium",
-                    status: "pending",
-                    due_date: dueDate,
-                    work_type_id: parseInt(taskTypeId),
-                    progress_percentage: 0,
-                    is_billable: false,
-                    target_company_id: parentCompanyId,
-                    target_company_name: parentCompanyName,
-                    viewable_company_id: parentCompanyId,
-                    created_by: window.taskManager?.userData?.userId || 134,
-                    creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
+                    ...baseData,
+                    company_id: window.taskManager?.userData?.companyId,
+                    target_company_id: targetCompanyId,
+                    target_company_name: selectedCompanyName,
+                    viewable_company_id: targetCompanyId,
                     is_for_subsidiary: false
                 };
             } else if (currentTaskType === 'partner') {
                 endpoint = '/partner-tasks/';
-                const metadata = {
-                    task_type: 'partner',
-                    partner_name: partnerName,
-                    partner_id: partnerCompanyId,
-                    created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem'
-                };
                 apiData = {
+                    ...baseData,
                     company_id: window.taskManager?.userData?.companyId,
-                    partner_id: partnerCompanyId,
-                    partner_name: partnerName,
-                    task_title: " ",
-                    task_description: description,
-                    assigned_to: assignedTo || otherExecutorId,
-                    department_id: parseInt(departmentId),
-                    priority: "medium",
-                    status: "pending",
-                    due_date: dueDate,
-                    work_type_id: parseInt(taskTypeId),
-                    progress_percentage: 0,
-                    is_billable: false,
+                    partner_id: targetCompanyId,
+                    partner_name: selectedCompanyName,
                     product_serial: `SN-${Date.now()}`,
                     product_model: "Default Model",
                     product_category: "General",
                     contract_number: `CT-${Date.now()}`,
-                    purchase_order_number: `PO-${Date.now()}`,
-                    created_by: window.taskManager?.userData?.userId || 134,
-                    creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
-                    metadata: JSON.stringify(metadata)
+                    purchase_order_number: `PO-${Date.now()}`
                 };
             }
 
@@ -1391,185 +1455,36 @@
             });
 
             console.log(`📤 ${currentTaskType.toUpperCase()} TASK:`, JSON.stringify(apiData, null, 2));
+
             const response = await makeApiRequest(endpoint, 'POST', apiData);
             console.log('📥 API cavabı:', response);
 
-            // Task ID tap
-            let taskId = response?.id || response?.data?.id || response?.task_id;
-            if (!taskId && response?.task?.id) taskId = response.task.id;
-            if (!taskId) throw new Error(response?.detail || response?.message || 'Task ID alınmadı');
+            const taskId = response?.task?.id || response?.id || response?.data?.id;
 
-            // ========== 🔥 FAYL VƏ AUDIO YÜKLƏMƏ (DÜZGÜN VERSİYA) ==========
-            if (taskId) {
-                console.log(`📦 Task yaradıldı (ID: ${taskId}), fayllar yüklənir...`);
-
-                // 1. File input-dan seçilmiş faylları yüklə
-                const fileInput = document.getElementById('newtaskFileInput');
-                if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                    const files = Array.from(fileInput.files);
-                    console.log(`📎 ${files.length} fayl yüklənir...`);
-
-                    for (const file of files) {
-                        try {
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            formData.append('category', 'company_file');
-
-                            const uploadResponse = await makeApiRequest('/files/simple-upload', 'POST', formData, true);
-                            console.log(`📥 ${file.name} yükləmə cavabı:`, uploadResponse);
-
-                            let fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id;
-                            if (fileUuid) {
-                                await addUuidToTask(taskId, fileUuid);
-                                console.log(`✅ ${file.name} yükləndi -> ${fileUuid}`);
-                            } else {
-                                console.warn(`⚠️ ${file.name} yükləndi amma UUID alınmadı`);
-                            }
-                        } catch (fileErr) {
-                            console.error(`❌ ${file.name} yükləmə xətası:`, fileErr);
-                        }
-                    }
-                } else {
-                    console.log('ℹ️ Yüklənəcək fayl yoxdur');
-                }
-
-                // ========== AUDIO YÜKLƏMƏ (DÜZGÜN VERSİYA) ==========
-                // 2. Audio qeydini yüklə (əgər varsa)
-                const audioDataInput = document.getElementById('newtaskAudioData');
-                const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-
-                console.log('🔍 Audio məlumatları yoxlanılır:');
-                console.log('   audioDataInput:', audioDataInput ? 'VAR' : 'YOX');
-                console.log('   audioDataInput.value:', audioDataInput?.value ? `${audioDataInput.value.substring(0, 100)}...` : 'YOX');
-                console.log('   audioFilenameInput:', audioFilenameInput ? 'VAR' : 'YOX');
-                console.log('   audioFilenameInput.value:', audioFilenameInput?.value);
-
-                if (audioDataInput && audioDataInput.value && audioFilenameInput && audioFilenameInput.value) {
-                    console.log('🎤 Audio qeydi tapıldı, yüklənir...');
-                    console.log(`   Filename: ${audioFilenameInput.value}`);
-                    console.log(`   Data uzunluğu: ${audioDataInput.value.length} chars`);
-
-                    try {
-                        let base64Data = audioDataInput.value;
-
-                        // 🔥 ƏHƏMİYYƏTLİ: data:audio/webm;base64, formatını təmizlə
-                        if (base64Data.includes(',')) {
-                            base64Data = base64Data.split(',')[1];
-                            console.log('   Base64 təmizləndi (data:audio formatı)');
-                        }
-
-                        // Base64-dən Blob yarat
-                        const byteCharacters = atob(base64Data);
-                        const byteNumbers = new Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const byteArray = new Uint8Array(byteNumbers);
-                        const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
-                        const audioFile = new File([audioBlob], audioFilenameInput.value, { type: 'audio/webm' });
-
-                        console.log(`   Audio ölçüsü: ${audioBlob.size} bytes`);
-
-                        const formData = new FormData();
-                        formData.append('file', audioFile);
-                        formData.append('category', 'audio_recording');
-                        formData.append('is_audio_recording', 'true');
-
-                        const uploadResponse = await makeApiRequest('/files/simple-upload', 'POST', formData, true);
-                        console.log('📥 Audio yükləmə cavabı:', uploadResponse);
-
-                        let audioUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id;
-                        if (audioUuid) {
-                            await addUuidToTask(taskId, audioUuid);
-                            console.log(`✅ Audio yükləndi -> ${audioUuid}`);
-
-                            // Yükləndikdən sonra audio məlumatlarını təmizlə
-                            audioDataInput.value = '';
-                            audioFilenameInput.value = '';
-
-                            // Audio preview-i gizlət
-                            const audioPreview = document.getElementById('newtaskAudioPreview');
-                            if (audioPreview) audioPreview.style.display = 'none';
-
-                        } else {
-                            console.warn('⚠️ Audio yükləndi amma UUID alınmadı');
-                        }
-                    } catch (audioErr) {
-                        console.error('❌ Audio yükləmə xətası:', audioErr);
-                        console.error('   Xəta detalları:', audioErr.message);
-                    }
-                } else {
-                    console.log('ℹ️ Audio məlumatı yoxdur');
-                    if (!audioDataInput) console.log('   - audioDataInput elementi tapılmadı');
-                    else if (!audioDataInput.value) console.log('   - audioDataInput.value boşdur');
-                    if (!audioFilenameInput) console.log('   - audioFilenameInput elementi tapılmadı');
-                    else if (!audioFilenameInput.value) console.log('   - audioFilenameInput.value boşdur');
-                }
-
-                console.log('✅ Bütün fayllar yükləndi!');
+            if (!taskId) {
+                throw new Error(response?.detail || response?.message || 'Task ID alınmadı');
             }
 
-            // Task status və countdown
-            const taskStatus = response?.task?.status || response?.status || 'pending_approval';
-            const approvalExpiresAt = response?.task?.approval_expires_at || response?.approval_expires_at;
+            console.log(`✅ Task yaradıldı (ID: ${taskId}) ${uploadedUuids.length} fayl ilə`);
 
-            if (taskStatus === 'pending_approval' || taskStatus === 'pending') {
-                const confirmEndTime = approvalExpiresAt
-                    ? new Date(approvalExpiresAt).getTime()
-                    : Date.now() + 2 * 60 * 60 * 1000;
-                localStorage.setItem(`task_confirm_end_${taskId}`, confirmEndTime);
-                console.log(`⏱️ Task ${taskId} üçün təsdiq countdown başladıldı`);
+            // ========== 6. UĞUR BİLDİRİŞİ ==========
+            showNotification(`✅ Tapşırıq uğurla yaradıldı! ${uploadedUuids.length} fayl əlavə edildi.`, 'success');
+
+            // ========== 7. SİYAHILARI YENİLƏ ==========
+            if (window.taskManager?.loadActiveTasks) {
+                setTimeout(() => window.taskManager.loadActiveTasks(1, true), 1000);
             }
 
-            // Uğur bildirişi
-            let companyDisplayName = '';
-            if (currentTaskType === 'internal') {
-                const companySelect = document.getElementById('newtaskCompanySelect');
-                if (companySelect?.selectedIndex > 0) {
-                    companyDisplayName = companySelect.options[companySelect.selectedIndex].text;
-                }
-            }
-            showNotification(`✅ Tapşırıq uğurla yaradıldı!${companyDisplayName ? ` (${companyDisplayName})` : ''}`, 'success');
-
-            // Telegram bildirişi
-            const finalAssignedTo = assignedTo || otherExecutorId;
-            if (taskId && finalAssignedTo && window.TelegramHelper?.notifyTaskCreated) {
-                console.log('📱 Telegram bildirişi göndərilir...');
-                console.log('   taskId:', taskId);
-                console.log('   assigned_to:', finalAssignedTo);
-
-                setTimeout(async () => {
-                    try {
-                        const creatorName = window.taskManager?.userData?.fullName ||
-                                           window.taskManager?.userData?.name ||
-                                           'Sistem';
-
-                        const notificationResult = await window.TelegramHelper.notifyTaskCreated({
-                            task_id: taskId,
-                            assigned_to: parseInt(finalAssignedTo),
-                            task_title: " ",
-                            task_description: description,
-                            priority: "medium",
-                            due_date: dueDate,
-                            creator_name: creatorName,
-                            company_name: companyDisplayName
-                        }, { silent: false });
-
-                        console.log('📬 Telegram nəticəsi:', notificationResult);
-                    } catch (telegramError) {
-                        console.error('❌ Telegram bildiriş xətası:', telegramError);
-                    }
-                }, 1500);
-            }
-
+            // ========== 8. MODALI BAĞLA ==========
             closeModal();
 
-            if (window.taskManager?.loadActiveTasks) {
-                setTimeout(() => window.taskManager.loadActiveTasks(1, false), 1000);
-            }
+            // ========== 9. SEÇİLMİŞ FAYLLARI TƏMİZLƏ ==========
+            window.modalSelectedFiles = [];
+            const fileListEl = document.getElementById('newtaskFileList');
+            if (fileListEl) fileListEl.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
 
         } catch (error) {
-            console.error('❌ Tapşırıq yaratma xətası:', error);
+            console.error('❌ Xəta:', error);
             showNotification('❌ ' + (error.message || 'Tapşırıq yaradılarkən xəta baş verdi'), 'error');
         }
     }
@@ -1578,45 +1493,37 @@
         try {
             console.log(`📝 Task ${taskId}-ə UUID əlavə edilir: ${uuid}`);
 
-            // Task-ın cari məlumatlarını al
-            const taskResponse = await makeApiRequest(`/tasks/${taskId}`, 'GET', null, true);
-            let attachments = [];
-
-            if (!taskResponse.error && taskResponse.data) {
-                const task = taskResponse.data;
-                if (task.attachments) {
-                    try {
-                        attachments = typeof task.attachments === 'string'
-                            ? JSON.parse(task.attachments)
-                            : (Array.isArray(task.attachments) ? task.attachments : []);
-                    } catch(e) {}
+            // 🔥 1. Əvvəlcə mövcud file_uuids-ləri al
+            let currentFileUuids = [];
+            try {
+                const taskResponse = await makeApiRequest(`/tasks/${taskId}`, 'GET', null, true);
+                if (!taskResponse.error && taskResponse.data) {
+                    const task = taskResponse.data;
+                    if (task.file_uuids && Array.isArray(task.file_uuids)) {
+                        currentFileUuids = task.file_uuids;
+                        console.log(`📋 Mövcud file_uuids:`, currentFileUuids);
+                    }
                 }
+            } catch (err) {
+                console.warn('⚠️ Task məlumatları alınarkən xəta:', err);
             }
 
-            // Yeni attachment əlavə et
-            const newAttachment = {
-                file_id: uuid,
-                uuid: uuid,
-                filename: `audio_${Date.now()}.webm`,
-                original_filename: `audio_${Date.now()}.webm`,
-                mime_type: 'audio/webm',
-                is_audio_recording: true,
-                uploaded_at: new Date().toISOString()
-            };
+            // 🔥 2. Yeni UUID-ni əlavə et (təkrarlanmasın)
+            if (!currentFileUuids.includes(uuid)) {
+                currentFileUuids.push(uuid);
+            }
 
-            attachments.push(newAttachment);
-
-            // 🔥 attachments sahəsini yenilə
-            const updateResponse = await makeApiRequest(`/tasks/${taskId}`, 'PATCH', {
-                attachments: JSON.stringify(attachments)
+            // 🔥 3. Birbaşa file_uuids sahəsini yenilə
+            const updateResponse = await makeApiRequest(`/tasks/${taskId}/add-file-uuid`, 'POST', {
+                file_uuid: uuid
             }, true);
 
             if (updateResponse.error) {
-                console.error('❌ Task yenilənə bilmədi:', updateResponse.error);
+                console.error('❌ UUID əlavə edilə bilmədi:', updateResponse.error);
                 return false;
             }
 
-            console.log(`✅ UUID ${uuid} task-a əlavə edildi (attachments vasitəsilə)`);
+            console.log(`✅ UUID ${uuid} task ${taskId}-yə əlavə edildi (file_uuids)`);
             return true;
 
         } catch (error) {

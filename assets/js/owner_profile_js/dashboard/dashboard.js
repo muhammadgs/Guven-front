@@ -367,9 +367,10 @@ class DashboardManager {
                 status: statusParam
             });
 
-            if (this.userId) {
-                queryParams.append('assigned_to', this.userId);
-            }
+            // 🔥 BURADAKİ assigned_to filtri SİLİNDİ - BÜTÜN TASKLAR GƏLSİN
+            // if (this.userId) {
+            //     queryParams.append('assigned_to', this.userId);
+            // }
 
             if (this.userCompanyCode) {
                 queryParams.append('company_code', this.userCompanyCode);
@@ -378,43 +379,61 @@ class DashboardManager {
             const url = `/tasks/detailed?${queryParams.toString()}`;
             console.log(`🌐 API sorğusu: ${url}`);
 
-            const tasks = await this.apiService.get(url);
+            try {
+                const tasks = await this.apiService.get(url);
 
-            if (Array.isArray(tasks)) {
-                this.activeTasks = tasks;
-            } else if (tasks && tasks.data && Array.isArray(tasks.data)) {
-                this.activeTasks = tasks.data;
-            } else if (tasks && tasks.tasks && Array.isArray(tasks.tasks)) {
-                this.activeTasks = tasks.tasks;
-            } else if (tasks && tasks.items && Array.isArray(tasks.items)) {
-                this.activeTasks = tasks.items;
-            } else {
-                this.activeTasks = [];
+                if (Array.isArray(tasks)) {
+                    this.activeTasks = tasks;
+                } else if (tasks && tasks.data && Array.isArray(tasks.data)) {
+                    this.activeTasks = tasks.data;
+                } else if (tasks && tasks.tasks && Array.isArray(tasks.tasks)) {
+                    this.activeTasks = tasks.tasks;
+                } else if (tasks && tasks.items && Array.isArray(tasks.items)) {
+                    this.activeTasks = tasks.items;
+                } else {
+                    this.activeTasks = [];
+                }
+
+                this.activeTasks = this.activeTasks.filter(task => {
+                    const status = task.status || task.task_status;
+                    return activeStatuses.includes(status);
+                });
+
+                // Hər bir task üçün tarix və məlumatları formatla
+                this.activeTasks = this.activeTasks.map(task => ({
+                    ...task,
+                    title: task.title || task.task_title || task.name || task.task_name || 'Task',
+                    status: task.status || task.task_status || 'pending',
+                    created_at: task.created_at || task.createdAt || task.created_date || task.updated_at || null
+                }));
+
+                console.log(`✅ ${this.activeTasks.length} aktiv task tapıldı`);
+
+                // Cache-lə (tasklar üçün qısa müddət)
+                this.setCache('tasks', this.activeTasks, this.cacheTTL.tasks);
+
+                // Task sayını göstər
+                if (this.elements.tasksCount) {
+                    this.elements.tasksCount.textContent = this.activeTasks.length;
+                }
+                localStorage.setItem('tasksCount', this.activeTasks.length);
+
+            } catch (apiError) {
+                console.warn('⚠️ API xətası, cache-dən istifadə olunur');
+                // API xəta verdisə, cache-dən oxu
+                const cached = this.getCache('tasks');
+                if (cached) {
+                    this.activeTasks = cached;
+                    if (this.elements.tasksCount) {
+                        this.elements.tasksCount.textContent = this.activeTasks.length;
+                    }
+                } else {
+                    this.activeTasks = [];
+                    if (this.elements.tasksCount) {
+                        this.elements.tasksCount.textContent = '0';
+                    }
+                }
             }
-
-            this.activeTasks = this.activeTasks.filter(task => {
-                const status = task.status || task.task_status;
-                return activeStatuses.includes(status);
-            });
-
-            // Hər bir task üçün tarix və məlumatları formatla
-            this.activeTasks = this.activeTasks.map(task => ({
-                ...task,
-                title: task.title || task.task_title || task.name || task.task_name || 'Task',
-                status: task.status || task.task_status || 'pending',
-                created_at: task.created_at || task.createdAt || task.created_date || task.updated_at || null
-            }));
-
-            console.log(`✅ ${this.activeTasks.length} aktiv task tapıldı`);
-
-            // Cache-lə (tasklar üçün qısa müddət)
-            this.setCache('tasks', this.activeTasks, this.cacheTTL.tasks);
-
-            // Task sayını göstər
-            if (this.elements.tasksCount) {
-                this.elements.tasksCount.textContent = this.activeTasks.length;
-            }
-            localStorage.setItem('tasksCount', this.activeTasks.length);
 
         } catch (error) {
             console.error('❌ Tasklar yüklənərkən xəta:', error);

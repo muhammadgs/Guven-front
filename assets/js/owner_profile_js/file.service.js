@@ -551,28 +551,35 @@ class FileService {
     async loadFiles(userIdentifier, folderUuid = null) {
         try {
             console.log(`📁 Backend-dən real fayllar yüklənir... folderUuid: ${folderUuid}`);
-            console.log('👤 İstifadəçi identifikatoru:', userIdentifier);
+            
+            // Cari istifadəçinin ID-sini al
+            const userId = this.getCurrentUserId();
 
-            // 1. USER UUID-Nİ TAP - ƏN VACİB HİSSƏ!
+            // 🔥 YALNIZ ÖZ FAYLLARINI YÜKLƏ - başqalarınınkı yox
+            console.log('👤 Cari istifadəçi ID:', userId);
+
+            // UUID-ni tapmağa çalış (sorğu GÖNDƏRMƏ)
             let usersUuid = null;
-            let userId = this.getCurrentUserId();
-
-            // UUID formatındadırsa (d152b378-...), onu istifadə et
-            if (userIdentifier && typeof userIdentifier === 'string' && userIdentifier.includes('-') && userIdentifier.length > 30) {
-                usersUuid = userIdentifier;
-            } else {
-                // ID-dirsə, UUID-ni tapmağa çalış
-                usersUuid = await this.getUserUUIDFromId(userId);
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsed = JSON.parse(userData);
+                    usersUuid = parsed.user?.uuid || parsed.uuid;
+                    if (usersUuid && usersUuid.includes('-') && usersUuid.length > 30) {
+                        console.log('✅ UUID localStorage-dən:', usersUuid);
+                    }
+                }
+            } catch(e) {
+                console.warn('UUID oxuma xətası:', e);
             }
 
-            console.log('🎯 İstifadə olunacaq UUID:', usersUuid);
-
-            // 2. BÜTÜN FAYLLARI YÜKLƏ (ID ilə)
+            // 2. BÜTÜN FAYLLARI YÜKLƏ (yalnız öz ID ilə)
             let allFiles = [];
             try {
                 const token = localStorage.getItem('guven_token');
-                const filesUrl = `${this.baseUrl}/files/user/${userId}?per_page=100`;
+                if (!token) throw new Error('Token tapılmadı');
 
+                const filesUrl = `${this.baseUrl}/files/user/${userId}?per_page=100`;
                 console.log('📡 Fayl URL (ID ilə):', filesUrl);
 
                 const filesResponse = await fetch(filesUrl, {
@@ -581,6 +588,14 @@ class FileService {
                         'Accept': 'application/json'
                     }
                 });
+
+                // 403 xətasını SİL
+                if (filesResponse.status === 403) {
+                    console.warn('⚠️ 403 xətası, fayllar yüklənə bilmədi');
+                    this.files = [];
+                    this.folders = [];
+                    return [];
+                }
 
                 if (filesResponse.ok) {
                     const filesData = await filesResponse.json();
@@ -592,13 +607,11 @@ class FileService {
                 console.warn('Fayllar yüklənə bilmədi:', e);
             }
 
-            // 3. QOVLUQLARI YÜKLƏ - UUID İLƏ!
+            // 3. QOVLUQLARI YÜKLƏ (UUID varsa)
             let folders = [];
-            try {
-                const token = localStorage.getItem('guven_token');
-
-                // Əgər UUID varsa, onunla yüklə
-                if (usersUuid) {
+            if (usersUuid) {
+                try {
+                    const token = localStorage.getItem('guven_token');
                     let foldersUrl = `${this.baseUrl}/folders?users_uuid=${usersUuid}&per_page=100`;
 
                     if (folderUuid && folderUuid !== 'null' && folderUuid !== 'undefined') {
@@ -616,15 +629,7 @@ class FileService {
 
                     if (foldersResponse.ok) {
                         const foldersData = await foldersResponse.json();
-
-                        // Cavab strukturuna uyğunlaş
-                        let rawFolders = [];
-                        if (foldersData.folders) rawFolders = foldersData.folders;
-                        else if (foldersData.data) rawFolders = foldersData.data;
-                        else if (Array.isArray(foldersData)) rawFolders = foldersData;
-
-                        console.log('📦 Qovluq cavabı:', foldersData);
-
+                        let rawFolders = foldersData.folders || foldersData.data || [];
                         folders = rawFolders.map(f => ({
                             id: f.uuid || f.id,
                             uuid: f.uuid || f.id,
@@ -635,47 +640,23 @@ class FileService {
                             created_at: f.created_at,
                             is_local: f.is_local || false
                         }));
-
                         console.log(`📁 ${folders.length} qovluq tapıldı`);
-                    } else {
-                        console.warn('Qovluqlar yüklənə bilmədi, status:', foldersResponse.status);
                     }
-                } else {
-                    console.warn('⚠️ UUID tapılmadı, qovluqlar yüklənə bilməz');
+                } catch (e) {
+                    console.warn('Qovluqlar yüklənə bilmədi:', e);
                 }
-            } catch (e) {
-                console.warn('Qovluqlar yüklənə bilmədi:', e);
             }
 
             // 4. CACHE-İ YENİLƏ
             this._cache.allFiles = allFiles;
             this._cache.folders = folders;
-
-            // 5. CARI QOVLUQDAKI FAYLLARI TAP
-            let currentFolderFiles = [];
-
-            if (folderUuid && folderUuid !== 'null' && folderUuid !== 'undefined') {
-                currentFolderFiles = allFiles.filter(f => {
-                    const fileFolderId = f.folder_id || f.parent_id;
-                    return String(fileFolderId) === String(folderUuid);
-                });
-                console.log(`📂 Cari qovluqdakı fayllar: ${currentFolderFiles.length}`);
-            } else {
-                currentFolderFiles = allFiles.filter(f => {
-                    const hasFolder = f.folder_id || f.parent_id;
-                    return !hasFolder;
-                });
-                console.log(`🏠 Root fayllar: ${currentFolderFiles.length}`);
-            }
-
-            // 6. CACHE-İ YENİLƏ
-            this._cache.files = currentFolderFiles;
+            this._cache.files = allFiles;
             this._cache.lastRefresh = Date.now();
-            this.files = currentFolderFiles;
+            this.files = allFiles;
             this.folders = folders;
 
-            console.log(`📊 Ümumi: ${currentFolderFiles.length} fayl, ${folders.length} qovluq`);
-            return currentFolderFiles;
+            console.log(`📊 Ümumi: ${allFiles.length} fayl, ${folders.length} qovluq`);
+            return allFiles;
 
         } catch (error) {
             console.error('❌ loadFiles xətası:', error);
@@ -686,19 +667,25 @@ class FileService {
     // Yeni metod - ID-dən UUID tap
     async getUserUUIDFromId(userId) {
         try {
-            // Əvvəlcə localStorage-dən bax
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                const parsed = JSON.parse(userData);
-                const uuid = parsed.user?.uuid || parsed.uuid;
-                if (uuid && uuid.includes('-') && uuid.length > 30) {
-                    console.log('✅ UUID localStorage-dən tapıldı:', uuid);
-                    return uuid;
-                }
+            console.log(`🔍 İstifadəçi UUID-si axtarılır: ${userId}`);
+
+            // Cari istifadəçinin ID-sini al
+            const currentUserId = this.getCurrentUserId();
+
+            // 🔥 Əgər başqasının ID-sini istəyirsə, API-yə sorğu GÖNDƏRMƏ
+            if (String(currentUserId) !== String(userId)) {
+                console.warn(`⚠️ Başqa istifadəçinin məlumatına icazə yoxdur: ${userId} (cari: ${currentUserId})`);
+                return null;
             }
 
-            // API-dən yüklə
+            // Öz məlumatını al
             const token = localStorage.getItem('guven_token');
+            if (!token) {
+                console.warn('⚠️ Token tapılmadı');
+                return null;
+            }
+
+            // Öz məlumatını yüklə
             const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -706,57 +693,48 @@ class FileService {
                 }
             });
 
-            if (response.ok) {
-                const userData = await response.json();
-                const uuid = userData.uuid || userData.data?.uuid;
-                if (uuid) {
-                    console.log('✅ UUID API-dən tapıldı:', uuid);
+            // 403 xətasını SİL (loginə atmasın)
+            if (response.status === 403) {
+                console.warn('⚠️ 403 xətası: Başqa istifadəçinin məlumatına icazə yoxdur');
+                return null;
+            }
 
-                    // localStorage-ə yadda saxla
+            if (!response.ok) {
+                console.warn(`⚠️ HTTP ${response.status} xətası`);
+                return null;
+            }
+
+            const userData = await response.json();
+            const uuid = userData.uuid || userData.data?.uuid;
+
+            if (uuid && uuid.includes('-') && uuid.length > 30) {
+                console.log('✅ UUID tapıldı:', uuid);
+
+                // UUID-ni localStorage-ə yadda saxla
+                try {
                     const existingData = localStorage.getItem('userData');
                     let newData = existingData ? JSON.parse(existingData) : {};
                     if (!newData.user) newData.user = {};
                     newData.user.uuid = uuid;
                     newData.uuid = uuid;
+                    newData.id = userId;
                     localStorage.setItem('userData', JSON.stringify(newData));
-
-                    return uuid;
+                } catch (e) {
+                    console.warn('User data save xətası:', e);
                 }
+
+                return uuid;
             }
-        } catch (e) {
-            console.error('UUID tapma xətası:', e);
+
+            return null;
+
+        } catch (error) {
+            // BÜTÜN XƏTALARI SİL (loginə atmasın)
+            console.warn('⚠️ UUID alma xətası (ignore):', error.message);
+            return null;
         }
-        return null;
     }
 
-    async uploadMultipleFiles(files, category = 'USER_FILE', folderId = null) {
-        console.log(`📤 ${files.length} fayl yüklənir...`);
-
-        const results = {
-            uploaded: [],
-            errors: []
-        };
-
-        for (const file of files) {
-            try {
-                const result = await this.uploadFile(file, category, folderId);
-                results.uploaded.push(result);
-            } catch (error) {
-                console.error(`❌ ${file.name} yüklənə bilmədi:`, error);
-                results.errors.push({
-                    file: file.name,
-                    error: error.message
-                });
-            }
-        }
-
-        if (results.uploaded.length > 0) {
-            this._cache.lastRefresh = 0;
-            await this.loadFiles();
-        }
-
-        return results;
-    }
 
     async uploadFile(file, category = 'USER_FILE', folderId = null) {
         try {
