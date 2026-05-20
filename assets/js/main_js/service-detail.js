@@ -53,6 +53,45 @@
         return { heading: heading || 'Xidmət detalı', body, order };
     }
 
+    function getServiceRichDescription(service) {
+        if (!service) return '';
+
+        const direct = String(
+            service.descriptionHtml ||
+            service.content ||
+            service.fullDescription ||
+            service.full_description ||
+            service.description_html ||
+            service.long_description ||
+            service.body ||
+            service.about ||
+            service.details ||
+            service.text ||
+            service.description ||
+            ''
+        ).trim();
+
+        if (direct) return direct;
+
+        const raw = service.original || {};
+        return String(
+            raw.description_html ||
+            raw.descriptionHtml ||
+            raw.content ||
+            raw.full_description ||
+            raw.fullDescription ||
+            raw.long_description ||
+            raw.longDescription ||
+            raw.body ||
+            raw.about ||
+            raw.details ||
+            raw.detail ||
+            raw.text ||
+            raw.description ||
+            ''
+        ).trim();
+    }
+
     function renderService(service) {
         const { title, desc, items } = getEls();
         title.textContent = service.name || 'Xidmət';
@@ -72,14 +111,7 @@
             }).join('');
         }
 
-        const rawDescription =
-            service.descriptionHtml ||
-            service.content ||
-            service.fullDescription ||
-            service.full_description ||
-            service.description_html ||
-            service.description ||
-            '';
+        const rawDescription = getServiceRichDescription(service);
         const normalizedDescription = normalizeEditorHtml(rawDescription);
 
         if (normalizedDescription) {
@@ -88,8 +120,11 @@
             } else {
                 desc.innerHTML = '<p>' + escapeHtml(normalizedDescription) + '</p>';
             }
+            desc.classList.remove('hidden');
         } else {
             desc.innerHTML = '';
+            desc.classList.add('hidden');
+            console.warn('⚠️ Service description is empty on detail page. Service:', service);
         }
 
         desc.querySelectorAll('a').forEach((a) => {
