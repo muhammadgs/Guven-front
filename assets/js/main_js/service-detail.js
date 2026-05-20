@@ -56,7 +56,6 @@
     function renderService(service) {
         const { title, desc, items } = getEls();
         title.textContent = service.name || 'Xidmət';
-        desc.textContent = service.description || FALLBACK_DESCRIPTION;
 
         const normalizedItems = Array.isArray(service.items)
             ? service.items.map((item, index) => normalizeItem(item, index)).filter(Boolean).sort((a, b) => a.order - b.order)
@@ -73,7 +72,51 @@
             }).join('');
         }
 
+        const richDescription = normalizeEditorHtml(service.content || service.full_description || service.description_html || '');
+        const plainDescription = String(service.description || '').trim();
+        if (richDescription) {
+            desc.innerHTML = sanitizeRichHtml(richDescription);
+        } else if (plainDescription) {
+            desc.innerHTML = '<p>' + escapeHtml(plainDescription) + '</p>';
+        } else {
+            desc.innerHTML = '';
+        }
+
+        desc.querySelectorAll('a').forEach((a) => {
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+        });
+
         renderState('success', 'Məlumatlar yeniləndi.');
+    }
+
+    function normalizeEditorHtml(html) {
+        const clean = String(html || '').trim();
+        if (!clean || clean === '<p><br></p>') return '';
+        return clean;
+    }
+
+    function stripHtml(html) {
+        const div = document.createElement('div');
+        div.innerHTML = html || '';
+        return (div.textContent || div.innerText || '').trim();
+    }
+
+    function escapeHtml(text) {
+        return String(text || '').replace(/[&<>"]/g, function(ch) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch] || ch;
+        });
+    }
+
+    function sanitizeRichHtml(html) {
+        if (!html) return '';
+        if (window.DOMPurify) {
+            return window.DOMPurify.sanitize(html, {
+                ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'span'],
+                ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class']
+            });
+        }
+        return '<p>' + escapeHtml(stripHtml(html)) + '</p>';
     }
 
     function findBySlug(services, slug) {

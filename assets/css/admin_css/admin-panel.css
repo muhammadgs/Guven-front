@@ -212,6 +212,27 @@ body {
     gap: 10px;
 }
 
+.service-description-editor {
+    min-height: 180px;
+    background: #fff;
+}
+
+#serviceModal .ql-toolbar {
+    border-radius: 10px 10px 0 0;
+}
+
+#serviceModal .ql-container {
+    min-height: 180px;
+    border-radius: 0 0 10px 10px;
+    font-family: "Poppins", sans-serif;
+}
+
+#serviceModal .ql-editor {
+    min-height: 180px;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
