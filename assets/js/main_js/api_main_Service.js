@@ -375,8 +375,10 @@ const ApiMainService = (function() {
                 id: raw.id || raw.service_id || null,
                 name,
                 slug,
-                description: String(raw.description || '').trim(),
+                description: richDescription || String(raw.description || '').trim(),
                 content: richDescription,
+                description_html: richDescription,
+                full_description: richDescription,
                 descriptionHtml: richDescription,
                 fullDescription: richDescription,
                 items: normalizedItems,
@@ -428,6 +430,7 @@ const ApiMainService = (function() {
             const normalized = services.normalizeService(raw);
             if (!normalized) return { success: false, data: null, error: 'Xidmət məlumatı tapılmadı' };
 
+            console.log('PUBLIC SERVICE DETAIL RAW RESPONSE:', result.data);
             console.log('🔎 Public service raw payload:', payload);
             console.log('🔎 Public service normalized:', normalized);
             console.log('🔎 Public service description fields:', {
