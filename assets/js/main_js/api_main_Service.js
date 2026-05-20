@@ -304,7 +304,7 @@ const ApiMainService = (function() {
             .replace(/^-+|-+$/g, '');
     }
 
-    function extractServiceRichDescription(raw) {
+    function extractServiceDescription(raw) {
         if (!raw || typeof raw !== 'object') return '';
 
         return String(
@@ -369,13 +369,13 @@ const ApiMainService = (function() {
             const name = String(raw.name || raw.title || raw.service_name || '').trim();
             const slug = normalizeAzServiceSlug(raw.slug || name);
 
-            const richDescription = extractServiceRichDescription(raw);
+            const richDescription = extractServiceDescription(raw);
 
             return {
                 id: raw.id || raw.service_id || null,
                 name,
                 slug,
-                description: richDescription || String(raw.description || '').trim(),
+                description: richDescription,
                 content: richDescription,
                 description_html: richDescription,
                 full_description: richDescription,
@@ -430,17 +430,11 @@ const ApiMainService = (function() {
             const normalized = services.normalizeService(raw);
             if (!normalized) return { success: false, data: null, error: 'Xidmət məlumatı tapılmadı' };
 
-            console.log('PUBLIC SERVICE DETAIL RAW RESPONSE:', result.data);
-            console.log('🔎 Public service raw payload:', payload);
-            console.log('🔎 Public service normalized:', normalized);
-            console.log('🔎 Public service description fields:', {
-                description: normalized.description,
-                content: normalized.content,
-                descriptionHtml: normalized.descriptionHtml,
-                fullDescription: normalized.fullDescription
-            });
+            console.log('PUBLIC SERVICE DETAIL RAW:', result.data);
+            console.log('PUBLIC SERVICE DETAIL UNWRAPPED:', raw);
+            console.log('PUBLIC SERVICE DETAIL NORMALIZED:', normalized);
 
-            if (!extractServiceRichDescription(raw || {})) {
+            if (!extractServiceDescription(raw || {})) {
                 console.warn('Public service API does not return description. Backend/public serializer must expose description/content.');
             }
             return { success: true, data: normalized };

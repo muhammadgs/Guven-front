@@ -63,9 +63,11 @@
             service.full_description ||
             service.description_html ||
             service.long_description ||
+            service.longDescription ||
             service.body ||
             service.about ||
             service.details ||
+            service.detail ||
             service.text ||
             service.description ||
             ''
@@ -112,6 +114,7 @@
         }
 
         const rawDescription = getServiceRichDescription(service);
+        console.log('DESCRIPTION THAT WILL BE RENDERED:', rawDescription);
         const normalizedDescription = normalizeEditorHtml(rawDescription);
 
         if (normalizedDescription) {
@@ -120,11 +123,16 @@
             } else {
                 desc.innerHTML = '<p>' + escapeHtml(normalizedDescription) + '</p>';
             }
+            desc.style.display = 'block';
             desc.classList.remove('hidden');
         } else {
             desc.innerHTML = '';
+            desc.style.display = 'none';
             desc.classList.add('hidden');
-            console.warn('⚠️ Service description is empty on detail page. Service:', service);
+            console.warn('Service description is missing on detail page. Public API response probably does not expose DB description.', {
+                service,
+                original: service.original
+            });
         }
 
         desc.querySelectorAll('a').forEach((a) => {
