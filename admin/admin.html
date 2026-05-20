@@ -25,6 +25,7 @@
     </script>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -1137,6 +1138,15 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="form-label">Xidmət Açıqlaması</label>
+                        <div id="serviceDescriptionEditor" class="service-description-editor"></div>
+                        <input type="hidden" id="serviceDescription" value="">
+                        <small class="form-text">
+                            Bu mətn xidmətin ətraflı səhifəsində xidmət maddələrindən sonra görünəcək.
+                        </small>
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">CTA Düyməsi Mətni</label>
                         <input type="text" class="form-control" id="serviceCta"
                                value="Ətraflı...">
@@ -1767,8 +1777,8 @@
     </div>
 
 
-
-        <script>
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
         // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
         const v = '1.0.0';
 

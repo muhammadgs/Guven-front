@@ -88,7 +88,38 @@
 }
 
 .service-detail-description {
+  margin-top: 38px;
+  width: min(760px, 100%);
+  color: #050B1F;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 300;
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1.8;
+}
+
+.service-detail-description:empty {
   display: none;
+}
+
+.service-detail-description h2,
+.service-detail-description h3 {
+  font-family: 'Cal Sans', 'Poppins', sans-serif;
+  margin: 28px 0 12px;
+  color: #050B1F;
+}
+
+.service-detail-description p {
+  margin: 0 0 16px;
+}
+
+.service-detail-description ul,
+.service-detail-description ol {
+  margin: 0 0 18px 24px;
+}
+
+.service-detail-description a {
+  color: #2563EB;
+  text-decoration: underline;
 }
 
 .service-detail-items {
