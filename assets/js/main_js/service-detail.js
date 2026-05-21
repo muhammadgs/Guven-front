@@ -1,7 +1,10 @@
 (function () {
     'use strict';
 
-    const FALLBACK_DESCRIPTION = 'Bu xidmət üzrə peşəkar dəstək təqdim edirik.';
+    const FALLBACK_DESCRIPTION = '';
+    const ALLOWED_TAGS = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'A', 'SPAN']);
+    const BLOCKED_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT']);
+    const SAFE_LINK_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:'];
 
     function normalizeAzSlug(value) {
         return String(value || '')
@@ -53,10 +56,80 @@
         return { heading: heading || 'Xidmət detalı', body, order };
     }
 
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function sanitizeServiceHtml(rawHtml) {
+        if (!rawHtml || typeof rawHtml !== 'string') return '';
+
+        const template = document.createElement('template');
+        template.innerHTML = rawHtml;
+
+        const walk = function (root) {
+            Array.from(root.children).forEach(function (node) {
+                const tag = node.tagName;
+
+                if (BLOCKED_TAGS.has(tag)) {
+                    node.remove();
+                    return;
+                }
+
+                if (!ALLOWED_TAGS.has(tag)) {
+                    const parent = node.parentNode;
+                    while (node.firstChild) parent.insertBefore(node.firstChild, node);
+                    parent.removeChild(node);
+                    return;
+                }
+
+                Array.from(node.attributes).forEach(function (attr) {
+                    const attrName = attr.name.toLowerCase();
+                    const attrValue = (attr.value || '').trim();
+                    if (attrName.startsWith('on')) {
+                        node.removeAttribute(attr.name);
+                        return;
+                    }
+                    if (tag === 'A' && attrName === 'href') {
+                        if (attrValue.startsWith('#')) return;
+                        try {
+                            const parsed = new URL(attrValue, window.location.origin);
+                            if (!SAFE_LINK_PROTOCOLS.includes(parsed.protocol)) {
+                                node.removeAttribute(attr.name);
+                            }
+                        } catch (e) {
+                            node.removeAttribute(attr.name);
+                        }
+                        return;
+                    }
+                    if (tag === 'A' && (attrName === 'target' || attrName === 'rel')) return;
+                    if (tag === 'SPAN' && attrName === 'class') return;
+                    node.removeAttribute(attr.name);
+                });
+
+                walk(node);
+            });
+        };
+
+        walk(template.content);
+        return template.innerHTML.trim();
+    }
+
     function renderService(service) {
         const { title, desc, items } = getEls();
         title.textContent = service.name || 'Xidmət';
-        desc.textContent = service.description || FALLBACK_DESCRIPTION;
+        const safeDescriptionHtml = sanitizeServiceHtml(service.description || '');
+        if (safeDescriptionHtml) {
+            desc.innerHTML = safeDescriptionHtml;
+            desc.style.display = '';
+        } else {
+            desc.innerHTML = FALLBACK_DESCRIPTION ? `<p>${escapeHtml(FALLBACK_DESCRIPTION)}</p>` : '';
+            desc.style.display = 'none';
+        }
 
         const normalizedItems = Array.isArray(service.items)
             ? service.items.map((item, index) => normalizeItem(item, index)).filter(Boolean).sort((a, b) => a.order - b.order)
@@ -67,8 +140,8 @@
         } else {
             items.innerHTML = normalizedItems.map(function (item) {
                 return '<article class="service-item-card">' +
-                    '<h3>' + item.heading + '</h3>' +
-                    (item.body ? '<p>' + item.body + '</p>' : '') +
+                    '<h3>' + escapeHtml(item.heading) + '</h3>' +
+                    (item.body ? '<p>' + escapeHtml(item.body) + '</p>' : '') +
                     '</article>';
             }).join('');
         }
