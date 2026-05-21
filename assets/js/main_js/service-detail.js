@@ -2,7 +2,7 @@
     'use strict';
 
     const FALLBACK_DESCRIPTION = '';
-    const ALLOWED_TAGS = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'A', 'SPAN']);
+    const ALLOWED_TAGS = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H1', 'H2', 'H3', 'H4', 'BLOCKQUOTE', 'A', 'SPAN']);
     const BLOCKED_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT']);
     const SAFE_LINK_PROTOCOLS = ['http:', 'https:', 'mailto:', 'tel:'];
 
@@ -65,6 +65,24 @@
             .replace(/'/g, '&#039;');
     }
 
+
+    function sanitizeInlineStyle(styleValue) {
+        if (!styleValue) return '';
+        const allowed = new Set(['color', 'background-color', 'font-family', 'text-align']);
+        return styleValue
+            .split(';')
+            .map(function (declaration) {
+                const parts = declaration.split(':');
+                if (parts.length < 2) return '';
+                const prop = parts[0].trim().toLowerCase();
+                const val = parts.slice(1).join(':').trim();
+                if (!allowed.has(prop) || !val) return '';
+                if (/url\s*\(|expression\s*\(/i.test(val)) return '';
+                return prop + ': ' + val;
+            })
+            .filter(Boolean)
+            .join('; ');
+    }
     function sanitizeServiceHtml(rawHtml) {
         if (!rawHtml || typeof rawHtml !== 'string') return '';
 
@@ -107,7 +125,21 @@
                         return;
                     }
                     if (tag === 'A' && (attrName === 'target' || attrName === 'rel')) return;
-                    if (tag === 'SPAN' && attrName === 'class') return;
+                    if (attrName === 'class') {
+                        const filtered = (attrValue.match(/\bql-[a-z0-9-]+\b/gi) || []).join(' ').trim();
+                        if (filtered) {
+                            node.setAttribute('class', filtered);
+                        } else {
+                            node.removeAttribute(attr.name);
+                        }
+                        return;
+                    }
+                    if (attrName === 'style') {
+                        const safeStyle = sanitizeInlineStyle(attrValue);
+                        if (safeStyle) node.setAttribute('style', safeStyle);
+                        else node.removeAttribute(attr.name);
+                        return;
+                    }
                     node.removeAttribute(attr.name);
                 });
 
