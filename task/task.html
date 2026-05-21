@@ -47,7 +47,7 @@
             // CSS faylları
             const styles = [
                 'userReportModal.css',
-                'enhancedModals.css'
+
 
             ];
 
@@ -1677,112 +1677,32 @@
         }
     </script>
 
-    <!-- ========== CACHE TƏMİZLƏMƏ SCRIPT ========== -->
-    <script>
-        // Cache təmizləmə funksiyası
-        async function clearAllCacheAndRefresh() {
-            console.log('🧹 Cache təmizləmə prosesi başladı...');
 
-            try {
-                // 1. Göstəricini göstər
-                const btn = document.getElementById('clearCacheBtn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Təmizlənir...</span>';
-                btn.disabled = true;
-
-                // 2. SessionStorage təmizlə (task cache-lər)
-                const sessionKeys = Object.keys(sessionStorage);
-                sessionKeys.forEach(key => {
-                    if (key.startsWith('tc_') || key.includes('task') || key.includes('cache')) {
-                        sessionStorage.removeItem(key);
-                        console.log(`🗑️ SessionStorage-dan silindi: ${key}`);
-                    }
-                });
-
-                // 3. LocalStorage təmizlə (task ilə əlaqəli olanlar)
-                const localStorageKeys = Object.keys(localStorage);
-                localStorageKeys.forEach(key => {
-                    if (key.startsWith('task_confirm_end_') ||
-                        key.startsWith('task_delay_') ||
-                        key.startsWith('task_work_start_') ||
-                        key === 'tasks_cache' ||
-                        key === 'tasks_cache_timestamp' ||
-                        key === 'externalTasks_cache' ||
-                        key === 'externalTasks_cache_timestamp') {
-                        localStorage.removeItem(key);
-                        console.log(`🗑️ LocalStorage-dan silindi: ${key}`);
-                    }
-                });
-
-                // 4. IndexedDB təmizlə (əgər dbManager varsa)
-                if (window.dbManager && window.dbManager.clearCache) {
-                    await window.dbManager.clearCache();
-                    console.log('✅ IndexedDB cache təmizləndi');
-                } else if (window.dbManager) {
-                    // Əgər clearCache metodu yoxdursa, bütün store-ları təmizlə
-                    const stores = ['tasks', 'partners', 'externalTasks', 'archiveTasks', 'cacheInfo'];
-                    for (const store of stores) {
-                        try {
-                            await window.dbManager.clearCache(store);
-                        } catch (e) {
-                            console.warn(`⚠️ ${store} təmizlənə bilmədi:`, e);
-                        }
-                    }
-                }
-
-                // 5. Service Worker cache təmizlə (əgər varsa)
-                if ('caches' in window) {
-                    const cacheNames = await caches.keys();
-                    for (const cacheName of cacheNames) {
-                        if (cacheName.includes('task') || cacheName.includes('manager')) {
-                            await caches.delete(cacheName);
-                            console.log(`🗑️ Service Worker cache silindi: ${cacheName}`);
-                        }
-                    }
-                }
-
-                // 6. TaskCache global obyektini təmizlə (əgər varsa)
-                if (typeof TaskCache !== 'undefined' && TaskCache.clear) {
-                    TaskCache.clear();
-                    console.log('✅ TaskCache təmizləndi');
-                }
-
-                // 7. Kiçik bir gözləmə (cache tamamilə təmizlənsin)
-                await new Promise(resolve => setTimeout(resolve, 300));
-
-                // 8. Səhifəni yenilə
-                console.log('🔄 Səhifə yenilənir...');
-                window.location.reload();
-
-            } catch (error) {
-                console.error('❌ Cache təmizləmə xətası:', error);
-                alert('Cache təmizlənərkən xəta baş verdi. Səhifə yenilənir...');
-                window.location.reload();
-            }
-        }
-
-        // Düyməyə klik eventi əlavə et
-        document.addEventListener('DOMContentLoaded', function() {
-            const clearBtn = document.getElementById('clearCacheBtn');
-            if (clearBtn) {
-                clearBtn.addEventListener('click', clearAllCacheAndRefresh);
-                console.log('✅ Cache təmizləmə düyməsi aktiv edildi');
-            }
-        });
-    </script>
 
     <!-- ========== INDEXEDDB MANAGER (CACHE ÜÇÜN) ========== -->
     <script src="../assets/js/task_js/dbManager.js"></script>
 
     <!-- ========== API SERVICE (CACHE DƏSTƏKLİ) ========== -->
-    <script src="../assets/js/task_js/api_service/apiService.js"></script>
+    <script src="../assets/js/base_api/api.service.js"></script>
+    <script src="../assets/js/base_api/auth.service.js"></script>
+    <script>
+        // ✅ Global instance-lar — dashboardRedirect və digər JS-lər bunları axtarır
+        window.apiService = new ApiService();
+        window.authService = new AuthService(window.apiService);
+
+        // Auth yoxla, sonra səhifəni yüklə
+        (async () => {
+            const ok = await window.authService.init();
+            if (!ok) return; // init() artıq loginə yönləndirib
+        })();
+    </script>
 
     <script>
         // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
         const v = '1.0.3';
 
         // Core services
-        document.write('<script src="../assets/js/task_js/api_service/authService.js?v=' + v + '"><\/script>');
+
         document.write('<script src="../assets/js/task_js/api_service/notification.js?v=' + v + '"><\/script>');
         document.write('<script src="../assets/js/task_js/api_service/telegramNotification.js?v=' + v + '"><\/script>');
         document.write('<script src="../assets/js/task_js/ui_ux/columnResizer.js?v=' + v + '"><\/script>');
@@ -1813,7 +1733,6 @@
         document.write('<script src="../assets/js/task_js/raport/report.js?v=' + v + '"><\/script>');
         document.write('<script src="../assets/js/task_js/raport/users/userReportExporter.js?v=' + v + '"><\/script>');
         document.write('<script src="../assets/js/task_js/raport/users/userReportModal.js?v=' + v + '"><\/script>');
-        document.write('<script src="../assets/js/task_js/raport/users/enhancedModals.js?v=' + v + '"><\/script>');
 
 
         document.write('<script src="../assets/js/task_js/dashboardRedirect.js?v=' + v + '"><\/script>');

@@ -11,8 +11,8 @@ const ApiMainService = (function() {
     // ==================== KONFİQURASİYA ====================
     const CONFIG = {
         // PROXY üzərindən backend-ə müraciət
-        baseURL: 'http://vps.guvenfinans.az:8008',
-        proxyBase: 'http://vps.guvenfinans.az:8008',
+        baseURL: 'https://guvenfinans.az/proxy.php/api/v1',
+        proxyBase: 'https://guvenfinans.az/proxy.php',
         timeout: 30000,
         headers: {
             'Accept': 'application/json',
@@ -304,44 +304,6 @@ const ApiMainService = (function() {
             .replace(/^-+|-+$/g, '');
     }
 
-    function extractServiceDescription(raw) {
-        if (!raw || typeof raw !== 'object') return '';
-
-        return String(
-            raw.description_html ||
-            raw.descriptionHtml ||
-            raw.content ||
-            raw.full_description ||
-            raw.fullDescription ||
-            raw.long_description ||
-            raw.longDescription ||
-            raw.body ||
-            raw.about ||
-            raw.details ||
-            raw.detail ||
-            raw.text ||
-            raw.description ||
-            ''
-        ).trim();
-    }
-
-    function unwrapServicePayload(payload) {
-        if (!payload) return null;
-
-        if (payload.data?.service) return payload.data.service;
-        if (payload.data?.item) return payload.data.item;
-        if (payload.data?.result) return payload.data.result;
-        if (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) return payload.data;
-
-        if (payload.service) return payload.service;
-        if (payload.item) return payload.item;
-        if (payload.result) return payload.result;
-
-        if (typeof payload === 'object' && !Array.isArray(payload)) return payload;
-
-        return null;
-    }
-
     const services = {
         normalizeItem: (item, index = 0) => {
             if (!item || (typeof item !== 'object' && typeof item !== 'string' && typeof item !== 'number')) return null;
@@ -369,16 +331,11 @@ const ApiMainService = (function() {
             const name = String(raw.name || raw.title || raw.service_name || '').trim();
             const slug = normalizeAzServiceSlug(raw.slug || name);
 
-            const richDescription = extractServiceDescription(raw);
-
             return {
                 id: raw.id || raw.service_id || null,
                 name,
                 slug,
-                description: richDescription,
-                content: richDescription,
-                descriptionHtml: richDescription,
-                fullDescription: richDescription,
+                description: String(raw.description || raw.text || raw.content || '').trim(),
                 items: normalizedItems,
                 order: Number(raw.order || raw.sort_order || 0) || 0,
                 active: typeof raw.active === 'boolean' ? raw.active : (typeof raw.is_active === 'boolean' ? raw.is_active : true),
@@ -422,18 +379,14 @@ const ApiMainService = (function() {
             const result = await apiFetch(`/services/public/${encodeURIComponent(normalizedSlug)}`);
             if (!result.success) return result;
 
-            const raw = unwrapServicePayload(result.data);
+            const payload = result.data;
+            const raw = (payload && payload.data && typeof payload.data === 'object') ? payload.data
+                : (payload && payload.service && typeof payload.service === 'object') ? payload.service
+                : (payload && typeof payload === 'object') ? payload
+                : null;
+
             const normalized = services.normalizeService(raw);
             if (!normalized) return { success: false, data: null, error: 'Xidmət məlumatı tapılmadı' };
-
-            console.log('PUBLIC DETAIL RAW RESPONSE:', result.data);
-            console.log('PUBLIC DETAIL UNWRAPPED SERVICE:', raw);
-            console.log('PUBLIC DETAIL NORMALIZED SERVICE:', normalized);
-            console.log('PUBLIC DETAIL DESCRIPTION VALUE:', normalized?.descriptionHtml || normalized?.content || normalized?.description);
-
-            if (!extractServiceDescription(raw || {})) {
-                console.warn('Public service API does not return description. Backend/public serializer must expose description/content.');
-            }
             return { success: true, data: normalized };
         }
     };

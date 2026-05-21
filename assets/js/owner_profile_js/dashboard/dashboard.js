@@ -99,21 +99,16 @@ class DashboardManager {
             // Cache-dən yoxla
             if (!forceRefresh) {
                 const cached = this.getCache('userData');
-                if (cached) {
+                if (cached && cached.bazaId) {
                     console.log('📦 User data cache-dən yükləndi');
                     this.userData = cached.userData;
                     this.userId = cached.userId;
                     this.userCompanyCode = cached.userCompanyCode;
-                    this.bazaId = cached.bazaId;  // <-- BURAYA ƏLAVƏ EDİN
+                    this.bazaId = cached.bazaId;
 
-                    // baza_id-ni localStorage-da da saxla
                     if (this.bazaId) {
                         localStorage.setItem('baza_id', this.bazaId);
-                        console.log('✅ baza_id cache-dən yükləndi:', this.bazaId);
-                    }
-
-                    if (this.userData) {
-                        localStorage.setItem('user', JSON.stringify(this.userData));
+                        console.log('✅ baza_id cache-dən:', this.bazaId);
                     }
                     return;
                 }
@@ -122,71 +117,46 @@ class DashboardManager {
             const response = await this.apiService.getCurrentUser();
             console.log('👤 İstifadəçi məlumatları:', response);
 
-            if (response && response.success && response.user) {
-                this.userData = response.user;
-            } else if (response && response.user) {
-                this.userData = response.user;
-            } else if (response && !response.user) {
-                this.userData = response;
-            }
+            // Məlumatları çıxart
+            const user = response.user_service || response;
+            this.userData = user;
+            this.userId = user.id;
+            this.userCompanyCode = user.company_code;
 
-            // 🔥 BURADA ƏSAS DƏYİŞİKLİK - baza_id-ni AL
-            // user_service obyektindən götür
-            if (response && response.user_service && response.user_service.baza_id) {
-                this.bazaId = response.user_service.baza_id;
-                console.log('✅ baza_id user_service-dən:', this.bazaId);
-            }
-            // user obyektindən götür
-            else if (this.userData && this.userData.baza_id) {
-                this.bazaId = this.userData.baza_id;
-                console.log('✅ baza_id user-dən:', this.bazaId);
-            }
-            // token-dən götür
-            else if (this.apiService.token) {
+            // 🔥 ƏSAS HƏLL: baza_id user_service-dən gəlir
+            this.bazaId = user.baza_id;
+
+            if (!this.bazaId && user.company_id) {
+                // Fallback: company_id varsa, ondan baza_id tapmağa çalış
+                console.warn('⚠️ baza_id yoxdur, company_id ilə tapılmağa çalışılır');
                 try {
-                    const token = this.apiService.token;
-                    const parts = token.split('.');
-                    if (parts.length === 3) {
-                        const payload = JSON.parse(atob(parts[1]));
-                        if (payload.baza_id) {
-                            this.bazaId = payload.baza_id;
-                            console.log('✅ baza_id token-dən:', this.bazaId);
-                        }
+                    const companyResponse = await this.apiService.get(`/companies/${user.company_id}`);
+                    if (companyResponse && companyResponse.baza_id) {
+                        this.bazaId = companyResponse.baza_id;
                     }
                 } catch(e) {}
             }
 
-            console.log('📦 User data:', this.userData);
-            console.log('🏢 baza_id:', this.bazaId);
-
-            this.userId = this.userData?.id || this.userData?.user_id;
-            console.log('🆔 İstifadəçi ID:', this.userId);
-
-            this.userCompanyCode =
-                this.userData?.company_code ||
-                this.userData?.companyCode ||
-                this.userData?.company?.code ||
-                this.userData?.company?.company_code ||
-                this.userData?.current_company_code;
-
-            if (!this.userCompanyCode && this.apiService.token) {
-                try {
-                    const token = this.apiService.token;
-                    const parts = token.split('.');
-                    if (parts.length === 3) {
-                        const payload = JSON.parse(atob(parts[1]));
-                        this.userCompanyCode = payload.company_code || payload.companyCode;
-                    }
-                } catch(e) {}
+            // Hələ də yoxdursa, default
+            if (!this.bazaId) {
+                console.warn('⚠️ baza_id tapılmadı, default 14 istifadə olunur');
+                this.bazaId = 14;
             }
 
-            console.log('🏢 İstifadəçi şirkət kodu:', this.userCompanyCode);
+            console.log('✅ baza_id təyin edildi:', this.bazaId);
 
-            // baza_id-ni localStorage-da saxla (1C Dashboard üçün)
+            // localStorage-a yaz
             if (this.bazaId) {
                 localStorage.setItem('baza_id', this.bazaId);
-                localStorage.setItem('user_baza_id', this.bazaId);
-                console.log('💾 baza_id localStorage-a yazıldı:', this.bazaId);
+                localStorage.setItem('guven_baza_id', this.bazaId);
+            }
+
+            if (this.userCompanyCode) {
+                localStorage.setItem('company_code', this.userCompanyCode);
+            }
+
+            if (user.company_id) {
+                localStorage.setItem('company_id', user.company_id);
             }
 
             // Cache-lə
@@ -194,17 +164,8 @@ class DashboardManager {
                 userData: this.userData,
                 userId: this.userId,
                 userCompanyCode: this.userCompanyCode,
-                bazaId: this.bazaId  // <-- BURAYA ƏLAVƏ EDİN
+                bazaId: this.bazaId
             }, this.cacheTTL.userData);
-
-            if (this.userData) {
-                localStorage.setItem('user', JSON.stringify({
-                    ...this.userData,
-                    company_code: this.userCompanyCode,
-                    baza_id: this.bazaId,
-                    id: this.userId
-                }));
-            }
 
         } catch (error) {
             console.error('❌ İstifadəçi məlumatları alınmadı:', error);
@@ -214,44 +175,33 @@ class DashboardManager {
             throw error;
         }
     }
-    // 1C Dashboard-u açmaq üçün metod əlavə edin
-    openOneCDashboard() {
-        if (!this.bazaId) {
-            console.error('❌ baza_id tapılmadı!');
-            alert('Baza ID tapılmadı. Zəhmət olmasa yenidən daxil olun.');
-            return;
-        }
 
-        console.log('🚀 Opening 1C Dashboard for baza_id:', this.bazaId);
 
-        // Əgər GF1C obyekti varsa, onu çağır
-        if (typeof GF1C !== 'undefined' && GF1C.open) {
-            // baza_id-ni qlobal olaraq saxla
-            window.GF_BAZA_ID = this.bazaId;
-            GF1C.open();
-        } else {
-            // Əgər 1C Dashboard ayrı səhifədədirsə
-            window.location.href = `owner/owp.html?baza_id=${this.bazaId}`;
-        }
-    }
-
-    async loadCompanies(forceRefresh = false) {
+    // dashboard.js - təxminən 250-ci sətir
+    async loadCompanies() {
         try {
-            // Cache-dən yoxla
-            if (!forceRefresh) {
-                const cached = this.getCache('companies');
-                if (cached) {
-                    console.log('📦 Şirkətlər cache-dən yükləndi');
-                    this.companies = cached;
-                    localStorage.setItem('companiesCount', this.companies.length);
-                    return;
+            // company_id-ni DÜZGÜN oxu
+            let companyId = localStorage.getItem('company_id') ||
+                            localStorage.getItem('guven_company_id');
+
+            // Token-dən də oxumağa çalış
+            if (!companyId) {
+                const token = this.apiService.getToken();
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        companyId = payload.company_id;
+                    } catch(e) {}
                 }
             }
 
-            console.log('📡 Şirkətlər yüklənir...');
-            console.log(`🌐 API: /companies/${this.userCompanyCode}/sub-companies`);
+            if (!companyId) {
+                console.warn('⚠️ Company ID tapılmadı, skip');
+                return;
+            }
 
-            const response = await this.apiService.get(`/companies/${this.userCompanyCode}/sub-companies`);
+            console.log(`📡 Şirkətlər yüklənir: /companies/${companyId}/sub-companies`);
+            const response = await this.apiService.get(`/companies/${companyId}/sub-companies`);
 
             console.log('📥 API cavabı:', response);
 

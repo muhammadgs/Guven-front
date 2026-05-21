@@ -1,109 +1,181 @@
 // commentTracker.js - OXUNMAMIŞ COMMENT SAYI İLƏ (FİKS EDİLMİŞ VERSİYA)
-// 🔥 ƏSAS DƏYİŞİKLİK: Sonsuz interval qurulmasının QARŞISI ALINIB
+// 🔥 ƏSAS DƏYİŞİKLİKLƏR:
+// 1. Paralel API çağırışları LƏĞV EDİLDİ (508 səbəbi)
+// 2. Hər task üçün ayrı interval YOX, tək global interval
+// 3. 508 xətası tutulur və təkrar cəhd EDİLMİR
 
 window.CommentTracker = {
     commentCounts: {},
     unreadCounts: {},
-    intervals: {},
-    initializedTasks: new Set(),     // ✅ HANSI TASKLAR ARTIQ INIT EDİLİB
-    globalInterval: null,            // ✅ BİR ƏDƏD GLOBAL INTERVAL
-    isPolling: false,
-    pollingIntervalMs: 30000,
+    initializedTasks: new Set(),
+    failedTasks: new Set(),           // ✅ 508 xətası alan tasklar
+    globalInterval: null,
+    pollingIntervalMs: 45000,         // ✅ 45 saniyəyə artırıldı (server yükü azalsın)
+    isInitializing: false,
 
     async initForTasks(taskIds) {
         if (!taskIds || taskIds.length === 0) return;
 
-        // ✅ YALNIZ YENİ TASKLARI TAP
-        const newTaskIds = taskIds.filter(id => !this.initializedTasks.has(id));
+        // ✅ ƏGƏR ARTIQ INIT DAVAM EDİR İDƏ, GÖZLƏ
+        if (this.isInitializing) {
+            console.log('⏳ CommentTracker artıq init olunur, gözlənilir...');
+            let waitCount = 0;
+            while (this.isInitializing && waitCount < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                waitCount++;
+            }
+        }
+
+        this.isInitializing = true;
+
+        // ✅ YALNIZ YENİ VƏ UĞURSUZ OLMAYAN TASKLARI YÜKLƏ
+        const newTaskIds = taskIds.filter(id =>
+            !this.initializedTasks.has(id) && !this.failedTasks.has(id)
+        );
 
         if (newTaskIds.length === 0) {
-            console.log(`ℹ️ CommentTracker: ${taskIds.length} task artıq init edilib, yeni task yoxdur`);
+            console.log(`ℹ️ CommentTracker: ${taskIds.length} task artıq init edilib`);
+            this.isInitializing = false;
             return;
         }
 
         console.log(`🚀 CommentTracker init: ${newTaskIds.length} yeni task (cəmi ${taskIds.length})`);
 
-        // ✅ YENİ TASKLAR ÜÇÜN MƏLUMATLARI YÜKLƏ
-        for (const taskId of newTaskIds) {
+        // ✅ ARDICIL YÜKLƏMƏ (PARALEL YOX!) - hər task üçün 1 saniyə gözləmə
+        for (let i = 0; i < newTaskIds.length; i++) {
+            const taskId = newTaskIds[i];
+
             try {
-                const response = await makeApiRequest(`/comments/task/${taskId}`, 'GET', null, { silent: true });
+                // ✅ TIMEOUT MEXANİZMİ (5 saniyə)
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await makeApiRequest(`/comments/task/${taskId}`, 'GET', null, {
+                    silent: true,
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                // ✅ 508 xətasını yoxla
+                if (response && (response.status === 508 || response.error?.includes('508'))) {
+                    throw new Error('508 Loop Detected');
+                }
+
                 const count = Array.isArray(response) ? response.length :
                               (response?.data?.length || response?.items?.length || 0);
 
                 this.commentCounts[taskId] = count;
                 this.unreadCounts[taskId] = count;
-                this.initializedTasks.add(taskId);      // ✅ ARTIQ INIT EDİLDİ
+                this.initializedTasks.add(taskId);
                 this._updateBadge(taskId, count, count);
                 console.log(`✅ Task ${taskId}: ${count} comment (${count} oxunmamış)`);
+
             } catch(e) {
-                console.warn(`⚠️ Task ${taskId} comment alınmadı:`, e);
-                this.commentCounts[taskId] = 0;
-                this.unreadCounts[taskId] = 0;
-                this.initializedTasks.add(taskId);
-                this._updateBadge(taskId, 0, 0);
+                if (e.message?.includes('508') || e.message?.includes('Loop')) {
+                    console.warn(`⚠️ Task ${taskId} 508 xətası - tracking LƏĞV EDİLDİ`);
+                    this.failedTasks.add(taskId);  // ✅ BİR DAHA CƏHD ETMƏ
+                    this.commentCounts[taskId] = 0;
+                    this.unreadCounts[taskId] = 0;
+                    this._updateBadge(taskId, 0, 0);
+                } else if (e.name === 'AbortError') {
+                    console.warn(`⚠️ Task ${taskId} timeout - tracking LƏĞV EDİLDİ`);
+                    this.failedTasks.add(taskId);
+                } else {
+                    console.warn(`⚠️ Task ${taskId} comment alınmadı:`, e.message);
+                    this.commentCounts[taskId] = 0;
+                    this.unreadCounts[taskId] = 0;
+                    this.initializedTasks.add(taskId);
+                    this._updateBadge(taskId, 0, 0);
+                }
             }
 
-            await new Promise(r => setTimeout(r, 50)); // 100ms → 50ms azaldıldı
+            // ✅ Hər task arasında GÖZLƏ (server overload olmasın)
+            if (i < newTaskIds.length - 1) {
+                await new Promise(r => setTimeout(r, 500));
+            }
         }
 
-        // ✅ BİR DƏFƏLİK GLOBAL POLLING BAŞLAT (hər task üçün AYRI interval YOX!)
+        // ✅ BİR DƏFƏLİK GLOBAL POLLING BAŞLAT
         this._startGlobalPolling();
+        this.isInitializing = false;
     },
 
-    // ✅ BİR DƏFƏLİK GLOBAL POLLING - bütün taskları BİRLİKDƏ yoxlayır
     _startGlobalPolling() {
         if (this.globalInterval) {
-            // Artıq polling işləyir, yenisini başlatma
+            return; // Artıq işləyir
+        }
+
+        // ✅ YALNIZ SAĞLAM TASKLAR ÜÇÜN POLLING
+        const healthyTasks = Array.from(this.initializedTasks).filter(
+            id => !this.failedTasks.has(id)
+        );
+
+        if (healthyTasks.length === 0) {
+            console.log('ℹ️ CommentTracker: Polling başladılmadı (sağlam task yoxdur)');
             return;
         }
 
-        console.log('🔄 CommentTracker: Global polling başladı (hər 30 saniyə)');
+        console.log(`🔄 CommentTracker: Global polling başladı (${healthyTasks.length} task, hər ${this.pollingIntervalMs/1000} saniyə)`);
 
         this.globalInterval = setInterval(async () => {
-            if (this.initializedTasks.size === 0) return;
+            const activeTasks = Array.from(this.initializedTasks).filter(
+                id => !this.failedTasks.has(id)
+            );
 
-            const taskIds = Array.from(this.initializedTasks);
-            console.log(`📊 CommentTracker: ${taskIds.length} task yoxlanılır...`);
+            if (activeTasks.length === 0) {
+                return;
+            }
 
-            // ✅ BÜTÜN TASKLARI BİR YERDƏ YOXLA (serial yox, parallel limitli)
-            const batchSize = 5;
-            for (let i = 0; i < taskIds.length; i += batchSize) {
-                const batch = taskIds.slice(i, i + batchSize);
-                await Promise.all(batch.map(taskId => this._checkSingleTask(taskId)));
-                await new Promise(r => setTimeout(r, 100));
+            // ✅ ARDICIL YOXLAMA (PARALEL YOX!)
+            for (const taskId of activeTasks) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                    const res = await makeApiRequest(`/comments/task/${taskId}`, 'GET', null, {
+                        silent: true,
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (res && (res.status === 508 || res.error?.includes('508'))) {
+                        console.warn(`⚠️ Task ${taskId} polling-də 508 xətası - tracking dayandırıldı`);
+                        this.failedTasks.add(taskId);
+                        this.initializedTasks.delete(taskId);
+                        continue;
+                    }
+
+                    const newCount = Array.isArray(res) ? res.length :
+                                    (res?.data?.length || res?.items?.length || 0);
+
+                    const oldCount = this.commentCounts[taskId] || 0;
+
+                    if (newCount !== oldCount) {
+                        const diff = newCount - oldCount;
+                        const newUnread = (this.unreadCounts[taskId] || 0) + diff;
+                        this.commentCounts[taskId] = newCount;
+                        this.unreadCounts[taskId] = newUnread;
+                        this._updateBadge(taskId, newCount, newUnread);
+                        console.log(`🆕 Task ${taskId}: +${diff} yeni comment (${newUnread} oxunmamış)`);
+                    }
+
+                } catch(e) {
+                    if (!e.message?.includes('508') && e.name !== 'AbortError') {
+                        console.warn(`⚠️ Task ${taskId} polling xətası:`, e.message);
+                    }
+                }
+
+                // ✅ Hər yoxlama arasında 200ms gözlə
+                await new Promise(r => setTimeout(r, 200));
             }
         }, this.pollingIntervalMs);
     },
 
-    // ✅ TAK BİR TASK-I YOXLA (global polling üçün)
-    async _checkSingleTask(taskId) {
-        try {
-            const res = await makeApiRequest(`/comments/task/${taskId}`, 'GET', null, { silent: true });
-            const newCount = Array.isArray(res) ? res.length :
-                            (res?.data?.length || res?.items?.length || 0);
-
-            const oldCount = this.commentCounts[taskId] || 0;
-
-            if (newCount !== oldCount) {
-                const diff = newCount - oldCount;
-                const newUnread = (this.unreadCounts[taskId] || 0) + diff;
-                this.commentCounts[taskId] = newCount;
-                this.unreadCounts[taskId] = newUnread;
-                this._updateBadge(taskId, newCount, newUnread);
-                console.log(`🆕 Task ${taskId}: +${diff} yeni comment (${newUnread} oxunmamış)`);
-            }
-        } catch(e) {
-            // Səhvləri ignor et, amma logla
-            if (!e.message?.includes('508')) {
-                console.warn(`⚠️ Task ${taskId} yoxlanılmadı:`, e.message);
-            }
-        }
-    },
-
-    // 🔥 İstifadəçi comment-ləri açdıqda çağırılır
     markAsRead(taskId) {
         if (this.unreadCounts[taskId] && this.unreadCounts[taskId] > 0) {
-            console.log(`📖 Task ${taskId} comment-ləri oxundu, oxunmamış sayı sıfırlanır`);
+            console.log(`📖 Task ${taskId} comment-ləri oxundu`);
             this.unreadCounts[taskId] = 0;
             this._updateBadge(taskId, this.commentCounts[taskId], 0);
         }
@@ -113,7 +185,6 @@ window.CommentTracker = {
         const badge = document.querySelector(`.comment-count-badge[data-task-id="${taskId}"]`);
         if (!badge) return;
 
-        const oldUnread = parseInt(badge.getAttribute('data-unread') || '0');
         const displayCount = unreadCount > 0 ? unreadCount : totalCount;
 
         badge.textContent = displayCount;
@@ -124,35 +195,6 @@ window.CommentTracker = {
             badge.style.background = '#ef4444';
             badge.style.color = '#ffffff';
             badge.style.animation = 'pulse-red 1s infinite';
-
-            if (unreadCount > oldUnread && oldUnread !== undefined) {
-                const btn = badge.closest('button');
-                if (btn) {
-                    btn.querySelectorAll('.cmt-plus-one').forEach(e => e.remove());
-                    const plus = document.createElement('span');
-                    plus.className = 'cmt-plus-one';
-                    plus.textContent = `+${unreadCount - oldUnread}`;
-                    plus.style.cssText = `
-                        position: absolute;
-                        top: -15px;
-                        right: -10px;
-                        background: #ef4444;
-                        color: white;
-                        font-size: 11px;
-                        font-weight: bold;
-                        padding: 3px 6px;
-                        border-radius: 20px;
-                        pointer-events: none;
-                        animation: cmtBounce 0.5s ease-out forwards;
-                        z-index: 100;
-                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                        white-space: nowrap;
-                    `;
-                    btn.style.position = 'relative';
-                    btn.appendChild(plus);
-                    setTimeout(() => plus.remove(), 500);
-                }
-            }
         } else {
             badge.style.background = totalCount > 0 ? '#dbeafe' : '#f1f5f9';
             badge.style.color = totalCount > 0 ? '#1d4ed8' : '#94a3b8';
@@ -160,26 +202,25 @@ window.CommentTracker = {
         }
     },
 
-    // ✅ Tək task tracking-i dayandır (artıq ehtiyac yoxdur, amma legacy üçün saxlanır)
     stopTracking(taskId) {
-        if (this.intervals[taskId]) {
-            clearInterval(this.intervals[taskId]);
-            delete this.intervals[taskId];
-        }
         this.initializedTasks.delete(taskId);
+        this.failedTasks.delete(taskId);
     },
 
-    // ✅ BÜTÜN polling-i dayandır
     stopAllTracking() {
         if (this.globalInterval) {
             clearInterval(this.globalInterval);
             this.globalInterval = null;
         }
         this.initializedTasks.clear();
+        this.failedTasks.clear();
         console.log('⏹️ CommentTracker tamamilə dayandırıldı');
     },
 
     onCommentAdded(taskId) {
+        // 508 xətası almış tasklar üçün comment əlavə etmə
+        if (this.failedTasks.has(taskId)) return;
+
         const curTotal = this.commentCounts[taskId] ?? 0;
         const curUnread = this.unreadCounts[taskId] ?? 0;
         const newTotal = curTotal + 1;
@@ -187,34 +228,12 @@ window.CommentTracker = {
 
         this.commentCounts[taskId] = newTotal;
         this.unreadCounts[taskId] = newUnread;
-
         this._updateBadge(taskId, newTotal, newUnread);
         console.log(`💬 Yeni comment! Task ${taskId}: ümumi=${newTotal}, oxunmamış=${newUnread}`);
-
-        setTimeout(() => this._fetchSingle(taskId), 2000);
     },
 
-    async _fetchSingle(taskId) {
-        try {
-            const res = await makeApiRequest(`/comments/task/${taskId}`, 'GET', null, { silent: true });
-            const newCount = Array.isArray(res) ? res.length :
-                            (res?.data?.length || res?.items?.length || 0);
-
-            const oldCount = this.commentCounts[taskId] || 0;
-
-            if (newCount !== oldCount) {
-                const diff = newCount - oldCount;
-                const newUnread = (this.unreadCounts[taskId] || 0) + diff;
-                this.commentCounts[taskId] = newCount;
-                this.unreadCounts[taskId] = newUnread;
-                this._updateBadge(taskId, newCount, newUnread);
-            }
-        } catch(e) {}
-    },
-
-    // ✅ Təzələmə (lazım olarsa)
     refresh() {
-        const taskIds = Array.from(this.initializedTasks);
+        const taskIds = Array.from(this.initializedTasks).filter(id => !this.failedTasks.has(id));
         if (taskIds.length > 0) {
             this.initForTasks(taskIds);
         }
@@ -226,13 +245,6 @@ if (!document.getElementById('cmt-tracker-styles')) {
     const s = document.createElement('style');
     s.id = 'cmt-tracker-styles';
     s.textContent = `
-        @keyframes cmtBounce {
-            0% { transform: translateY(0) scale(0.8); opacity: 0; }
-            30% { transform: translateY(-8px) scale(1.1); opacity: 1; }
-            70% { transform: translateY(-2px) scale(1); opacity: 1; }
-            100% { transform: translateY(-20px) scale(0.9); opacity: 0; }
-        }
-        
         @keyframes pulse-red {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
             70% { transform: scale(1.05); box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); }
@@ -246,8 +258,12 @@ if (!document.getElementById('cmt-tracker-styles')) {
     document.head.appendChild(s);
 }
 
-window.refreshCommentCount = (taskId) => window.CommentTracker._fetchSingle(taskId);
+window.refreshCommentCount = (taskId) => {
+    if (!window.CommentTracker.failedTasks.has(taskId)) {
+        window.CommentTracker._fetchSingle(taskId);
+    }
+};
 window.onCommentAdded = (taskId) => window.CommentTracker.onCommentAdded(taskId);
 window.stopCommentTracking = () => window.CommentTracker.stopAllTracking();
 
-console.log('✅ CommentTracker yükləndi (FİKS EDİLMİŞ - oxunmamış comment sayı aktiv)');
+console.log('✅ CommentTracker yükləndi (FİKS EDİLMİŞ - 508 xətası həll olundu)');

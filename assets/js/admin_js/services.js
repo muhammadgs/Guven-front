@@ -2,67 +2,6 @@
 
 let currentServiceId = null;
 let servicesData = [];
-let serviceDescriptionQuill = null;
-
-function initServiceDescriptionEditor() {
-    const editorEl = document.getElementById('serviceDescriptionEditor');
-    if (!editorEl) return;
-
-    if (!serviceDescriptionQuill && window.Quill) {
-        serviceDescriptionQuill = new Quill(editorEl, {
-            theme: 'snow',
-            modules: {
-                toolbar: [
-                    [{ header: [2, 3, false] }],
-                    ['bold', 'italic', 'underline'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    [{ align: [] }],
-                    ['link'],
-                    ['clean']
-                ]
-            }
-        });
-    } else if (!window.Quill) {
-        editorEl.setAttribute('contenteditable', 'true');
-        editorEl.style.border = '1px solid #d9d9d9';
-        editorEl.style.padding = '12px';
-    }
-}
-
-function setServiceDescriptionHtml(html) {
-    initServiceDescriptionEditor();
-    const safeHtml = html || '';
-    if (serviceDescriptionQuill) {
-        serviceDescriptionQuill.root.innerHTML = safeHtml;
-    } else {
-        const hidden = document.getElementById('serviceDescription');
-        const editorEl = document.getElementById('serviceDescriptionEditor');
-        if (hidden) hidden.value = safeHtml;
-        if (editorEl) editorEl.innerHTML = safeHtml;
-    }
-}
-
-function getServiceDescriptionHtml() {
-    initServiceDescriptionEditor();
-    if (serviceDescriptionQuill) {
-        return serviceDescriptionQuill.root.innerHTML.trim();
-    }
-    const hiddenValue = document.getElementById('serviceDescription')?.value?.trim() || '';
-    if (hiddenValue) return hiddenValue;
-    return document.getElementById('serviceDescriptionEditor')?.innerHTML?.trim() || '';
-}
-
-function normalizeEditorHtml(html) {
-    const clean = (html || '').trim();
-    if (!clean || clean === '<p><br></p>') return '';
-    return clean;
-}
-
-function stripHtml(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return (div.textContent || div.innerText || '').trim();
-}
 
 async function loadServices(status = null) {
     console.log('🎯 Xidmətlər yüklənir...');
@@ -77,28 +16,15 @@ async function loadServices(status = null) {
         const result = await makeApiRequest(endpoint, 'GET', null, true);
 
         if (result && result.success && result.data) {
-            servicesData = result.data.map(service => {
-                const descriptionHtml =
-                    service.description_html ||
-                    service.content ||
-                    service.full_description ||
-                    service.description ||
-                    '';
-
-                return {
-                    id: service.id,
-                    name: service.name,
-                    items: service.items ? service.items.map(item => item.text || item.title || item.name || item.description || '') : [],
-                    order: service.order_num || service.order || 0,
-                    cta: service.cta_text || 'Ətraflı...',
-                    target: service.cta_target || 'konsultasiya',
-                    active: service.status === 'active',
-                    description: service.description || '',
-                    content: descriptionHtml,
-                    fullDescription: descriptionHtml,
-                    descriptionHtml: descriptionHtml
-                };
-            });
+            servicesData = result.data.map(service => ({
+                id: service.id,
+                name: service.name,
+                items: service.items ? service.items.map(item => item.text) : [],
+                order: service.order_num || 0,
+                cta: service.cta_text || 'Ətraflı...',
+                target: service.cta_target || 'konsultasiya',
+                active: service.status === 'active'
+            }));
 
             localStorage.setItem('guvenfinans-services', JSON.stringify(servicesData));
             renderServicesTable();
@@ -175,10 +101,6 @@ function showAddServiceModal() {
 
     document.querySelector('#serviceModal .modal-title').textContent = 'Yeni Xidmət';
     openModal('serviceModal');
-    setTimeout(() => {
-        initServiceDescriptionEditor();
-        setServiceDescriptionHtml('');
-    }, 0);
 }
 
 function editService(id) {
@@ -210,16 +132,6 @@ function editService(id) {
 
     document.querySelector('#serviceModal .modal-title').textContent = 'Xidməti Redaktə Et';
     openModal('serviceModal');
-    const descriptionHtml =
-        service.descriptionHtml ||
-        service.content ||
-        service.fullDescription ||
-        service.description ||
-        '';
-    setTimeout(() => {
-        initServiceDescriptionEditor();
-        setServiceDescriptionHtml(descriptionHtml);
-    }, 0);
 }
 
 // ============ ƏSAS FUNKSİYA - HTML "saveService" çağırır ============
@@ -230,13 +142,6 @@ async function saveService() {
     const cta = document.getElementById('serviceCta').value.trim();
     const target = document.getElementById('serviceTarget').value.trim();
     const active = document.getElementById('serviceIsActive').checked;
-    const descriptionHtml = normalizeEditorHtml(getServiceDescriptionHtml());
-    const hiddenDescription = document.getElementById('serviceDescription');
-    if (hiddenDescription) {
-        hiddenDescription.value = descriptionHtml;
-    }
-    const cleanDescriptionHtml = descriptionHtml || '';
-    const cleanDescriptionText = stripHtml(cleanDescriptionHtml);
 
     // Maddələri topla
     const itemInputs = document.querySelectorAll('.service-item');
@@ -277,11 +182,8 @@ async function saveService() {
     const serviceData = {
         name: name,
         slug: slug,
-        description: cleanDescriptionHtml,
-        content: cleanDescriptionHtml,
-        full_description: cleanDescriptionHtml,
-        description_html: cleanDescriptionHtml,
-        description_text: cleanDescriptionText,
+        description: name,
+        content: "",
         image_url: null,
         icon: "fa-chart-bar",
         order_num: order,
@@ -292,8 +194,6 @@ async function saveService() {
         items: items
     };
 
-    console.log('📝 Service description HTML:', cleanDescriptionHtml);
-    console.log('📝 Service description text:', cleanDescriptionText);
     console.log("📤 Göndərilən məlumat:", JSON.stringify(serviceData, null, 2));
 
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -316,11 +216,6 @@ async function saveService() {
             alert(serviceId ? 'Xidmət yeniləndi!' : 'Xidmət yaradıldı!');
             closeModal('serviceModal');
             await loadServices();
-            const savedService = servicesData.find(s => String(s.id) === String(serviceId || result.data?.id));
-            console.log('✅ Saved service after reload:', savedService);
-            if (!savedService || !(savedService.description || savedService.content || savedService.fullDescription || savedService.descriptionHtml)) {
-                console.warn('Backend did not return saved service description. Check API schema for service description field.');
-            }
         } else {
             const errorMsg = result?.error || result?.detail || 'Xidmət saxlanılmadı';
             alert(`Xəta: ${errorMsg}`);

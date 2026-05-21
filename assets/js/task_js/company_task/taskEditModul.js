@@ -952,8 +952,7 @@ const TaskEditModule = {
                         statusNote = `[${new Date().toLocaleString('az-AZ')}] ${userName} tərəfindən imtina edildi`;
                     } else if (finalStatus === 'cancelled') {
                         statusNote = `[${new Date().toLocaleString('az-AZ')}] ${userName} tərəfindən ləğv edildi`;
-                    } else if (finalStatus === 'completed') {
-                        statusNote = `[${new Date().toLocaleString('az-AZ')}] ${userName} tərəfindən tamamlandı`;
+                    
                     }
 
                     const statusUpdateData = {

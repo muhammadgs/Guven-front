@@ -37,7 +37,7 @@
         }
 
         clearInterval(interval);
-        console.log('✅ Container, token və user ID tapıldı');
+        console.log('✅ Container, token və user_service ID tapıldı');
 
         try {
             const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
@@ -87,7 +87,7 @@
                          alt="Profil şəkli" 
                          class="w-32 h-32 rounded-full object-cover border-4 border-brand-blue shadow-lg"
                          onload="console.log('✅ Şəkil yükləndi', this.naturalWidth, this.naturalHeight)"
-                         onerror="this.onerror=null; console.log('❌ Şəkil yüklənmədi'); this.parentElement.innerHTML='<div class=\\'flex flex-col items-center justify-center\\'><div class=\\'w-20 h-20 rounded-full bg-brand-soft flex items-center justify-center text-brand-blue\\'><i class=\\'fa-solid fa-user text-3xl\\'></i></div><p class=\\'text-sm text-slate-500 mt-2\\'>Şəkli yükləmək üçün klik edin</p></div>'">
+                         onerror="this.onerror=null; console.log('❌ Şəkil yüklənmədi'); this.parentElement.innerHTML='<div class=\\'flex flex-col items-center justify-center\\'><div class=\\'w-20 h-20 rounded-full bg-brand-soft flex items-center justify-center text-brand-blue\\'><i class=\\'fa-solid fa-user_service text-3xl\\'></i></div><p class=\\'text-sm text-slate-500 mt-2\\'>Şəkli yükləmək üçün klik edin</p></div>'">
                     <p class="text-sm text-slate-500 mt-2">Şəkli dəyişmək üçün klik edin</p>
                 </div>
             `;
@@ -181,7 +181,7 @@ class ProfileApp {
 
             console.log('✅ Authentication uğurlu');
 
-            // 2. Current user məlumatlarını yüklə
+            // 2. Current user_service məlumatlarını yüklə
             await this.loadCurrentUserData();
 
 
@@ -199,6 +199,12 @@ class ProfileApp {
 
             // 7. Modal listener-larını qur
             this.setupModalListeners();
+
+            // ASAN İmza Modalını başlat
+            if (this.profile && typeof this.profile.initAsanImzaModal === 'function') {
+                this.profile.initAsanImzaModal();
+                console.log('✅ ASAN İmza Modal başladıldı');
+            }
 
             this.setupFayllarimButton();
 
@@ -385,11 +391,11 @@ class ProfileApp {
                 if (userResponse.user.company_id) {
                     this.currentCompanyId = parseInt(userResponse.user.company_id);
                 } else {
-                    // Əgər user object-də company_id yoxdursa, API-dən gətir
+                    // Əgər user_service object-də company_id yoxdursa, API-dən gətir
                     await this.fetchCompanyIdFromCode();
                 }
 
-                // ✅ ƏSAS DÜZƏLİŞ: window.app.user-i set et
+                // ✅ ƏSAS DÜZƏLİŞ: window.app.user_service-i set et
                 window.app = window.app || this;
                 window.app.user = {
                     id: this.currentUserId,
@@ -438,7 +444,7 @@ class ProfileApp {
         try {
             console.log('🔍 Header elementləri axtarılır...');
 
-            // 1. Header-dakı user info div-i tap
+            // 1. Header-dakı user_service info div-i tap
             const userInfoDiv = document.querySelector('.flex.items-center.gap-3.rounded-2xl.bg-white.px-4.py-2.shadow-soft');
 
             if (userInfoDiv) {
@@ -520,43 +526,6 @@ class ProfileApp {
             const companyData = await this.companiesService.loadCompanyData(this.currentCompanyCode);
         } catch (error) {
 
-        }
-    }
-
-    setTaskManagerShell(isOpen) {
-        const profileContent = document.getElementById('profileContent');
-        const mainPanel = profileContent ? profileContent.closest('main') : document.querySelector('main');
-        const mainContainer = document.getElementById('mainContainer');
-
-        document.body.classList.toggle('task-manager-open', isOpen);
-
-        if (mainPanel) {
-            mainPanel.classList.toggle('task-manager-open', isOpen);
-        }
-
-        if (mainContainer) {
-            mainContainer.classList.toggle('task-manager-open', isOpen);
-        }
-
-        if (profileContent) {
-            profileContent.classList.toggle('task-manager-open', isOpen);
-
-            if (isOpen) {
-                profileContent.classList.remove('p-8');
-                profileContent.classList.add('p-0');
-                profileContent.style.padding = '0';
-                profileContent.style.margin = '0';
-                profileContent.style.overflow = 'hidden';
-                profileContent.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                profileContent.scrollTop = 0;
-            } else {
-                profileContent.classList.remove('p-0');
-                profileContent.classList.add('p-8');
-                profileContent.style.padding = '';
-                profileContent.style.margin = '';
-                profileContent.style.overflow = '';
-                profileContent.style.background = '';
-            }
         }
     }
 
@@ -822,7 +791,7 @@ class ProfileApp {
                         this.ui.showNotification('Uğurla çıxış edildi', 'success');
 
                         setTimeout(() => {
-                            window.location.href = 'login.html';
+                            window.location.href = '../login.html';
                         }, 1000);
 
                     } catch (error) {
@@ -1034,24 +1003,20 @@ class ProfileApp {
         });
     }
 
-   getFormData() {
-        const voenInput = document.getElementById('voen');
-        const voenValue = voenInput ? voenInput.value : '';
-
-        console.log('🔍 VÖEN input dəyəri:', voenValue);
-
+    // Form məlumatlarını almaq
+    getFormData() {
         const formData = {
             firstName: document.getElementById('firstName')?.value || '',
             lastName: document.getElementById('lastName')?.value || '',
             fatherName: document.getElementById('fatherName')?.value || '',
             gender: document.getElementById('gender')?.value || '',
             birthDate: document.getElementById('birthDate')?.value || '',
-            voen: voenValue,  // Birbaşa input dəyəri
+            voen: document.getElementById('voen')?.value || '',
             asanImza: document.getElementById('asanImza')?.value || '',
             asanId: document.getElementById('asanId')?.value || '',
             pin1: document.getElementById('pin1')?.value || '',
             pin2: document.getElementById('pin2')?.value || '',
-            puk: document.getElementById('puk')?.value || '',
+            puk: document.getElementById('puk')?.value || '',  // ✅ BURANI ƏLAVƏ EDİN
             finCode: document.getElementById('finCode')?.value || '',
             email: document.getElementById('email')?.value || '',
             phone: document.getElementById('phone')?.value || '',
@@ -1059,7 +1024,6 @@ class ProfileApp {
             password: document.getElementById('password')?.value || ''
         };
 
-        console.log('📝 Form data VÖEN:', formData.voen);
         return formData;
     }
 
@@ -1135,6 +1099,50 @@ class ProfileApp {
     setupModalListeners(){
         console.log('🔧 Modal düymələri bağlanır...');
 
+
+        // ==================== 1. İŞÇİLƏR DÜYMƏSİ ====================
+        const employeesBtn = document.getElementById('openEmployeesModalBtn');
+        if (employeesBtn) {
+            console.log('✅ İşçilər düyməsi tapıldı');
+
+            employeesBtn.replaceWith(employeesBtn.cloneNode(true));
+            const newEmployeesBtn = document.getElementById('openEmployeesModalBtn');
+
+            newEmployeesBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('👥 İşçilər düyməsinə klik edildi');
+
+                try {
+                    if (this._employeesClickDebounce) {
+                        console.log('⏱️ Çox tez klik, gözləyin...');
+                        return;
+                    }
+
+                    this._employeesClickDebounce = true;
+                    setTimeout(() => { this._employeesClickDebounce = false; }, 500);
+
+                    // BÜTÜN BÖLMƏLƏRİ SİL VƏ YA GİZLƏT
+                    this.clearAllSections();
+
+
+                    // Aktiv menyu stilini yenilə
+                    document.querySelectorAll('nav a').forEach(a => {
+                        a.classList.remove('bg-brand-soft', 'text-brand-blue');
+                    });
+                    newEmployeesBtn.classList.add('bg-brand-soft', 'text-brand-blue');
+
+                    // Sidebar-ı daralt
+                    const sidebar = document.getElementById('mainSidebar');
+                    if (sidebar) sidebar.classList.add('sidebar-collapsed');
+
+                } catch (error) {
+                    console.error('❌ İşçilər modulu xətası:', error);
+                }
+            });
+
+            console.log('✅ İşçilər düyməsi bağlandı');
+        }
 
         // ==================== 2. ŞİRKƏTLƏR DÜYMƏSİ ====================
         const companiesBtn = document.getElementById('openCompaniesModalBtn');
@@ -1411,6 +1419,24 @@ class ProfileApp {
                     console.error('❌ Xəta:', error);
                 }
             });
+            // ==================== 1C MƏLUMATLARIM DÜYMƏSİ ====================
+            const oneCLinks = document.querySelectorAll('a[href*="1c-dashboard"]');
+            oneCLinks.forEach(function(link) {
+                const newLink = link.cloneNode(true);
+                link.parentNode.replaceChild(newLink, link);
+
+                newLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('⬡ 1C Məlumatlarım açılır...');
+
+                    if (typeof GF1C !== 'undefined' && typeof GF1C.open === 'function') {
+                        GF1C.open();
+                    } else {
+                        console.error('❌ GF1C tapılmadı, skript yüklənibmi?');
+                    }
+                });
+            });
         }
 
         console.log('✅ Bütün düymələr bağlandı');
@@ -1509,56 +1535,26 @@ class ProfileApp {
 
                 this.clearAllSections();
 
-                // Task Manager açıq rejimə keçir:
-                // ağ parent səhifə, parent padding və parent scrollbar söndürülür
-                this.setTaskManagerShell(true);
-
-                const container =
-                    document.getElementById('profileContent') ||
-                    document.querySelector('main .overflow-y-auto') ||
-                    document.querySelector('main');
-
+                const container = document.querySelector('main .overflow-y-auto') || document.querySelector('main');
                 if (!container) return;
+
+                const taskSection = document.createElement('section');
+                taskSection.id = 'taskManagerSection';
+                taskSection.className = 'w-full h-full p-0';
+                taskSection.style.display = 'block';
+                taskSection.style.height = 'calc(100vh - 70px)';
 
                 const oldSection = document.getElementById('taskManagerSection');
                 if (oldSection) oldSection.remove();
 
-                const taskSection = document.createElement('section');
-                taskSection.id = 'taskManagerSection';
-                taskSection.className = 'task-manager-fullscreen-shell';
-                taskSection.style.cssText = `
-                display: block;
-                width: 100%;
-                height: 100%;
-                min-height: 100%;
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border-radius: 0;
-            `;
-
                 container.appendChild(taskSection);
 
-                // İFRAME ilə yüklə - parent ağ səhifə və parent scrollbar görünməyəcək
+                // İFRAME ilə yüklə - ƏN SADƏ VƏ ƏN ETİBARLI ÜSUL
                 taskSection.innerHTML = `
                     <iframe 
                         src="../task/task.html" 
+                        style="width: 100%; height: 100%; border: none; border-radius: 1rem; background: white;"
                         title="Task Manager"
-                        scrolling="no"
-                        style="
-                            display: block;
-                            width: 100%;
-                            height: 100%;
-                            min-height: 100%;
-                            border: 0;
-                            outline: 0;
-                            margin: 0;
-                            padding: 0;
-                            border-radius: 0;
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            overflow: hidden;
-                        "
                     ></iframe>
                 `;
 
@@ -1578,9 +1574,6 @@ class ProfileApp {
      */
     clearAllSections() {
         console.log('🧹 Bütün bölmələr təmizlənir...');
-
-        // Task Manager-dən çıxanda ağ parent səhifəni normal vəziyyətə qaytar
-        this.setTaskManagerShell(false);
 
         // 1. HTML-də olan əsas bölmələri gizlət
         const dashboardSection = document.getElementById('dashboardSection');
@@ -1613,7 +1606,6 @@ class ProfileApp {
                 console.log(`🗑️ ${id} silindi`);
             }
         });
-        
 
         sectionsToRemove.forEach(id => {
         const element = document.getElementById(id);
@@ -1649,10 +1641,16 @@ class ProfileApp {
             window.fileService.onFileChange = null;
         }
 
-        // 5. Açıq modalları bağla
+        // 5. Açıq modalları bağla - ASAN İMZA MODALINI SAXLA
         const modals = document.querySelectorAll('[id$="Modal"]');
         modals.forEach(modal => {
-            if (modal.id !== 'settingsMenu') { // Settings menu-sunu silmə
+            // ✅ ASAN İmza modalını SİLME, sadəcə gizlət
+            if (modal.id === 'asanImzaModal') {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
+            // Digər modalları sil
+            else if (modal.id !== 'settingsMenu') {
                 modal.remove();
             }
         });
@@ -1694,7 +1692,7 @@ class ProfileApp {
         if (parentInfo) {
             parentInfo.classList.remove('hidden');
 
-            // window.app.user-dən götür
+            // window.app.user_service-dən götür
             const user = window.app?.user || {};
 
             document.getElementById('parent-company-code').textContent = user.company_code || this.currentCompanyCode || '-';
@@ -2011,3 +2009,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 10000);
 })();
+
+// main.js faylında, CompaniesService yaradıldıqdan sonra əlavə edin
+
+// companiesService yaradıldıqdan sonra
+if (window.companiesService) {
+    // Bir az gözlə, companies yüklənsin
+    setTimeout(() => {
+        const companiesSection = document.getElementById('companiesSection');
+        if (companiesSection && companiesSection.style.display !== 'none') {
+            window.companiesService.initDetailPanel();
+        }
+    }, 1000);
+}

@@ -32,28 +32,23 @@ class DashboardRedirect {
         }
     }
 
+    // ✅ YENİ:
     checkAuthStatus() {
         const now = Date.now();
-
-        // Əgər son 30 saniyədə yoxlanılıbsa, yoxlama
-        if (now - this._lastCheck < 30000 && this._checking === false) {
-            return true;
-        }
-
+        if (now - this._lastCheck < 30000) return true;
         this._lastCheck = now;
         this._checking = true;
 
         try {
-            // AuthService varsa onunla yoxla
-            if (typeof AuthService !== 'undefined') {
-                // AuthService-in öz debounce-unu istifadə et
-                const result = AuthService.checkAuth();
+            // AuthService instance varsa onunla yoxla
+            if (window.authService && typeof window.authService.hasValidToken === 'function') {
+                const valid = window.authService.hasValidToken();
+                if (!valid) this.handleUnauthorized();
                 this._checking = false;
-                return result;
-            } else {
-                // AuthService yoxdursa, sadə yoxlama
-                return this.basicAuthCheck();
+                return valid;
             }
+            // Yoxsa sadə yoxlama
+            return this.basicAuthCheck();
         } catch (error) {
             console.error('❌ Auth yoxlama xətası:', error);
             this._checking = false;

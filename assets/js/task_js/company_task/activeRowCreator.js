@@ -1051,9 +1051,10 @@ const ActiveRowCreator = {
             if (uuids.length > 0) {
                 attachments = uuids.map(uuid => ({
                     file_id: uuid, uuid: uuid, id: uuid,
-                    filename: `fayl_${uuid.substring(0, 8)}`,
+                    filename: `recording_${uuid.substring(0, 8)}.webm`,
                     original_filename: `Fayl ${uuid.substring(0, 8)}`,
-                    mime_type: '', is_audio_recording: true
+                    mime_type: 'audio/webm',
+                    is_audio_recording: true
                 }));
             }
         }

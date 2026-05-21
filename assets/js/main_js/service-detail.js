@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    const FALLBACK_DESCRIPTION = 'Bu xidmət üzrə peşəkar dəstək təqdim edirik.';
+
     function normalizeAzSlug(value) {
         return String(value || '')
             .replace(/[Əə]/g, 'e')
@@ -24,9 +26,8 @@
         return {
             status: document.getElementById('service-detail-status'),
             title: document.getElementById('service-detail-title'),
-            items: document.getElementById('service-detail-items'),
-            descriptionSection: document.getElementById('service-detail-description-section'),
-            description: document.getElementById('service-detail-description')
+            desc: document.getElementById('service-detail-description'),
+            items: document.getElementById('service-detail-items')
         };
     }
 
@@ -52,50 +53,10 @@
         return { heading: heading || 'Xidmət detalı', body, order };
     }
 
-    function getServiceRichDescription(service) {
-        if (!service) return '';
-
-        const direct = String(
-            service.descriptionHtml ||
-            service.content ||
-            service.fullDescription ||
-            service.full_description ||
-            service.description_html ||
-            service.long_description ||
-            service.longDescription ||
-            service.body ||
-            service.about ||
-            service.details ||
-            service.detail ||
-            service.text ||
-            service.description ||
-            ''
-        ).trim();
-
-        if (direct) return direct;
-
-        const raw = service.original || {};
-        return String(
-            raw.description_html ||
-            raw.descriptionHtml ||
-            raw.content ||
-            raw.full_description ||
-            raw.fullDescription ||
-            raw.long_description ||
-            raw.longDescription ||
-            raw.body ||
-            raw.about ||
-            raw.details ||
-            raw.detail ||
-            raw.text ||
-            raw.description ||
-            ''
-        ).trim();
-    }
-
     function renderService(service) {
-        const { title, items } = getEls();
+        const { title, desc, items } = getEls();
         title.textContent = service.name || 'Xidmət';
+        desc.textContent = service.description || FALLBACK_DESCRIPTION;
 
         const normalizedItems = Array.isArray(service.items)
             ? service.items.map((item, index) => normalizeItem(item, index)).filter(Boolean).sort((a, b) => a.order - b.order)
@@ -112,70 +73,7 @@
             }).join('');
         }
 
-        renderServiceDescription(service);
         renderState('success', 'Məlumatlar yeniləndi.');
-    }
-
-    function renderServiceDescription(service) {
-        const { descriptionSection, description } = getEls();
-        if (!descriptionSection || !description) return;
-
-        const rawDescription = normalizeEditorHtml(getServiceRichDescription(service));
-
-        console.log('DESCRIPTION THAT WILL BE INSERTED INTO HTML:', rawDescription);
-
-        if (!rawDescription) {
-            description.innerHTML = '';
-            descriptionSection.hidden = true;
-            console.warn('No service description returned from public API for this service:', service);
-            return;
-        }
-
-        if (containsHtmlTags(rawDescription)) {
-            description.innerHTML = sanitizeRichHtml(rawDescription);
-        } else {
-            description.innerHTML = '<p>' + escapeHtml(rawDescription) + '</p>';
-        }
-
-        description.querySelectorAll('a').forEach((a) => {
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-        });
-
-        descriptionSection.hidden = false;
-    }
-
-    function normalizeEditorHtml(html) {
-        const clean = String(html || '').trim();
-        if (!clean || clean === '<p><br></p>') return '';
-        return clean;
-    }
-
-    function containsHtmlTags(value) {
-        return /<[^>]+>/.test(String(value || ''));
-    }
-
-    function stripHtml(html) {
-        const div = document.createElement('div');
-        div.innerHTML = html || '';
-        return (div.textContent || div.innerText || '').trim();
-    }
-
-    function escapeHtml(text) {
-        return String(text || '').replace(/[&<>"]/g, function(ch) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch] || ch;
-        });
-    }
-
-    function sanitizeRichHtml(html) {
-        if (!html) return '';
-        if (window.DOMPurify) {
-            return window.DOMPurify.sanitize(html, {
-                ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'a', 'span'],
-                ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class']
-            });
-        }
-        return '<p>' + escapeHtml(stripHtml(html)) + '</p>';
     }
 
     function findBySlug(services, slug) {

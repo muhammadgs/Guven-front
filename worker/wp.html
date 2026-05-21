@@ -138,7 +138,7 @@
                             </button>
                         </div>
                     </div>
-<!--                    <h2 class="sidebar-title text-sm font-semibold text-slate-400">İdarəetmə</h2>-->
+                    <h2 class="sidebar-title text-sm font-semibold text-slate-400">İdarəetmə</h2>
                     <nav class="mt-6 space-y-2 flex-1">
                         <!-- Giriş -->
                         <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
@@ -169,7 +169,7 @@
                         <!-- Departament və İş Növləri -->
                         <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
                             <i class="fa-solid fa-diagram-project w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Departamentlər</span>
+                            <span class="sidebar-text whitespace-nowrap">Departament və İş Növləri</span>
                         </a>
                         <!-- Diaqram -->
                         <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
@@ -590,28 +590,61 @@
         (function() {
             const v = Date.now();
 
-            const jsFiles = [
-                '../assets/js/worker_profile_js/api.service.js',
-                '../assets/js/worker_profile_js/auth.service.js',
+            // ⭐ 1. ƏVVƏLCƏ Service class-larını yüklə
+            const coreFiles = [
+                '../assets/js/base_api/api.service.js',
+                '../assets/js/base_api/auth.service.js'
+            ];
+
+            coreFiles.forEach(file => {
+                document.write(`<script src="${file}?v=${v}"><\/script>`);
+            });
+
+            // ⭐ 2. Global instance yarat (BURASI ƏHƏMİYYƏTLİ)
+            document.write(`<script>
+                (function() {
+                    console.log('🔄 Global service instance-ları yaradılır...');
+
+                    // ApiService instance
+                    if (typeof ApiService !== 'undefined' && !window.apiService) {
+                        window.apiService = new ApiService();
+                        console.log('✅ Global ApiService yaradıldı');
+                    }
+
+                    // AuthService instance
+                    if (typeof AuthService !== 'undefined' && !window.authService) {
+                        window.authService = new AuthService(window.apiService);
+                        console.log('✅ Global AuthService yaradıldı');
+                    }
+
+                    // Qlobal referanslar
+                    window.api = window.apiService;
+                    window.auth = window.authService;
+                })();
+            <\/script>`);
+
+            // ⭐ 3. Qalan bütün JS fayllarını yüklə
+            const otherFiles = [
+                '../assets/js/worker_profile_js/dashboard/dashboard.js',
                 '../assets/js/worker_profile_js/profile.service.js',
                 '../assets/js/worker_profile_js/company.service.js',
                 '../assets/js/worker_profile_js/partners.modal.js',
                 '../assets/js/worker_profile_js/file.service.js',
-                '../assets/js/worker_profile_js/task_manager/taskManagerLoader.js',
-                '../assets/js/owner_profile_js/dashboard/dashboard.js',
                 '../assets/js/worker_profile_js/file_service/files.ui.js',
                 '../assets/js/worker_profile_js/file_service/file.service.extended.js',
                 '../assets/js/worker_profile_js/file_service/companyFolderService.js',
+                '../assets/js/worker_profile_js/file_service/folder-permission-modal.js',
                 '../assets/js/worker_profile_js/ui.service.js',
                 '../assets/js/worker_profile_js/permissions.service.js',
                 '../assets/js/worker_profile_js/sidebar-fullscreen.js',
                 '../assets/js/worker_profile_js/obligations.service.js',
                 '../assets/js/worker_profile_js/positions.service.js',
                 '../assets/js/worker_profile_js/salary.service.js',
+                '../assets/js/worker_profile_js/task_manager/taskManagerLoader.js',
                 '../assets/js/worker_profile_js/main.js'
             ];
 
-            jsFiles.forEach(file => {
+            otherFiles.forEach(file => {
                 document.write(`<script src="${file}?v=${v}"><\/script>`);
             });
 

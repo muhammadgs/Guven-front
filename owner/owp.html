@@ -661,10 +661,42 @@
         (function() {
             const v = Date.now();
 
-            const jsFiles = [
+            // ⭐ 1. ƏVVƏLCƏ Service class-larını yüklə
+            const coreFiles = [
+                '../assets/js/base_api/api.service.js',
+                '../assets/js/base_api/auth.service.js'
+            ];
+
+            coreFiles.forEach(file => {
+                document.write(`<script src="${file}?v=${v}"><\/script>`);
+            });
+
+            // ⭐ 2. Global instance yarat (BURASI ƏHƏMİYYƏTLİ)
+            document.write(`<script>
+                (function() {
+                    console.log('🔄 Global service instance-ları yaradılır...');
+
+                    // ApiService instance
+                    if (typeof ApiService !== 'undefined' && !window.apiService) {
+                        window.apiService = new ApiService();
+                        console.log('✅ Global ApiService yaradıldı');
+                    }
+
+                    // AuthService instance
+                    if (typeof AuthService !== 'undefined' && !window.authService) {
+                        window.authService = new AuthService(window.apiService);
+                        console.log('✅ Global AuthService yaradıldı');
+                    }
+
+                    // Qlobal referanslar
+                    window.api = window.apiService;
+                    window.auth = window.authService;
+                })();
+            <\/script>`);
+
+            // ⭐ 3. Qalan bütün JS fayllarını yüklə
+            const otherFiles = [
                 '../assets/js/owner_profile_js/dashboard/dashboard.js',
-                '../assets/js/owner_profile_js/api.service.js',
-                '../assets/js/owner_profile_js/auth.service.js',
                 '../assets/js/owner_profile_js/profile.service.js',
                 '../assets/js/owner_profile_js/employees.service.js',
                 '../assets/js/owner_profile_js/company_service/company.service.js',
@@ -686,7 +718,7 @@
                 '../assets/js/owner_profile_js/main.js'
             ];
 
-            jsFiles.forEach(file => {
+            otherFiles.forEach(file => {
                 document.write(`<script src="${file}?v=${v}"><\/script>`);
             });
 

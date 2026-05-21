@@ -23,19 +23,28 @@ const TableManager = {
     initialize: function () {
         console.log('📊 TableManager initialize edilir...');
 
-        // Get table bodies
-        this.tableBodies.active = document.getElementById('tableBody');
-        this.tableBodies.archive = document.getElementById('archiveTableBody');
-        this.tableBodies.external = document.getElementById('externalTableBody');
-        this.tableBodies.partner = document.getElementById('partnerTableBody');
+        // ✅ DOM hazır deyilsə gözlə
+        const doInit = () => {
+            this.tableBodies.active   = document.getElementById('tableBody');
+            this.tableBodies.archive  = document.getElementById('archiveTableBody');
+            this.tableBodies.external = document.getElementById('externalTableBody');
+            this.tableBodies.partner  = document.getElementById('partnerTableBody');
 
-        // Get meta elements
-        this.metaElements.active = document.getElementById('tableMeta');
-        this.metaElements.archive = document.getElementById('archiveMeta');
-        this.metaElements.external = document.getElementById('externalMeta');
-        this.metaElements.partner = document.getElementById('partnerMeta');
+            this.metaElements.active   = document.getElementById('tableMeta');
+            this.metaElements.archive  = document.getElementById('archiveMeta');
+            this.metaElements.external = document.getElementById('externalMeta');
+            this.metaElements.partner  = document.getElementById('partnerMeta');
 
-        console.log('✅ TableManager hazırdır');
+            console.log('✅ TableManager hazırdır');
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', doInit);
+        } else {
+            doInit();
+        }
+
+        // ✅ loadUserData mövcud deyil, sadəcə return et
         return this;
     },
 
@@ -63,46 +72,10 @@ const TableManager = {
         }
 
         const tasksWithAttachments = tasks.map(async (task) => {
-            if (tableType === 'active') {
-                try {
-                    const response = await this.apiRequest(`/tasks/${task.id}`, 'GET');
-                    if (response && !response.error) {
-                        const taskDetail = response.data || response;
-
-                        if (taskDetail.attachments && taskDetail.attachments !== '[]') {
-                            task.attachments = taskDetail.attachments;
-                        }
-
-                        // ✅ file_uuids - PostgreSQL "{uuid,uuid}" formatını düzəlt
-                        let rawUuids = taskDetail.file_uuids;
-
-                        if (typeof rawUuids === 'string') {
-                            rawUuids = rawUuids
-                                .replace(/^\{/, '').replace(/\}$/, '')
-                                .split(',')
-                                .map(s => s.trim().replace(/"/g, ''))
-                                .filter(s => s.length === 36 && s.includes('-'));
-                        }
-
-                        if (Array.isArray(rawUuids) && rawUuids.length > 0) {
-                            const validUuids = rawUuids.filter(uuid =>
-                                typeof uuid === 'string' &&
-                                uuid.length === 36 &&
-                                uuid.includes('-')
-                            );
-                            task.file_uuids = validUuids;
-                            task.file_count = validUuids.length;
-                        } else {
-                            task.file_uuids = [];
-                            task.file_count = 0;
-                        }
-                    }
-                } catch (e) {
-                    console.error(`❌ Task ${task.id} xətası:`, e);
-                }
-            }
-
+            // ✅ Ayrıca API sorğusu yoxdur — task artıq bütün məlumatları ehtiva edir
             if (!task.attachments) task.attachments = [];
+            if (!task.file_uuids) task.file_uuids = [];
+            task.file_count = Array.isArray(task.file_uuids) ? task.file_uuids.length : 0;
             return task;
         });
 

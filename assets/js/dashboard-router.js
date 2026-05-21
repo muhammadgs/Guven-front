@@ -1,291 +1,241 @@
-// assets/js/dashboard-router.js - SADƏ VƏ ETİBARLI VERSİYA
+// assets/js/dashboard-router.js
 
 (function() {
-    'use strict';
-
-    console.log('📍 Dashboard Router v6.0 - Sadə versiya');
+    console.log('📍 Dashboard Router started');
 
     var API_BASE = "/proxy.php";
-    var USER_ME_ENDPOINT = API_BASE + "/api/v1/auth/me";
-    var REFRESH_ENDPOINT = API_BASE + "/api/v1/auth/refresh";
-
     var statusEl = document.getElementById('routing-status');
-    var loadingEl = document.getElementById('loading-spinner');
 
-    var setStatus = function(message, isError) {
-        if (statusEl) {
-            statusEl.textContent = message;
-            statusEl.style.color = isError ? '#b00020' : '#333';
-        }
-        console.log(message);
+    var setStatus = function(message) {
+        if (!statusEl) return;
+        statusEl.textContent = message;
     };
 
-    var showLoading = function(show) {
-        if (loadingEl) loadingEl.style.display = show ? 'flex' : 'none';
+    var showError = function(message) {
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.style.color = '#b00020';
     };
 
-    // Token alma
-    var getToken = function() {
-        var token = localStorage.getItem('guven_token') ||
-                    localStorage.getItem('access_token') ||
-                    document.cookie.match(/access_token=([^;]+)/)?.[1];
-
-        if (token && token !== 'null' && token !== 'undefined') {
-            return token;
-        }
-        return null;
+    var clearAuthStorage = function() {
+        var keys = [
+            'guven_token', 'guven_token_type', 'guven_user_role',
+            'guven_user_id', 'guven_user', 'guven_user_name',
+            'guven_company_name', 'guven_last_role_raw', 'guven_last_role_norm',
+            'auth_token', 'user_email', 'user_name', 'user_uuid'
+        ];
+        keys.forEach(function(key) { localStorage.removeItem(key); });
     };
 
-    // Refresh token alma
-    var getRefreshToken = function() {
-        return localStorage.getItem('guven_refresh_token') ||
-               localStorage.getItem('refresh_token');
-    };
-
-    // Token vaxtını yoxla
-    var isTokenExpired = function(token) {
-        if (!token) return true;
-        try {
-            var payload = JSON.parse(atob(token.split('.')[1]));
-            var exp = payload.exp;
-            var now = Math.floor(Date.now() / 1000);
-            return exp < now;
-        } catch(e) {
-            return true;
-        }
-    };
-
-    // Token yenilə
-    var refreshToken = async function() {
-        var refreshToken = getRefreshToken();
-        if (!refreshToken) {
-            console.log('❌ Refresh token yoxdur');
-            return false;
-        }
-
-        console.log('🔄 Token yenilənir...');
-        setStatus('Token yenilənir...');
-
-        try {
-            var response = await fetch(REFRESH_ENDPOINT, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh_token: refreshToken }),
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                var data = await response.json();
-                if (data.access_token) {
-                    localStorage.setItem('guven_token', data.access_token);
-                    localStorage.setItem('access_token', data.access_token);
-                    console.log('✅ Token yeniləndi');
-                    return true;
-                }
-            }
-
-            console.log('❌ Token yenilənmədi, status:', response.status);
-            return false;
-        } catch(e) {
-            console.error('Refresh xətası:', e);
-            return false;
-        }
-    };
-
-    // ROLU TAP (MÜTLƏQ)
-    var extractRole = function(userData) {
-        console.log('🔍 Rol axtarılır:', userData);
-
-        // 1. user_service.role
-        if (userData.user_service) {
-            var role = userData.user_service.role ||
-                      userData.user_service.user_type ||
-                      userData.user_service.user_role;
-            if (role && role !== 'null' && role !== 'undefined') {
-                console.log('✅ Rol user_service-dən:', role);
-                return role;
-            }
-        }
-
-        // 2. Root səviyyə
-        var directRole = userData.role || userData.user_type || userData.user_role;
-        if (directRole && directRole !== 'null' && directRole !== 'undefined') {
-            console.log('✅ Rol root-dan:', directRole);
-            return directRole;
-        }
-
-        // 3. Token-dən
-        var token = getToken();
-        if (token) {
-            try {
-                var payload = JSON.parse(atob(token.split('.')[1]));
-                var tokenRole = payload.role || payload.user_type || payload.user_role;
-                if (tokenRole) {
-                    console.log('✅ Rol token-dən:', tokenRole);
-                    return tokenRole;
-                }
-            } catch(e) {}
-        }
-
-        // 4. LocalStorage-dan
-        var storedRole = localStorage.getItem('guven_user_role');
-        if (storedRole && storedRole !== 'null') {
-            console.log('✅ Rol localStorage-dan:', storedRole);
-            return storedRole;
-        }
-
-        console.warn('⚠️ Rol tapılmadı, default "employee"');
-        return 'employee';
-    };
-
-    // Rol normallaşdır
     var normalizeRole = function(role) {
-        if (!role) return 'employee';
-        var r = String(role).toLowerCase().trim();
-
-        if (r === 'company_admin' || r === 'companyadmin' || r === 'ceo' || r === 'company') {
-            return 'company_admin';
-        }
-        if (r === 'super_admin' || r === 'superadmin' || r === 'admin') {
-            return 'super_admin';
-        }
-        return 'employee';
+        var normalized = String(role || '').trim().toLowerCase()
+            .replace(/\s+/g, '_')
+            .replace(/-/g, '_');
+        if (normalized === 'companyadmin')  return 'company_admin';
+        if (normalized === 'superadmin')    return 'super_admin';
+        if (normalized === 'company')       return 'company_admin';
+        if (normalized === 'worker')        return 'employee';
+        if (normalized === 'user')          return 'employee';
+        return normalized;
     };
 
-    // Yönləndir
-    var redirect = function(role) {
-        var normalized = normalizeRole(role);
-        console.log('🎯 Yönləndirilir:', normalized);
+    var extractRole = function(userData) {
+        if (!userData) return '';
 
-        var pages = {
-            'company_admin': '/owner/owp.html',
-            'super_admin': '/admin.html',
-            'employee': '/worker/wp.html'
-        };
+        // user_service obyekti varsa
+        if (userData.user_service) {
+            const us = userData.user_service;
+            return us.role
+                || us.user_role
+                || us.user_type
+                || us.type
+                || us.access_level
+                || us.permission
+                || '';
+        }
 
-        var url = pages[normalized] || '/worker/wp.html';
-
-        // 1 saniyə gözlə və yönləndir
-        setTimeout(function() {
-            window.location.href = url;
-        }, 500);
+        // Əsas obyekt
+        return userData.role
+            || userData.user_role
+            || userData.user_type
+            || userData.type
+            || userData.access_level
+            || (userData.user && (
+                userData.user.role
+                || userData.user.user_role
+                || userData.user.user_type
+            ))
+            || '';
     };
 
-    // ƏSAS FUNKSİYA
-    var init = async function(retryCount) {
-        retryCount = retryCount || 0;
-        if (retryCount > 3) {
-            setStatus('Xəta: Çox sayda cəhd', true);
-            setTimeout(function() { window.location.href = '/login.html'; }, 2000);
+    // 🔥 DÜZGÜN LOGIN YOLU
+    var LOGIN_URL = '/login.html';
+
+    var handleAuthFailure = function(reason) {
+        console.warn('🔐 Auth uğursuz:', reason);
+        clearAuthStorage();
+        window.location.href = LOGIN_URL + '?reason=' + encodeURIComponent(reason);
+    };
+
+    var routeByRole = function(rawRole) {
+        var raw = rawRole == null ? '' : String(rawRole);
+        var normalized = normalizeRole(raw);
+
+        localStorage.setItem('guven_last_role_raw', raw);
+        localStorage.setItem('guven_last_role_norm', normalized);
+
+        console.log('🎯 Role:', raw, '→', normalized);
+
+        if (normalized === 'company_admin' || normalized === 'company') {
+            window.location.href = '/owner/owp.html';
+            return;
+        }
+        if (normalized === 'employee') {
+            window.location.href = '/worker/wp.html';
+            return;
+        }
+        if (normalized === 'super_admin' || normalized === 'admin') {
+            window.location.href = '/admin.html';
             return;
         }
 
-        showLoading(true);
-        setStatus('Yoxlanılır...');
+        console.error('❌ Naməlum rol:', raw, normalized);
+        showError('Naməlum istifadəçi rolu: ' + raw);
+    };
 
-        var token = getToken();
+    // ============ TOKEN AL ============
+    var token = localStorage.getItem('guven_token')
+             || localStorage.getItem('auth_token')
+             || sessionStorage.getItem('guven_token')
+             || sessionStorage.getItem('auth_token');
 
-        // Token yoxdursa, refresh et
-        if (!token) {
-            console.log('Token yoxdur, refresh edilir...');
-            var refreshed = await refreshToken();
-            if (!refreshed) {
-                setStatus('Token tapılmadı, loginə yönləndirilir', true);
-                setTimeout(function() { window.location.href = '/login.html'; }, 1000);
-                return;
-            }
-            token = getToken();
-        }
+    if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
+        console.warn('❌ Token tapılmadı');
+        clearAuthStorage();
+        window.location.href = LOGIN_URL + '?reason=missing';
+        return;
+    }
 
-        // Token bitibsə, refresh et
-        if (isTokenExpired(token)) {
-            console.log('Token bitib, refresh edilir...');
-            var refreshed = await refreshToken();
-            if (!refreshed) {
-                setStatus('Token bitib, loginə yönləndirilir', true);
-                setTimeout(function() { window.location.href = '/login.html'; }, 1000);
-                return;
-            }
-            token = getToken();
-        }
+    // Token type
+    var tokenTypeRaw = localStorage.getItem('guven_token_type') || 'Bearer';
+    var tokenType = tokenTypeRaw
+        ? tokenTypeRaw.charAt(0).toUpperCase() + tokenTypeRaw.slice(1).toLowerCase()
+        : 'Bearer';
 
-        if (!token) {
-            setStatus('Token yoxdur', true);
-            setTimeout(function() { window.location.href = '/login.html'; }, 1000);
-            return;
-        }
-
-        // İstifadəçi məlumatlarını al
+    // ============ TOKEN EXPIRE YOXLAMA ============
+    var isTokenExpired = function(t) {
         try {
-            console.log('📡 İstifadəçi məlumatları alınır...');
-            var response = await fetch(USER_ME_ENDPOINT, {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + token,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
+            var parts = t.split('.');
+            if (parts.length !== 3) return true;
+            var payload = JSON.parse(atob(
+                parts[1].replace(/-/g, '+').replace(/_/g, '/')
+                    .padEnd(Math.ceil(parts[1].length / 4) * 4, '=')
+            ));
+            if (!payload.exp) return false;
+            return payload.exp < Math.floor(Date.now() / 1000);
+        } catch(e) {
+            return false; // Parse olmursa expired saymırıq
+        }
+    };
 
-            console.log('📡 Response status:', response.status);
+    if (isTokenExpired(token)) {
+        console.warn('⚠️ Token vaxtı bitib');
+        handleAuthFailure('expired');
+        return;
+    }
 
-            if (response.status === 401) {
-                console.log('401 xətası, refresh edilir...');
-                var refreshed = await refreshToken();
-                if (refreshed) {
-                    return init(retryCount + 1);
-                } else {
-                    setStatus('Sessiya bitib, yenidən daxil olun', true);
-                    setTimeout(function() { window.location.href = '/login.html'; }, 1000);
-                    return;
-                }
+    // ============ /auth/me SORĞUSU ============
+    var fetchUserMe = function(attempt) {
+        setStatus('Yönləndirilir...');
+
+        var url = '/proxy.php/api/v1/auth/me';
+        console.log('🔗 Sorğu:', url, '(cəhd:', attempt + 1, ')');
+
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': tokenType + ' ' + token,
+                'Accept': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(function(response) {
+            console.log('📥 Status:', response.status);
+
+            if (response.status === 401 || response.status === 403) {
+                handleAuthFailure('auth');
+                return null;
+            }
+
+            // 5xx — retry
+            if (response.status >= 500 && attempt < 2) {
+                console.warn('⚠️ Server xətası, yenidən cəhd...');
+                setTimeout(function() { fetchUserMe(attempt + 1); }, 800);
+                return null;
             }
 
             if (!response.ok) {
-                throw new Error('HTTP ' + response.status);
+                showError('Server xətası: ' + response.status);
+                return null;
             }
 
-            var data = await response.json();
-            console.log('📡 Cavab:', data);
+            return response.text().then(function(bodyText) {
+                if (!bodyText || bodyText.trim() === '') {
+                    showError('Boş cavab');
+                    return null;
+                }
+                try {
+                    return JSON.parse(bodyText);
+                } catch(e) {
+                    console.error('❌ JSON parse xətası:', bodyText.substring(0, 200));
+                    showError('Cavab oxuna bilmədi');
+                    return null;
+                }
+            });
+        })
+        .then(function(userData) {
+            if (!userData) return;
+
+            console.log('✅ İstifadəçi məlumatı:', userData);
 
             // Məlumatları saxla
-            if (data.user_service) {
-                var user = data.user_service;
-                if (user.id) localStorage.setItem('guven_user_id', user.id);
-                if (user.email) localStorage.setItem('guven_user_email', user.email);
-                if (user.baza_id) localStorage.setItem('baza_id', user.baza_id);
-                if (user.company_code) localStorage.setItem('guven_company_code', user.company_code);
-                if (user.company_name) localStorage.setItem('guven_company_name', user.company_name);
+            var userId   = userData.id || userData.user_id || (userData.user && userData.user.id) || '';
+            var userName = userData.ceo_name || userData.name || userData.full_name
+                        || (userData.user && (userData.user.name || userData.user.ceo_name)) || '';
+            var compName = userData.company_name
+                        || (userData.user && userData.user.company_name) || '';
+
+            if (userId)   localStorage.setItem('guven_user_id', userId);
+            if (userName) localStorage.setItem('guven_user_name', userName);
+            if (compName) localStorage.setItem('guven_company_name', compName);
+
+            var roleRaw = extractRole(userData);
+
+            if (!roleRaw) {
+                console.error('❌ Rol tapılmadı:', userData);
+                showError('İstifadəçi rolu tapılmadı');
+                return;
             }
 
-            // ROLU TAP VƏ YÖNLƏNDİR
-            var role = extractRole(data);
-            console.log('🎯 Təyin edilmiş rol:', role);
+            routeByRole(roleRaw);
+        })
+        .catch(function(err) {
+            console.error('❌ Fetch xətası:', err);
 
-            // Rolu saxla
-            localStorage.setItem('guven_user_role', role);
-            localStorage.setItem('user_role', role);
-
-            setStatus('Yönləndirilir: ' + role);
-            redirect(role);
-
-        } catch(error) {
-            console.error('Xəta:', error);
-            setStatus('Xəta: ' + error.message, true);
-
-            if (retryCount < 2) {
-                console.log('Yenidən cəhd edilir...');
-                setTimeout(function() { init(retryCount + 1); }, 1500);
-            } else {
-                setTimeout(function() { window.location.href = '/login.html'; }, 2000);
+            if (attempt < 2) {
+                setStatus('Yenidən cəhd edilir...');
+                setTimeout(function() { fetchUserMe(attempt + 1); }, 1000 * (attempt + 1));
+                return;
             }
-        }
+
+            showError('Bağlantı xətası. Yenidən cəhd edin.');
+            setTimeout(function() {
+                handleAuthFailure('network');
+            }, 2000);
+        });
     };
 
-    // BAŞLAT
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() { init(); });
-    } else {
-        init();
-    }
+    fetchUserMe(0);
+
 })();

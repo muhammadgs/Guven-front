@@ -712,7 +712,7 @@
         const dueDateInput = document.getElementById('newtaskDueDate');
         if (dueDateInput) {
             const d = new Date();
-            d.setDate(d.getDate());
+            d.setDate(d.getDate() + 1);
             dueDateInput.value = d.toISOString().split('T')[0];
         }
 

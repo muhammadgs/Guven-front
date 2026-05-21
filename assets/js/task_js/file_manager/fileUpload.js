@@ -1361,23 +1361,294 @@ FileUploadManager.removeModalFile = function(index) {
 // ==================== PREVIEW FUNCTIONS ====================
 FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAudioRecording = false) {
     try {
-        console.log(`👁️ Fayl preview: ${fileId}, ${filename}, audio: ${isAudioRecording}`);
+        console.log(`👁️ Fayl preview: ${fileId}`);
 
-        if (isAudioRecording || (mimeType && mimeType.startsWith('audio/'))) {
-            this.openAudioPreviewModal(fileId, filename);
-        } else if (mimeType && mimeType.startsWith('image/')) {
-            this.openImagePreviewModal(fileId, filename);
-        } else if (mimeType && mimeType.startsWith('video/')) {
-            this.openVideoPreviewModal(fileId, filename);
-        } else if (mimeType && (mimeType.includes('pdf') || filename?.endsWith('.pdf'))) {
-            this.openPdfPreviewModal(fileId, filename);
-        } else {
-            this.downloadFile(fileId, filename);
+        // Loading göstər
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'file-loading-overlay';
+        loadingDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:99999;';
+        loadingDiv.innerHTML = '<div style="background:white;padding:24px 32px;border-radius:12px;font-size:15px;display:flex;align-items:center;gap:12px;"><i class="fas fa-spinner fa-spin" style="color:#3b82f6;font-size:20px;"></i> Fayl yüklənir...</div>';
+        document.body.appendChild(loadingDiv);
+
+        const token = localStorage.getItem('guven_token') || '';
+
+        // Əvvəlcə fayl məlumatlarını al
+        try {
+            const info = await makeApiRequest(`/files/${fileId}`, 'GET');
+            const fileData = info?.data || info;
+            if (fileData?.mime_type) mimeType = fileData.mime_type;
+            if (fileData?.original_filename || fileData?.filename) {
+                filename = fileData.original_filename || fileData.filename || filename;
+            }
+            console.log(`📄 Fayl info: mime=${mimeType}, name=${filename}`);
+        } catch(e) {
+            console.warn('Fayl info alınmadı:', e);
         }
+
+        // Loading sil
+        document.getElementById('file-loading-overlay')?.remove();
+
+        const fn = (filename || '').toLowerCase();
+        const fileUrl = `/proxy.php/api/v1/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+
+        // Tip təyin et
+        const isAudio = isAudioRecording ||
+            (mimeType && mimeType.startsWith('audio/')) ||
+            fn.match(/\.(webm|mp3|wav|ogg|m4a)$/);
+
+        const isImage = (mimeType && mimeType.startsWith('image/')) ||
+            fn.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
+
+        const isVideo = (mimeType && mimeType.startsWith('video/')) ||
+            fn.match(/\.(mp4|mov|avi)$/);
+
+        const isPdf = (mimeType && mimeType.includes('pdf')) || fn.endsWith('.pdf');
+
+        const isWord = fn.match(/\.(doc|docx)$/);
+        const isExcel = fn.match(/\.(xls|xlsx)$/);
+
+        if (isAudio) {
+            this._openUniversalModal('audio', fileId, filename, fileUrl, mimeType);
+        } else if (isImage) {
+            this._openUniversalModal('image', fileId, filename, fileUrl, mimeType);
+        } else if (isVideo) {
+            this._openUniversalModal('video', fileId, filename, fileUrl, mimeType);
+        } else if (isPdf) {
+            this._openUniversalModal('pdf', fileId, filename, fileUrl, mimeType);
+        } else if (isWord || isExcel) {
+            // Google Docs viewer ilə aç
+            this._openUniversalModal('office', fileId, filename, fileUrl, mimeType);
+        } else {
+            // Naməlum — yenə də göstər, yükləmə linki ilə
+            this._openUniversalModal('unknown', fileId, filename, fileUrl, mimeType);
+        }
+
     } catch (error) {
-        console.error('❌ Fayl preview xətası:', error);
+        document.getElementById('file-loading-overlay')?.remove();
+        console.error('❌ Preview xətası:', error);
         this.showError('Fayl açıla bilmədi: ' + error.message);
     }
+};
+
+FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl, mimeType) {
+    // Köhnə modalları sil
+    document.querySelectorAll('[id$="PreviewModal"]').forEach(m => m.remove());
+    document.getElementById('universalPreviewModal')?.remove();
+
+    const token = localStorage.getItem('guven_token') || '';
+    const safeFilename = (filename || 'Fayl').replace(/'/g, "\\'");
+
+    let contentHtml = '';
+    let iconHtml = '';
+    let titleText = '';
+
+    if (type === 'audio') {
+        titleText = 'Səs Qeydi';
+        iconHtml = '<i class="fas fa-microphone" style="color:#3b82f6;"></i>';
+
+        // Mime type
+        let audioMime = mimeType || 'audio/webm';
+        const fn = (filename || '').toLowerCase();
+        if (fn.endsWith('.mp3')) audioMime = 'audio/mpeg';
+        else if (fn.endsWith('.wav')) audioMime = 'audio/wav';
+        else if (fn.endsWith('.ogg')) audioMime = 'audio/ogg';
+
+        contentHtml = `
+            <div style="text-align:center;padding:20px;">
+                <div style="margin-bottom:20px;">
+                    <i class="fas fa-microphone" style="font-size:56px;color:#3b82f6;"></i>
+                </div>
+                <div style="font-weight:600;color:#334155;margin-bottom:20px;font-size:15px;">
+                    ${FileUploadManager.escapeHtml(filename || 'Səs qeydi')}
+                </div>
+                <audio controls style="width:100%;border-radius:12px;outline:none;" id="uniAudioPlayer">
+                    <source src="${fileUrl}" type="${audioMime}">
+                    <source src="${fileUrl}" type="audio/webm">
+                    <source src="${fileUrl}" type="audio/mpeg">
+                    <source src="${fileUrl}" type="audio/wav">
+                </audio>
+                <div id="uniAudioStatus" style="margin-top:12px;font-size:13px;color:#64748b;">
+                    <i class="fas fa-spinner fa-spin"></i> Yüklənir...
+                </div>
+            </div>
+        `;
+    } else if (type === 'image') {
+        titleText = 'Şəkil';
+        iconHtml = '<i class="fas fa-image" style="color:#10b981;"></i>';
+        contentHtml = `
+            <div style="text-align:center;padding:20px;max-height:65vh;overflow-y:auto;">
+                <img src="${fileUrl}" 
+                     style="max-width:100%;max-height:60vh;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"
+                     alt="${FileUploadManager.escapeHtml(filename || 'Şəkil')}"
+                     id="uniImgEl"
+                     onerror="document.getElementById('uniImgError').style.display='block';this.style.display='none'">
+                <div id="uniImgError" style="display:none;padding:20px;color:#ef4444;">
+                    <i class="fas fa-exclamation-triangle"></i> Şəkil yüklənmədi.
+                    <br><a href="${fileUrl}" target="_blank" style="color:#3b82f6;">Birbaşa aç</a>
+                </div>
+            </div>
+        `;
+    } else if (type === 'video') {
+        titleText = 'Video';
+        iconHtml = '<i class="fas fa-video" style="color:#ef4444;"></i>';
+        contentHtml = `
+            <div style="text-align:center;padding:20px;">
+                <video controls style="max-width:100%;max-height:55vh;border-radius:8px;" id="uniVideoPlayer">
+                    <source src="${fileUrl}" type="${mimeType || 'video/mp4'}">
+                    <source src="${fileUrl}" type="video/webm">
+                    Brauzeriniz video dəstəkləmir.
+                </video>
+            </div>
+        `;
+    } else if (type === 'pdf') {
+        titleText = 'PDF Sənəd';
+        iconHtml = '<i class="fas fa-file-pdf" style="color:#ef4444;"></i>';
+        contentHtml = `
+            <div style="height:65vh;">
+                <iframe src="${fileUrl}" 
+                        style="width:100%;height:100%;border:none;border-radius:4px;"
+                        id="uniPdfFrame">
+                </iframe>
+                <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:center;">
+                    PDF yüklənmirsə — 
+                    <a href="${fileUrl}" target="_blank" style="color:#3b82f6;">yeni pəncərədə aç</a>
+                </div>
+            </div>
+        `;
+    } else if (type === 'office') {
+        titleText = 'Sənəd';
+        iconHtml = '<i class="fas fa-file-word" style="color:#3b82f6;"></i>';
+        // Tam URL lazımdır Google Docs viewer üçün
+        const fullUrl = `${window.location.origin}${fileUrl}`;
+        const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
+        contentHtml = `
+            <div style="height:65vh;">
+                <iframe src="${googleViewerUrl}" 
+                        style="width:100%;height:100%;border:none;border-radius:4px;">
+                </iframe>
+                <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:center;">
+                    Sənəd yüklənmirsə — 
+                    <a href="${fileUrl}" download="${FileUploadManager.escapeHtml(filename || 'fayl')}" style="color:#3b82f6;">yüklə</a>
+                </div>
+            </div>
+        `;
+    } else {
+        titleText = 'Fayl';
+        iconHtml = '<i class="fas fa-file" style="color:#64748b;"></i>';
+        contentHtml = `
+            <div style="text-align:center;padding:40px 20px;">
+                <i class="fas fa-file" style="font-size:64px;color:#94a3b8;margin-bottom:20px;display:block;"></i>
+                <div style="font-weight:600;color:#334155;margin-bottom:8px;font-size:16px;">
+                    ${FileUploadManager.escapeHtml(filename || 'Fayl')}
+                </div>
+                <div style="color:#64748b;font-size:13px;margin-bottom:24px;">
+                    Bu fayl tipi birbaşa göstərilə bilmir
+                </div>
+                <a href="${fileUrl}" download="${FileUploadManager.escapeHtml(filename || 'fayl')}"
+                   style="background:#3b82f6;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
+                    <i class="fas fa-download"></i> Yüklə
+                </a>
+            </div>
+        `;
+    }
+
+    const modalHTML = `
+        <div id="universalPreviewModal" style="
+            position:fixed;top:0;left:0;right:0;bottom:0;
+            background:rgba(0,0,0,0.6);
+            display:flex;align-items:center;justify-content:center;
+            z-index:100000;
+            padding:16px;
+        ">
+            <div style="
+                background:white;
+                border-radius:16px;
+                width:100%;
+                max-width:${type === 'pdf' || type === 'office' ? '900px' : type === 'image' ? '800px' : '550px'};
+                max-height:92vh;
+                display:flex;
+                flex-direction:column;
+                box-shadow:0 25px 50px rgba(0,0,0,0.25);
+                overflow:hidden;
+            ">
+                <!-- Header -->
+                <div style="
+                    display:flex;align-items:center;justify-content:space-between;
+                    padding:16px 20px;
+                    border-bottom:1px solid #e2e8f0;
+                    flex-shrink:0;
+                ">
+                    <div style="display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#0f172a;">
+                        ${iconHtml}
+                        <span>${titleText}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-size:12px;color:#94a3b8;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            ${FileUploadManager.escapeHtml(filename || '')}
+                        </span>
+                        <button onclick="FileUploadManager.closeModal('universalPreviewModal')" 
+                                style="background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;color:#64748b;display:flex;align-items:center;justify-content:center;">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Content -->
+                <div style="flex:1;overflow:auto;">
+                    ${contentHtml}
+                </div>
+
+                <!-- Footer -->
+                <div style="
+                    display:flex;justify-content:flex-end;gap:10px;
+                    padding:12px 20px;
+                    border-top:1px solid #e2e8f0;
+                    flex-shrink:0;
+                ">
+                    <button onclick="FileUploadManager.closeModal('universalPreviewModal')"
+                            style="padding:8px 16px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;color:#475569;font-weight:500;">
+                        Bağla
+                    </button>
+                    <a href="${fileUrl}" download="${FileUploadManager.escapeHtml(filename || 'fayl')}"
+                       style="padding:8px 18px;background:#3b82f6;color:white;border-radius:8px;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                        <i class="fas fa-download"></i> Yüklə
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Audio status yoxla
+    if (type === 'audio') {
+        setTimeout(() => {
+            const player = document.getElementById('uniAudioPlayer');
+            const status = document.getElementById('uniAudioStatus');
+            if (player && status) {
+                player.oncanplay = () => {
+                    status.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Hazırdır</span>';
+                };
+                player.onerror = () => {
+                    status.innerHTML = `<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> Yüklənmədi</span> — <a href="${fileUrl}" target="_blank" style="color:#3b82f6;">birbaşa aç</a>`;
+                };
+            }
+        }, 200);
+    }
+
+    // ESC ilə bağla
+    const escHandler = (e) => {
+        if (e.key === 'Escape') {
+            FileUploadManager.closeModal('universalPreviewModal');
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Kənar klik ilə bağla
+    document.getElementById('universalPreviewModal').addEventListener('click', function(e) {
+        if (e.target === this) FileUploadManager.closeModal('universalPreviewModal');
+    });
 };
 
 // ==================== IMAGE PREVIEW ====================
@@ -1557,115 +1828,64 @@ FileUploadManager.loadAudioForPreview = async function(fileId, filename) {
     try {
         console.log(`🎵 Audio yüklənir: ${fileId}`);
 
-        const audioInfo = document.getElementById('audioInfo');
-        if (audioInfo) {
-            audioInfo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yüklənir...';
-        }
-
-        // apiService vasitəsilə yüklə
-        const response = await makeApiRequest(`/files/${fileId}/download`, 'GET', null, true);
-
-        if (response.error) {
-            throw new Error(response.error);
-        }
-
-        console.log('✅ Audio cavabı:', response);
-
-        // Audio player-i tap
         const audioPlayer = document.getElementById('audioPlayer');
-        if (!audioPlayer) {
-            console.error('❌ Audio player tapılmadı');
-            return;
+        const audioInfo = document.getElementById('audioInfo');
+
+        if (!audioPlayer) return;
+
+        // Birbaşa URL ilə yüklə — ən etibarlı üsul
+        const token = localStorage.getItem('guven_token') || '';
+        const audioUrl = `/proxy.php/api/v1/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+
+        console.log('🔗 Audio URL:', audioUrl);
+
+        // Mime type yoxla
+        let mimeType = 'audio/webm';
+        const fn = (filename || '').toLowerCase();
+        if (fn.endsWith('.mp3')) mimeType = 'audio/mpeg';
+        else if (fn.endsWith('.wav')) mimeType = 'audio/wav';
+        else if (fn.endsWith('.ogg')) mimeType = 'audio/ogg';
+        else if (fn.endsWith('.webm')) mimeType = 'audio/webm';
+
+        // Audio source-u təyin et
+        audioPlayer.innerHTML = `
+            <source src="${audioUrl}" type="${mimeType}">
+            <source src="${audioUrl}" type="audio/webm">
+            <source src="${audioUrl}" type="audio/mpeg">
+            Brauzeriniz audio elementini dəstəkləmir.
+        `;
+        audioPlayer.load();
+
+        if (audioInfo) {
+            audioInfo.innerHTML = '<span style="color:#10b981;">✅ Hazırdır</span>';
         }
 
-        // Əgər response.url varsa (əgər backend URL qaytarırsa)
-        if (response.url) {
-            console.log('🔗 Audio URL:', response.url);
-            audioPlayer.src = response.url;
-            audioPlayer.load();
-
+        // Yükləmə xətası
+        audioPlayer.onerror = () => {
+            console.error('❌ Audio yüklənmədi');
             if (audioInfo) {
-                audioInfo.innerHTML = '<span style="color: #10b981;">✅ Hazırdır (URL)</span>';
+                audioInfo.innerHTML = `
+                    <span style="color:#ef4444;">❌ Audio yüklənmədi</span>
+                    <br>
+                    <a href="${audioUrl}" target="_blank" 
+                       style="color:#3b82f6;font-size:12px;text-decoration:underline;">
+                       Birbaşa aç
+                    </a>`;
             }
-            return;
-        }
+        };
 
-        // Əgər response Blob-dursa (birbaşa fayl məzmunu)
-        if (response instanceof Blob) {
-            console.log('📦 Audio blob:', response.type, response.size);
-            const audioUrl = URL.createObjectURL(response);
-            audioPlayer.src = audioUrl;
-            audioPlayer.load();
-
+        audioPlayer.oncanplay = () => {
+            console.log('✅ Audio hazırdır');
             if (audioInfo) {
-                audioInfo.innerHTML = '<span style="color: #10b981;">✅ Hazırdır (Blob)</span>';
+                audioInfo.innerHTML = '<span style="color:#10b981;">✅ Hazırdır</span>';
             }
-
-            // Yadda saxla ki, sonra təmizləyək
-            setTimeout(() => {
-                URL.revokeObjectURL(audioUrl);
-            }, 60000); // 1 dəqiqə sonra təmizlə
-
-            return;
-        }
-
-        // Əgər response ArrayBuffer və ya digər formatdadırsa
-        if (response instanceof ArrayBuffer) {
-            console.log('📦 Audio ArrayBuffer:', response.byteLength);
-            const blob = new Blob([response], { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(blob);
-            audioPlayer.src = audioUrl;
-            audioPlayer.load();
-
-            if (audioInfo) {
-                audioInfo.innerHTML = '<span style="color: #10b981;">✅ Hazırdır (ArrayBuffer)</span>';
-            }
-
-            setTimeout(() => {
-                URL.revokeObjectURL(audioUrl);
-            }, 60000);
-
-            return;
-        }
-
-        // Əgər response string-dirsə (base64 ola bilər)
-        if (typeof response === 'string') {
-            console.log('📦 Audio string:', response.substring(0, 50));
-
-            // Base64 yoxla
-            if (response.startsWith('data:audio')) {
-                audioPlayer.src = response;
-                audioPlayer.load();
-
-                if (audioInfo) {
-                    audioInfo.innerHTML = '<span style="color: #10b981;">✅ Hazırdır (Base64)</span>';
-                }
-                return;
-            }
-        }
-
-        // Heç bir format tanınmadı
-        throw new Error('Fayl formatı tanınmadı');
+        };
 
     } catch (error) {
-        console.error('❌ Audio yükləmə xətası:', error);
+        console.error('❌ Audio xətası:', error);
         const audioInfo = document.getElementById('audioInfo');
         if (audioInfo) {
-            audioInfo.innerHTML = `<span style="color: #ef4444;">❌ Xəta: ${error.message}</span>`;
-        }
-
-        // Fallback: birbaşa endpoint-ə keçid
-        const audioPlayer = document.getElementById('audioPlayer');
-        if (audioPlayer) {
-            const token = localStorage.getItem('guven_token');
-            const fallbackUrl = `/proxy.php/api/v1/files/${fileId}/download?token=${encodeURIComponent(token || '')}`;
-            console.log('🔄 Fallback URL:', fallbackUrl);
-            audioPlayer.src = fallbackUrl;
-            audioPlayer.load();
-
-            if (audioInfo) {
-                audioInfo.innerHTML = '<span style="color: #f59e0b;">⚠️ Fallback istifadə olunur</span>';
-            }
+            audioInfo.innerHTML = `<span style="color:#ef4444;">❌ ${error.message}</span>`;
         }
     }
 };

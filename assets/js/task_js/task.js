@@ -1,4 +1,22 @@
 // task.js - User-specific TaskCache
+// task.js - faylın ən başına (TaskCache-dən əvvəl) əlavə et
+function _waitForGlobals() {
+    return new Promise((resolve) => {
+        if (window.getSubCompaniesWithCache) {
+            resolve();
+            return;
+        }
+        let attempts = 0;
+        const check = setInterval(() => {
+            attempts++;
+            if (window.getSubCompaniesWithCache || attempts > 50) {
+                clearInterval(check);
+                resolve();
+            }
+        }, 100);
+    });
+}
+
 const TaskCache = {
     prefix: 'tc_',
     ttl: 5 * 60 * 1000,
@@ -291,12 +309,17 @@ class TaskManager {
             this.showLoading('Məlumatlar yüklənir...');
 
             // ✅ BÜTÜN MƏLUMATLAR CACHE İLƏ YÜKLƏNIR - yalnız bir dəfə API sorğusu
-            const [subCompanies, departments, employees] = await Promise.all([
-                getSubCompaniesWithCache(this.userData.companyCode),
-                getDepartmentsWithCache(this.userData.companyCode),
-                getEmployeesWithCache(this.userData.companyCode)
-            ]);
+            const getSubCo  = window.getSubCompaniesWithCache  || (async () => []);
+            const getDepts  = window.getDepartmentsWithCache   || (async () => []);
+            const getEmps   = window.getEmployeesWithCache     || (async () => []);
+            const getWTypes = window.getWorkTypesWithCache     || (async () => []);
+            const getAllCo  = window.getAllCompaniesWithCache   || (async () => []);
 
+            const [subCompanies, departments, employees] = await Promise.all([
+                getSubCo(this.userData.companyCode),
+                getDepts(this.userData.companyCode),
+                getEmps(this.userData.companyCode)
+            ]);
             // Şirkət məlumatı
             this.myCompany = {
                 id: this.userData.companyId,
@@ -343,7 +366,8 @@ class TaskManager {
             if (window.FormManager?.loadWorkTypes) {
                 await window.FormManager.loadWorkTypes();
             } else {
-                const wt = await getWorkTypesWithCache(this.userData.companyId);
+                const wt = await (window.getWorkTypesWithCache || (async () => []))(this.userData.companyId);
+
                 this.workTypes = Array.isArray(wt) ? wt : [];
             }
 
@@ -368,53 +392,21 @@ class TaskManager {
         try {
             this.companyCache = {};
 
-            // Öz şirkət - REAL ADINI AL
             if (this.myCompany && this.myCompany.id) {
-                // Əvvəlcə userData-dan şirkət adını al
-                let myCompanyName = this.userData?.companyName || this.myCompany?.company_name;
+                let myCompanyName = this.userData?.companyName;
 
-                // Əgər yoxdursa, API-dən yüklə
                 if (!myCompanyName) {
-                    try {
-                        const companyResponse = await makeApiRequest(`/companies/${this.myCompany.id}`, 'GET');
-                        if (companyResponse && !companyResponse.error) {
-                            const company = companyResponse.data || companyResponse;
-                            myCompanyName = company.company_name || company.name;
-                        }
-                    } catch (e) {
-                        console.warn('⚠️ Şirkət adı API-dən alınmadı:', e);
+                    // ❌ Köhnə: /companies/55
+                    // ✅ Yeni: companies/code/SOC26001
+                    const companyResponse = await makeApiRequest(`/companies/code/${this.userData.companyCode}`, 'GET');
+                    if (companyResponse && !companyResponse.error) {
+                        myCompanyName = companyResponse.company_name;
                     }
                 }
 
-                // Hələ də yoxdursa, fallback
-                if (!myCompanyName) {
-                    myCompanyName = this.userData?.companyName || this.myCompany.company_name;
-                }
-
-                this.companyCache[this.myCompany.id] = myCompanyName;
-                console.log(`✅ Öz şirkət cache-ə əlavə edildi: ${this.myCompany.id} = ${myCompanyName}`);
+                this.companyCache[this.myCompany.id] = myCompanyName || this.userData.companyCode;
             }
-
-            // Alt şirkətlər
-            this.subsidiaryCompanies.forEach(s => {
-                if (s.id && s.company_name) {
-                    this.companyCache[s.id] = s.company_name;
-                }
-            });
-
-            // Bütün şirkətlər cache ilə
-            const all = await getAllCompaniesWithCache();
-            const allArr = Array.isArray(all) ? all : [];
-            allArr.forEach(c => {
-                if (c.id && c.company_name && !this.companyCache[c.id]) {
-                    this.companyCache[c.id] = c.company_name;
-                }
-            });
-
-            console.log(`✅ Company cache: ${Object.keys(this.companyCache).length} şirkət`);
-            console.log('📋 Company cache məzmunu:', this.companyCache);
-
-        } catch (e) {
+        } catch(e) {
             console.warn('⚠️ Company cache xətası:', e);
         }
     }
@@ -429,7 +421,7 @@ class TaskManager {
             partniyorSelect.disabled = true;
 
             // ✅ CACHE İSTİFADƏ ET
-            const partners = await getPartnersWithCache(this.userData.companyCode);
+            const partners = await (window.getPartnersWithCache || (async () => []))(this.userData.companyCode);
             const arr = Array.isArray(partners) ? partners : (partners?.items || partners?.data || []);
 
             if (!arr.length) {
@@ -484,7 +476,7 @@ class TaskManager {
             parentSelect.disabled = true;
 
             // ✅ CACHE İSTİFADƏ ET
-            const parents = await getParentCompaniesWithCache(this.userData.companyCode);
+            const parents = await (window.getParentCompaniesWithCache || (async () => []))(this.userData.companyCode);
             const arr = Array.isArray(parents) ? parents : (parents?.parent_companies || []);
 
             this.populateParentSelect(parentSelect, arr);
@@ -619,7 +611,7 @@ class TaskManager {
             }
 
             // ✅ Cache ilə yüklə
-            const emps = await getEmployeesWithCache(code);
+            const emps = await (window.getEmployeesWithCache || (async () => []))(code);
             const arr = Array.isArray(emps) ? emps : (emps?.data || []);
 
             let html = '<option value="">İşçi seçin</option>';
