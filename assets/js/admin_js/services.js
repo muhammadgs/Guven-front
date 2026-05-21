@@ -3,6 +3,69 @@
 let currentServiceId = null;
 let servicesData = [];
 
+function pickServiceDescription(source) {
+    if (!source || typeof source !== 'object') return '';
+    const keys = ['description', 'content', 'full_description', 'description_html', 'service_description'];
+    for (const key of keys) {
+        const value = source[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+}
+
+function getServiceDescriptionValue() {
+    const descEl = document.getElementById('serviceDescription');
+    if (!descEl) return '';
+
+    if (window.tinymce && typeof window.tinymce.get === 'function' && descEl.id) {
+        const tiny = window.tinymce.get(descEl.id);
+        if (tiny && typeof tiny.getContent === 'function') return tiny.getContent().trim();
+    }
+
+    if (window.CKEDITOR && window.CKEDITOR.instances && descEl.id && window.CKEDITOR.instances[descEl.id]) {
+        return String(window.CKEDITOR.instances[descEl.id].getData() || '').trim();
+    }
+
+    if (descEl.__quill && typeof descEl.__quill.root?.innerHTML === 'string') {
+        return descEl.__quill.root.innerHTML.trim();
+    }
+
+    if (descEl.classList.contains('ql-editor')) return String(descEl.innerHTML || '').trim();
+    if (descEl.isContentEditable) return String(descEl.innerHTML || '').trim();
+    return String(descEl.value || '').trim();
+}
+
+function setServiceDescriptionValue(value) {
+    const descEl = document.getElementById('serviceDescription');
+    if (!descEl) return;
+    const safeValue = String(value || '');
+
+    if (window.tinymce && typeof window.tinymce.get === 'function' && descEl.id) {
+        const tiny = window.tinymce.get(descEl.id);
+        if (tiny && typeof tiny.setContent === 'function') {
+            tiny.setContent(safeValue);
+            return;
+        }
+    }
+
+    if (window.CKEDITOR && window.CKEDITOR.instances && descEl.id && window.CKEDITOR.instances[descEl.id]) {
+        window.CKEDITOR.instances[descEl.id].setData(safeValue);
+        return;
+    }
+
+    if (descEl.__quill && typeof descEl.__quill.clipboard?.dangerouslyPasteHTML === 'function') {
+        descEl.__quill.clipboard.dangerouslyPasteHTML(safeValue);
+        return;
+    }
+
+    if (descEl.classList.contains('ql-editor') || descEl.isContentEditable) {
+        descEl.innerHTML = safeValue;
+        return;
+    }
+
+    descEl.value = safeValue;
+}
+
 async function loadServices(status = null) {
     console.log('🎯 Xidmətlər yüklənir...');
 
@@ -20,6 +83,7 @@ async function loadServices(status = null) {
                 id: service.id,
                 name: service.name,
                 items: service.items ? service.items.map(item => item.text) : [],
+                description: pickServiceDescription(service),
                 order: service.order_num || 0,
                 cta: service.cta_text || 'Ətraflı...',
                 target: service.cta_target || 'konsultasiya',
@@ -86,6 +150,7 @@ function showAddServiceModal() {
     document.getElementById('serviceCta').value = 'Ətraflı...';
     document.getElementById('serviceTarget').value = 'konsultasiya';
     document.getElementById('serviceIsActive').checked = true;
+    setServiceDescriptionValue('');
 
     const container = document.getElementById('serviceItemsContainer');
     if (container) {
@@ -114,6 +179,7 @@ function editService(id) {
     document.getElementById('serviceCta').value = service.cta;
     document.getElementById('serviceTarget').value = service.target;
     document.getElementById('serviceIsActive').checked = service.active;
+    setServiceDescriptionValue(service.description || '');
 
     const container = document.getElementById('serviceItemsContainer');
     if (container) {
@@ -142,6 +208,7 @@ async function saveService() {
     const cta = document.getElementById('serviceCta').value.trim();
     const target = document.getElementById('serviceTarget').value.trim();
     const active = document.getElementById('serviceIsActive').checked;
+    const description = getServiceDescriptionValue();
 
     // Maddələri topla
     const itemInputs = document.querySelectorAll('.service-item');
@@ -182,8 +249,11 @@ async function saveService() {
     const serviceData = {
         name: name,
         slug: slug,
-        description: name,
-        content: "",
+        description: description,
+        content: description,
+        full_description: description,
+        description_html: description,
+        service_description: description,
         image_url: null,
         icon: "fa-chart-bar",
         order_num: order,

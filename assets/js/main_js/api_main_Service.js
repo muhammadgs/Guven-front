@@ -305,6 +305,16 @@ const ApiMainService = (function() {
     }
 
     const services = {
+        pickDescription: (raw) => {
+            if (!raw || typeof raw !== 'object') return '';
+            const keys = ['description_html', 'full_description', 'service_description', 'content', 'description', 'text', 'about', 'detail_description'];
+            for (const key of keys) {
+                const value = raw[key];
+                if (typeof value === 'string' && value.trim()) return value.trim();
+            }
+            return '';
+        },
+
         normalizeItem: (item, index = 0) => {
             if (!item || (typeof item !== 'object' && typeof item !== 'string' && typeof item !== 'number')) return null;
 
@@ -335,7 +345,7 @@ const ApiMainService = (function() {
                 id: raw.id || raw.service_id || null,
                 name,
                 slug,
-                description: String(raw.description || raw.text || raw.content || '').trim(),
+                description: services.pickDescription(raw),
                 items: normalizedItems,
                 order: Number(raw.order || raw.sort_order || 0) || 0,
                 active: typeof raw.active === 'boolean' ? raw.active : (typeof raw.is_active === 'boolean' ? raw.is_active : true),
