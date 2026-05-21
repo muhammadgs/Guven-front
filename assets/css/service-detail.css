@@ -71,7 +71,7 @@
   z-index: 2;
   max-width: min(1520px, 100%);
   margin: 0 auto;
-  padding: 110px clamp(20px, 2vw, 32px) 120px;
+  padding: 50px clamp(20px, 2vw, 32px) 120px;
 }
 
 .service-detail-hero {
@@ -210,7 +210,7 @@
 
 @media (max-width: 1024px) {
   .service-detail-main {
-    padding-top: 90px;
+    padding-top: 55px;
   }
 
   .service-detail-content-grid {
@@ -244,7 +244,7 @@
   }
 
   .service-detail-main {
-    padding: 70px 22px 90px;
+    padding: 40px 22px 90px;
   }
 
   .service-detail-hero {
