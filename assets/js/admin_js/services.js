@@ -2,10 +2,11 @@
 
 let currentServiceId = null;
 let servicesData = [];
+let serviceDescriptionQuill = null;
 
 function pickServiceDescription(source) {
     if (!source || typeof source !== 'object') return '';
-    const keys = ['description', 'content', 'full_description', 'description_html', 'service_description'];
+    const keys = ['description_html', 'full_description', 'service_description', 'content', 'description', 'text', 'about', 'detail_description'];
     for (const key of keys) {
         const value = source[key];
         if (typeof value === 'string' && value.trim()) return value.trim();
@@ -13,25 +14,49 @@ function pickServiceDescription(source) {
     return '';
 }
 
+function initServiceDescriptionEditor() {
+    if (serviceDescriptionQuill) return serviceDescriptionQuill;
+
+    const hiddenField = document.getElementById('serviceDescription');
+    const editorEl = document.getElementById('serviceDescriptionEditor');
+    const toolbarEl = document.getElementById('serviceDescriptionToolbar');
+
+    if (!hiddenField || !editorEl || !toolbarEl || typeof window.Quill !== 'function') {
+        return null;
+    }
+
+    const Font = window.Quill.import('formats/font');
+    Font.whitelist = ['poppins', 'inter', 'roboto', 'montserrat', 'open-sans', 'lato', 'merriweather', 'playfair-display', 'arial'];
+    window.Quill.register(Font, true);
+
+    const Size = window.Quill.import('attributors/class/size');
+    Size.whitelist = ['small', 'normal', 'large', 'huge'];
+    window.Quill.register(Size, true);
+
+    serviceDescriptionQuill = new window.Quill('#serviceDescriptionEditor', {
+        theme: 'snow',
+        modules: { toolbar: '#serviceDescriptionToolbar' },
+        placeholder: 'Xidmət üçün ətraflı açıqlama daxil edin...'
+    });
+
+    serviceDescriptionQuill.on('text-change', function () {
+        hiddenField.value = getServiceDescriptionValue();
+    });
+
+    return serviceDescriptionQuill;
+}
+
 function getServiceDescriptionValue() {
     const descEl = document.getElementById('serviceDescription');
     if (!descEl) return '';
 
-    if (window.tinymce && typeof window.tinymce.get === 'function' && descEl.id) {
-        const tiny = window.tinymce.get(descEl.id);
-        if (tiny && typeof tiny.getContent === 'function') return tiny.getContent().trim();
+    if (serviceDescriptionQuill && serviceDescriptionQuill.root) {
+        const html = String(serviceDescriptionQuill.root.innerHTML || '').trim();
+        const normalized = html === '<p><br></p>' ? '' : html;
+        descEl.value = normalized;
+        return normalized;
     }
 
-    if (window.CKEDITOR && window.CKEDITOR.instances && descEl.id && window.CKEDITOR.instances[descEl.id]) {
-        return String(window.CKEDITOR.instances[descEl.id].getData() || '').trim();
-    }
-
-    if (descEl.__quill && typeof descEl.__quill.root?.innerHTML === 'string') {
-        return descEl.__quill.root.innerHTML.trim();
-    }
-
-    if (descEl.classList.contains('ql-editor')) return String(descEl.innerHTML || '').trim();
-    if (descEl.isContentEditable) return String(descEl.innerHTML || '').trim();
     return String(descEl.value || '').trim();
 }
 
@@ -39,31 +64,21 @@ function setServiceDescriptionValue(value) {
     const descEl = document.getElementById('serviceDescription');
     if (!descEl) return;
     const safeValue = String(value || '');
+    descEl.value = safeValue;
 
-    if (window.tinymce && typeof window.tinymce.get === 'function' && descEl.id) {
-        const tiny = window.tinymce.get(descEl.id);
-        if (tiny && typeof tiny.setContent === 'function') {
-            tiny.setContent(safeValue);
-            return;
+    if (serviceDescriptionQuill && serviceDescriptionQuill.clipboard) {
+        serviceDescriptionQuill.setText('');
+        if (safeValue.trim()) {
+            serviceDescriptionQuill.clipboard.dangerouslyPasteHTML(safeValue);
         }
-    }
-
-    if (window.CKEDITOR && window.CKEDITOR.instances && descEl.id && window.CKEDITOR.instances[descEl.id]) {
-        window.CKEDITOR.instances[descEl.id].setData(safeValue);
-        return;
-    }
-
-    if (descEl.__quill && typeof descEl.__quill.clipboard?.dangerouslyPasteHTML === 'function') {
-        descEl.__quill.clipboard.dangerouslyPasteHTML(safeValue);
-        return;
-    }
-
-    if (descEl.classList.contains('ql-editor') || descEl.isContentEditable) {
-        descEl.innerHTML = safeValue;
         return;
     }
 
     descEl.value = safeValue;
+}
+
+function clearServiceDescriptionEditor() {
+    setServiceDescriptionValue('');
 }
 
 async function loadServices(status = null) {
@@ -208,7 +223,7 @@ async function saveService() {
     const cta = document.getElementById('serviceCta').value.trim();
     const target = document.getElementById('serviceTarget').value.trim();
     const active = document.getElementById('serviceIsActive').checked;
-    const description = getServiceDescriptionValue();
+    const descriptionHtml = getServiceDescriptionValue();
 
     // Maddələri topla
     const itemInputs = document.querySelectorAll('.service-item');
@@ -249,11 +264,11 @@ async function saveService() {
     const serviceData = {
         name: name,
         slug: slug,
-        description: description,
-        content: description,
-        full_description: description,
-        description_html: description,
-        service_description: description,
+        description: descriptionHtml,
+        content: descriptionHtml,
+        full_description: descriptionHtml,
+        description_html: descriptionHtml,
+        service_description: descriptionHtml,
         image_url: null,
         icon: "fa-chart-bar",
         order_num: order,
@@ -443,9 +458,14 @@ window.toggleServiceStatus = toggleServiceStatus;
 window.searchServices = searchServices;
 window.addServiceItem = addServiceItem;
 window.removeServiceItem = removeServiceItem;
+window.initServiceDescriptionEditor = initServiceDescriptionEditor;
+window.getServiceDescriptionValue = getServiceDescriptionValue;
+window.setServiceDescriptionValue = setServiceDescriptionValue;
+window.clearServiceDescriptionEditor = clearServiceDescriptionEditor;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('services.js yükləndi');
+    initServiceDescriptionEditor();
     const servicesPage = document.getElementById('contentServicesPage');
     if (servicesPage && !servicesPage.classList.contains('hidden')) {
         loadServices();

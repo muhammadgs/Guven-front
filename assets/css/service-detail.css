@@ -243,3 +243,25 @@
     line-height: 1.65;
   }
 }
+
+.service-detail-description a {
+  color: #0b63ce;
+  text-decoration: underline;
+}
+
+.service-detail-description .ql-align-center { text-align: center; }
+.service-detail-description .ql-align-right { text-align: right; }
+.service-detail-description .ql-align-justify { text-align: justify; }
+.service-detail-description .ql-size-small { font-size: 0.875em; }
+.service-detail-description .ql-size-large { font-size: 1.25em; }
+.service-detail-description .ql-size-huge { font-size: 1.6em; }
+
+.service-detail-description .ql-font-poppins { font-family: 'Poppins', sans-serif; }
+.service-detail-description .ql-font-inter { font-family: 'Inter', sans-serif; }
+.service-detail-description .ql-font-roboto { font-family: 'Roboto', sans-serif; }
+.service-detail-description .ql-font-montserrat { font-family: 'Montserrat', sans-serif; }
+.service-detail-description .ql-font-open-sans { font-family: 'Open Sans', sans-serif; }
+.service-detail-description .ql-font-lato { font-family: 'Lato', sans-serif; }
+.service-detail-description .ql-font-merriweather { font-family: 'Merriweather', serif; }
+.service-detail-description .ql-font-playfair-display { font-family: 'Playfair Display', serif; }
+.service-detail-description .ql-font-arial { font-family: Arial, sans-serif; }
