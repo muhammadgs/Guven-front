@@ -75,8 +75,21 @@
 }
 
 .service-detail-hero {
-  width: min(560px, 100%);
+  width: 100%;
+  max-width: 1100px;
   margin-left: 20px;
+}
+
+.service-detail-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
+  gap: clamp(24px, 3vw, 36px);
+  align-items: start;
+}
+
+.service-detail-description-column,
+.service-detail-items-column {
+  min-width: 0;
 }
 
 #service-detail-title {
@@ -143,14 +156,15 @@
 .service-detail-items {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .service-item-card,
 .service-empty {
-  min-height: 62px;
+  min-height: 50px;
   border-radius: 999px;
-  padding: 14px 34px;
+  padding: 10px 16px;
   background: rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(16px);
@@ -166,9 +180,12 @@
 .service-empty {
   margin: 0;
   color: #050B1F;
-  font-size: clamp(18px, 2vw, 25px);
-  line-height: 1.25;
-  font-weight: 300;
+  font-size: clamp(14px, 1.2vw, 17px);
+  line-height: 1.4;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  width: 100%;
 }
 
 .service-item-card p {
@@ -197,6 +214,11 @@
 
   .service-detail-hero {
     margin-left: 20px;
+  }
+
+  .service-detail-content-grid {
+    grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+    gap: 24px;
   }
 
   .service-detail-bg {
@@ -234,7 +256,12 @@
 
   .service-item-card,
   .service-empty {
-    padding: 14px 22px;
+    padding: 12px 16px;
+  }
+
+  .service-detail-content-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
   }
 
   .service-detail-description {
