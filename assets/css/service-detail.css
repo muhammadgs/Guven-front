@@ -83,7 +83,7 @@
 
 .service-detail-content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
+  grid-template-columns: minmax(0, 2.6fr) minmax(360px, 1fr);
   gap: clamp(18px, 2vw, 28px);
   align-items: start;
 }
@@ -91,6 +91,11 @@
 .service-detail-description-column,
 .service-detail-items-column {
   min-width: 0;
+}
+
+.service-detail-items-column {
+  width: 100%;
+  min-width: 340px;
 }
 
 #service-detail-title {
@@ -163,8 +168,10 @@
 
 .service-item-card,
 .service-empty {
+  width: 100%;
+  min-width: 0;
   border-radius: 999px;
-  padding: 14px 22px;
+  padding: 14px 26px;
   background: rgba(255, 255, 255, 0.34);
   border: 1px solid rgba(255, 255, 255, 0.38);
   backdrop-filter: blur(6px);
@@ -180,15 +187,16 @@
 
 .service-item-title,
 .service-empty {
-  font-family: 'Cal Sans', 'Poppins', sans-serif;
+  font-family: 'Poppins', sans-serif;
   margin: 0;
   color: #050B1F;
   font-size: clamp(16px, 1.35vw, 21px);
   line-height: 1.25;
   font-weight: 400;
   text-align: center;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
   width: 100%;
 }
 
@@ -252,7 +260,7 @@
   }
 
   .service-detail-content-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+    grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr);
     gap: 24px;
   }
 
@@ -264,8 +272,17 @@
 
 @media (max-width: 900px) {
   .service-detail-content-grid {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .service-detail-items-column {
+    min-width: 0;
+  }
+
+  .service-item-card,
+  .service-empty {
+    width: 100%;
   }
 }
 
