@@ -170,8 +170,9 @@
 .service-empty {
   width: 100%;
   min-width: 0;
+  min-height: 0;
   border-radius: 999px;
-  padding: 14px 26px;
+  padding: 13px 26px;
   background: linear-gradient(150deg, rgba(255, 255, 255, 0.44), rgba(229, 241, 255, 0.24));
   border: 1px solid rgba(255, 255, 255, 0.56);
   backdrop-filter: blur(8px) saturate(1.06);
@@ -202,13 +203,14 @@
 .service-item-card::before {
   background: radial-gradient(
     circle at var(--mx, 50%) var(--my, 50%),
-    rgba(255, 255, 255, 0.94) 0%,
-    rgba(255, 255, 255, 0.66) 9%,
-    rgba(255, 255, 255, 0.36) 24%,
-    rgba(255, 255, 255, 0.14) 42%,
-    transparent 66%
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.96) 6%,
+    rgba(255, 255, 255, 0.68) 16%,
+    rgba(255, 255, 255, 0.34) 32%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 72%
   );
-  filter: blur(10px);
+  filter: blur(8px);
   transform: translateZ(0);
   opacity: 0;
   transition: opacity 0.35s ease;
@@ -223,11 +225,11 @@
 
 .service-item-card:hover {
   transform: translateY(-4px) scale(1.015);
-  background: linear-gradient(148deg, rgba(255, 255, 255, 0.64), rgba(226, 240, 255, 0.34));
-  border-color: rgba(255, 255, 255, 0.76);
+  background: linear-gradient(148deg, rgba(255, 255, 255, 0.88), rgba(240, 248, 255, 0.58));
+  border-color: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(10px) saturate(1.25);
   -webkit-backdrop-filter: blur(10px) saturate(1.25);
-  box-shadow: 0 18px 45px rgba(80, 150, 220, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: 0 22px 55px rgba(80, 150, 220, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.92), inset 0 -18px 36px rgba(255, 255, 255, 0.28);
 }
 
 .service-item-card:hover::before {
@@ -235,7 +237,7 @@
 }
 
 .service-item-card:hover::after {
-  opacity: 0.62;
+  opacity: 0.82;
 }
 
 .service-item-card:active {
@@ -249,7 +251,7 @@
   margin: 0;
   color: #050B1F;
   font-size: clamp(16px, 1.35vw, 21px);
-  line-height: 1.25;
+  line-height: 1.22;
   font-weight: 400;
   text-align: center;
   white-space: normal;
@@ -260,6 +262,7 @@
 }
 
 .service-item-title {
+  display: block;
   border: 0;
   background: transparent;
   cursor: default;
@@ -282,9 +285,9 @@
 }
 
 .service-item-body {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(5, 11, 31, 0.12);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
   font-family: 'Poppins', sans-serif;
   font-size: 14px;
   line-height: 1.6;
@@ -301,14 +304,16 @@
 
 .service-item-card.is-open {
   border-radius: 28px;
+  padding-top: 16px;
+  padding-bottom: 16px;
   align-items: stretch;
   text-align: left;
   transform: translateY(0) scale(1);
 }
 
 .service-item-card.is-open:hover {
-  background: linear-gradient(148deg, rgba(255, 255, 255, 0.66), rgba(227, 241, 255, 0.36));
-  border-color: rgba(255, 255, 255, 0.78);
+  background: linear-gradient(148deg, rgba(255, 255, 255, 0.88), rgba(240, 248, 255, 0.58));
+  border-color: rgba(255, 255, 255, 0.92);
 }
 
 .service-item-card.is-open:hover {
@@ -320,6 +325,9 @@
 }
 
 .service-item-card.is-open .service-item-body {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(5, 11, 31, 0.12);
   max-height: 520px;
   opacity: 1;
   transform: translateY(0);
