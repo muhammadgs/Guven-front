@@ -323,11 +323,15 @@ const ApiMainService = (function() {
                 source.title || source.name || source.text || source.description || source.content ||
                 source.item_text || source.service_item || source.service_text || source.value || source.label || ''
             ).trim();
-            const description = String(source.description || source.content || source.detail || '').trim();
+            const description = String(
+                source.description_html || source.full_description || source.item_description || source.service_item_description ||
+                source.content || source.description || source.detail_description || source.about || source.detail || ''
+            ).trim();
             const order = Number(source.order ?? source.order_num ?? source.sort_order ?? source.position ?? index) || 0;
+            const id = source.id || source.item_id || source.service_item_id || null;
 
             if (!title && !description) return null;
-            return { title, description, order, original: item };
+            return { id, title, description, order, original: item };
         },
 
         normalizeService: (raw) => {

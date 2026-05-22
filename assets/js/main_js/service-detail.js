@@ -50,7 +50,9 @@
 
     function normalizeItem(item, index) {
         const heading = getItemText(item);
-        const body = (item && typeof item === 'object') ? String(item.description || item.content || '').trim() : '';
+        const body = (item && typeof item === 'object')
+            ? String(item.description_html || item.full_description || item.item_description || item.service_item_description || item.content || item.description || item.detail_description || item.about || '').trim()
+            : '';
         const order = (item && typeof item === 'object') ? Number(item.order ?? item.order_num ?? item.sort_order ?? item.position ?? index) || index : index;
         if (!heading && !body) return null;
         return { heading: heading || 'Xidmət detalı', body, order };
@@ -171,11 +173,21 @@
             items.innerHTML = '<div class="service-empty">Bu xidmət üzrə məlumatlar tezliklə əlavə olunacaq.</div>';
         } else {
             items.innerHTML = normalizedItems.map(function (item) {
+                const safeBody = sanitizeServiceHtml(item.body || '');
+                const hasBody = !!safeBody;
                 return '<article class="service-item-card">' +
-                    '<h3>' + escapeHtml(item.heading) + '</h3>' +
-                    (item.body ? '<p>' + escapeHtml(item.body) + '</p>' : '') +
+                    `<button type="button" class="service-item-title${hasBody ? ' has-description' : ''}">` + escapeHtml(item.heading) + '</button>' +
+                    (hasBody ? '<div class="service-item-body">' + safeBody + '</div>' : '') +
                     '</article>';
             }).join('');
+
+            Array.from(items.querySelectorAll('.service-item-card')).forEach(function (card) {
+                const titleBtn = card.querySelector('.service-item-title.has-description');
+                if (!titleBtn) return;
+                titleBtn.addEventListener('click', function () {
+                    card.classList.toggle('is-open');
+                });
+            });
         }
 
         renderState('success', 'Məlumatlar yeniləndi.');

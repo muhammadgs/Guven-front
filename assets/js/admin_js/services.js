@@ -3,6 +3,7 @@
 let currentServiceId = null;
 let servicesData = [];
 let serviceDescriptionQuill = null;
+let serviceItemDescriptionEditors = new Map();
 
 function pickServiceDescription(source) {
     if (!source || typeof source !== 'object') return '';
@@ -81,6 +82,116 @@ function clearServiceDescriptionEditor() {
     setServiceDescriptionValue('');
 }
 
+function pickServiceItemText(source) {
+    if (!source || typeof source !== 'object') return '';
+    const keys = ['text', 'title', 'name', 'item_text', 'service_item', 'service_text', 'label', 'value'];
+    for (const key of keys) {
+        const value = source[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+}
+
+function pickServiceItemDescription(source) {
+    if (!source || typeof source !== 'object') return '';
+    const keys = ['description_html', 'full_description', 'item_description', 'service_item_description', 'content', 'description', 'detail_description', 'about'];
+    for (const key of keys) {
+        const value = source[key];
+        if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+}
+
+function normalizeServiceItem(item, index = 0) {
+    if (typeof item === 'string' || typeof item === 'number') {
+        const text = String(item).trim();
+        return { id: null, text, description: '', order_num: index, original: item };
+    }
+    if (!item || typeof item !== 'object') return null;
+    return {
+        id: item.id || item.item_id || item.service_item_id || null,
+        text: pickServiceItemText(item),
+        description: pickServiceItemDescription(item),
+        order_num: Number(item.order_num ?? item.order ?? item.sort_order ?? item.position ?? index) || index,
+        original: item
+    };
+}
+
+function createServiceItemMarkup(item = {}, index = 0) {
+    const itemId = item.id ? ` data-item-id="${escapeHtml(String(item.id))}"` : '';
+    const label = `Maddə ${index + 1}`;
+    return `
+        <div class="service-item-input" data-item-index="${index}"${itemId}>
+            <div class="service-item-header">
+                <span class="service-item-label">${label}</span>
+                <input type="text" class="form-control service-item" value="${escapeHtml(item.text || '')}" placeholder="Xidmət maddəsini daxil edin">
+                <button type="button" class="btn btn-outline btn-sm service-item-desc-toggle" onclick="toggleServiceItemDescription(this)">Açıqlama</button>
+                <button type="button" class="btn btn-danger btn-sm service-item-remove-btn" onclick="removeServiceItem(this)"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="service-item-description-panel">
+                <input type="hidden" class="service-item-description" value="${escapeHtml(item.description || '')}">
+                <div class="service-item-description-toolbar"></div>
+                <div class="service-item-description-editor"></div>
+            </div>
+        </div>
+    `;
+}
+function initServiceItemDescriptionEditor(itemEl) {
+    if (!itemEl || serviceItemDescriptionEditors.has(itemEl)) return;
+    const hiddenField = itemEl.querySelector('.service-item-description');
+    const toolbarEl = itemEl.querySelector('.service-item-description-toolbar');
+    const editorEl = itemEl.querySelector('.service-item-description-editor');
+    if (!hiddenField || !toolbarEl || !editorEl) return;
+    const initialHtml = String(hiddenField.value || '');
+
+    if (typeof window.Quill !== 'function') {
+        editorEl.innerHTML = `<textarea class="form-control service-item-description-fallback" rows="6" placeholder="Maddə açıqlaması...">${escapeHtml(initialHtml)}</textarea>`;
+        const area = editorEl.querySelector('textarea');
+        if (area) area.addEventListener('input', function () { hiddenField.value = area.value; });
+        serviceItemDescriptionEditors.set(itemEl, { fallback: true, textarea: area });
+        return;
+    }
+
+    toolbarEl.innerHTML = `
+        <select class="ql-font"></select><select class="ql-size"></select><select class="ql-header"><option selected></option><option value="1"></option><option value="2"></option></select>
+        <button class="ql-bold"></button><button class="ql-italic"></button><button class="ql-underline"></button>
+        <button class="ql-list" value="ordered"></button><button class="ql-list" value="bullet"></button>
+        <select class="ql-align"></select><button class="ql-link"></button><select class="ql-color"></select><select class="ql-background"></select><button class="ql-clean"></button>
+    `;
+    const quill = new window.Quill(editorEl, { theme: 'snow', modules: { toolbar: toolbarEl }, placeholder: 'Maddə açıqlaması...' });
+    if (initialHtml.trim()) quill.clipboard.dangerouslyPasteHTML(initialHtml);
+    quill.on('text-change', function () {
+        const html = String(quill.root.innerHTML || '').trim();
+        hiddenField.value = html === '<p><br></p>' ? '' : html;
+    });
+    serviceItemDescriptionEditors.set(itemEl, { quill, fallback: false });
+}
+function initAllServiceItemDescriptionEditors() { document.querySelectorAll('#serviceItemsContainer .service-item-input').forEach(initServiceItemDescriptionEditor); }
+function getServiceItemDescriptionValue(itemEl) {
+    const hidden = itemEl?.querySelector('.service-item-description');
+    if (!hidden) return '';
+    const ref = serviceItemDescriptionEditors.get(itemEl);
+    if (ref?.quill?.root) {
+        const html = String(ref.quill.root.innerHTML || '').trim();
+        hidden.value = html === '<p><br></p>' ? '' : html;
+    } else if (ref?.fallback && ref?.textarea) {
+        hidden.value = ref.textarea.value || '';
+    }
+    return String(hidden.value || '').trim();
+}
+function destroyServiceItemDescriptionEditor(itemEl) { serviceItemDescriptionEditors.delete(itemEl); }
+function clearServiceItemDescriptionEditors() { serviceItemDescriptionEditors.clear(); }
+function refreshServiceItemIndexes() {
+    const allItems = Array.from(document.querySelectorAll('#serviceItemsContainer .service-item-input'));
+    allItems.forEach((itemEl, index) => {
+        itemEl.dataset.itemIndex = String(index);
+        const label = itemEl.querySelector('.service-item-label');
+        if (label) label.textContent = `Maddə ${index + 1}`;
+        const btn = itemEl.querySelector('.service-item-remove-btn');
+        if (btn) btn.disabled = allItems.length === 1;
+    });
+}
+
 async function loadServices(status = null) {
     console.log('🎯 Xidmətlər yüklənir...');
 
@@ -97,7 +208,7 @@ async function loadServices(status = null) {
             servicesData = result.data.map(service => ({
                 id: service.id,
                 name: service.name,
-                items: service.items ? service.items.map(item => item.text) : [],
+                items: Array.isArray(service.items) ? service.items.map((item, index) => normalizeServiceItem(item, index)).filter(Boolean) : [],
                 description: pickServiceDescription(service),
                 order: service.order_num || 0,
                 cta: service.cta_text || 'Ətraflı...',
@@ -169,14 +280,10 @@ function showAddServiceModal() {
 
     const container = document.getElementById('serviceItemsContainer');
     if (container) {
-        container.innerHTML = `
-            <div class="service-item-input" style="margin-bottom: 10px;">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" class="form-control service-item" placeholder="Xidmət maddəsini daxil edin" style="flex: 1;">
-                    <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)" disabled><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        `;
+        clearServiceItemDescriptionEditors();
+        container.innerHTML = createServiceItemMarkup({}, 0);
+        initAllServiceItemDescriptionEditors();
+        refreshServiceItemIndexes();
     }
 
     document.querySelector('#serviceModal .modal-title').textContent = 'Yeni Xidmət';
@@ -199,16 +306,15 @@ function editService(id) {
     const container = document.getElementById('serviceItemsContainer');
     if (container) {
         container.innerHTML = '';
-        service.items.forEach((item, index) => {
-            container.innerHTML += `
-                <div class="service-item-input" style="margin-bottom: 10px;">
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" class="form-control service-item" value="${escapeHtml(item)}" placeholder="Xidmət maddəsi" style="flex: 1;">
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)" ${index === 0 ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
-        });
+        clearServiceItemDescriptionEditors();
+        const items = Array.isArray(service.items) ? service.items : [];
+        if (!items.length) {
+            container.innerHTML = createServiceItemMarkup({}, 0);
+        } else {
+            container.innerHTML = items.map((item, index) => createServiceItemMarkup(normalizeServiceItem(item, index) || {}, index)).join('');
+        }
+        initAllServiceItemDescriptionEditors();
+        refreshServiceItemIndexes();
     }
 
     document.querySelector('#serviceModal .modal-title').textContent = 'Xidməti Redaktə Et';
@@ -226,15 +332,28 @@ async function saveService() {
     const descriptionHtml = getServiceDescriptionValue();
 
     // Maddələri topla
-    const itemInputs = document.querySelectorAll('.service-item');
+    const itemBlocks = document.querySelectorAll('#serviceItemsContainer .service-item-input');
     const items = [];
-    itemInputs.forEach((input, idx) => {
-        const text = input.value.trim();
+    itemBlocks.forEach((itemEl, idx) => {
+        const input = itemEl.querySelector('.service-item');
+        const text = String(input?.value || '').trim();
+        const description = getServiceItemDescriptionValue(itemEl);
+        const itemId = itemEl.dataset.itemId;
         if (text) {
-            items.push({
+            const payload = {
                 text: text,
-                order_num: idx
-            });
+                title: text,
+                description: description,
+                content: description,
+                description_html: description,
+                full_description: description,
+                item_description: description,
+                service_item_description: description,
+                order_num: idx,
+                order: idx
+            };
+            if (itemId) payload.id = itemId;
+            items.push(payload);
         }
     });
 
@@ -413,26 +532,31 @@ function searchServices() {
 function addServiceItem() {
     const container = document.getElementById('serviceItemsContainer');
     if (container) {
-        const newItem = document.createElement('div');
-        newItem.className = 'service-item-input';
-        newItem.style.marginBottom = '10px';
-        newItem.innerHTML = `
-            <div style="display: flex; gap: 10px;">
-                <input type="text" class="form-control service-item" placeholder="Yeni maddə" style="flex: 1;">
-                <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceItem(this)"><i class="fas fa-trash"></i></button>
-            </div>
-        `;
+        const template = document.createElement('div');
+        const nextIndex = container.querySelectorAll('.service-item-input').length;
+        template.innerHTML = createServiceItemMarkup({}, nextIndex);
+        const newItem = template.firstElementChild;
         container.appendChild(newItem);
+        initServiceItemDescriptionEditor(newItem);
+        refreshServiceItemIndexes();
     }
 }
 
 function removeServiceItem(btn) {
     const container = document.getElementById('serviceItemsContainer');
     if (container && container.children.length > 1) {
-        btn.closest('.service-item-input').remove();
+        const itemEl = btn.closest('.service-item-input');
+        destroyServiceItemDescriptionEditor(itemEl);
+        itemEl.remove();
+        refreshServiceItemIndexes();
     } else {
         alert('Ən azı bir maddə olmalıdır!');
     }
+}
+function toggleServiceItemDescription(btn) {
+    const wrapper = btn.closest('.service-item-input');
+    if (!wrapper) return;
+    wrapper.classList.toggle('is-description-open');
 }
 
 function escapeHtml(text) {
@@ -458,6 +582,7 @@ window.toggleServiceStatus = toggleServiceStatus;
 window.searchServices = searchServices;
 window.addServiceItem = addServiceItem;
 window.removeServiceItem = removeServiceItem;
+window.toggleServiceItemDescription = toggleServiceItemDescription;
 window.initServiceDescriptionEditor = initServiceDescriptionEditor;
 window.getServiceDescriptionValue = getServiceDescriptionValue;
 window.setServiceDescriptionValue = setServiceDescriptionValue;
