@@ -69,21 +69,21 @@
 .service-detail-main {
   position: relative;
   z-index: 2;
-  max-width: min(1520px, 100%);
+  max-width: min(1640px, 100%);
   margin: 0 auto;
   padding: 50px clamp(20px, 2vw, 32px) 120px;
 }
 
 .service-detail-hero {
   width: 100%;
-  max-width: 1360px;
+  max-width: 1500px;
   margin-left: auto;
   margin-right: auto;
 }
 
 .service-detail-content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2.6fr) minmax(360px, 1fr);
+  grid-template-columns: minmax(0, 1.7fr) minmax(520px, 0.95fr);
   gap: clamp(18px, 2vw, 28px);
   align-items: start;
 }
@@ -95,7 +95,7 @@
 
 .service-detail-items-column {
   width: 100%;
-  min-width: 340px;
+  min-width: 520px;
 }
 
 #service-detail-title {
@@ -194,6 +194,7 @@
   line-height: 1.25;
   font-weight: 400;
   text-align: center;
+  white-space: normal;
   overflow-wrap: normal;
   word-break: normal;
   hyphens: manual;
@@ -278,6 +279,7 @@
 
   .service-detail-items-column {
     min-width: 0;
+    width: 100%;
   }
 
   .service-item-card,
