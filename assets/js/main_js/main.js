@@ -641,7 +641,7 @@ function renderServicesOnPage(services) {
                 <ul class="service-list">
                     ${itemsHtml}
                 </ul>
-                <a href="${getServiceDetailLink(service)}" class="service-btn">
+                <a href="${getServiceDetailLink(service)}" class="service-btn" target="_blank" rel="noopener noreferrer">
                     ${ctaText}
                 </a>
             </article>
