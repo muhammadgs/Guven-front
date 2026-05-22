@@ -183,6 +183,17 @@
 
             Array.from(items.querySelectorAll('.service-item-card')).forEach(function (card) {
                 const titleBtn = card.querySelector('.service-item-title.has-description');
+                card.addEventListener('mousemove', function (event) {
+                    const rect = card.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    card.style.setProperty('--mx', x + 'px');
+                    card.style.setProperty('--my', y + 'px');
+                });
+                card.addEventListener('mouseleave', function () {
+                    card.style.removeProperty('--mx');
+                    card.style.removeProperty('--my');
+                });
                 if (!titleBtn) return;
                 titleBtn.addEventListener('click', function () {
                     card.classList.toggle('is-open');
