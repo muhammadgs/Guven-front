@@ -172,8 +172,8 @@
   min-width: 0;
   border-radius: 999px;
   padding: 14px 26px;
-  background: linear-gradient(150deg, rgba(255, 255, 255, 0.44), rgba(229, 241, 255, 0.24));
-  border: 1px solid rgba(255, 255, 255, 0.56);
+  background: rgba(205, 222, 238, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.32);
   backdrop-filter: blur(8px) saturate(1.06);
   -webkit-backdrop-filter: blur(8px) saturate(1.06);
   display: flex;
@@ -211,8 +211,8 @@
 
 .service-item-card:hover {
   transform: translateY(-4px) scale(1.015);
-  background: linear-gradient(148deg, rgba(255, 255, 255, 0.58), rgba(223, 238, 255, 0.28));
-  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.56);
+  border-color: rgba(255, 255, 255, 0.62);
   backdrop-filter: blur(10px) saturate(1.25);
   -webkit-backdrop-filter: blur(10px) saturate(1.25);
   box-shadow: 0 18px 45px rgba(80, 150, 220, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -292,10 +292,12 @@
   align-items: stretch;
   text-align: left;
   transform: translateY(0) scale(1);
+  background: rgba(220, 234, 246, 0.52);
 }
 
 .service-item-card.is-open:hover {
   transform: translateY(-3px) scale(1.008);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .service-item-card.is-open .service-item-title {
