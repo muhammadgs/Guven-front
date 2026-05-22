@@ -1867,3 +1867,61 @@ body.sidebar-open {
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="open-sans"]::before { content: 'Open Sans'; }
 .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair-display"]::before,
 .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="playfair-display"]::before { content: 'Playfair Display'; }
+
+.service-item-input {
+  border: 1px solid #dbe3ec;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.service-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.service-item-label {
+  font-size: 12px;
+  color: #637083;
+  min-width: 56px;
+}
+
+.service-item-header .service-item {
+  flex: 1;
+}
+
+.service-item-description-panel {
+  display: none;
+  border-top: 1px solid #e8eef5;
+  padding: 10px;
+}
+
+.service-item-input.is-description-open .service-item-description-panel {
+  display: block;
+}
+
+.service-item-description-toolbar.ql-toolbar.ql-snow {
+  border: 1px solid #e8eef5;
+  border-radius: 10px 10px 0 0;
+  background: #f8fbff;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.service-item-description-editor.ql-container.ql-snow {
+  border: 1px solid #e8eef5;
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  min-height: 150px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.service-item-description-editor .ql-editor {
+  min-height: 140px;
+  font-family: 'Poppins', sans-serif;
+}

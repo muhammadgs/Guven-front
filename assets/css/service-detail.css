@@ -163,21 +163,21 @@
 
 .service-item-card,
 .service-empty {
-  min-height: 50px;
-  border-radius: 999px;
-  padding: 10px 16px;
+  border-radius: 16px;
+  padding: 10px 12px;
   background: rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.18);
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
-  text-align: center;
+  text-align: left;
   box-shadow: none;
 }
 
-.service-item-card h3,
+.service-item-title,
 .service-empty {
   margin: 0;
   color: #050B1F;
@@ -189,8 +189,29 @@
   width: 100%;
 }
 
-.service-item-card p {
+.service-item-title {
+  border: 0;
+  background: transparent;
+  cursor: default;
+  padding: 2px 0;
+  text-align: left;
+}
+
+.service-item-title.has-description {
+  cursor: pointer;
+}
+
+.service-item-body {
   display: none;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(5, 11, 31, 0.12);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.service-item-card.is-open .service-item-body {
+  display: block;
 }
 
 .service-state.success {
@@ -296,3 +317,18 @@
 .service-detail-description .ql-font-merriweather { font-family: 'Merriweather', serif; }
 .service-detail-description .ql-font-playfair-display { font-family: 'Playfair Display', serif; }
 .service-detail-description .ql-font-arial { font-family: Arial, sans-serif; }
+.service-item-body .ql-align-center { text-align: center; }
+.service-item-body .ql-align-right { text-align: right; }
+.service-item-body .ql-align-justify { text-align: justify; }
+.service-item-body .ql-size-small { font-size: 0.875em; }
+.service-item-body .ql-size-large { font-size: 1.25em; }
+.service-item-body .ql-size-huge { font-size: 1.6em; }
+.service-item-body .ql-font-poppins { font-family: 'Poppins', sans-serif; }
+.service-item-body .ql-font-inter { font-family: 'Inter', sans-serif; }
+.service-item-body .ql-font-roboto { font-family: 'Roboto', sans-serif; }
+.service-item-body .ql-font-montserrat { font-family: 'Montserrat', sans-serif; }
+.service-item-body .ql-font-open-sans { font-family: 'Open Sans', sans-serif; }
+.service-item-body .ql-font-lato { font-family: 'Lato', sans-serif; }
+.service-item-body .ql-font-merriweather { font-family: 'Merriweather', serif; }
+.service-item-body .ql-font-playfair-display { font-family: 'Playfair Display', serif; }
+.service-item-body .ql-font-arial { font-family: Arial, sans-serif; }
