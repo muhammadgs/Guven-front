@@ -27,41 +27,57 @@
     async function init() {
         console.log('🚀 new_task_modal.js init başladı...');
         createModal();
-        attachCardEvents();
+        attachCardEvents    ();
 
-        // TaskManager hazır olana qədər gözlə
         await waitForTaskManager();
         console.log('✅ TaskManager hazırdır');
 
-        // TaskManager-dan məlumatları yüklə
         await loadDataFromTaskManager();
 
-        // Token-dan company adını logla
-        const token = getAuthToken();
-        if (token) {
-            const payload = parseTokenPayload(token);
-            console.log('🔑 Token payload:', {
-                company_name: payload?.company_name,
-                company_id: payload?.company_id,
-                company_code: payload?.company_code
-            });
-        }
-
-        console.log('📊 Yüklənən məlumatlar:', {
-            myCompany: myCompany,
-            myCompanyName: myCompany?.company_name,
-            myCompanyId: myCompany?.id
-        });
+        console.log('📊 employees sayı init-də:', employees.length);
 
         await loadWorkTypes();
         await loadParentCompanies();
         await loadPartnerCompanies();
+
+        // ✅ FIX: employees hələ boşdursa, birbaşa API-dan yüklə
+        if (!employees || employees.length === 0) {
+            console.warn('⚠️ employees boşdur, birbaşa API-dan yüklənir...');
+            await loadMyCompanyEmployees();
+        }
+
         populateSelects();
         setupPrintScreenCapture();
         attachModalEvents();
         setupAudioRecorder();
         setupFileUpload();
-        console.log('✅ new_task_modal.js hazırdır');
+        console.log('✅ new_task_modal.js hazırdır, employees:', employees.length);
+    }
+
+    // ✅ YENİ FUNKSIYA - öz şirkətin işçilərini yüklə
+    async function loadMyCompanyEmployees() {
+        try {
+            const companyCode = myCompany?.company_code
+                || window.taskManager?.userData?.companyCode;
+
+            if (!companyCode) {
+                console.error('❌ companyCode tapılmadı, işçilər yüklənə bilmir');
+                return;
+            }
+
+            console.log(`🔄 Öz şirkətin işçiləri yüklənir: /users/company/${companyCode}`);
+            const response = await makeApiRequest(`/users/company/${companyCode}`, 'GET');
+
+            const list = response?.data || (Array.isArray(response) ? response : []);
+            if (list.length > 0) {
+                employees = list;
+                console.log(`✅ ${employees.length} işçi API-dan yükləndi`);
+            } else {
+                console.warn('⚠️ API boş siyahı qaytardı');
+            }
+        } catch (err) {
+            console.error('❌ loadMyCompanyEmployees xətası:', err);
+        }
     }
 
     function waitForTaskManager() {
@@ -1140,8 +1156,43 @@
         try {
             const otherExecutorSelect = document.getElementById('newtaskOtherExecutorSelect');
             if (!otherExecutorSelect) return;
+
             otherExecutorSelect.innerHTML = '<option value="">Yüklənir...</option>';
             otherExecutorSelect.disabled = true;
+
+            // ✅ FIX: Əgər öz şirkəti seçilibsə, artıq yüklənmiş employees-i istifadə et
+            if (myCompany?.id && parseInt(companyId) === parseInt(myCompany.id)) {
+                console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
+                if (employees && employees.length > 0) {
+                    let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                    employees.forEach(emp => {
+                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
+                        if (name) {
+                            html += `<option value="${emp.id}">👤 ${name}</option>`;
+                        }
+                    });
+                    otherExecutorSelect.innerHTML = html;
+                    otherExecutorSelect.disabled = false;
+                    return;
+                }
+            }
+
+            // ✅ FIX: Əgər öz şirkəti seçilibsə, artıq yüklənmiş employees-i istifadə et
+            if (myCompany?.id && parseInt(companyId) === parseInt(myCompany.id)) {
+                console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
+                if (employees && employees.length > 0) {
+                    let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                    employees.forEach(emp => {
+                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
+                        if (name) {
+                            html += `<option value="${emp.id}">👤 ${name}</option>`;
+                        }
+                    });
+                    otherExecutorSelect.innerHTML = html;
+                    otherExecutorSelect.disabled = false;
+                    return;
+                }
+            }
 
             let companyCode = null, companyName = '';
 

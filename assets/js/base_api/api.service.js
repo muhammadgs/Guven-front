@@ -10,20 +10,52 @@ class ApiService {
         this.token = this.loadToken();
     }
 
+    // api.service.js - loadToken()
     loadToken() {
         const keys = ['guven_token', 'access_token', 'auth_token', 'token'];
+
+        // 1. localStorage
         for (const key of keys) {
             const val = localStorage.getItem(key);
             if (val && val !== 'null' && val !== 'undefined') return val;
         }
+
+        // 2. sessionStorage
+        for (const key of keys) {
+            const val = sessionStorage.getItem(key);
+            if (val && val !== 'null' && val !== 'undefined') return val;
+        }
+
+        // 3. Cookie — əsas problem buradadır
+        for (const key of keys) {
+            const match = document.cookie.match(
+                new RegExp('(?:^|; )' + key + '=([^;]*)')
+            );
+            if (match?.[1] && match[1] !== 'null' && match[1] !== 'undefined') {
+                const val = decodeURIComponent(match[1]);
+                // Tapıldı — localStorage-ə yaz ki növbəti dəfə birinci addımda tapsın
+                localStorage.setItem('guven_token', val);
+                localStorage.setItem('access_token', val);
+                return val;
+            }
+        }
+
         return null;
     }
 
     // ==================== ÜMUMİ SORĞU (baza_id OLMADAN) ====================
     async request(endpoint, method = 'GET', data = null, isFormData = false) {
+        this.token = this.loadToken();
+
+        // Auth olmayan endpointlərə icazə ver
+        if (!this.token && !endpoint.includes('/auth/') && !endpoint.includes('/login')) {
+            console.warn('⚠️ Token yoxdur, loginə yönləndirilir:', endpoint);
+            this.redirectToLogin();  // ✅ DÜZƏLDİ: Birbaşa loginə at
+            return null;
+        }
+
         const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
-        const finalEndpoint = cleanEndpoint;
-        const url = `${this.baseUrl}${finalEndpoint}`;
+        const url = `${this.baseUrl}${cleanEndpoint}`;
 
         const options = {
             method: method,
@@ -45,7 +77,35 @@ class ApiService {
         try {
             const response = await fetch(url, options);
 
+            // ✅ 401 xətası - Token bitib
             if (response.status === 401) {
+                console.warn('🔑 401 xətası, token yenilənir...');
+
+                // Refresh endpointinə sorğu getməsin
+                if (endpoint.includes('/auth/refresh')) {
+                    this.redirectToLogin();
+                    return null;
+                }
+
+                // Token yeniləməyə çalış
+                const refreshed = await this.tryRefreshToken();
+
+                if (refreshed) {
+                    console.log('✅ Token yeniləndi, sorğu təkrarlanır...');
+                    options.headers['Authorization'] = `Bearer ${this.token}`;
+                    const retryResponse = await fetch(url, options);
+
+                    if (retryResponse.ok) {
+                        const contentType = retryResponse.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            return await retryResponse.json();
+                        }
+                        return { success: true };
+                    }
+                }
+
+                // Refresh olmadısa, loginə yönləndir
+                console.error('❌ Token yenilənə bilmədi, loginə yönləndirilir');
                 this.redirectToLogin();
                 return null;
             }
@@ -56,7 +116,7 @@ class ApiService {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}`);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
 
             const contentType = response.headers.get('content-type');
@@ -68,7 +128,95 @@ class ApiService {
             }
 
         } catch (error) {
+            console.error('❌ API xətası:', error);
+
+            // ✅ Şəbəkə xətası və ya CORS problemi
+            if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
+                console.warn('⚠️ Şəbəkə xətası, token yoxlanılır...');
+                if (!this.token || !this.isTokenValid()) {
+                    this.redirectToLogin();
+                }
+            }
+
             throw error;
+        }
+    }
+
+    // ✅ YENİ KÖMƏKÇİ METOD: Tokenin etibarlılığını yoxla
+    isTokenValid() {
+        const token = this.token || this.loadToken();
+        if (!token) return false;
+
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return false;
+
+            const payload = JSON.parse(atob(parts[1]));
+            const now = Math.floor(Date.now() / 1000);
+            return payload.exp > now;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // 🔥 YENİ METOD: Token yeniləmə
+    async tryRefreshToken() {
+        try {
+            console.log('🔄 Refresh token cəhdi...');
+
+            // Token artıq bitibsə, refresh etmə
+            if (this.token && !this.isTokenValid()) {
+                console.log('❌ Token artıq bitib, refresh mümkün deyil');
+                return false;
+            }
+
+            const response = await fetch(`${this.baseUrl}/api/v1/auth/refresh`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                console.warn('⚠️ Refresh token da bitib');
+                return false;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.access_token) {
+                    console.log('✅ Yeni access_token alındı');
+                    this.setToken(data.access_token);
+
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('guven_token', data.access_token);
+
+                    return true;
+                }
+            }
+
+            console.warn('⚠️ Refresh token uğursuz:', response.status);
+            return false;
+        } catch (error) {
+            console.error('❌ Refresh token xətası:', error);
+            return false;
+        }
+    }
+
+
+
+    parseToken(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
         }
     }
 
@@ -87,16 +235,19 @@ class ApiService {
 
         const url = `${this.baseUrl}${finalEndpoint}`;
 
+        // ✅ ƏVVƏLCƏ options obyektini YARAD
         const options = {
             method: method,
             headers: { 'Accept': 'application/json' },
             credentials: 'include'
         };
 
+        // ✅ SONRA token əlavə et
         if (this.token && !isFormData) {
             options.headers['Authorization'] = `Bearer ${this.token}`;
         }
 
+        // ✅ Body əlavə et
         if (!isFormData && data) {
             options.headers['Content-Type'] = 'application/json';
             options.body = JSON.stringify(data);
@@ -108,6 +259,10 @@ class ApiService {
             const response = await fetch(url, options);
 
             if (response.status === 401) {
+                // 🔥 Logout endpoint-i 401 versə, redirect etmə
+                if (endpoint.includes('/auth/logout')) {
+                    return { success: true };
+                }
                 this.redirectToLogin();
                 return null;
             }
@@ -197,15 +352,34 @@ class ApiService {
     }
 
     redirectToLogin() {
+        console.log('🚪 Login səhifəsinə yönləndirilir...');
+
         this.clearToken();
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = 'login.html';
+
+        // Bütün cookieləri təmizlə
+        document.cookie.split(';').forEach(c => {
+            document.cookie = c.replace(/^ +/, '')
+                .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+        });
+
+        // Döngünün qarşısını al
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('login.html') || currentPath === '/' || currentPath === '/login') {
+            console.log('📄 Artıq login səhifəsində, yönləndirmə atlanır');
+            return;
+        }
+
+        // Path-a görə düzgün login url-ə get
+        if (currentPath.includes('/worker/') || currentPath.includes('/owner/') || currentPath.includes('/admin/')) {
+            window.location.href = '../login.html';
+        } else {
+            window.location.href = '/login.html';
+        }
     }
 
-    async updateUser(id, data) {
-        return this.patch(`/users/${id}`, data);
-    }
+
 
     setToken(token) {
         this.token = token;
@@ -238,10 +412,22 @@ window.makeApiRequest = async function(endpoint, method = 'GET', data = null, is
 // ✅ Global getAuthToken
 window.getAuthToken = function() {
     const keys = ['guven_token', 'access_token', 'auth_token', 'token'];
+
     for (const key of keys) {
         const val = localStorage.getItem(key) || sessionStorage.getItem(key);
         if (val && val !== 'null' && val !== 'undefined') return val;
     }
+
+    // Cookie
+    for (const key of keys) {
+        const match = document.cookie.match(
+            new RegExp('(?:^|; )' + key + '=([^;]*)')
+        );
+        if (match?.[1] && match[1] !== 'null' && match[1] !== 'undefined') {
+            return decodeURIComponent(match[1]);
+        }
+    }
+
     return '';
 };
 

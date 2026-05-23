@@ -10,10 +10,118 @@ class AuthService {
             return;
         }
 
-        // ✅ Constructor-da yalnız token DEcode yoxlaması (sinxron)
-        // API çağırısını ayrıca init() ilə et
-        this._quickTokenCheck();
+        // 🔥 CONSTRUCTOR-DA REDIRECT ETMƏ — yalnız loq yaz
+        const token = this._getToken();
+        if (!token) {
+            console.log('❌ Token tapılmadı');
+        } else {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const now = Math.floor(Date.now() / 1000);
+                if (payload.exp < now) {
+                    console.log('❌ Token müddəti bitib');
+                } else {
+                    console.log('✅ Token lokal olaraq etibarlıdır');
+                }
+            } catch (e) {
+                console.error('❌ Token parse xətası:', e);
+            }
+        }
+        // ← REDIRECT YOX
+
         this.setupProfileButtons();
+    }
+
+    async init() {
+        if (this.isLoginPage()) return true;
+
+        // Token-i yoxla
+        if (!this.hasValidToken()) {
+            console.log('🔴 Token yoxdur və ya bitib');
+            this._redirectToLogin();
+            return false;
+        }
+
+        try {
+            const isAuth = await this.checkAuthStatus();
+            if (!isAuth) {
+                this._redirectToLogin();
+                return false;
+            }
+
+            // ✅ ƏLAVƏ: API sorğuları üçün tokeni yoxla
+            await this._ensureValidTokenForApi();
+
+            return true;
+        } catch (e) {
+            console.error('❌ Init xətası:', e);
+            const cached = this.getCachedUserData();
+            if (cached && this.hasValidToken()) {
+                this.currentUser = cached;
+                return true;
+            }
+            this._redirectToLogin();
+            return false;
+        }
+    }
+
+    // ✅ YENİ METOD: API sorğusundan əvvəl tokeni yoxla
+    async _ensureValidTokenForApi() {
+        const token = this._getToken();
+        if (!token) {
+            this._redirectToLogin();
+            return false;
+        }
+
+        // Token vaxtını yoxla
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const now = Math.floor(Date.now() / 1000);
+
+            // 30 saniyədən az qalıbsa, refresh etməyə çalış
+            if (payload.exp - now < 30) {
+                console.log('🔄 Token bitmək üzrə, refresh edilir...');
+                const refreshed = await this._tryRefreshToken();
+                if (!refreshed) {
+                    this._redirectToLogin();
+                    return false;
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Token parse xətası:', e);
+        }
+
+        return true;
+    }
+
+    // ✅ YENİ METOD: Token refresh
+    async _tryRefreshToken() {
+        try {
+            const response = await fetch('https://guvenfinans.az/proxy.php/api/v1/auth/refresh', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.access_token) {
+                    localStorage.setItem('guven_token', data.access_token);
+                    localStorage.setItem('access_token', data.access_token);
+                    console.log('✅ Token uğurla yeniləndi');
+                    return true;
+                }
+            }
+
+            console.warn('⚠️ Token refresh uğursuz:', response.status);
+            return false;
+        } catch (error) {
+            console.error('❌ Token refresh xətası:', error);
+            return false;
+        }
     }
 
     isLoginPage() {
@@ -64,54 +172,56 @@ class AuthService {
         if (!token) return false;
 
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const now = Math.floor(Date.now() / 1000);
-            // ✅ 30 saniyə tolerance — clock skew üçün
-            return payload.exp > (now - 30);
-        } catch (e) {
-            return false;
-        }
-    }
-
-    // ✅ YENİ: Səhifə yükləndikdə çağırılacaq async init
-    async init() {
-        if (this.isLoginPage()) return true;
-
-        try {
-            const isAuth = await this.checkAuthStatus();
-            if (!isAuth) {
-                this._redirectToLogin();
-                return false;
-            }
-            return true;
-        } catch (e) {
-            console.error('❌ init() xətası:', e);
-            // ✅ Cached data varsa, loginə atmadan davam et
-            const cached = this.getCachedUserData();
-            if (cached) {
-                this.currentUser = cached;
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                console.warn('⚠️ Token formatı düzgün deyil (JWT deyil)');
+                // JWT deyilsə, yalnız tokenin mövcudluğunu yoxla
                 return true;
             }
-            this._redirectToLogin();
-            return false;
+
+            const payload = JSON.parse(atob(parts[1]));
+            const now = Math.floor(Date.now() / 1000);
+
+            // Token bitibsə, false qaytar
+            if (payload.exp <= now) {
+                console.log('❌ Token vaxtı bitib');
+                return false;
+            }
+
+            return true;
+        } catch (e) {
+            console.warn('⚠️ Token parse xətası:', e.message);
+            return false;  // ✅ DÜZƏLDİ: Parse olunmayan token üçün false qaytar
         }
     }
+
+
 
     async checkAuthStatus() {
         if (!this.hasValidToken()) {
             console.log('🔴 Token yoxdur və ya bitib');
+            this._redirectToLogin();  // ✅ DÜZƏLDİ: Birbaşa loginə at
             return false;
         }
 
         try {
             const response = await this.api.getCurrentUser();
 
-            if (response === null) return false;
+            if (!response || response === null) {
+                console.warn('⚠️ API-dən null cavab gəldi');
+                const cached = this.getCachedUserData();
+                if (cached && this.hasValidToken()) {
+                    console.log('⚠️ Null cavab — cached user istifadə edilir');
+                    this.currentUser = cached;
+                    return true;
+                }
+                this._redirectToLogin();
+                return false;
+            }
 
-            if (response && response.success && response.user_service) {
+            if (response.success && response.user_service) {
                 this.currentUser = response.user_service;
 
-                // baza_id saxla
                 if (this.currentUser.baza_id) {
                     localStorage.setItem('baza_id', this.currentUser.baza_id);
                 }
@@ -121,20 +231,49 @@ class AuthService {
                 return true;
             }
 
-            console.warn('⚠️ API cavabında user_service yoxdur');
+            // ✅ 401 və ya unauthorized cavabı
+            if (response.status === 401 || response.message === 'Unauthorized') {
+                console.warn('🔑 API unauthorized cavab qaytardı');
+                this._redirectToLogin();
+                return false;
+            }
+
+            if (response.data && response.data.user_service) {
+                this.currentUser = response.data.user_service;
+                this.saveUserData({ user_service: this.currentUser, success: true });
+                console.log('✅ Auth uğurlu (alternativ format):', this.currentUser.email);
+                return true;
+            }
+
+            console.warn('⚠️ API cavabında user_service yoxdur', response);
+
+            const cached = this.getCachedUserData();
+            if (cached && this.hasValidToken()) {
+                console.log('⚠️ API-dan user_service gəlmədi — cached user istifadə edilir');
+                this.currentUser = cached;
+                return true;
+            }
+
+            this._redirectToLogin();
             return false;
 
         } catch (error) {
             console.error('❌ checkAuthStatus xətası:', error.message);
 
-            // ✅ Şəbəkə xətasında cached datanı istifadə et (loginə atma)
+            // ✅ 401 xətası
+            if (error.message.includes('401')) {
+                this._redirectToLogin();
+                return false;
+            }
+
             const cached = this.getCachedUserData();
-            if (cached) {
+            if (cached && this.hasValidToken()) {
                 console.log('⚠️ Şəbəkə xətası — cached user istifadə edilir');
                 this.currentUser = cached;
                 return true;
             }
 
+            this._redirectToLogin();
             return false;
         }
     }
@@ -255,13 +394,17 @@ class AuthService {
     async handleLogout() {
         if (!confirm('Hesabdan çıxmaq istədiyinizə əminsiniz?')) return;
 
-        try { await this.api.post('/auth/logout'); } catch {}
-
+        // 🔥 Əvvəlcə clear et, sonra logout API çağır
+        // (API 401 versə belə problem olmasın)
         await this._clearServiceWorkerCaches();
         await this._clearIndexedDB();
         this._clearAll();
 
-        setTimeout(() => this._redirectToLogin(), 500);
+        try {
+            await this.api.post('/auth/logout');
+        } catch {} // xəta olsa da davam et
+
+        setTimeout(() => this._redirectToLogin(), 200);
     }
 
     async _clearServiceWorkerCaches() {
