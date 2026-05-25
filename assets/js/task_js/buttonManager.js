@@ -1380,7 +1380,7 @@ class ButtonManager {
 
                 // Redirect to login
                 setTimeout(() => {
-                    window.GF_CONFIG.redirectToLogin('auth_required');
+                    window.location.href = '../login.html';
                 }, 1000);
             }
         } catch (error) {

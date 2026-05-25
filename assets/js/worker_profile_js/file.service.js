@@ -10,7 +10,7 @@ class FileService {
         this.folders = [];
         this.selectedFiles = new Set();
         this.currentView = 'grid';
-        this.baseUrl = window.GF_CONFIG.apiV1Base;
+        this.baseUrl = 'https://guvenfinans.az/proxy.php/api/v1';
         this.currentFolder = null;
         this.onFileChange = null;
 
@@ -375,7 +375,7 @@ class FileService {
 
             // API-dən yüklə
             const token = localStorage.getItem('guven_token');
-            const response = await fetch(`${window.GF_CONFIG.apiV1Base}/users/${userId}`, {
+            const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json'
@@ -652,7 +652,7 @@ class FileService {
             console.log(`📡 Backend-dən qovluq silinir: ${cleanFolderId}`);
 
             // Fetch ilə birbaşa sorğu
-            const response = await fetch(`${window.GF_CONFIG.apiV1Base}/folders/${cleanFolderId}`, {
+            const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/folders/${cleanFolderId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -1250,7 +1250,7 @@ class FileService {
 
             console.log('📡 API-dən UUID yüklənir, userId:', userId);
 
-            const response = await fetch(`${window.GF_CONFIG.apiV1Base}/users/${userId}`, {
+            const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json'

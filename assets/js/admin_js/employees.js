@@ -151,7 +151,7 @@ window.loadEmployees = async function(page = 1) {
         }
 
         // URL yarat
-        let url = `${window.API_BASE || window.GF_CONFIG.apiBase}/api/v1/admin/employees?page=${page}&limit=10`;
+        let url = `${window.API_BASE || 'https://guvenfinans.az/proxy.php'}/api/v1/admin/employees?page=${page}&limit=10`;
 
         // Axtarış filterləri
         const search = document.getElementById('employeesSearch');
@@ -222,7 +222,7 @@ window.viewEmployee = async function(id) {
             console.log(`📡 Employees list-dən axtarılır: ID=${id}`);
 
             // Əvvəlcə employees list-dən tap
-            const response = await fetch(`${window.API_BASE || window.GF_CONFIG.apiBase}/api/v1/admin/employees?limit=100`, {
+            const response = await fetch(`${window.API_BASE || 'https://guvenfinans.az/proxy.php'}/api/v1/admin/employees?limit=100`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -254,7 +254,7 @@ window.viewEmployee = async function(id) {
         if (!employee) {
             try {
                 console.log(`📡 Users endpoint-ə sorğu: /users/${id}`);
-                const userResponse = await fetch(`${window.API_BASE || window.GF_CONFIG.apiBase}/api/v1/admin/users/${id}`, {
+                const userResponse = await fetch(`${window.API_BASE || 'https://guvenfinans.az/proxy.php'}/api/v1/admin/users/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -395,7 +395,7 @@ window.editEmployee = async function(id) {
         // **YENİ STRATEGİYA: Əvvəlcə Users endpoint-inə get**
         try {
             console.log(`📡 Users endpoint-ə sorğu: /users/${id}`);
-            const userResponse = await fetch(`${window.API_BASE || window.GF_CONFIG.apiBase}/api/v1/admin/users/${id}`, {
+            const userResponse = await fetch(`${window.API_BASE || 'https://guvenfinans.az/proxy.php'}/api/v1/admin/users/${id}`, {
                 headers: {
                     'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -421,7 +421,7 @@ window.editEmployee = async function(id) {
         if (employee && employee.id) {
             try {
                 console.log(`🔍 Employees məlumatları axtarılır (user_id=${employee.id})`);
-                const employeesResponse = await fetch(`${window.API_BASE || window.GF_CONFIG.apiBase}/api/v1/admin/employees?user_id=${employee.id}&limit=1`, {
+                const employeesResponse = await fetch(`${window.API_BASE || 'https://guvenfinans.az/proxy.php'}/api/v1/admin/employees?user_id=${employee.id}&limit=1`, {
                     headers: {
                         'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`

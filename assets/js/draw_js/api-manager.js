@@ -3,7 +3,7 @@
     class ApiManager {
         constructor(diagramTool) {
             this.diagramTool = diagramTool;
-            this.API_URL = window.GF_CONFIG.apiBase;
+            this.API_URL = "http://vps.guvenfinans.az:8008";
             this.token = this.loadToken();
             this.autoSaveInterval = null;
 
@@ -379,7 +379,7 @@
         redirectToLogin() {
             console.log('🔴 Redirecting to login...');
             setTimeout(() => {
-                window.GF_CONFIG.redirectToLogin('auth_required');
+                window.location.href = '../login.html';
             }, 1000);
         }
 

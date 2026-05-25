@@ -745,7 +745,7 @@ class FilesUI {
             // Sub-companies
             let companies = [];
             try {
-                const companiesResponse = await fetch(`${window.GF_CONFIG.apiV1Base}/companies/${companyCode}/sub-companies`, {
+                const companiesResponse = await fetch(`https://guvenfinans.az/proxy.php/api/v1/companies/${companyCode}/sub-companies`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -773,7 +773,7 @@ class FilesUI {
             // Partners
             let partners = [];
             try {
-                const partnersResponse = await fetch(`${window.GF_CONFIG.apiV1Base}/partners/?company_code=${companyCode}`, {
+                const partnersResponse = await fetch(`https://guvenfinans.az/proxy.php/api/v1/partners/?company_code=${companyCode}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Accept': 'application/json'
@@ -1765,7 +1765,7 @@ class FilesUI {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = btn.dataset.id;
-                window.open(`${window.GF_CONFIG.apiV1Base}/files/${id}/download?token=${localStorage.getItem('guven_token')}`, '_blank');
+                window.open(`https://guvenfinans.az/proxy.php/api/v1/files/${id}/download?token=${localStorage.getItem('guven_token')}`, '_blank');
             });
         });
 

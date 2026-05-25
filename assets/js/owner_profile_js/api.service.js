@@ -4,7 +4,7 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = window.GF_CONFIG.apiBase;
+        this.baseUrl = "https://guvenfinans.az/proxy.php";
         this.token = this.loadToken();
     }
 
