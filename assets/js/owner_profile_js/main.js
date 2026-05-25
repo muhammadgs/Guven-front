@@ -40,7 +40,7 @@
         console.log('✅ Container, token və user_service ID tapıldı');
 
         try {
-            const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
+            const response = await fetch(`${window.GF_CONFIG.apiV1Base}/users/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -70,9 +70,9 @@
             let fullUrl = imageUrl;
             if (!imageUrl.startsWith('http')) {
                 if (imageUrl.startsWith('/')) {
-                    fullUrl = `https://guvenfinans.az/proxy.php${imageUrl}`;
+                    fullUrl = `${window.GF_CONFIG.apiBase}${imageUrl}`;
                 } else {
-                    fullUrl = `https://guvenfinans.az/proxy.php/${imageUrl}`;
+                    fullUrl = `${window.GF_CONFIG.apiBase}/${imageUrl}`;
                 }
             }
 

@@ -11,8 +11,8 @@ const ApiMainService = (function() {
     // ==================== KONFİQURASİYA ====================
     const CONFIG = {
         // PROXY üzərindən backend-ə müraciət
-        baseURL: 'https://guvenfinans.az/proxy.php/api/v1',
-        proxyBase: 'https://guvenfinans.az/proxy.php',
+        baseURL: window.GF_CONFIG.apiV1Base,
+        proxyBase: window.GF_CONFIG.apiBase,
         timeout: 30000,
         headers: {
             'Accept': 'application/json',

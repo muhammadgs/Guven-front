@@ -549,7 +549,7 @@ class PermissionsService {
 
             // 🔥 BİRBAŞA FETCH İSTİFADƏ ET - api.service-dən KEÇMƏ!
             const token = localStorage.getItem('guven_token');
-            const url = `https://guvenfinans.az/proxy.php/api/v1/departments/company/${actualCompanyId}/all`;
+            const url = `${window.GF_CONFIG.apiV1Base}/departments/company/${actualCompanyId}/all`;
 
             console.log(`📡 Direct fetch: ${url}`);
 

@@ -1,7 +1,7 @@
 /**
  * ================================================
  * GF44 | 1C BRIDGE DASHBOARD — JavaScript
- * Proxy: https://guvenfinans.az/proxy.php/api/v1
+ * Proxy: window.GF_CONFIG.apiV1Base
  * ================================================
  */
 
@@ -9,7 +9,7 @@
     'use strict';
 
     /* ── CONFIG ─────────────────────────────────── */
-    const API_BASE = 'https://guvenfinans.az/proxy.php/api/v1';
+    const API_BASE = window.GF_CONFIG.apiV1Base;
     const PAGE_SIZE = 15;
 
     /* ── STATE ──────────────────────────────────── */

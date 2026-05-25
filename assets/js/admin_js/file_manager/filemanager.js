@@ -8,7 +8,7 @@
   'use strict';
 
   // ── API konfiqurasiya ────────────────────────────────────────
-  const API = window.API_BASE || 'https://guvenfinans.az/proxy.php';
+  const API = window.API_BASE || window.GF_CONFIG.apiBase;
 
   // ── Vəziyyət (state) ─────────────────────────────────────────
   let fm = {

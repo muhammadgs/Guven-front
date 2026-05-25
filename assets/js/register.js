@@ -77,7 +77,7 @@
     //  KONFİQURASİYA
 
     const CONFIG = {
-        API_BASE: "http://vps.guvenfinans.az:8008",
+        API_BASE: window.GF_CONFIG.apiBase,
         DEBOUNCE_DELAY: 800,
         PASSWORD_STRENGTH_LEVELS: {
             weak: { color: '#ef4444', minScore: 0 },
