@@ -97,7 +97,7 @@ class AuthService {
     // ✅ YENİ METOD: Token refresh
     async _tryRefreshToken() {
         try {
-            const response = await fetch('https://guvenfinans.az/proxy.php/api/v1/auth/refresh', {
+            const response = await fetch(, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

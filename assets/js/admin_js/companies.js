@@ -11,7 +11,7 @@ window.loadCompanies = async function(page = 1) {
     try {
         currentCompanyPage = page;
 
-        const API_BASE = window.API_BASE || "https://guvenfinans.az/proxy.php";
+        const API_BASE = window.API_BASE || window.GF_CONFIG.apiBase;
         const token = localStorage.getItem('guven_token');
 
         // Axtarış parametrlərini əlavə et
@@ -246,7 +246,7 @@ window.viewCompany = async function(id) {
             return;
         }
 
-        const API_BASE = window.API_BASE || "https://guvenfinans.az/proxy.php";
+        const API_BASE = window.API_BASE || window.GF_CONFIG.apiBase;
         const token = localStorage.getItem('guven_token');
         const response = await fetch(`${API_BASE}/api/v1/admin/companies/${id}`, {
             headers: {
@@ -415,7 +415,7 @@ window.editCompany = async function(id) {
             return;
         }
 
-        const API_BASE = window.API_BASE || "https://guvenfinans.az/proxy.php";
+        const API_BASE = window.API_BASE || window.GF_CONFIG.apiBase;
         const token = localStorage.getItem('guven_token');
         const response = await fetch(`${API_BASE}/api/v1/admin/companies/${id}`, {
             headers: {
@@ -512,7 +512,7 @@ window.saveCompanyChanges = async function() {
             return;
         }
 
-        const API_BASE = window.API_BASE || "https://guvenfinans.az/proxy.php";
+        const API_BASE = window.API_BASE || window.GF_CONFIG.apiBase;
         const token = localStorage.getItem('guven_token');
 
         if (!token) {

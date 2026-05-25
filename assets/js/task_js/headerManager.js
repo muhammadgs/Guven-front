@@ -945,7 +945,7 @@ class HeaderManager {
 
             // Redirect to login
             setTimeout(() => {
-                window.location.href = '../login.html';
+                window.GF_CONFIG.redirectToLogin('auth_required');
             }, 1000);
         }
     }

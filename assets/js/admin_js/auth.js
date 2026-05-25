@@ -147,13 +147,13 @@ async function logoutUser() {
         console.log('✅ Bütün cache-lər təmizləndi!');
 
         // 11. Login səhifəsinə yönləndir (hard reload ilə)
-        window.location.href = '../login.html';
+        window.GF_CONFIG.redirectToLogin('auth_required');
 
     } catch (error) {
         console.error('❌ Çıxış edərkən xəta:', error);
         // Yenə də təmizlə
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = '../login.html';
+        window.GF_CONFIG.redirectToLogin('auth_required');
     }
 }

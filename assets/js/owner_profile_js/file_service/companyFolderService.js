@@ -4,7 +4,7 @@
  */
 class CompanyFolderService {
     constructor() {
-        this.baseUrl = 'https://guvenfinans.az/proxy.php';
+        this.baseUrl = window.GF_CONFIG.apiBase;
         console.log('🔥🔥🔥 CompanyFolderService YÜKLƏNDİ! 🔥🔥🔥');
 
         // Cache

@@ -137,7 +137,7 @@ class AuthService {
         let loginPath = 'login';
         if (window.location.pathname.includes('/') ||
             window.location.pathname.includes('/')) {
-            loginPath = '../login.html';
+            loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '../login.html';
         }
 
         window.location.href = loginPath;

@@ -91,11 +91,11 @@ class AuthService {
         });
 
         // Düzgün login path
-        let loginPath = '/login.html';
+        let loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '/login.html';
         if (currentPath.includes('/owner/')) {
-            loginPath = '../login.html';
+            loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '../login.html';
         } else if (currentPath.includes('/admin/')) {
-            loginPath = '../login.html';
+            loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '../login.html';
         }
 
         console.log('🚪 Loginə yönləndirilir:', loginPath);
@@ -333,12 +333,12 @@ class AuthService {
 
                 setTimeout(() => {
                     const currentPath = window.location.pathname;
-                    let loginPath = '/login.html';
+                    let loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '/login.html';
 
                     if (currentPath.includes('/owner/')) {
-                        loginPath = '../login.html';
+                        loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '../login.html';
                     } else if (currentPath.includes('/admin/')) {
-                        loginPath = '../login.html';
+                        loginPath = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '../login.html';
                     }
 
                     console.log('🔀 Yönləndirilir:', loginPath);

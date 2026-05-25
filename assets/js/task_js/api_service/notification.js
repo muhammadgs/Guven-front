@@ -45,7 +45,7 @@ function showNotification(message, type = 'info', options = {}) {
         // Sessiya bitib
         console.warn('Session expired, redirecting to login');
         setTimeout(() => {
-            window.location.href = '../login.html?reason=session_expired';
+            window.GF_CONFIG.redirectToLogin('session_expired');
         }, 2000);
     }
 
