@@ -83,7 +83,7 @@ class DashboardRedirect {
 
         // Login səhifəsinə yönləndir
         setTimeout(() => {
-            window.GF_CONFIG.redirectToLogin('auth_required');
+            window.location.href = '../login.html';
         }, 1500);
     }
 

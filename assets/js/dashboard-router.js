@@ -70,7 +70,7 @@
             || '';
     };
 
-    var LOGIN_URL = (window.GF_CONFIG && window.GF_CONFIG.getLoginUrl()) || '/login.html';
+    var LOGIN_URL = '/login.html';
 
     var handleAuthFailure = function(reason) {
         console.warn('🔐 Auth uğursuz:', reason);

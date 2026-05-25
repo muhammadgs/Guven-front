@@ -6,7 +6,7 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = window.GF_CONFIG.apiBase;
+        this.baseUrl = "http://vps.guvenfinans.az:8008";
         this.token = this.loadToken();
     }
 
@@ -373,9 +373,9 @@ class ApiService {
 
         // Path-a görə düzgün login url-ə get
         if (currentPath.includes('/worker/') || currentPath.includes('/owner/') || currentPath.includes('/admin/')) {
-            window.GF_CONFIG.redirectToLogin('auth_required');
+            window.location.href = '../login.html';
         } else {
-            window.GF_CONFIG.redirectToLogin('auth_required');
+            window.location.href = '/login.html';
         }
     }
 

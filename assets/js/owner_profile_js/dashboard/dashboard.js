@@ -725,7 +725,7 @@ class DashboardManager {
                 <div class="text-center py-8 text-orange-500">
                     <i class="fa-solid fa-lock text-4xl mb-2"></i>
                     <p>Zəhmət olmasa daxil olun</p>
-                    <a href="${window.GF_CONFIG ? window.GF_CONFIG.getLoginUrl() : '/login.html'}" class="mt-3 inline-block px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition">
+                    <a href="/login.html" class="mt-3 inline-block px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition">
                         <i class="fa-solid fa-right-to-bracket mr-2"></i>
                         Daxil ol
                     </a>

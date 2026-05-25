@@ -1,5 +1,5 @@
 // Admin Panel JavaScript - core.js
-const API_BASE = window.GF_CONFIG.apiBase;
+const API_BASE = "https://guvenfinans.az/proxy.php";
 let currentUser = {};
 window.API_BASE = API_BASE;
 window.deleteType = null;
