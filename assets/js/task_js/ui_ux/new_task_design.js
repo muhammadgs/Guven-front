@@ -54,29 +54,68 @@
         console.log('✅ new_task_modal.js hazırdır, employees:', employees.length);
     }
 
-    // ✅ YENİ FUNKSIYA - öz şirkətin işçilərini yüklə
     async function loadMyCompanyEmployees() {
         try {
             const companyCode = myCompany?.company_code
                 || window.taskManager?.userData?.companyCode;
 
-            if (!companyCode) {
-                console.error('❌ companyCode tapılmadı, işçilər yüklənə bilmir');
-                return;
+            if (!companyCode) return;
+
+            console.log(`🔄 İşçilər yüklənir: ${companyCode}`);
+
+            let list = [];
+
+            // ✅ 1. Birinci cəhd: requestOneC ilə (baza_id ilə - əsas endpoint)
+            try {
+                    const r1 = await makeApiRequest(`/users/company/${companyCode}`, 'GET');
+                    console.log('🔍 RAW cavab:', r1);  // ← ƏLAVƏ EDİN
+                    const arr = Array.isArray(r1) ? r1 : (r1?.data || r1?.items || []);
+                    console.log('🔍 Array:', arr);     // ← ƏLAVƏ EDİN
+                    if (arr.length > 0) {
+                        list = arr;
+                        console.log(`✅ makeApiRequest: ${list.length} işçi`);
+                    }
+                } catch(e) {
+                    console.warn('makeApiRequest failed:', e.message);  // ← bu artıq var
+                }
+
+            // ✅ 2. İkinci cəhd: window._apiGet ilə (baza_id-siz)
+            if (list.length === 0 && window._apiGet) {
+                try {
+                    const r2 = await window._apiGet(`/users/company/${companyCode}`);
+                    const arr = Array.isArray(r2) ? r2 : (r2?.data || r2?.items || []);
+                    if (arr.length > 0) { list = arr; console.log(`✅ _apiGet: ${list.length} işçi`); }
+                } catch(e) { console.warn('_apiGet failed:', e.message); }
             }
 
-            console.log(`🔄 Öz şirkətin işçiləri yüklənir: /users/company/${companyCode}`);
-            const response = await makeApiRequest(`/users/company/${companyCode}`, 'GET');
+            // ✅ 3. Üçüncü cəhd: getEmployeesWithCache (api.service.js-dən)
+            if (list.length === 0) {
+                try {
+                    const r3 = await window.getEmployeesWithCache(companyCode);
+                    const arr = Array.isArray(r3) ? r3 : (r3?.data || []);
+                    if (arr.length > 0) { list = arr; console.log(`✅ getEmployeesWithCache: ${list.length} işçi`); }
+                } catch(e) { console.warn('getEmployeesWithCache failed:', e.message); }
+            }
 
-            const list = response?.data || (Array.isArray(response) ? response : []);
+            // ✅ 4. Son fallback: taskManager.employees (report.js yükləyib)
+            if (list.length === 0 && window.taskManager?.employees?.length > 0) {
+                list = window.taskManager.employees;
+                console.log(`✅ taskManager.employees fallback: ${list.length} işçi`);
+            }
+
             if (list.length > 0) {
                 employees = list;
-                console.log(`✅ ${employees.length} işçi API-dan yükləndi`);
+                console.log(`✅ ${employees.length} işçi yükləndi`);
+                populateSelects();
             } else {
-                console.warn('⚠️ API boş siyahı qaytardı');
+                console.warn('⚠️ Heç bir mənbədən işçi tapılmadı');
             }
         } catch (err) {
             console.error('❌ loadMyCompanyEmployees xətası:', err);
+            if (window.taskManager?.employees?.length > 0) {
+                employees = window.taskManager.employees;
+                populateSelects();
+            }
         }
     }
 
@@ -177,16 +216,52 @@
 
             // 6. myCompany obyektini yarat
             if (companyId && companyCode) {
+                // ✅ FIX: şirkət adını düzgün mənbədən al
+                // userData.name = şəxsin adı, companyName = şirkət adı - bunları qarışdırma!
+                let finalName = null;
+
+                // 1. Birbaşa API-dan al (ən etibarlı)
+                try {
+                    const companyResp = await makeApiRequest(`/companies/code/${companyCode}`, 'GET');
+                    if (companyResp?.company_name) {
+                        finalName = companyResp.company_name;
+                        console.log('✅ Şirkət adı API-dan alındı:', finalName);
+                    } else if (companyResp?.data?.company_name) {
+                        finalName = companyResp.data.company_name;
+                    }
+                } catch(e) {
+                    console.warn('⚠️ Company API xətası:', e);
+                }
+
+                // 2. Fallback: localStorage-dan al
+                if (!finalName) {
+                    try {
+                        const stored = localStorage.getItem('guven_user_data')
+                            || localStorage.getItem('profileData');
+                        if (stored) {
+                            const parsed = JSON.parse(stored);
+                            finalName = parsed?.company_name
+                                || parsed?.companyName
+                                || parsed?.user?.company_name;
+                        }
+                    } catch(e) {}
+                }
+
+                // 3. Fallback: taskManager myCompany-dən (əgər artıq yüklənibsə)
+                if (!finalName && window.taskManager?.myCompany?.company_name) {
+                    finalName = window.taskManager.myCompany.company_name;
+                }
+
+                // 4. Son fallback: kompanyCode (addan daha yaxşıdır)
+                if (!finalName) finalName = companyCode;
+
                 myCompany = {
                     id: companyId,
-                    company_name: companyName || companyCode,
+                    company_name: finalName,
                     company_code: companyCode,
-                    name: companyName || companyCode
+                    name: finalName
                 };
                 console.log('✅ myCompany yaradıldı:', myCompany);
-            } else {
-                console.error('❌ Company məlumatları tapılmadı!', { companyId, companyCode, companyName });
-                myCompany = null;
             }
 
             // Alt məlumatları yüklə
@@ -487,15 +562,12 @@
 
                 // Hələ də yoxdursa, token-dan və ya API-dan al
                 if (!companyName || companyName === 'undefined') {
-                    const token = getAuthToken();
-                    if (token) {
-                        const payload = parseTokenPayload(token);
-                        if (payload && payload.company_name) {
-                            companyName = payload.company_name;
-                        } else if (payload && payload.company_code) {
-                            companyName = payload.company_code;
-                        }
-                    }
+                    companyName = window.taskManager?.userData?.companyName
+                        || window.taskManager?.userData?.companyCode
+                        || myCompany.company_code;
+                    // myCompany-ni də yenilə ki növbəti dəfə düzgün olsun
+                    myCompany.company_name = companyName;
+                    myCompany.name = companyName;
                 }
 
                 // Əgər hələ də yoxdursa, default
@@ -1270,7 +1342,14 @@
         } catch (error) {
             console.error('❌ Şirkət işçiləri xətası:', error);
             const el = document.getElementById('newtaskOtherExecutorSelect');
-            if (el) { el.innerHTML = '<option value="">Xəta baş verdi</option>'; el.disabled = false; }
+            if (el) {
+                // 403 = icazə yoxdur, digər xəta = texniki problem
+                const msg = error.message?.includes('403')
+                    ? 'Bu şirkətin işçilərinə baxmaq icazəniz yoxdur'
+                    : 'İşçilər yüklənə bilmədi';
+                el.innerHTML = `<option value="">${msg}</option>`;
+                el.disabled = false;
+            }
         }
     }
 
@@ -1400,28 +1479,31 @@
 
             // ========== 4. TASK MƏLUMATLARINI HAZIRLA ==========
             let targetCompanyId = null;
-            let targetCompanyName = '';
             let selectedCompanyName = '';
 
             if (currentTaskType === 'internal') {
                 const companySelect = document.getElementById('newtaskCompanySelect');
-                if (companySelect?.selectedIndex > 0) {
-                    targetCompanyId = parseInt(companySelect.value);
-                    selectedCompanyName = companySelect.options[companySelect.selectedIndex].text;
+                if (companySelect && companySelect.selectedIndex > 0) {
+                    const opt = companySelect.options[companySelect.selectedIndex];
+                    // "🏢 Güvən Finans MMC (Mənim şirkətim)" → "Güvən Finans MMC"
+                    selectedCompanyName = opt.text
+                        .replace('🏢', '')
+                        .replace('(Mənim şirkətim)', '')
+                        .trim();
                 }
             } else if (currentTaskType === 'parent') {
                 const parentSelect = document.getElementById('newtaskParentSelect');
-                if (parentSelect?.selectedIndex > 0) {
-                    targetCompanyId = parseInt(parentSelect.value);
-                    selectedCompanyName = parentSelect.options[parentSelect.selectedIndex].text
-                        .replace(/⬆️|✅|⏳/g, '').trim();
+                if (parentSelect && parentSelect.selectedIndex > 0) {
+                    selectedCompanyName = parentSelect.options[parentSelect.selectedIndex]
+                        .getAttribute('data-company-name')
+                        || parentSelect.options[parentSelect.selectedIndex].text
+                            .replace(/⬆️/g, '').trim();
                 }
             } else if (currentTaskType === 'partner') {
                 const partnerSelect = document.getElementById('newtaskPartnerSelect');
-                if (partnerSelect?.selectedIndex > 0) {
-                    targetCompanyId = parseInt(partnerSelect.value);
+                if (partnerSelect && partnerSelect.selectedIndex > 0) {
                     selectedCompanyName = partnerSelect.options[partnerSelect.selectedIndex].text
-                        .replace(/🤝|✅|⏳/g, '').trim();
+                        .replace(/🤝/g, '').trim();
                 }
             }
 
@@ -1448,7 +1530,7 @@
             };
 
             const baseData = {
-                task_title: " ",
+                task_title: `  [${selectedCompanyName}]`,  // ← Arxiv ilə eyni format
                 task_description: description,
                 assigned_to: assignedTo || otherExecutorId,
                 priority: "medium",
@@ -1461,19 +1543,19 @@
                 created_by: window.taskManager?.userData?.userId,
                 creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
                 metadata: JSON.stringify(metadata),
-                file_uuids: uploadedUuids  // 🔥 BURADA - YÜKLƏNMİŞ UUID-LƏR
+                file_uuids: uploadedUuids
             };
 
             if (currentTaskType === 'internal') {
-                endpoint = '/tasks/';
-                apiData = {
-                    ...baseData,
-                    company_id: targetCompanyId,
-                    company_name: selectedCompanyName,
-                    is_company_viewable: isVisible,
-                    viewable_company_id: isVisible ? targetCompanyId : null
-                };
-            } else if (currentTaskType === 'parent') {
+                    endpoint = '/tasks/';
+                    apiData = {
+                        ...baseData,
+                        company_id: targetCompanyId,  // Bu əsl sahib şirkət (Güvən Finans)
+                        company_name: selectedCompanyName,
+                        is_company_viewable: true,     // ✅ Dəyişdirildi: false → true
+                        viewable_company_id: targetCompanyId  // ✅ Bu göstəriləcək şirkət (DRM MMC)
+                    };
+                } else if (currentTaskType === 'parent') {
                 endpoint = '/tasks-external/';
                 apiData = {
                     ...baseData,

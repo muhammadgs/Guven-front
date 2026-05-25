@@ -829,10 +829,10 @@ const TaskManagerLoader = {
         console.log('📚 TaskManagerLoader: Script-lər yüklənir...');
 
         const scripts = [
-            '../assets/js/base_api/api.service.js',
-            '../assets/js/base_api/auth.service.js',
             '../assets/js/task_js/dashboardRedirect.js',
             '../assets/js/task_js/soundManager.js',
+            '../assets/js/base_api/api.service.js',
+            '../assets/js/base_api/auth.service.js',
             '../assets/js/task_js/cacheService.js',
             '../assets/js/task_js/columnResizer.js',
             '../assets/js/task_js/formatters.js',

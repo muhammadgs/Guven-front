@@ -860,26 +860,56 @@ function buildCompletedRejectedHTML(taskId, status, isAssignedToMe, isCreatedByM
 // ======================== ANA MODUL ========================
 const ActiveRowCreator = {
 
+    // activeRowCreator.js - DÜZƏLİŞ: Şirkət adını task_title-dan oxu
+
     _syncCompanyName: function(task) {
-        if (task.viewable_company_name?.trim()) return task.viewable_company_name;
+        // ✅ 1. Əvvəlcə task_title-dan şirkət adını çıxarmağa çalış
+        if (task.task_title && task.task_title.trim()) {
+            const title = task.task_title.trim();
+            // Format: "  [DRM MMC]" və ya "[DRM MMC]" və ya "  [DRM MMC] test"
+            const bracketMatch = title.match(/\[([^\]]+)\]/);
+            if (bracketMatch && bracketMatch[1]) {
+                const companyFromTitle = bracketMatch[1].trim();
+                if (companyFromTitle && companyFromTitle !== 'Mənim şirkətim') {
+                    console.log(`🏢 Task ${task.id} üçün şirkət adı title-dan tapıldı: ${companyFromTitle}`);
+                    return companyFromTitle;
+                }
+            }
+        }
+
+        // 2. viewable_company_name
+        if (task.viewable_company_name && task.viewable_company_name.trim()) {
+            return task.viewable_company_name;
+        }
+
+        // 3. metadata-dan
         if (task.metadata) {
             try {
                 const m = typeof task.metadata === 'string' ? JSON.parse(task.metadata) : task.metadata;
                 const n = m.target_company_name || m.partner_company_name ||
-                    m.original_company_name || m.viewable_company_name || m.display_for;
-                if (n?.trim()) return n;
+                    m.original_company_name || m.viewable_company_name || m.display_for || m.display_company_name;
+                if (n && n.trim()) return n;
             } catch(e) {}
         }
+
+        // 4. viewable_company_id üzrə cache
         const cache = window.taskManager?.companyCache || {};
         if (task.viewable_company_id && cache[task.viewable_company_id]) {
             const c = cache[task.viewable_company_id];
             return typeof c === 'string' ? c : (c.company_name || c.name || '');
         }
-        if (task.company_name?.trim()) return task.company_name;
+
+        // 5. company_name
+        if (task.company_name && task.company_name.trim()) {
+            return task.company_name;
+        }
+
+        // 6. company_id üzrə cache
         if (task.company_id && cache[task.company_id]) {
             const c = cache[task.company_id];
             return typeof c === 'string' ? c : (c.company_name || c.name || '');
         }
+
         const id = task.viewable_company_id || task.company_id;
         return id ? `Şirkət ID: ${id}` : 'Şirkət məlumatı yoxdur';
     },

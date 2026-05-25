@@ -40,7 +40,7 @@
         console.log('✅ Container, token və user_service ID tapıldı');
 
         try {
-            const response = await fetch(`http://vps.guvenfinans.az:8008/api/v1/users/${userId}`, {
+            const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

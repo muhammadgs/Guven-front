@@ -3,7 +3,7 @@
 (function() {
     console.log('📍 Dashboard Router started');
 
-    var API_BASE = "http://vps.guvenfinans.az:8008";
+    var API_BASE = "/proxy.php";
     var statusEl = document.getElementById('routing-status');
 
     var setStatus = function(message) {
