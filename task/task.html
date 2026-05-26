@@ -1599,15 +1599,49 @@
     <script src="../assets/js/base_api/api.service.js"></script>
     <script src="../assets/js/base_api/auth.service.js"></script>
     <script>
-        // ✅ Global instance-lar — dashboardRedirect və digər JS-lər bunları axtarır
-        window.apiService = new ApiService();
-        window.authService = new AuthService(window.apiService);
+        const taskQuery = new URLSearchParams(window.location.search);
+        const isEmbeddedTask = taskQuery.get('embedded') === '1';
+        const taskTokenKeys = ['guven_token', 'access_token', 'auth_token', 'token'];
 
-        // Auth yoxla, sonra səhifəni yüklə
-        (async () => {
-            const ok = await window.authService.init();
-            if (!ok) return; // init() artıq loginə yönləndirib
-        })();
+        const hasTaskToken = taskTokenKeys.some((key) => {
+            const localVal = localStorage.getItem(key);
+            const sessionVal = sessionStorage.getItem(key);
+            return Boolean((localVal && localVal !== 'null' && localVal !== 'undefined') || (sessionVal && sessionVal !== 'null' && sessionVal !== 'undefined'));
+        });
+
+        const redirectTaskLogin = () => {
+            const pathName = window.location.pathname;
+            const loginPath = (pathName.includes('/worker/') || pathName.includes('/owner/') || pathName.includes('/admin/'))
+                ? '../login.html'
+                : '/login.html';
+
+            const target = (isEmbeddedTask || window.self !== window.top) ? window.top : window;
+            console.warn(`🚪 Task auth redirect (${isEmbeddedTask ? 'embedded' : 'page'}): ${loginPath}`);
+            target.location.href = loginPath;
+        };
+
+        if (isEmbeddedTask && !hasTaskToken) {
+            const loadingTextEl = document.getElementById('loadingText');
+            if (loadingTextEl) {
+                loadingTextEl.textContent = 'Sessiya yoxlanılır, giriş səhifəsinə yönləndirilirsiniz...';
+            }
+            console.warn('⚠️ Embedded task token tapılmadı, loginə yönləndirilir');
+            redirectTaskLogin();
+        } else {
+            // ✅ Global instance-lar — dashboardRedirect və digər JS-lər bunları axtarır
+            window.apiService = new ApiService();
+            window.authService = new AuthService(window.apiService);
+
+            // Auth yoxla, sonra səhifəni yüklə
+            (async () => {
+                const ok = await window.authService.init();
+                if (!ok) {
+                    if (isEmbeddedTask) redirectTaskLogin();
+                    return;
+                }
+                console.log(`✅ Task auth ok (${isEmbeddedTask ? 'embedded' : 'standalone'})`);
+            })();
+        }
     </script>
 
     <script>
