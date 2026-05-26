@@ -1559,10 +1559,7 @@ class CompaniesService {
                 <div style="text-align:center;padding:40px;color:#9ca3af;">
                     <i class="fa-regular fa-file-lines" style="font-size:32px;margin-bottom:12px;display:block;"></i>
                     Hələ ASAN İmza əlavə edilməyib
-                </div>
-                <button id="cdpAddAsanBtn" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg, #185FA5 0%, #0E3D6B 100%);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:600;">
-                    <i class="fa-solid fa-plus-circle"></i> Yeni ASAN İmza Əlavə Et
-                </button>
+                </div>              
             `;
         } else {
             const items = asanImzalar.map((imza, index) => {
@@ -1597,9 +1594,6 @@ class CompaniesService {
                     <h3 style="font-size:16px;font-weight:600;color:#1f2937;">📋 ASAN İmza Sertifikatları (${asanImzalar.length})</h3>
                 </div>
                 <div id="asanImzaList">${items}</div>
-                <button id="cdpAddAsanBtn" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg, #185FA5 0%, #0E3D6B 100%);color:white;border:none;border-radius:10px;cursor:pointer;font-weight:600;">
-                    <i class="fa-solid fa-plus-circle"></i> Yeni ASAN İmza Əlavə Et
-                </button>
                 <style>
                     .asan-imza-card:hover { background:#f8fafc !important; border-color:#185FA5 !important; transform:translateX(4px); }
                 </style>
