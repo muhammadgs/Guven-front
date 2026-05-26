@@ -4,9 +4,25 @@
  * API Service - 1C və Digər Sorğular Ayrı
  */
 
+// TEMP LOCAL DEV API FIX - remove after task design work
+(function setupGuvenApiEnv() {
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+    const base = isLocal ? 'http://vps.guvenfinans.az:8008' : 'https://guvenfinans.az/proxy.php';
+
+    window.GF_IS_LOCAL_DEV = isLocal;
+    window.GF_API_BASE = base;
+    window.GF_API_V1_BASE = `${base}/api/v1`;
+    window.resolveGuvenApiBase = function() {
+        return window.GF_API_BASE;
+    };
+
+    console.log(`🌐 API base selected: ${window.GF_API_BASE}`);
+})();
+
 class ApiService {
     constructor() {
-        this.baseUrl = "https://guvenfinans.az/proxy.php";
+        this.baseUrl = window.resolveGuvenApiBase ? window.resolveGuvenApiBase() : "https://guvenfinans.az/proxy.php";
         this.token = this.loadToken();
     }
 
