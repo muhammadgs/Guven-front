@@ -1546,43 +1546,25 @@ class ProfileApp {
                 const container = document.querySelector('main .overflow-y-auto') || document.querySelector('main');
                 if (!container) return;
 
-                const oldSection = document.getElementById('taskManagerSection');
-                if (oldSection) {
-                    oldSection.remove();
-                    console.log('🧹 Köhnə TaskManager bölməsi silindi');
-                }
-
                 const taskSection = document.createElement('section');
                 taskSection.id = 'taskManagerSection';
                 taskSection.className = 'w-full h-full p-0';
                 taskSection.style.display = 'block';
                 taskSection.style.height = 'calc(100vh - 70px)';
 
+                const oldSection = document.getElementById('taskManagerSection');
+                if (oldSection) oldSection.remove();
+
                 container.appendChild(taskSection);
 
-                // İFRAME ilə yüklə - embedded auth rejimi
+                // İFRAME ilə yüklə - ƏN SADƏ VƏ ƏN ETİBARLI ÜSUL
                 taskSection.innerHTML = `
                     <iframe 
-                        src="../task/task.html?embedded=1" 
+                        src="../task/task.html" 
                         style="width: 100%; height: 100%; border: none; border-radius: 1rem; background: white;"
                         title="Task Manager"
                     ></iframe>
                 `;
-
-                const taskIframe = taskSection.querySelector('iframe');
-                if (taskIframe) {
-                    taskIframe.addEventListener('load', () => {
-                        try {
-                            const iframePath = taskIframe.contentWindow?.location?.pathname || '';
-                            if (iframePath.includes('login.html')) {
-                                console.warn('⚠️ Task iframe login səhifəsinə düşdü, top-level loginə yönləndirilir');
-                                window.top.location.href = '../login.html';
-                            }
-                        } catch (err) {
-                            console.warn('⚠️ Task iframe path yoxlanışı mümkün olmadı:', err?.message || err);
-                        }
-                    });
-                }
 
                 document.querySelectorAll('nav a').forEach(a => {
                     a.classList.remove('bg-brand-soft', 'text-brand-blue');

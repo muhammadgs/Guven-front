@@ -345,19 +345,10 @@ class AuthService {
 
     _redirectToLogin() {
         this._clearAll();
-        const pathName = window.location.pathname;
-        const loginPath = (pathName.includes('/worker/') || pathName.includes('/owner/') || pathName.includes('/admin/'))
+        const p = window.location.pathname;
+        const loginPath = (p.includes('/owner/') || p.includes('/admin/'))
             ? '../login.html'
             : '/login.html';
-
-        const inIframe = window.self !== window.top;
-        console.warn(`🚪 Auth redirect login (${inIframe ? 'top' : 'self'}): ${loginPath}`);
-
-        if (inIframe) {
-            window.top.location.href = loginPath;
-            return;
-        }
-
         window.location.href = loginPath;
     }
 

@@ -6,18 +6,10 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = this.resolveApiBase();
+        this.baseUrl = "https://guvenfinans.az/proxy.php";
         this.token = this.loadToken();
     }
 
-
-    resolveApiBase() {
-        const host = window.location.hostname;
-        const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(host);
-        const base = isLocal ? `${window.location.origin}/proxy.php` : 'https://guvenfinans.az/proxy.php';
-        console.log(`🌐 ApiService baseUrl: ${base} (${isLocal ? 'local' : 'production'})`);
-        return base;
-    }
     // api.service.js - loadToken()
     loadToken() {
         const keys = ['guven_token', 'access_token', 'auth_token', 'token'];
@@ -380,17 +372,11 @@ class ApiService {
         }
 
         // Path-a görə düzgün login url-ə get
-        const loginPath = (currentPath.includes('/worker/') || currentPath.includes('/owner/') || currentPath.includes('/admin/'))
-            ? '../login.html'
-            : '/login.html';
-
-        if (window.self !== window.top) {
-            console.warn('⚠️ ApiService login redirect iframe daxilində başladı, top-level yönləndirilir');
-            window.top.location.href = loginPath;
-            return;
+        if (currentPath.includes('/worker/') || currentPath.includes('/owner/') || currentPath.includes('/admin/')) {
+            window.location.href = '../login.html';
+        } else {
+            window.location.href = '/login.html';
         }
-
-        window.location.href = loginPath;
     }
 
 
