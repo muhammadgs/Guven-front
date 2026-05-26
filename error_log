@@ -668,3 +668,11 @@
 [25-May-2026 02:46:28 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
 [25-May-2026 02:46:29 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
 [25-May-2026 02:46:29 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1692 but version 1693 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
+[25-May-2026 17:38:53 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[25-May-2026 17:38:53 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[25-May-2026 17:38:53 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[25-May-2026 17:38:53 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[26-May-2026 02:47:49 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[26-May-2026 02:47:50 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[26-May-2026 02:47:50 UTC] PHP Warning:  Module 'sodium' already loaded in Unknown on line 0
+[26-May-2026 02:47:50 UTC] PHP Warning:  Version warning: Imagick was compiled against ImageMagick version 1692 but version 1693 is loaded. Imagick will run but may behave surprisingly in Unknown on line 0
