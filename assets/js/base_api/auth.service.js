@@ -97,10 +97,7 @@ class AuthService {
     // ✅ YENİ METOD: Token refresh
     async _tryRefreshToken() {
         try {
-            // TEMP LOCAL DEV API FIX - remove after task design work
-            const apiBase = window.resolveGuvenApiBase ? window.resolveGuvenApiBase() : 'https://guvenfinans.az/proxy.php';
-            console.log(`🌐 API base selected: ${apiBase}`);
-            const response = await fetch(`${apiBase}/api/v1/auth/refresh`, {
+            const response = await fetch('https://guvenfinans.az/proxy.php/api/v1/auth/refresh', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
