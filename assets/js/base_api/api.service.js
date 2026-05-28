@@ -6,8 +6,85 @@
 
 class ApiService {
     constructor() {
-        this.baseUrl = "http://vps.guvenfinans.az:8008";
+        this.baseUrl = this.resolveBaseUrl();
         this.token = this.loadToken();
+    }
+
+    isLocalDevelopment() {
+        const host = window.location.hostname;
+        const port = window.location.port;
+        return host === 'localhost' || host === '127.0.0.1' || port === '63342';
+    }
+
+    resolveBaseUrl() {
+        if (this.isLocalDevelopment()) {
+            return 'http://vps.guvenfinans.az:8008';
+        }
+
+        return 'https://guvenfinans.az/proxy.php';
+    }
+
+    normalizeEndpoint(endpoint) {
+        return endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
+    }
+
+    isAuthCriticalEndpoint(endpoint) {
+        const cleanEndpoint = this.normalizeEndpoint(endpoint);
+        return cleanEndpoint.includes('/auth/me') || cleanEndpoint.includes('/auth/refresh');
+    }
+
+    async parseResponseBody(response) {
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            try {
+                return await response.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        try {
+            return await response.text();
+        } catch (e) {
+            return null;
+        }
+    }
+
+    buildErrorResponse(response, responseData = null) {
+        const fallback = response.status === 401 ? 'Unauthorized' :
+            response.status === 403 ? 'Forbidden' :
+            `HTTP ${response.status}`;
+
+        const message = responseData?.detail ||
+            responseData?.message ||
+            responseData?.error ||
+            (typeof responseData === 'string' && responseData) ||
+            fallback;
+
+        return {
+            success: false,
+            error: message,
+            status: response.status,
+            data: responseData
+        };
+    }
+
+    buildNetworkErrorResponse(error) {
+        return {
+            success: false,
+            error: error.message || 'Network error',
+            status: 0
+        };
+    }
+
+    getLoginPath() {
+        const currentPath = window.location.pathname;
+        const nestedSections = ['/worker/', '/owner/', '/admin/', '/task/'];
+        if (this.isLocalDevelopment()) {
+            return nestedSections.some(section => currentPath.includes(section)) ? '../login.html' : 'login.html';
+        }
+
+        return nestedSections.some(section => currentPath.includes(section)) ? '../login.html' : '/login.html';
     }
 
     // api.service.js - loadToken()
@@ -45,25 +122,36 @@ class ApiService {
 
     // ==================== ÜMUMİ SORĞU (baza_id OLMADAN) ====================
     async request(endpoint, method = 'GET', data = null, isFormData = false) {
+        return this._sendRequest(endpoint, method, data, isFormData, false);
+    }
+
+    async _sendRequest(endpoint, method = 'GET', data = null, isFormData = false, withBazaId = false) {
         this.token = this.loadToken();
 
-        // Auth olmayan endpointlərə icazə ver
         if (!this.token && !endpoint.includes('/auth/') && !endpoint.includes('/login')) {
-            console.warn('⚠️ Token yoxdur, loginə yönləndirilir:', endpoint);
-            this.redirectToLogin();  // ✅ DÜZƏLDİ: Birbaşa loginə at
-            return null;
+            console.warn('⚠️ Token yoxdur, API sorğusu dayandırıldı:', endpoint);
+            return { success: false, error: 'No auth token', status: 401, data: null };
         }
 
-        const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
-        const url = `${this.baseUrl}${cleanEndpoint}`;
+        const cleanEndpoint = this.normalizeEndpoint(endpoint);
+        let finalEndpoint = cleanEndpoint;
 
+        if (withBazaId) {
+            const bazaId = localStorage.getItem('baza_id');
+            if (bazaId && !cleanEndpoint.includes('baza_id')) {
+                const separator = cleanEndpoint.includes('?') ? '&' : '?';
+                finalEndpoint = `${cleanEndpoint}${separator}baza_id=${bazaId}`;
+            }
+        }
+
+        const url = `${this.baseUrl}${finalEndpoint}`;
         const options = {
             method: method,
             headers: { 'Accept': 'application/json' },
             credentials: 'include'
         };
 
-        if (this.token && !isFormData) {
+        if (this.token) {
             options.headers['Authorization'] = `Bearer ${this.token}`;
         }
 
@@ -77,68 +165,63 @@ class ApiService {
         try {
             const response = await fetch(url, options);
 
-            // ✅ 401 xətası - Token bitib
-            if (response.status === 401) {
-                console.warn('🔑 401 xətası, token yenilənir...');
-
-                // Refresh endpointinə sorğu getməsin
-                if (endpoint.includes('/auth/refresh')) {
-                    this.redirectToLogin();
-                    return null;
-                }
-
-                // Token yeniləməyə çalış
-                const refreshed = await this.tryRefreshToken();
-
-                if (refreshed) {
-                    console.log('✅ Token yeniləndi, sorğu təkrarlanır...');
-                    options.headers['Authorization'] = `Bearer ${this.token}`;
-                    const retryResponse = await fetch(url, options);
-
-                    if (retryResponse.ok) {
-                        const contentType = retryResponse.headers.get('content-type');
-                        if (contentType && contentType.includes('application/json')) {
-                            return await retryResponse.json();
-                        }
-                        return { success: true };
-                    }
-                }
-
-                // Refresh olmadısa, loginə yönləndir
-                console.error('❌ Token yenilənə bilmədi, loginə yönləndirilir');
-                this.redirectToLogin();
-                return null;
-            }
-
             if (response.status === 204) {
                 return { success: true, status: 204 };
             }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            const responseData = await this.parseResponseBody(response);
+
+            if (response.status === 401) {
+                if (endpoint.includes('/auth/logout')) {
+                    return { success: true };
+                }
+
+                if (this.isAuthCriticalEndpoint(endpoint)) {
+                    console.warn('🔑 Auth-critical 401 cavabı, loginə yönləndirilir:', endpoint);
+                    this.redirectToLogin();
+                } else {
+                    console.warn('⚠️ Feature endpoint 401 cavabı, logout edilmir:', endpoint);
+                }
+
+                return this.buildErrorResponse(response, responseData);
             }
 
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                const text = await response.text();
-                return { success: true, data: text };
+            if (response.status === 403) {
+                console.warn('⚠️ Feature endpoint 403 cavabı:', endpoint);
+                return this.buildErrorResponse(response, responseData);
             }
+
+            if (!response.ok) {
+                return this.buildErrorResponse(response, responseData);
+            }
+
+            if (responseData === null || responseData === '') {
+                return { success: true };
+            }
+
+            if (typeof responseData === 'string') {
+                return { success: true, data: responseData };
+            }
+
+            return responseData;
 
         } catch (error) {
             console.error('❌ API xətası:', error);
 
-            // ✅ Şəbəkə xətası və ya CORS problemi
             if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
-                console.warn('⚠️ Şəbəkə xətası, token yoxlanılır...');
-                if (!this.token || !this.isTokenValid()) {
+                if (this.token && this.isTokenValid()) {
+                    console.warn('⚠️ Şəbəkə/CORS xətası, lokal etibarlı token saxlanılır:', endpoint);
+                    return this.buildNetworkErrorResponse(error);
+                }
+
+                if (this.isAuthCriticalEndpoint(endpoint)) {
                     this.redirectToLogin();
                 }
+
+                return this.buildNetworkErrorResponse(error);
             }
 
-            throw error;
+            return { success: false, error: error.message || 'API error', status: 0 };
         }
     }
 
@@ -149,7 +232,7 @@ class ApiService {
 
         try {
             const parts = token.split('.');
-            if (parts.length !== 3) return false;
+            if (parts.length !== 3) return true;
 
             const payload = JSON.parse(atob(parts[1]));
             const now = Math.floor(Date.now() / 1000);
@@ -222,71 +305,7 @@ class ApiService {
 
     // ==================== 1C SORĞULARI (baza_id İLƏ) ====================
     async requestOneC(endpoint, method = 'GET', data = null, isFormData = false) {
-        this.token = this.loadToken();
-        const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
-
-        let finalEndpoint = cleanEndpoint;
-        const bazaId = localStorage.getItem('baza_id');
-
-        if (bazaId && !cleanEndpoint.includes('baza_id')) {
-            const separator = cleanEndpoint.includes('?') ? '&' : '?';
-            finalEndpoint = `${cleanEndpoint}${separator}baza_id=${bazaId}`;
-        }
-
-        const url = `${this.baseUrl}${finalEndpoint}`;
-
-        // ✅ ƏVVƏLCƏ options obyektini YARAD
-        const options = {
-            method: method,
-            headers: { 'Accept': 'application/json' },
-            credentials: 'include'
-        };
-
-        // ✅ SONRA token əlavə et
-        if (this.token && !isFormData) {
-            options.headers['Authorization'] = `Bearer ${this.token}`;
-        }
-
-        // ✅ Body əlavə et
-        if (!isFormData && data) {
-            options.headers['Content-Type'] = 'application/json';
-            options.body = JSON.stringify(data);
-        } else if (data) {
-            options.body = data;
-        }
-
-        try {
-            const response = await fetch(url, options);
-
-            if (response.status === 401) {
-                // 🔥 Logout endpoint-i 401 versə, redirect etmə
-                if (endpoint.includes('/auth/logout')) {
-                    return { success: true };
-                }
-                this.redirectToLogin();
-                return null;
-            }
-
-            if (response.status === 204) {
-                return { success: true, status: 204 };
-            }
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return await response.json();
-            } else {
-                const text = await response.text();
-                return { success: true, data: text };
-            }
-
-        } catch (error) {
-            throw error;
-        }
+        return this._sendRequest(endpoint, method, data, isFormData, true);
     }
 
     // ==================== ÜMUMİ METODLAR (baza_id OLMADAN) ====================
@@ -333,14 +352,7 @@ class ApiService {
 
     // ==================== AUTH ====================
     async getCurrentUser() {
-        try {
-            return await this.get('/auth/me');
-        } catch (error) {
-            if (error.message.includes('401')) {
-                this.redirectToLogin();
-            }
-            throw error;
-        }
+        return await this.get('/auth/me');
     }
 
     async logout() {
@@ -371,12 +383,7 @@ class ApiService {
             return;
         }
 
-        // Path-a görə düzgün login url-ə get
-        if (currentPath.includes('/worker/') || currentPath.includes('/owner/') || currentPath.includes('/admin/')) {
-            window.location.href = '../login.html';
-        } else {
-            window.location.href = '/login.html';
-        }
+        window.location.href = this.getLoginPath();
     }
 
 
@@ -734,6 +741,8 @@ const _NO_BAZA_PATTERNS = [
     '/comments/',
     '/files/',        // ← ƏSAS DÜZƏLIŞ: fayl yükləmə baza_id istəmir
     '/auth/',
+    '/reports/',
+    '/tasks/',
     '/task-archive/',
 ];
 

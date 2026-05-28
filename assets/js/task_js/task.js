@@ -315,11 +315,19 @@ class TaskManager {
             const getWTypes = window.getWorkTypesWithCache     || (async () => []);
             const getAllCo  = window.getAllCompaniesWithCache   || (async () => []);
 
-            const [subCompanies, departments, employees] = await Promise.all([
+            const [subCompaniesResult, departmentsResult, employeesResult] = await Promise.allSettled([
                 getSubCo(this.userData.companyCode),
                 getDepts(this.userData.companyCode),
                 getEmps(this.userData.companyCode)
             ]);
+
+            const subCompanies = subCompaniesResult.status === 'fulfilled' ? subCompaniesResult.value : [];
+            const departments = departmentsResult.status === 'fulfilled' ? departmentsResult.value : [];
+            const employees = employeesResult.status === 'fulfilled' ? employeesResult.value : [];
+
+            if (subCompaniesResult.status === 'rejected') console.warn('⚠️ Alt şirkətlər yüklənmədi:', subCompaniesResult.reason);
+            if (departmentsResult.status === 'rejected') console.warn('⚠️ Şöbələr yüklənmədi:', departmentsResult.reason);
+            if (employeesResult.status === 'rejected') console.warn('⚠️ İşçilər yüklənmədi:', employeesResult.reason);
             // Şirkət məlumatı
             this.myCompany = {
                 id: this.userData.companyId,
@@ -362,18 +370,26 @@ class TaskManager {
             this.populateDepartmentSelects();
             this.populateEmployeeSelect();
 
-            // İş növləri cache ilə
-            if (window.FormManager?.loadWorkTypes) {
-                await window.FormManager.loadWorkTypes();
-            } else {
-                const wt = await (window.getWorkTypesWithCache || (async () => []))(this.userData.companyId);
-
-                this.workTypes = Array.isArray(wt) ? wt : [];
+            // İş növləri cache ilə (opsionaldır, task yüklənməsini bloklamamalıdır)
+            try {
+                if (window.FormManager?.loadWorkTypes) {
+                    await window.FormManager.loadWorkTypes();
+                } else {
+                    const wt = await (window.getWorkTypesWithCache || (async () => []))(this.userData.companyId);
+                    this.workTypes = Array.isArray(wt) ? wt : [];
+                }
+            } catch (e) {
+                console.warn('⚠️ İş növləri yüklənmədi:', e);
+                this.workTypes = [];
             }
 
-            // Partner şirkətlər cache ilə
-            await this.loadPartnerCompanies();
-            this.setupPartnerSelection();
+            // Partner şirkətlər cache ilə (opsionaldır)
+            try {
+                await this.loadPartnerCompanies();
+                this.setupPartnerSelection();
+            } catch (e) {
+                console.warn('⚠️ Partner məlumatları yüklənmədi:', e);
+            }
 
             // Taskları yüklə (cache ilə)
             await this.loadTasksData();
@@ -629,10 +645,17 @@ class TaskManager {
 
     // ==================== TASK YÜKLƏMƏSİ (CACHE İLƏ) ====================
     async loadTasksData() {
-        await Promise.all([
+        const [activeResult, externalResult] = await Promise.allSettled([
             this.loadActiveTasks(),
             this.loadExternalTasks()
         ]);
+
+        if (activeResult.status === 'rejected') {
+            console.warn('⚠️ Aktiv tasklar yüklənmədi:', activeResult.reason);
+        }
+        if (externalResult.status === 'rejected') {
+            console.warn('⚠️ Xarici tasklar yüklənmədi:', externalResult.reason);
+        }
     }
 
 
@@ -656,6 +679,16 @@ class TaskManager {
 
                 const endpoint = `/tasks/detailed?page=${page}&limit=${this.pagination.active.pageSize}&status=pending,in_progress,waiting,overdue,pending_approval,paused,approval_overdue`;
                 const response = await this.apiRequest(endpoint, 'GET');
+
+                if (response?.error || response?.status === 401 || response?.status === 403) {
+                    console.warn('⚠️ /tasks/detailed yüklənmədi, cədvəl boş göstərilir:', response.error || response.status);
+                    TableManager?.renderTasksTable?.('active', [], false, page);
+                    this.pagination.active.total = 0;
+                    this.pagination.active.page = page;
+                    this.pagination.active.totalPages = 1;
+                    this.updatePaginationUI('active');
+                    return [];
+                }
 
                 if (Array.isArray(response)) allTasks = response;
                 else if (response?.data && Array.isArray(response.data)) allTasks = response.data;
@@ -1320,8 +1353,14 @@ class TaskManager {
         }
     }
 
-    apiRequest(endpoint, method = 'GET', data = null) {
-        return makeApiRequest(endpoint, method, data);
+    async apiRequest(endpoint, method = 'GET', data = null) {
+        try {
+            const response = await makeApiRequest(endpoint, method, data);
+            return response || { success: false, error: 'Empty API response', status: 0 };
+        } catch (error) {
+            console.warn('⚠️ API sorğusu tutuldu:', endpoint, error);
+            return { success: false, error: error.message || 'API request failed', status: 0 };
+        }
     }
 
     showSuccess(message) {
