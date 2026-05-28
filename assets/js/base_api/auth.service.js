@@ -97,7 +97,7 @@ class AuthService {
     // ✅ YENİ METOD: Token refresh
     async _tryRefreshToken() {
         try {
-            const response = await fetch('https://guvenfinans.az/proxy.php/api/v1/auth/refresh', {
+            const response = await fetch(`${this.api.baseUrl}/api/v1/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {
@@ -346,9 +346,14 @@ class AuthService {
     _redirectToLogin() {
         this._clearAll();
         const p = window.location.pathname;
-        const loginPath = (p.includes('/owner/') || p.includes('/admin/'))
+        const nestedSections = ['/owner/', '/admin/', '/worker/', '/task/'];
+        const isLocal = this.api?.isLocalDevelopment?.() ||
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.port === '63342';
+        const loginPath = nestedSections.some(section => p.includes(section))
             ? '../login.html'
-            : '/login.html';
+            : (isLocal ? 'login.html' : '/login.html');
         window.location.href = loginPath;
     }
 

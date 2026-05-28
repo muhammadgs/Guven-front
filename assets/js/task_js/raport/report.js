@@ -37,6 +37,9 @@ class ReportManager {
         this.elements = {};
         this.api = null;
         this.notification = null;
+        this.hasLoaded = false;
+        this.isLoading = false;
+        this.reportAccessDenied = false;
     }
 
     initialize(services = {}) {
@@ -51,7 +54,7 @@ class ReportManager {
         this.cacheElements();
         this.bindEvents();
         this.setDefaultDates();
-        this.loadData();
+        this.showEmptyReportState();
     }
 
     cacheElements() {
@@ -133,6 +136,17 @@ class ReportManager {
     bindEvents() {
         if (this.elements.refreshBtn) {
             this.elements.refreshBtn.addEventListener('click', () => this.loadData());
+        }
+
+        document.querySelectorAll('[data-target="report"], [href="#reportTableSection"], [data-section="report"]').forEach(trigger => {
+            trigger.addEventListener('click', () => this.loadDataOnce());
+        });
+
+        if (this.elements.reportModal || document.getElementById('reportTableSection')) {
+            const reportSection = document.getElementById('reportTableSection');
+            if (reportSection && reportSection.style.display !== 'none' && !reportSection.classList.contains('task-section-hidden')) {
+                setTimeout(() => this.loadDataOnce(), 0);
+            }
         }
 
         if (this.elements.applyDateBtn) {
@@ -244,6 +258,54 @@ class ReportManager {
 
     // ========== API SORĞULARI ==========
 
+    isReportResponseError(response, context) {
+        if (!response) {
+            console.warn(`⚠️ ${context}: hesabat API-si boş cavab qaytardı`);
+            return true;
+        }
+
+        if (response.error || response.status === 401 || response.status === 403) {
+            const permissionStatus = response.status === 401 || response.status === 403;
+            if (permissionStatus) this.reportAccessDenied = true;
+            const log = permissionStatus ? console.warn : console.error;
+            log(`⚠️ ${context}: hesabat məlumatı əlçatan deyil`, response.error || response.status);
+            return true;
+        }
+
+        return false;
+    }
+
+    showEmptyReportState() {
+        this.data = {
+            tasks: [],
+            companies: [],
+            departments: [],
+            employees: [],
+            taskTypes: [],
+            partners: [],
+            partnerTasks: [],
+            archiveTasks: [],
+            financial: {},
+            general: {},
+            trends: {},
+            monthlyTrend: [],
+            recentTasks: []
+        };
+
+        try {
+            this.processData?.();
+            this.updateUI?.();
+            this.updateCharts?.();
+        } catch (e) {
+            console.warn('⚠️ Boş hesabat vəziyyəti göstərilə bilmədi:', e);
+        }
+    }
+
+    loadDataOnce() {
+        if (this.hasLoaded || this.isLoading) return;
+        return this.loadData();
+    }
+
     async fetchTasks(dateRange, filters = {}) {
         try {
             const params = new URLSearchParams({
@@ -261,8 +323,7 @@ class ReportManager {
             const endpoint = `/reports/tasks?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchTasks xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchTasks')) {
                 return [];
             }
 
@@ -277,8 +338,7 @@ class ReportManager {
         try {
             const response = await makeApiRequest('/reports/companies', 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchCompanies xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchCompanies')) {
                 return [];
             }
 
@@ -293,8 +353,7 @@ class ReportManager {
         try {
             const response = await makeApiRequest('/reports/departments', 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchDepartments xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchDepartments')) {
                 return [];
             }
 
@@ -309,8 +368,7 @@ class ReportManager {
         try {
             const response = await makeApiRequest('/reports/employees', 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchEmployees xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchEmployees')) {
                 return [];
             }
 
@@ -325,8 +383,7 @@ class ReportManager {
         try {
             const response = await makeApiRequest('/reports/work-types', 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchTaskTypes xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchTaskTypes')) {
                 return [];
             }
 
@@ -341,8 +398,7 @@ class ReportManager {
         try {
             const response = await makeApiRequest('/reports/partners', 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchPartners xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchPartners')) {
                 return [];
             }
 
@@ -368,8 +424,7 @@ class ReportManager {
             const endpoint = `/reports/partner-tasks?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchPartnerTasks xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchPartnerTasks')) {
                 return [];
             }
 
@@ -394,8 +449,7 @@ class ReportManager {
             const endpoint = `/reports/archive?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchArchiveTasks xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchArchiveTasks')) {
                 return [];
             }
 
@@ -416,8 +470,7 @@ class ReportManager {
             const endpoint = `/reports/financial?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchFinancialStats xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchFinancialStats')) {
                 return {};
             }
 
@@ -445,8 +498,7 @@ class ReportManager {
             const endpoint = `/reports/full?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchFullReport xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchFullReport')) {
                 return {};
             }
 
@@ -467,8 +519,7 @@ class ReportManager {
             const endpoint = `/reports/company/${companyId}?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchCompanyReport xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchCompanyReport')) {
                 return {};
             }
 
@@ -489,8 +540,7 @@ class ReportManager {
             const endpoint = `/reports/employee/${employeeId}?${params.toString()}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchEmployeeReport xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchEmployeeReport')) {
                 return {};
             }
 
@@ -506,8 +556,7 @@ class ReportManager {
             const endpoint = `/reports/monthly-trend?year=${year}`;
             const response = await makeApiRequest(endpoint, 'GET', null, true);
 
-            if (response.error) {
-                console.error('fetchMonthlyTrend xətası:', response.error);
+            if (this.isReportResponseError(response, 'fetchMonthlyTrend')) {
                 return [];
             }
 
@@ -521,12 +570,18 @@ class ReportManager {
     // ========== MƏLUMAT YÜKLƏMƏ ==========
 
     async loadData() {
+        if (this.isLoading) return;
+        this.isLoading = true;
+        this.reportAccessDenied = false;
         this.showLoading();
 
         try {
             const fullReport = await this.fetchFullReport(this.dateRange, this.filters);
 
-            if (fullReport && Object.keys(fullReport).length > 0) {
+            if (this.reportAccessDenied) {
+                console.warn('⚠️ Hesabat icazəsi yoxdur, Task Manager açıq saxlanılır və boş hesabat göstərilir.');
+                this.showEmptyReportState();
+            } else if (fullReport && Object.keys(fullReport).length > 0) {
                 this.data = {
                     tasks: fullReport.detailed_tasks || [],
                     companies: fullReport.companies || [],
@@ -564,11 +619,15 @@ class ReportManager {
                 `;
             }
 
-            this.showNotification('Məlumatlar uğurla yeniləndi', 'success');
+            this.hasLoaded = true;
+            if (!this.reportAccessDenied) {
+                this.showNotification('Məlumatlar uğurla yeniləndi', 'success');
+            }
         } catch (error) {
             console.error('loadData xətası:', error);
             this.showError('Məlumatlar yüklənərkən xəta baş verdi');
         } finally {
+            this.isLoading = false;
             this.hideLoading();
         }
     }
