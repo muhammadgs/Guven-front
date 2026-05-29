@@ -565,11 +565,11 @@ html body .table-card {
 }
 
 html body .table-card:not(.new-task-section):not(.report-section) {
-    width: min(98%, 1640px) !important;
+    width: 100% !important;
     height: calc(100vh - var(--tm-section-gap)) !important;
     min-height: 460px !important;
     margin-top: 0 !important;
-    margin-bottom: 18px !important;
+    margin-bottom: 0 !important;
 }
 
 html body .table-card .table-header {
@@ -647,7 +647,7 @@ html body .task-limit-select {
 }
 
 html body .table-wrapper {
-    padding: 0 12px 12px !important;
+    padding: 0 !important;
     margin-top: 0 !important;
     top: 0 !important;
 }
@@ -842,7 +842,7 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
     html body .task-manager-section-active .wave-item { min-width: 178px !important; min-height: 78px !important; height: auto !important; }
     html body .wave-nav-container.minimized .wave-title,
     html body .task-manager-section-active .wave-title { font-size: 15px !important; }
-    html body .table-card:not(.new-task-section):not(.report-section) { width: calc(100% - 20px) !important; min-height: 430px !important; }
+    html body .table-card:not(.new-task-section):not(.report-section) { width: 100% !important; min-height: 430px !important; }
     html body .table-card .table-header { padding: 14px !important; }
 }
 
@@ -1282,9 +1282,9 @@ html body .task-manager-section-active .task-section-active.table-card {
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
-    border-radius: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
+    border-radius: 22px !important;
+    border: 1px solid var(--finance-border) !important;
+    box-shadow: var(--finance-shadow-soft) !important;
     box-sizing: border-box !important;
     min-height: 100vh !important;
 }
@@ -2012,7 +2012,7 @@ html body .task-manager-section-active #waveNav .wave-text {
    centered 1640px content contract used by the compact dock.
    ===================================================================== */
 :root {
-    --task-page-x-padding: clamp(16px, 2.5vw, 40px);
+    --task-page-x-padding: 0px;
 }
 
 html body.task-page-selected > .task-section-active.table-card,
@@ -2025,7 +2025,7 @@ html body.task-manager-section-active > #activeTableSection.task-section-active,
 html body.task-manager-section-active > #externalTableSection.task-section-active,
 html body.task-manager-section-active > #partnerTableSection.task-section-active,
 html body.task-manager-section-active > #archiveTableSection.task-section-active {
-    width: calc(100vw - (var(--task-page-x-padding) * 2)) !important;
+    width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
     margin-left: auto !important;
@@ -2054,7 +2054,7 @@ html body.task-manager-section-active > .task-section-active.table-card .excel-t
 
 @media (max-width: 720px) {
     :root {
-        --task-page-x-padding: 10px;
+        --task-page-x-padding: 0px;
     }
 }
 

@@ -28,7 +28,7 @@
 }
 
 body .table-card {
-    width: min(100%, calc(100vw - clamp(16px, 2.5vw, 40px))) !important;
+    width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
     margin-left: auto !important;
@@ -83,7 +83,7 @@ body .table-card:not(.new-task-section):not(.report-section) .data-table thead {
 }
 
 /* ===== Unified Task Manager scrolling system ===== */
-:root { --tm-section-gap: 112px; }
+:root { --tm-section-gap: 80px; }
 body { overflow: hidden; }
 body .table-card { min-height: 0; }
 body .table-card:not(.new-task-section):not(.report-section) {
@@ -114,7 +114,7 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 }
 
 @media (max-width: 768px) {
-  :root { --tm-section-gap: 132px; }
+  :root { --tm-section-gap: 100px; }
 }
 
 /* ===== Report section scroll fix (Hesabat only) ===== */
@@ -160,7 +160,7 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 /* ===== Task Manager active table sections: fill remaining viewport cleanly ===== */
 :root {
   --task-section-top-gap: 0px;
-  --task-bottom-gap: 1px;
+  --task-bottom-gap: 0px;
 }
 
 #activeTableSection,
@@ -191,6 +191,8 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
 }
 
 .task-manager-section-active .task-section-active#activeTableSection .table-header,
@@ -211,4 +213,10 @@ body .table-card:not(.new-task-section):not(.report-section) .excel-table thead 
 .task-manager-section-active .task-section-active#archiveTableSection .excel-table {
   width: max-content;
   min-width: 100%;
+  margin-bottom: 0 !important;
+}
+
+/* Səhifənin altındakı boşluğu tamamilə silmək üçün */
+body .page-content {
+    padding-bottom: 0 !important;
 }
