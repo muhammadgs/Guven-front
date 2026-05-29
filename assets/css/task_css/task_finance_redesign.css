@@ -739,9 +739,64 @@ html body .confirm-countdown {
 html body .countdown-label,
 html body .timer-status-label { color: inherit !important; opacity: .9 !important; }
 
-/* Embedded Task Manager profile sizing lives in the scoped block near the end of
-   this file so it can override the standalone task-page layout without changing
-   the dock/nav spacing globally. */
+/* Embedded Task Manager flush layout for owner/worker profile panels. */
+#profileContent.profile-content-task-active {
+    padding: 0 !important;
+}
+
+.task-manager-embedded-root {
+    width: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+.task-manager-embedded-root .wave-nav-container.minimized,
+.task-manager-embedded-root.task-manager-section-active .wave-nav-container,
+.task-manager-embedded-root .task-manager-section-active .wave-nav-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.task-manager-embedded-root .wave-nav-container.minimized .wave-nav-items,
+.task-manager-embedded-root.task-manager-section-active .wave-nav-items,
+.task-manager-embedded-root .task-manager-section-active .wave-nav-items {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+}
+
+.task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: auto !important;
+}
+
+@media (max-width: 720px) {
+    .task-manager-embedded-root .wave-nav-container.minimized,
+    .task-manager-embedded-root.task-manager-section-active .wave-nav-container,
+    .task-manager-embedded-root .task-manager-section-active .wave-nav-container,
+    .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
+        width: 100% !important;
+    }
+}
 
 @keyframes financePanelIn {
     from { opacity: 0; transform: translateY(12px); }
@@ -2005,79 +2060,44 @@ html body.task-manager-section-active > .task-section-active.table-card .excel-t
 
 
 /* Embedded profile tables must full-bleed inside the profile frame without
-   changing the standalone task page sizing contract above.  The real inset was
-   the profileContent p-8 padding plus the table-wrapper 12px inner gutter, so
-   Task Manager mode keeps only the top padding for the dock/nav and removes
-   the side/bottom spacing from the table path. */
+   changing the standalone task page sizing contract above. */
 #profileContent.profile-content-task-active {
-    padding-top: 32px !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     padding-bottom: 0 !important;
-    overflow: hidden !important;
 }
 
-#profileContent.profile-content-task-active > #taskManagerSection.task-manager-embedded-shell,
+#profileContent.profile-content-task-active > #taskManagerSection.task-manager-embedded-root,
 #profileContent.profile-content-task-active .task-manager-embedded-root {
-    width: 100% !important;
-    max-width: none !important;
     min-height: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
     padding-bottom: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-    background: transparent !important;
-}
-
-#profileContent.profile-content-task-active .task-manager-embedded-root .wave-nav-container {
-    flex: 0 0 auto !important;
-    width: calc(100% - 64px) !important;
-    max-width: none !important;
-    margin-left: 32px !important;
-    margin-right: 32px !important;
-    box-sizing: border-box !important;
-}
-
-#profileContent.profile-content-task-active .task-manager-embedded-root #activeTableSection,
-#profileContent.profile-content-task-active .task-manager-embedded-root #externalTableSection,
-#profileContent.profile-content-task-active .task-manager-embedded-root #partnerTableSection,
-#profileContent.profile-content-task-active .task-manager-embedded-root #archiveTableSection {
-    width: 100% !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
     margin-bottom: 0 !important;
-    border-radius: 0 0 22px 22px !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
 }
 
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section),
 #profileContent.profile-content-task-active .task-manager-embedded-root #activeTableSection.task-section-active,
 #profileContent.profile-content-task-active .task-manager-embedded-root #externalTableSection.task-section-active,
 #profileContent.profile-content-task-active .task-manager-embedded-root #partnerTableSection.task-section-active,
 #profileContent.profile-content-task-active .task-manager-embedded-root #archiveTableSection.task-section-active {
-    flex: 1 1 auto !important;
-    height: auto !important;
-    max-height: none !important;
-    min-height: 0 !important;
-    display: flex !important;
-}
-
-#profileContent.profile-content-task-active .task-manager-embedded-root .table-card .table-wrapper {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    margin-bottom: 0 !important;
     width: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
     box-sizing: border-box !important;
     overflow: auto !important;
 }
