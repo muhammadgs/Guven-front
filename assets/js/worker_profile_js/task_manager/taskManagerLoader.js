@@ -64,7 +64,11 @@ const TaskManagerLoader = {
                 }
 
                 this.activateEmbeddedMode(container);
-                container.innerHTML = content;
+                container.innerHTML = `
+                    <div id="embeddedTaskManagerRoot" class="task-manager-embedded-root">
+                        ${content}
+                    </div>
+                `;
 
                 // ƏSAS DƏYİŞİKLİK: CSS və Script-ləri yüklə
                 this.loadTaskManagerStyles();
@@ -1024,7 +1028,7 @@ const TaskManagerLoader = {
 
     activateEmbeddedMode: function(container) {
         if (container) {
-            container.classList.add('task-manager-embedded-root');
+            container.classList.add('task-manager-embedded-shell');
         }
 
         const profileContent = document.getElementById('profileContent');
@@ -1032,12 +1036,17 @@ const TaskManagerLoader = {
             profileContent.classList.add('profile-content-task-active');
         }
 
+        const paddedProfileContent = container && container.closest('#profileContent');
+        if (paddedProfileContent) {
+            paddedProfileContent.classList.add('profile-content-task-active');
+        }
+
         document.body.classList.add('task-manager-open');
     },
 
     deactivateEmbeddedMode: function() {
-        document.querySelectorAll('.task-manager-embedded-root').forEach(root => {
-            root.classList.remove('task-manager-embedded-root');
+        document.querySelectorAll('.task-manager-embedded-shell').forEach(root => {
+            root.classList.remove('task-manager-embedded-shell');
         });
 
         const profileContent = document.getElementById('profileContent');
