@@ -9,92 +9,214 @@ function initTaskDockMagnification() {
     const row = nav?.querySelector('.wave-nav-items');
 
     if (!nav || !row) return;
-    if (row.dataset.dockMagnificationBound === 'true') return;
 
-    row.dataset.dockMagnificationBound = 'true';
+    // Unbind previous if re-initializing (hot reload safe)
+    if (row._dockCleanup) {
+        row._dockCleanup();
+    }
 
-    let rafId = null;
-    let latestClientX = null;
+    /* ─── Configuration ─── */
+    const CFG = {
+        maxDistance: 200,         // px radius of influence from cursor
+        maxScaleBoost: 0.38,     // peak scale above 1.0
+        maxLift: 16,             // px upward translation at peak
+        maxShadow: 12,           // extra shadow blur at peak
+        maxShadowAlpha: 0.06,    // extra shadow opacity at peak
+        lerpSpeed: 0.18,         // interpolation factor per frame (0-1, lower = smoother)
+        lerpReturnSpeed: 0.12,   // interpolation when returning to rest (slower = more graceful)
+        epsilon: 0.0005,         // threshold to stop animating (close enough to target)
+    };
 
-    const getItems = () => Array.from(row.querySelectorAll('.wave-item'));
+    /* ─── State ─── */
+    let items = [];
+    let itemCount = 0;
+
+    // Current animated values per item (what's visually rendered)
+    let curScale, curY, curShadow, curAlpha;
+    // Target values per item (what we're animating toward)
+    let tgtScale, tgtY, tgtShadow, tgtAlpha;
+
+    let pointerX = -9999;       // current pointer X (screen coords)
+    let isHovering = false;     // is pointer inside the dock row?
+    let isAnimating = false;    // is the RAF loop running?
+    let rafId = 0;
+
+    function cacheItems() {
+        items = Array.from(row.querySelectorAll('.wave-item'));
+        itemCount = items.length;
+        curScale  = new Float64Array(itemCount).fill(1);
+        curY      = new Float64Array(itemCount).fill(0);
+        curShadow = new Float64Array(itemCount).fill(0);
+        curAlpha  = new Float64Array(itemCount).fill(0);
+        tgtScale  = new Float64Array(itemCount).fill(1);
+        tgtY      = new Float64Array(itemCount).fill(0);
+        tgtShadow = new Float64Array(itemCount).fill(0);
+        tgtAlpha  = new Float64Array(itemCount).fill(0);
+    }
 
     function isCollapsedMode() {
         return nav.classList.contains('minimized') ||
-            nav.classList.contains('has-selection');
+               nav.classList.contains('has-selection');
     }
 
-    function resetDock() {
+    /* Hermite smoothstep for organic feel */
+    function smoothstep(t) {
+        return t * t * (3 - 2 * t);
+    }
+
+    /* Compute target values based on current pointer position */
+    function computeTargets() {
+        if (!isHovering || !isCollapsedMode()) {
+            // Return all targets to rest
+            for (let i = 0; i < itemCount; i++) {
+                tgtScale[i] = 1;
+                tgtY[i] = 0;
+                tgtShadow[i] = 0;
+                tgtAlpha[i] = 0;
+            }
+            return;
+        }
+
+        for (let i = 0; i < itemCount; i++) {
+            const el = items[i];
+            const rect = el.getBoundingClientRect();
+            const centerX = rect.left + rect.width * 0.5;
+            const dist = Math.abs(pointerX - centerX);
+
+            const raw = Math.max(0, 1 - dist / CFG.maxDistance);
+            const inf = smoothstep(raw);
+
+            tgtScale[i]  = 1 + inf * CFG.maxScaleBoost;
+            tgtY[i]      = -inf * CFG.maxLift;
+            tgtShadow[i] = inf * CFG.maxShadow;
+            tgtAlpha[i]  = inf * CFG.maxShadowAlpha;
+        }
+    }
+
+    /* Main render loop — runs continuously while animating */
+    function tick() {
+        rafId = 0;
+
+        computeTargets();
+
+        let stillMoving = false;
+
+        for (let i = 0; i < itemCount; i++) {
+            // Choose lerp speed: faster when approaching target while hovering,
+            // slower on the way back for a graceful ease-out
+            const speed = isHovering ? CFG.lerpSpeed : CFG.lerpReturnSpeed;
+
+            // Exponential interpolation (lerp)
+            curScale[i]  += (tgtScale[i]  - curScale[i])  * speed;
+            curY[i]      += (tgtY[i]      - curY[i])      * speed;
+            curShadow[i] += (tgtShadow[i] - curShadow[i]) * speed;
+            curAlpha[i]  += (tgtAlpha[i]  - curAlpha[i])   * speed;
+
+            // Snap to target if close enough
+            const dScale = Math.abs(tgtScale[i] - curScale[i]);
+            const dY     = Math.abs(tgtY[i]     - curY[i]);
+
+            if (dScale > CFG.epsilon || dY > CFG.epsilon * 10) {
+                stillMoving = true;
+            } else {
+                curScale[i]  = tgtScale[i];
+                curY[i]      = tgtY[i];
+                curShadow[i] = tgtShadow[i];
+                curAlpha[i]  = tgtAlpha[i];
+            }
+
+            // Write CSS custom properties (batched, no layout thrash)
+            const el = items[i];
+            el.style.setProperty('--dock-scale', curScale[i].toFixed(4));
+            el.style.setProperty('--dock-y', curY[i].toFixed(2) + 'px');
+            el.style.setProperty('--dock-shadow', curShadow[i].toFixed(2) + 'px');
+            el.style.setProperty('--dock-shadow-alpha', curAlpha[i].toFixed(4));
+        }
+
+        isAnimating = stillMoving;
+
+        if (stillMoving) {
+            rafId = requestAnimationFrame(tick);
+        }
+    }
+
+    function startLoop() {
+        if (!isAnimating) {
+            isAnimating = true;
+            if (!rafId) {
+                rafId = requestAnimationFrame(tick);
+            }
+        }
+    }
+
+    function hardReset() {
         if (rafId) {
             cancelAnimationFrame(rafId);
-            rafId = null;
+            rafId = 0;
         }
-
-        latestClientX = null;
-
-        getItems().forEach(item => {
-            item.style.setProperty('--dock-scale', '1');
-            item.style.setProperty('--dock-y', '0px');
-            item.style.setProperty('--dock-shadow', '0px');
-            item.style.setProperty('--dock-shadow-alpha', '0');
-        });
-    }
-
-    function smoothstep(value) {
-        return value * value * (3 - 2 * value);
-    }
-
-    function renderDock() {
-        rafId = null;
-
-        if (latestClientX == null || !isCollapsedMode()) {
-            resetDock();
-            return;
+        isAnimating = false;
+        isHovering = false;
+        pointerX = -9999;
+        for (let i = 0; i < itemCount; i++) {
+            curScale[i] = tgtScale[i] = 1;
+            curY[i] = tgtY[i] = 0;
+            curShadow[i] = tgtShadow[i] = 0;
+            curAlpha[i] = tgtAlpha[i] = 0;
+            const el = items[i];
+            el.style.setProperty('--dock-scale', '1');
+            el.style.setProperty('--dock-y', '0px');
+            el.style.setProperty('--dock-shadow', '0px');
+            el.style.setProperty('--dock-shadow-alpha', '0');
         }
-
-        const maxDistance = 220;
-        const maxScaleBoost = 0.31;
-        const maxLift = 13;
-        const maxShadow = 10;
-        const maxShadowAlpha = 0.055;
-
-        getItems().forEach(item => {
-            const rect = item.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const distance = Math.abs(latestClientX - centerX);
-
-            const raw = Math.max(0, 1 - distance / maxDistance);
-            const influence = smoothstep(raw);
-
-            const scale = 1 + influence * maxScaleBoost;
-            const y = -influence * maxLift;
-            const shadow = influence * maxShadow;
-            const shadowAlpha = influence * maxShadowAlpha;
-
-            item.style.setProperty('--dock-scale', scale.toFixed(3));
-            item.style.setProperty('--dock-y', `${y.toFixed(2)}px`);
-            item.style.setProperty('--dock-shadow', `${shadow.toFixed(2)}px`);
-            item.style.setProperty('--dock-shadow-alpha', shadowAlpha.toFixed(3));
-        });
     }
 
-    row.addEventListener('pointermove', event => {
+    /* ─── Event Handlers ─── */
+    function onPointerMove(e) {
         if (!isCollapsedMode()) {
-            resetDock();
+            if (isHovering) {
+                isHovering = false;
+                startLoop(); // animate back to rest
+            }
             return;
         }
+        pointerX = e.clientX;
+        isHovering = true;
+        startLoop();
+    }
 
-        latestClientX = event.clientX;
+    function onPointerLeave() {
+        isHovering = false;
+        pointerX = -9999;
+        startLoop(); // animate gracefully back to rest
+    }
 
-        if (!rafId) {
-            rafId = requestAnimationFrame(renderDock);
-        }
-    }, { passive: true });
+    /* ─── Bind ─── */
+    cacheItems();
 
-    row.addEventListener('pointerleave', resetDock);
-    row.addEventListener('pointercancel', resetDock);
-    row.addEventListener('blur', resetDock, true);
+    row.addEventListener('pointermove', onPointerMove, { passive: true });
+    row.addEventListener('pointerleave', onPointerLeave, { passive: true });
+    row.addEventListener('pointercancel', onPointerLeave, { passive: true });
+    row.addEventListener('blur', onPointerLeave, true);
 
-    resetDock();
+    // Re-cache items when DOM changes (e.g. dynamic nav items)
+    const observer = new MutationObserver(() => {
+        cacheItems();
+    });
+    observer.observe(row, { childList: true });
+
+    hardReset();
+
+    // Cleanup function for hot-reload
+    row._dockCleanup = () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        row.removeEventListener('pointermove', onPointerMove);
+        row.removeEventListener('pointerleave', onPointerLeave);
+        row.removeEventListener('pointercancel', onPointerLeave);
+        row.removeEventListener('blur', onPointerLeave, true);
+        observer.disconnect();
+        hardReset();
+        delete row._dockCleanup;
+    };
 }
 
 window.initTaskDockMagnification = initTaskDockMagnification;

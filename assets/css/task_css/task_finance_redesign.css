@@ -50,7 +50,7 @@ html body .wave-nav-container.centered,
 html body .wave-nav-container.pinned,
 html body .wave-nav-container.fullscreen,
 html body .wave-nav-container.expanded {
-    width: min(92vw, 1720px) !important;
+    width: min(96%, 1720px) !important;
     max-width: 1720px !important;
     min-height: auto !important;
     height: auto !important;
@@ -103,7 +103,7 @@ html body .wave-nav-container.fullscreen .wave-nav-content {
     position: relative !important;
     z-index: 1 !important;
     display: grid !important;
-    grid-template-columns: minmax(0, 1fr) 250px !important;
+    grid-template-columns: 1fr !important;
     align-items: center !important;
     gap: clamp(22px, 4vw, 72px) !important;
     width: 100% !important;
@@ -240,13 +240,13 @@ html body .wave-nav-container.fullscreen .wave-nav-content {
 html body .wave-nav-items,
 html body .wave-nav-container.centered .wave-nav-items,
 html body .wave-nav-container.fullscreen .wave-nav-items {
-    grid-column: 1;
+    grid-column: 1 / -1;
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(210px, 1fr)) !important;
+    grid-template-columns: repeat(3, minmax(250px, 340px)) !important;
     gap: 28px !important;
-    padding: 0 !important;
+    padding: 20px 0 0 0 !important;
     margin: 0 auto !important;
-    width: min(100%, 1050px) !important;
+    width: 100% !important;
     justify-content: center !important;
     align-items: stretch !important;
 }
@@ -409,7 +409,7 @@ html body .wave-nav-container.minimized,
 html body .task-manager-section-active .wave-nav-container,
 html body .wave-nav-container.pinned.minimized,
 html body .wave-nav-container.fullscreen.minimized {
-    width: min(95vw, 1640px) !important;
+    width: min(98%, 1640px) !important;
     max-width: 1640px !important;
     margin: 28px auto 22px !important;
     padding: 0 !important;
@@ -565,7 +565,7 @@ html body .table-card {
 }
 
 html body .table-card:not(.new-task-section):not(.report-section) {
-    width: min(95vw, 1640px) !important;
+    width: min(98%, 1640px) !important;
     height: calc(100vh - var(--tm-section-gap)) !important;
     min-height: 460px !important;
     margin-top: 0 !important;
@@ -769,7 +769,7 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
 
 @media (max-width: 720px) {
     :root { --tm-section-gap: 176px; }
-    html body .wave-nav-container { width: calc(100vw - 24px) !important; padding: 20px !important; border-radius: 22px !important; }
+    html body .wave-nav-container { width: calc(100% - 24px) !important; padding: 20px !important; border-radius: 22px !important; }
     .task-finance-breadcrumb { margin-bottom: 22px; }
     .task-finance-hero-body { grid-template-columns: 1fr; text-align: left; min-height: 0; }
     .task-finance-hero-icon { width: 82px; height: 82px; border-radius: 20px; font-size: 34px; }
@@ -778,12 +778,12 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
     html body .wave-nav-extra { justify-content: stretch !important; }
     html body .cache-clear-btn { width: 100%; justify-content: center; }
     html body .wave-nav-container.minimized,
-    html body .task-manager-section-active .wave-nav-container { width: calc(100vw - 24px) !important; margin-top: 16px !important; }
+    html body .task-manager-section-active .wave-nav-container { width: calc(100% - 24px) !important; margin-top: 16px !important; }
     html body .wave-nav-container.minimized .wave-item,
     html body .task-manager-section-active .wave-item { min-width: 178px !important; min-height: 78px !important; height: auto !important; }
     html body .wave-nav-container.minimized .wave-title,
     html body .task-manager-section-active .wave-title { font-size: 15px !important; }
-    html body .table-card:not(.new-task-section):not(.report-section) { width: calc(100vw - 20px) !important; min-height: 430px !important; }
+    html body .table-card:not(.new-task-section):not(.report-section) { width: calc(100% - 20px) !important; min-height: 430px !important; }
     html body .table-card .table-header { padding: 14px !important; }
 }
 
@@ -907,11 +907,11 @@ html body .wave-nav-container.fullscreen:not(.minimized) .wave-nav-items {
     grid-template-columns: repeat(3, minmax(220px, 260px)) !important;
     grid-auto-rows: minmax(158px, auto) !important;
     gap: 32px 36px !important;
-    justify-content: end !important;
+    justify-content: center !important;
     align-items: stretch !important;
     width: 100% !important;
     max-width: 852px !important;
-    margin: 0 0 0 auto !important;
+    margin: 0 auto !important;
     padding: 0 !important;
 }
 
@@ -1219,15 +1219,25 @@ html body .table-card,
 html body.task-page-selected .task-section-active.table-card,
 html body .task-page-selected .task-section-active.table-card,
 html body.task-manager-section-active .task-section-active.table-card,
-html body .task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .task-section-active.table-card {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    box-sizing: border-box !important;
+    min-height: 100vh !important;
+}
+
 html body #waveNav.minimized,
 html body #waveNav.has-selection,
 html body.task-page-selected #waveNav,
 html body .task-page-selected #waveNav,
 html body.task-manager-section-active #waveNav,
 html body .task-manager-section-active #waveNav {
-    width: min(100%, calc(100vw - var(--task-content-inline-gutter) - var(--task-content-inline-gutter))) !important;
-    max-width: var(--task-content-max-width) !important;
+    width: 100% !important;
+    max-width: none !important;
     margin-left: auto !important;
     margin-right: auto !important;
     box-sizing: border-box !important;
@@ -1556,18 +1566,18 @@ html body .task-manager-section-active #waveNav .wave-nav-items {
     grid-template-columns: none !important;
     align-items: flex-end !important;
     justify-content: center !important;
-    gap: 22px !important;
+    gap: 16px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 116px !important;
+    min-height: 100px !important;
     height: auto !important;
     max-height: none !important;
     margin: 0 auto !important;
-    padding: 8px 22px 8px !important;
+    padding: 6px 18px 6px !important;
     overflow: visible !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
-    scroll-padding-inline: 24px !important;
+    scroll-padding-inline: 18px !important;
 }
 
 html body #waveNav.minimized .wave-nav-items::-webkit-scrollbar,
@@ -1585,14 +1595,14 @@ html body #waveNav.has-selection .wave-item.active-item,
 html body .task-manager-section-active #waveNav .wave-item,
 html body .task-manager-section-active #waveNav .wave-item.selected,
 html body .task-manager-section-active #waveNav .wave-item.active-item {
-    width: 94px !important;
-    min-width: 94px !important;
-    max-width: 94px !important;
-    height: 94px !important;
-    min-height: 94px !important;
-    max-height: 94px !important;
-    flex: 0 0 94px !important;
-    flex-basis: 94px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+    flex: 0 0 72px !important;
+    flex-basis: 72px !important;
 
     display: flex !important;
     flex-direction: column !important;
@@ -1600,43 +1610,63 @@ html body .task-manager-section-active #waveNav .wave-item.active-item {
     justify-content: center !important;
     position: relative !important;
     isolation: isolate !important;
-    padding: 11px 10px !important;
-    border-radius: 24px !important;
+    padding: 8px 6px !important;
+    border-radius: 20px !important;
     text-align: center !important;
 
-    background: rgba(255, 255, 255, 0.92) !important;
-    border: 1px solid rgba(214, 228, 241, 0.95) !important;
+    /* === iOS 26 Liquid Glass Effect === */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.55) 0%,
+        rgba(255, 255, 255, 0.25) 40%,
+        rgba(240, 248, 255, 0.35) 60%,
+        rgba(255, 255, 255, 0.50) 100%
+    ) !important;
+    backdrop-filter: blur(28px) saturate(1.8) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.65) !important;
     box-shadow:
-        0 calc(14px + var(--dock-shadow, 0px))
-          calc(34px + var(--dock-shadow, 0px))
-          rgba(15, 35, 65, calc(0.08 + var(--dock-shadow-alpha, 0))),
-        inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+        0 calc(8px + var(--dock-shadow, 0px))
+          calc(20px + var(--dock-shadow, 0px))
+          rgba(15, 35, 65, calc(0.06 + var(--dock-shadow-alpha, 0))),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        inset 0 -0.5px 0 rgba(0, 0, 0, 0.04),
+        0 0 0 0.5px rgba(255, 255, 255, 0.3) !important;
 
     transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
     transform-origin: center bottom !important;
     transform-style: preserve-3d !important;
     backface-visibility: hidden !important;
+    /* No CSS transition on transform — JS interpolation handles it for 60fps+ smoothness */
     transition:
-        transform 165ms cubic-bezier(0.16, 1, 0.3, 1),
-        box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1),
-        background-color 180ms ease,
+        box-shadow 120ms ease,
+        background 180ms ease,
         border-color 180ms ease !important;
 
     overflow: visible !important;
     will-change: transform !important;
+    contain: layout style !important;
     cursor: pointer !important;
 }
 
 html body #waveNav.minimized .wave-item:hover,
 html body #waveNav.has-selection .wave-item:hover,
 html body .task-manager-section-active #waveNav .wave-item:hover {
-    border-color: rgba(66, 187, 183, 0.46) !important;
-    background: rgba(255, 255, 255, 0.98) !important;
+    border-color: rgba(255, 255, 255, 0.85) !important;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.72) 0%,
+        rgba(255, 255, 255, 0.40) 40%,
+        rgba(240, 250, 255, 0.50) 60%,
+        rgba(255, 255, 255, 0.65) 100%
+    ) !important;
     box-shadow:
-        0 calc(16px + var(--dock-shadow, 0px))
-          calc(36px + var(--dock-shadow, 0px))
-          rgba(15, 35, 65, calc(0.09 + var(--dock-shadow-alpha, 0))),
-        inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+        0 calc(10px + var(--dock-shadow, 0px))
+          calc(24px + var(--dock-shadow, 0px))
+          rgba(15, 35, 65, calc(0.08 + var(--dock-shadow-alpha, 0))),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -0.5px 0 rgba(0, 0, 0, 0.03),
+        0 0 0 0.5px rgba(255, 255, 255, 0.5) !important;
     transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
 }
 
@@ -1646,13 +1676,21 @@ html body #waveNav.has-selection .wave-item.selected,
 html body #waveNav.has-selection .wave-item.active-item,
 html body .task-manager-section-active #waveNav .wave-item.selected,
 html body .task-manager-section-active #waveNav .wave-item.active-item {
-    background: linear-gradient(180deg, rgba(235, 255, 253, 0.96), rgba(255, 255, 255, 0.96)) !important;
-    border-color: rgba(45, 191, 183, 0.65) !important;
+    background: linear-gradient(
+        135deg,
+        rgba(220, 255, 252, 0.62) 0%,
+        rgba(235, 255, 253, 0.35) 40%,
+        rgba(245, 255, 254, 0.45) 60%,
+        rgba(230, 255, 250, 0.58) 100%
+    ) !important;
+    border-color: rgba(45, 191, 183, 0.55) !important;
     box-shadow:
-        0 calc(16px + var(--dock-shadow, 0px))
-          calc(38px + var(--dock-shadow, 0px))
-          rgba(20, 150, 145, calc(0.12 + var(--dock-shadow-alpha, 0))),
-        inset 0 0 0 1px rgba(45, 191, 183, 0.18) !important;
+        0 calc(10px + var(--dock-shadow, 0px))
+          calc(26px + var(--dock-shadow, 0px))
+          rgba(20, 150, 145, calc(0.10 + var(--dock-shadow-alpha, 0))),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        inset 0 0 0 0.5px rgba(45, 191, 183, 0.15),
+        0 0 0 0.5px rgba(45, 191, 183, 0.12) !important;
     transform: translate3d(0, var(--dock-y, 0px), 0) scale(var(--dock-scale, 1)) !important;
 }
 
@@ -1672,10 +1710,10 @@ html body .task-manager-section-active #waveNav .wave-item.active-item::after {
     content: "" !important;
     display: block !important;
     position: absolute !important;
-    bottom: 9px !important;
+    bottom: 6px !important;
     left: 50% !important;
     right: auto !important;
-    width: 22px !important;
+    width: 18px !important;
     height: 3px !important;
     border-radius: 999px !important;
     background: rgba(45, 191, 183, 0.9) !important;
@@ -1694,7 +1732,7 @@ html body .task-manager-section-active #waveNav .wave-item-content {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 8px !important;
+    gap: 5px !important;
     text-align: center !important;
 }
 
@@ -1705,11 +1743,11 @@ html body #waveNav.minimized .wave-item.selected .wave-icon,
 html body #waveNav.minimized .wave-item.active-item .wave-icon,
 html body #waveNav.has-selection .wave-item.selected .wave-icon,
 html body #waveNav.has-selection .wave-item.active-item .wave-icon {
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    flex: 0 0 40px !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    flex: 0 0 32px !important;
     position: static !important;
     margin: 0 !important;
 
@@ -1718,10 +1756,10 @@ html body #waveNav.has-selection .wave-item.active-item .wave-icon {
     justify-content: center !important;
     border-radius: 50% !important;
     color: #2f88c9 !important;
-    font-size: 17px !important;
-    background: linear-gradient(145deg, #eef8ff, #e5f2fb) !important;
+    font-size: 14px !important;
+    background: linear-gradient(145deg, rgba(238,248,255,0.75), rgba(229,242,251,0.65)) !important;
     border: 0 !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 22px rgba(61, 134, 198, 0.10) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 4px 10px rgba(61, 134, 198, 0.08) !important;
     transform: none !important;
 }
 
@@ -1744,13 +1782,13 @@ html body #waveNav.has-selection .wave-item.selected .wave-title,
 html body #waveNav.has-selection .wave-item.active-item .wave-title {
     display: block !important;
     width: 100% !important;
-    max-width: 82px !important;
+    max-width: 66px !important;
     min-width: 0 !important;
     margin: 0 !important;
     text-align: center !important;
-    font-size: 12.5px !important;
+    font-size: 10.5px !important;
     line-height: 1.1 !important;
-    font-weight: 800 !important;
+    font-weight: 700 !important;
     letter-spacing: -0.01em !important;
     text-transform: none !important;
     color: #475569 !important;
@@ -1781,25 +1819,25 @@ html body #waveNav.minimized .wave-count,
 html body #waveNav.has-selection .wave-count,
 html body .task-manager-section-active #waveNav .wave-count {
     position: absolute !important;
-    top: 6px !important;
-    right: 6px !important;
+    top: 3px !important;
+    right: 3px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    min-width: 20px !important;
+    min-width: 17px !important;
     width: auto !important;
-    height: 20px !important;
-    min-height: 20px !important;
+    height: 17px !important;
+    min-height: 17px !important;
     margin: 0 !important;
-    padding: 0 5px !important;
+    padding: 0 4px !important;
     border-radius: 999px !important;
     border: 1px solid rgba(255, 255, 255, 0.9) !important;
     background: linear-gradient(180deg, #3d86c6, #2f78b7) !important;
     color: #ffffff !important;
-    font-size: 11px !important;
-    line-height: 20px !important;
+    font-size: 9px !important;
+    line-height: 17px !important;
     font-weight: 900 !important;
-    box-shadow: 0 7px 16px rgba(47, 120, 183, 0.2) !important;
+    box-shadow: 0 4px 10px rgba(47, 120, 183, 0.18) !important;
     z-index: 3 !important;
 }
 
@@ -1842,16 +1880,16 @@ html body .task-manager-section-active #waveNav .wave-nav-extra {
     html body .task-manager-section-active #waveNav .wave-item,
     html body .task-manager-section-active #waveNav .wave-item.selected,
     html body .task-manager-section-active #waveNav .wave-item.active-item {
-        width: 84px !important;
-        min-width: 84px !important;
-        max-width: 84px !important;
-        height: 84px !important;
-        min-height: 84px !important;
-        max-height: 84px !important;
-        flex: 0 0 84px !important;
-        flex-basis: 84px !important;
-        border-radius: 22px !important;
-        padding: 10px 9px !important;
+        width: 64px !important;
+        min-width: 64px !important;
+        max-width: 64px !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        max-height: 64px !important;
+        flex: 0 0 64px !important;
+        flex-basis: 64px !important;
+        border-radius: 18px !important;
+        padding: 7px 6px !important;
     }
 
     html body #waveNav.minimized .wave-icon,
@@ -1861,13 +1899,13 @@ html body .task-manager-section-active #waveNav .wave-nav-extra {
     html body #waveNav.minimized .wave-item.active-item .wave-icon,
     html body #waveNav.has-selection .wave-item.selected .wave-icon,
     html body #waveNav.has-selection .wave-item.active-item .wave-icon {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        min-height: 36px !important;
-        flex: 0 0 36px !important;
-        flex-basis: 36px !important;
-        font-size: 15px !important;
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        flex: 0 0 28px !important;
+        flex-basis: 28px !important;
+        font-size: 12px !important;
     }
 
     html body #waveNav.minimized .wave-title,
@@ -1877,20 +1915,20 @@ html body .task-manager-section-active #waveNav .wave-nav-extra {
     html body #waveNav.minimized .wave-item.active-item .wave-title,
     html body #waveNav.has-selection .wave-item.selected .wave-title,
     html body #waveNav.has-selection .wave-item.active-item .wave-title {
-        font-size: 11.5px !important;
-        max-width: 72px !important;
+        font-size: 9.5px !important;
+        max-width: 58px !important;
     }
 
     html body #waveNav.minimized .wave-count,
     html body #waveNav.has-selection .wave-count,
     html body .task-manager-section-active #waveNav .wave-count {
-        top: 6px !important;
-        right: 6px !important;
-        min-width: 20px !important;
-        height: 20px !important;
-        min-height: 20px !important;
-        font-size: 11px !important;
-        line-height: 20px !important;
+        top: 2px !important;
+        right: 2px !important;
+        min-width: 15px !important;
+        height: 15px !important;
+        min-height: 15px !important;
+        font-size: 8px !important;
+        line-height: 15px !important;
     }
 }
 

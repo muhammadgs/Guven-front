@@ -1538,11 +1538,14 @@ class ProfileApp {
                 const container = document.querySelector('main .overflow-y-auto') || document.querySelector('main');
                 if (!container) return;
 
+                // Remove padding to eliminate gaps
+                container.classList.remove('p-8');
+
                 const taskSection = document.createElement('section');
                 taskSection.id = 'taskManagerSection';
                 taskSection.className = 'w-full h-full p-0';
                 taskSection.style.display = 'block';
-                taskSection.style.height = 'calc(100vh - 70px)';
+                taskSection.style.height = '100%';
 
                 const oldSection = document.getElementById('taskManagerSection');
                 if (oldSection) oldSection.remove();
@@ -1553,7 +1556,7 @@ class ProfileApp {
                 taskSection.innerHTML = `
                     <iframe 
                         src="../task/task.html" 
-                        style="width: 100%; height: 100%; border: none; border-radius: 1rem; background: white;"
+                        style="width: 100%; height: 100%; border: none; border-radius: 1.5rem; background: transparent;"
                         title="Task Manager"
                     ></iframe>
                 `;
@@ -1574,6 +1577,12 @@ class ProfileApp {
      */
     clearAllSections() {
         console.log('🧹 Bütün bölmələr təmizlənir...');
+
+        // Restore padding if it was removed
+        const container = document.querySelector('main .overflow-y-auto');
+        if (container) {
+            container.classList.add('p-8');
+        }
 
         // 1. HTML-də olan əsas bölmələri gizlət
         const dashboardSection = document.getElementById('dashboardSection');
