@@ -885,7 +885,7 @@ const TaskManagerLoader = {
 
     // CSS fayllarını yüklə
     loadTaskManagerStyles: function() {
-        const version = '1.0.2';
+        const version = '1.0.1';
         const taskStyles = [
             '../assets/css/task_css/task.css',
             '../assets/css/task_css/edit_module.css',
