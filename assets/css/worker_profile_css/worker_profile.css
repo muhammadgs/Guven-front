@@ -593,9 +593,11 @@ header {
 }
 
 
-/* Task Manager embeds should sit flush inside the profile surface only while active. */
+/* Task Manager embeds keep the profile panel's p-8 top spacing; table cards
+   compensate the frame padding in task_finance_redesign.css only while active. */
 #profileContent.profile-content-task-active {
-    padding: 0 !important;
+    --task-frame-pad-x: 32px;
+    --task-frame-pad-bottom: 32px;
 }
 
 #profileContent.profile-content-task-active .task-manager-embedded-root {
