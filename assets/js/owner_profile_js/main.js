@@ -1546,14 +1546,14 @@ class ProfileApp {
                 const container = document.querySelector('main .overflow-y-auto') || document.querySelector('main');
                 if (!container) return;
 
-                // Mark Task Manager as active; CSS keeps the original top padding and
-                // removes only the side/bottom padding while this section is open.
+                // Mark Task Manager as active so profile padding is removed only in this state.
                 container.classList.add('profile-content-task-active');
                 document.body.classList.add('task-manager-open');
+                container.classList.remove('p-8');
 
                 const taskSection = document.createElement('section');
                 taskSection.id = 'taskManagerSection';
-                taskSection.className = 'task-manager-embedded-shell w-full h-full p-0';
+                taskSection.className = 'task-manager-embedded-root w-full h-full p-0';
                 taskSection.style.display = 'block';
                 taskSection.style.height = '100%';
 
@@ -1562,17 +1562,14 @@ class ProfileApp {
 
                 container.appendChild(taskSection);
 
-                if (window.TaskManagerLoader && typeof window.TaskManagerLoader.loadInContainer === 'function') {
-                    window.TaskManagerLoader.loadInContainer(taskSection);
-                } else {
-                    taskSection.innerHTML = `
-                        <iframe
-                            src="../task/task.html"
-                            style="width: 100%; height: 100%; border: none; border-radius: 0; background: transparent; display: block;"
-                            title="Task Manager"
-                        ></iframe>
-                    `;
-                }
+                // İFRAME ilə yüklə - ƏN SADƏ VƏ ƏN ETİBARLI ÜSUL
+                taskSection.innerHTML = `
+                    <iframe 
+                        src="../task/task.html" 
+                        style="width: 100%; height: 100%; border: none; border-radius: 0; background: transparent; display: block;"
+                        title="Task Manager"
+                    ></iframe>
+                `;
 
                 document.querySelectorAll('nav a').forEach(a => {
                     a.classList.remove('bg-brand-soft', 'text-brand-blue');

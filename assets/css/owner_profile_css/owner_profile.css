@@ -571,17 +571,12 @@ header {
 
 /* Task Manager embeds should sit flush inside the profile surface only while active. */
 #profileContent.profile-content-task-active {
-    padding-top: 2rem !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 0 !important;
+    padding: 0 !important;
 }
 
-#profileContent.profile-content-task-active .task-manager-embedded-root,
-#profileContent.profile-content-task-active .task-manager-embedded-shell {
+#profileContent.profile-content-task-active .task-manager-embedded-root {
     width: 100% !important;
     min-height: 100% !important;
-    height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     background: transparent !important;
