@@ -772,13 +772,21 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
 .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
     width: 100% !important;
     max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
-    border-radius: 0 0 22px 22px !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
 }
 
-.task-manager-embedded-root .task-section-active.table-card .table-wrapper {
-    overflow-x: auto !important;
+.task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: auto !important;
 }
 
 @media (max-width: 720px) {
@@ -2048,6 +2056,56 @@ html body.task-manager-section-active > .task-section-active.table-card .excel-t
     :root {
         --task-page-x-padding: 10px;
     }
+}
+
+
+/* Embedded profile tables must full-bleed inside the profile frame without
+   changing the standalone task page sizing contract above. */
+#profileContent.profile-content-task-active {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+#profileContent.profile-content-task-active > #taskManagerSection.task-manager-embedded-root,
+#profileContent.profile-content-task-active .task-manager-embedded-root {
+    min-height: 100% !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section),
+#profileContent.profile-content-task-active .task-manager-embedded-root #activeTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root #externalTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root #partnerTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root #archiveTableSection.task-section-active {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .data-table,
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) .excel-table {
+    width: max-content !important;
+    min-width: 100% !important;
 }
 
 /* Report section keeps the fixed header visible while the report body scrolls. */
