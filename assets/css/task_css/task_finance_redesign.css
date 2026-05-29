@@ -739,6 +739,57 @@ html body .confirm-countdown {
 html body .countdown-label,
 html body .timer-status-label { color: inherit !important; opacity: .9 !important; }
 
+/* Embedded Task Manager flush layout for owner/worker profile panels. */
+#profileContent.profile-content-task-active {
+    padding: 0 !important;
+}
+
+.task-manager-embedded-root {
+    width: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+}
+
+.task-manager-embedded-root .wave-nav-container.minimized,
+.task-manager-embedded-root.task-manager-section-active .wave-nav-container,
+.task-manager-embedded-root .task-manager-section-active .wave-nav-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.task-manager-embedded-root .wave-nav-container.minimized .wave-nav-items,
+.task-manager-embedded-root.task-manager-section-active .wave-nav-items,
+.task-manager-embedded-root .task-manager-section-active .wave-nav-items {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+.task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 0 22px 22px !important;
+}
+
+.task-manager-embedded-root .task-section-active.table-card .table-wrapper {
+    overflow-x: auto !important;
+}
+
+@media (max-width: 720px) {
+    .task-manager-embedded-root .wave-nav-container.minimized,
+    .task-manager-embedded-root.task-manager-section-active .wave-nav-container,
+    .task-manager-embedded-root .task-manager-section-active .wave-nav-container,
+    .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
+        width: 100% !important;
+    }
+}
+
 @keyframes financePanelIn {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }

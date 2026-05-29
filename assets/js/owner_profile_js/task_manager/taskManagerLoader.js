@@ -14,6 +14,7 @@ const TaskManagerLoader = {
                 return;
             }
 
+            this.activateEmbeddedMode(container);
             this.showLoading(container);
 
             setTimeout(() => {
@@ -62,6 +63,7 @@ const TaskManagerLoader = {
                     content = html;
                 }
 
+                this.activateEmbeddedMode(container);
                 container.innerHTML = content;
 
                 // ƏSAS DƏYİŞİKLİK: CSS və Script-ləri yüklə
@@ -1014,8 +1016,36 @@ const TaskManagerLoader = {
             taskSection.innerHTML = '';
         }
 
+        this.deactivateEmbeddedMode();
+
         const navStyles = document.getElementById('task-manager-nav-styles');
         if (navStyles) navStyles.remove();
+    },
+
+    activateEmbeddedMode: function(container) {
+        if (container) {
+            container.classList.add('task-manager-embedded-root');
+        }
+
+        const profileContent = document.getElementById('profileContent');
+        if (profileContent) {
+            profileContent.classList.add('profile-content-task-active');
+        }
+
+        document.body.classList.add('task-manager-open');
+    },
+
+    deactivateEmbeddedMode: function() {
+        document.querySelectorAll('.task-manager-embedded-root').forEach(root => {
+            root.classList.remove('task-manager-embedded-root');
+        });
+
+        const profileContent = document.getElementById('profileContent');
+        if (profileContent) {
+            profileContent.classList.remove('profile-content-task-active');
+        }
+
+        document.body.classList.remove('task-manager-open');
     }
 };
 
