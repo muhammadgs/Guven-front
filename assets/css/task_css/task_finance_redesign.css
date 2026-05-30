@@ -2525,3 +2525,120 @@ html body .task-manager-section-active .task-section-active.table-card .table-he
         max-height: 64px !important;
     }
 }
+
+/* ===== Task Manager compact stack vertical placement fix ===== */
+
+:root {
+    --task-compact-stack-top-safe: 42px;
+    --task-compact-nav-table-gap: 6px;
+}
+
+/*
+   In compact mode we need to move the whole nav + table stack DOWN.
+   Do not use negative margins here. The navbar needs top breathing room
+   for the macOS dock magnification animation.
+*/
+html body #waveNav.wave-nav-container.minimized.has-selection,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized {
+    margin-top: var(--task-compact-stack-top-safe) !important;
+    margin-bottom: var(--task-compact-nav-table-gap) !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: visible !important;
+}
+
+/* Make sure dock animation is not clipped inside the nav wrappers */
+html body #waveNav.wave-nav-container.minimized.has-selection,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-content,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-items,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items {
+    overflow: visible !important;
+}
+
+/* Keep the nav row compact, but do not pull it into the top edge */
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-content,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    gap: 0 !important;
+}
+
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-items,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items {
+    margin: 0 !important;
+    padding: 0 4px 2px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+}
+
+/* Keep compact cards smaller so the row is not too tall */
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item {
+    min-height: 68px !important;
+    height: 68px !important;
+    max-height: 68px !important;
+    padding: 8px 16px !important;
+    margin: 0 !important;
+}
+
+/*
+   Active table should follow the navbar closely.
+   It should move down because navbar margin-top moves the whole flow down,
+   not because table is manually pulled upward.
+*/
+html body.task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .task-section-active.table-card {
+    margin-top: 0 !important;
+}
+
+/*
+   Since the whole stack moved down, reduce table height a little
+   to avoid bottom overflow inside worker/owner profile containers.
+*/
+html body.task-manager-section-active .task-section-active#activeTableSection,
+html body.task-manager-section-active .task-section-active#externalTableSection,
+html body.task-manager-section-active .task-section-active#partnerTableSection,
+html body.task-manager-section-active .task-section-active#archiveTableSection,
+html body .task-manager-section-active .task-section-active#activeTableSection,
+html body .task-manager-section-active .task-section-active#externalTableSection,
+html body .task-manager-section-active .task-section-active#partnerTableSection,
+html body .task-manager-section-active .task-section-active#archiveTableSection {
+    height: calc(100vh - var(--tm-section-gap) - var(--task-compact-stack-top-safe)) !important;
+    max-height: calc(100vh - var(--tm-section-gap) - var(--task-compact-stack-top-safe)) !important;
+    min-height: 0 !important;
+}
+
+/* Report section must also respect the lowered compact stack */
+html body.task-manager-section-active #reportTableSection.table-card.report-section,
+html body .task-manager-section-active #reportTableSection.table-card.report-section {
+    max-height: calc(100vh - var(--tm-section-gap) - var(--task-compact-stack-top-safe)) !important;
+}
+
+/* Mobile: smaller safe offset */
+@media (max-width: 768px) {
+    :root {
+        --task-compact-stack-top-safe: 28px;
+        --task-compact-nav-table-gap: 6px;
+    }
+
+    html body #waveNav.wave-nav-container.minimized.has-selection .wave-item,
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item {
+        min-height: 60px !important;
+        height: 60px !important;
+        max-height: 60px !important;
+        padding: 6px 10px !important;
+    }
+}
