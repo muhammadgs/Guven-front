@@ -2133,3 +2133,89 @@ html body.task-manager-section-active > #reportTableSection.task-section-active.
     scrollbar-gutter: stable;
     -webkit-overflow-scrolling: touch;
 }
+
+/* =====================================================================
+   EMBEDDED PROFILE TABLE HEIGHT FILL
+   Owner/worker panels provide a real-height #profileContent frame. Use that
+   frame as a flex column so table sections consume the remaining panel height
+   instead of the older viewport calc that left an empty strip at the bottom.
+   ===================================================================== */
+html,
+body {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+#profileContent.profile-content-task-active {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+#profileContent.profile-content-task-active > #taskManagerSection.task-manager-embedded-root,
+#profileContent.profile-content-task-active .task-manager-embedded-root {
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: visible !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root > #waveNav {
+    flex: 0 0 auto !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) > .table-header {
+    flex: 0 0 auto !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #externalTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #partnerTableSection.task-section-active,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #archiveTableSection.task-section-active {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    overflow: hidden !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active > .table-header,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #externalTableSection.task-section-active > .table-header,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #partnerTableSection.task-section-active > .table-header,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #archiveTableSection.task-section-active > .table-header,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #archiveTableSection.task-section-active > .archive-tabs,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active > .filter-bar,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #externalTableSection.task-section-active > .filter-bar,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #partnerTableSection.task-section-active > .filter-bar {
+    flex: 0 0 auto !important;
+}
+
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active > .table-wrapper,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #externalTableSection.task-section-active > .table-wrapper,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #partnerTableSection.task-section-active > .table-wrapper,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #archiveTableSection.task-section-active > .table-wrapper {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding-bottom: 0 !important;
+    box-sizing: border-box !important;
+    overflow: auto !important;
+}
