@@ -2397,3 +2397,131 @@ html body .task-manager-section-active .table-card:not(.new-task-section):not(.r
         padding-bottom: 0 !important;
     }
 }
+
+/* ===== Task Manager compact nav/table gap fix =====
+   Keep selected-state spacing in real layout flow: the previous compact dock
+   left height/padding on the nav row (and used negative margins/transforms),
+   so changing only margin-bottom did not reliably move the table. */
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized,
+html body #waveNav.wave-nav-container.minimized.has-selection {
+    flex: 0 0 auto !important;
+    margin-top: 6px !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-content,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+}
+
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-items {
+    margin: 0 !important;
+    padding: 0 4px 2px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+}
+
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.selected,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.active-item {
+    width: 68px !important;
+    min-width: 68px !important;
+    max-width: 68px !important;
+    flex: 0 0 68px !important;
+    flex-basis: 68px !important;
+    min-height: 68px !important;
+    height: 68px !important;
+    max-height: 68px !important;
+    padding: 7px 6px !important;
+}
+
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-icon,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-icon,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-icon,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected .wave-icon,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected .wave-icon,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.selected .wave-icon,
+html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item .wave-icon,
+html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item .wave-icon,
+html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.active-item .wave-icon {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    flex: 0 0 30px !important;
+    flex-basis: 30px !important;
+    font-size: 13px !important;
+}
+
+html body.task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .task-section-active.table-card {
+    margin-top: 0 !important;
+}
+
+html body.task-manager-section-active .task-section-active.table-card .table-header,
+html body .task-manager-section-active .task-section-active.table-card .table-header {
+    padding-top: 8px !important;
+}
+
+@media (max-width: 768px) {
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized,
+    html body #waveNav.wave-nav-container.minimized.has-selection {
+        margin-top: 4px !important;
+        margin-bottom: 0 !important;
+    }
+
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-nav-items,
+    html body #waveNav.wave-nav-container.minimized.has-selection .wave-nav-items {
+        padding: 0 10px 4px !important;
+        min-height: 0 !important;
+        align-items: center !important;
+    }
+
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item,
+    html body #waveNav.wave-nav-container.minimized.has-selection .wave-item,
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.selected,
+    html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.selected,
+    html body.task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item,
+    html body .task-manager-section-active #waveNav.wave-nav-container.minimized .wave-item.active-item,
+    html body #waveNav.wave-nav-container.minimized.has-selection .wave-item.active-item {
+        width: 64px !important;
+        min-width: 64px !important;
+        max-width: 64px !important;
+        flex-basis: 64px !important;
+        min-height: 64px !important;
+        height: 64px !important;
+        max-height: 64px !important;
+    }
+}
