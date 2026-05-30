@@ -2331,7 +2331,7 @@ html body.task-manager-section-active .task-section-active.table-card:not(.new-t
    ========================================================= */
 
 :root {
-    --task-collapsed-dock-shift: -3px;
+    --task-collapsed-dock-shift: -1px;
 }
 
 html body #waveNav.minimized #waveNavContent,
