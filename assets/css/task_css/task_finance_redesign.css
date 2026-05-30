@@ -2159,17 +2159,24 @@ body {
     max-height: 100% !important;
     display: flex !important;
     flex-direction: column !important;
-    overflow: visible !important;
+    overflow: hidden !important;
 }
 
-#profileContent.profile-content-task-active .task-manager-embedded-root > #waveNav {
+#profileContent.profile-content-task-active .task-manager-embedded-root > #waveNav,
+#profileContent.profile-content-task-active .task-manager-embedded-root .wave-nav-container.minimized,
+#profileContent.profile-content-task-active .task-manager-embedded-root.task-manager-section-active .wave-nav-container,
+#profileContent.profile-content-task-active .task-manager-embedded-root .task-manager-section-active .wave-nav-container {
     flex: 0 0 auto !important;
+    margin: 0 !important;
 }
 
 #profileContent.profile-content-task-active .task-manager-embedded-root .table-card:not(.new-task-section):not(.report-section) {
     display: flex !important;
     flex-direction: column !important;
+    height: auto !important;
     min-height: 0 !important;
+    max-height: none !important;
+    margin-bottom: 0 !important;
     overflow: hidden !important;
 }
 
