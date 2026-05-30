@@ -2226,3 +2226,102 @@ body {
     box-sizing: border-box !important;
     overflow: auto !important;
 }
+
+/* =========================================================
+   FINAL FIX: Task iframe selected table must fill bottom edge
+   ========================================================= */
+html,
+body {
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+}
+
+html body.task-page-selected,
+html body.task-manager-section-active {
+    height: 100vh !important;
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Compact top dock/nav: keep it in normal flow, no bottom gap tricks. */
+html body.task-page-selected #waveNav,
+html body.task-manager-section-active #waveNav,
+html body.task-page-selected #waveNav.minimized,
+html body.task-manager-section-active #waveNav.minimized,
+html body.task-page-selected #waveNav.has-selection,
+html body.task-manager-section-active #waveNav.has-selection {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 8px 0 8px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}
+
+/* Only real table sections must stretch. Do NOT affect Yeni or Hesabat. */
+html body.task-page-selected #activeTableSection.task-section-active,
+html body.task-page-selected #externalTableSection.task-section-active,
+html body.task-page-selected #partnerTableSection.task-section-active,
+html body.task-page-selected #archiveTableSection.task-section-active,
+html body.task-manager-section-active #activeTableSection.task-section-active,
+html body.task-manager-section-active #externalTableSection.task-section-active,
+html body.task-manager-section-active #partnerTableSection.task-section-active,
+html body.task-manager-section-active #archiveTableSection.task-section-active {
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Fixed-height card chrome stays above the scrolling table viewport. */
+html body.task-page-selected #activeTableSection.task-section-active > .table-header,
+html body.task-page-selected #externalTableSection.task-section-active > .table-header,
+html body.task-page-selected #partnerTableSection.task-section-active > .table-header,
+html body.task-page-selected #partnerTableSection.task-section-active > .filter-bar,
+html body.task-page-selected #archiveTableSection.task-section-active > .table-header,
+html body.task-manager-section-active #activeTableSection.task-section-active > .table-header,
+html body.task-manager-section-active #externalTableSection.task-section-active > .table-header,
+html body.task-manager-section-active #partnerTableSection.task-section-active > .table-header,
+html body.task-manager-section-active #partnerTableSection.task-section-active > .filter-bar,
+html body.task-manager-section-active #archiveTableSection.task-section-active > .table-header {
+    flex: 0 0 auto !important;
+}
+
+/* This is the real fix: table viewport fills the remaining vertical space. */
+html body.task-page-selected #activeTableSection.task-section-active > .table-wrapper,
+html body.task-page-selected #externalTableSection.task-section-active > .table-wrapper,
+html body.task-page-selected #partnerTableSection.task-section-active > .table-wrapper,
+html body.task-page-selected #archiveTableSection.task-section-active > .table-wrapper,
+html body.task-manager-section-active #activeTableSection.task-section-active > .table-wrapper,
+html body.task-manager-section-active #externalTableSection.task-section-active > .table-wrapper,
+html body.task-manager-section-active #partnerTableSection.task-section-active > .table-wrapper,
+html body.task-manager-section-active #archiveTableSection.task-section-active > .table-wrapper {
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Override older broad rules like min-height:100vh on .table-card. */
+html body.task-page-selected .task-section-active.table-card:not(.new-task-section):not(.report-section),
+html body.task-manager-section-active .task-section-active.table-card:not(.new-task-section):not(.report-section) {
+    min-height: 0 !important;
+}
