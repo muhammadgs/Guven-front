@@ -2354,3 +2354,46 @@ html body.task-manager-section-active #waveNav {
     margin-bottom: 0 !important;
     overflow: visible !important;
 }
+
+/* ===== Compact Task Nav → Table spacing hard fix ===== */
+html body .wave-nav-container.minimized,
+html body .task-manager-section-active .wave-nav-container,
+html body .wave-nav-container.pinned.minimized,
+html body .wave-nav-container.fullscreen.minimized {
+    margin-top: 10px !important;
+    margin-bottom: -18px !important;
+}
+
+html body .wave-nav-container.minimized .wave-nav-items,
+html body .task-manager-section-active .wave-nav-items {
+    padding-top: 2px !important;
+    padding-bottom: 0 !important;
+}
+
+html body .task-manager-section-active .task-section-active.table-card,
+html body .task-manager-section-active .table-card:not(.new-task-section):not(.report-section) {
+    margin-top: 0 !important;
+}
+
+/* Cədvəl action/header hissəsinin öz daxili yuxarı boşluğunu da azaldır */
+html body .task-manager-section-active .task-section-active.table-card .table-header,
+html body .task-manager-section-active .table-card:not(.new-task-section):not(.report-section) .table-header {
+    padding-top: 10px !important;
+}
+
+/* Mobile-da negative margin çox olmasın */
+@media (max-width: 768px) {
+    html body .wave-nav-container.minimized,
+    html body .task-manager-section-active .wave-nav-container,
+    html body .wave-nav-container.pinned.minimized,
+    html body .wave-nav-container.fullscreen.minimized {
+        margin-top: 8px !important;
+        margin-bottom: -8px !important;
+    }
+
+    html body .wave-nav-container.minimized .wave-nav-items,
+    html body .task-manager-section-active .wave-nav-items {
+        padding-top: 2px !important;
+        padding-bottom: 0 !important;
+    }
+}
