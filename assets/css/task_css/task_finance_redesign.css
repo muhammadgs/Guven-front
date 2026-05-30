@@ -2325,3 +2325,32 @@ html body.task-page-selected .task-section-active.table-card:not(.new-task-secti
 html body.task-manager-section-active .task-section-active.table-card:not(.new-task-section):not(.report-section) {
     min-height: 0 !important;
 }
+
+/* =========================================================
+   FINAL FIX: lift compact task dock above table border
+   ========================================================= */
+
+:root {
+    --task-collapsed-dock-shift: -8px;
+}
+
+html body #waveNav.minimized #waveNavContent,
+html body #waveNav.has-selection #waveNavContent,
+html body #waveNav.minimized .wave-nav-content,
+html body #waveNav.has-selection .wave-nav-content,
+html body.task-page-selected #waveNav #waveNavContent,
+html body.task-page-selected #waveNav .wave-nav-content,
+html body.task-manager-section-active #waveNav #waveNavContent,
+html body.task-manager-section-active #waveNav .wave-nav-content {
+    transform: translateY(var(--task-collapsed-dock-shift)) !important;
+}
+
+/* Keep the dock itself in flow, but do not push its visual content down. */
+html body #waveNav.minimized,
+html body #waveNav.has-selection,
+html body.task-page-selected #waveNav,
+html body.task-manager-section-active #waveNav {
+    padding-bottom: 4px !important;
+    margin-bottom: 0 !important;
+    overflow: visible !important;
+}
