@@ -411,7 +411,7 @@ html body .wave-nav-container.pinned.minimized,
 html body .wave-nav-container.fullscreen.minimized {
     width: min(98%, 1640px) !important;
     max-width: 1640px !important;
-    margin: 28px auto 22px !important;
+    margin: 18px auto 6px !important;
     padding: 0 !important;
     min-height: 0 !important;
     border: 0 !important;
@@ -453,7 +453,7 @@ html body .task-manager-section-active .wave-nav-items {
     gap: clamp(24px, 2vw, 32px) !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 8px 4px 14px !important;
+    padding: 6px 4px 4px !important;
     height: auto !important;
     max-height: none !important;
     overflow-x: auto !important;
@@ -819,7 +819,7 @@ html body .timer-status-label { color: inherit !important; opacity: .9 !importan
         display: flex !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
-        padding: 8px 2px 14px !important;
+        padding: 6px 2px 6px !important;
         scroll-snap-type: x proximity;
     }
     html body .wave-nav-container.minimized .wave-item,
@@ -1100,7 +1100,7 @@ html body .wave-nav-container.minimized .wave-nav-items,
 html body .task-manager-section-active .wave-nav-items {
     height: auto !important;
     max-height: none !important;
-    padding: 8px 4px 16px !important;
+    padding: 6px 4px 4px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scrollbar-width: none !important;
@@ -1208,7 +1208,7 @@ html body .task-manager-section-active #waveNav {
     display: block !important;
     align-items: stretch !important;
     justify-content: flex-start !important;
-    margin: 24px auto 24px !important;
+    margin: 18px auto 6px !important;
     padding: 0 !important;
     overflow-x: visible !important;
     overflow-y: visible !important;
@@ -1308,8 +1308,8 @@ html body.task-page-selected #waveNav,
 html body .task-page-selected #waveNav,
 html body.task-manager-section-active #waveNav,
 html body .task-manager-section-active #waveNav {
-    margin-top: 24px !important;
-    margin-bottom: 22px !important;
+    margin-top: 18px !important;
+    margin-bottom: 6px !important;
     padding: 0 !important;
     overflow: visible !important;
 }
@@ -1568,8 +1568,8 @@ html body .task-manager-section-active #waveNav,
 html body .task-manager-section-active .wave-nav-container {
     width: 100% !important;
     max-width: 100% !important;
-    margin: 0 auto 24px !important;
-    padding: 8px 0 8px !important;
+    margin: 0 auto 6px !important;
+    padding: 6px 0 4px !important;
     min-height: 0 !important;
     background: transparent !important;
     border: 0 !important;
@@ -1632,7 +1632,7 @@ html body .task-manager-section-active #waveNav .wave-nav-items {
     height: auto !important;
     max-height: none !important;
     margin: 0 auto !important;
-    padding: 6px 18px 6px !important;
+    padding: 6px 18px 4px !important;
     overflow: visible !important;
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
@@ -1924,7 +1924,7 @@ html body .task-manager-section-active #waveNav .wave-nav-extra {
         justify-content: flex-start !important;
         gap: 18px !important;
         min-height: 108px !important;
-        padding: 8px 16px 8px !important;
+        padding: 6px 16px 6px !important;
         overflow-x: auto !important;
         overflow-y: visible !important;
         scrollbar-width: none !important;
