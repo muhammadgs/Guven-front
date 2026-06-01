@@ -233,9 +233,9 @@ section#taskManagerSection {
 /* ===== OWNER SIDEBAR PROFILE CARD FIX ===== */
 
 :root {
-    --gf-sidebar-collapsed-width: 118px;
+    --gf-sidebar-collapsed-width: 88px;
     --gf-sidebar-expanded-width: 300px;
-    --gf-profile-card-height: 92px;
+    --gf-profile-card-height: 64px;
 }
 
 @media (min-width: 769px) {
