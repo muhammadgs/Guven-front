@@ -2642,3 +2642,61 @@ html body .task-manager-section-active #reportTableSection.table-card.report-sec
         padding: 6px 10px !important;
     }
 }
+
+/* ===== Task Manager table bottom fill fix: height only, no repositioning ===== */
+
+:root {
+    --task-table-bottom-frame-gap: 0px;
+}
+
+/*
+   Only extend active table sections downward.
+   Do not change nav placement, table top, table width, or margins.
+   The compact selected table top is already represented by --tm-section-gap,
+   so the height uses that offset directly and only grows the card downward.
+*/
+html body.task-manager-section-active .task-section-active#activeTableSection,
+html body.task-manager-section-active .task-section-active#externalTableSection,
+html body.task-manager-section-active .task-section-active#partnerTableSection,
+html body.task-manager-section-active .task-section-active#archiveTableSection,
+html body .task-manager-section-active .task-section-active#activeTableSection,
+html body .task-manager-section-active .task-section-active#externalTableSection,
+html body .task-manager-section-active .task-section-active#partnerTableSection,
+html body .task-manager-section-active .task-section-active#archiveTableSection {
+    height: calc(
+        100dvh - var(--tm-section-gap) - var(--task-table-bottom-frame-gap)
+    ) !important;
+    max-height: calc(
+        100dvh - var(--tm-section-gap) - var(--task-table-bottom-frame-gap)
+    ) !important;
+    min-height: 0 !important;
+}
+
+/*
+   Ensure inner scroll area fills the newly increased table height.
+*/
+html body.task-manager-section-active .task-section-active#activeTableSection .table-wrapper,
+html body.task-manager-section-active .task-section-active#externalTableSection .table-wrapper,
+html body.task-manager-section-active .task-section-active#partnerTableSection .table-wrapper,
+html body.task-manager-section-active .task-section-active#archiveTableSection .table-wrapper,
+html body .task-manager-section-active .task-section-active#activeTableSection .table-wrapper,
+html body .task-manager-section-active .task-section-active#externalTableSection .table-wrapper,
+html body .task-manager-section-active .task-section-active#partnerTableSection .table-wrapper,
+html body .task-manager-section-active .task-section-active#archiveTableSection .table-wrapper {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: auto !important;
+}
+
+/*
+   Report section: only adjust its bottom fill if it has the same bottom gap.
+   Do not change its top position.
+*/
+html body.task-manager-section-active #reportTableSection.table-card.report-section,
+html body .task-manager-section-active #reportTableSection.table-card.report-section {
+    max-height: calc(
+        100dvh - var(--tm-section-gap) - var(--task-table-bottom-frame-gap)
+    ) !important;
+}
