@@ -235,7 +235,7 @@ section#taskManagerSection {
 :root {
     --gf-sidebar-collapsed-width: 88px;
     --gf-sidebar-expanded-width: 300px;
-    --gf-profile-card-height: 64px;
+    --gf-profile-card-height: 60px;
 }
 
 @media (min-width: 769px) {
