@@ -80,7 +80,7 @@
 
 <div class="h-screen flex flex-col">
     <!-- Header - SİZİN SCRIPTLƏRİNİZ İŞLƏYƏCƏK -->
-    <header class="flex-shrink-0 px-2 py-1">
+    <header class="flex-shrink-0 px-2 py-2">
         
     </header>
     <!-- Ana content -->
@@ -621,11 +621,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-medium text-gray-700">ASAN İmza Nömrəsi</label>
-                        <input type="text" id="newAsanImzaNumber" maxlength="50" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN İmza nömrəsi">
+                        <input type="text" id="newAsanImzaNumber" maxlength="10" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN İmza nömrəsi">
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">ASAN ID</label>
-                        <input type="text" id="newAsanId" maxlength="50" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN ID">
+                        <input type="text" id="newAsanId" maxlength="6" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="ASAN ID">
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">PIN1</label>
@@ -633,7 +633,7 @@
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">PIN2</label>
-                        <input type="text" id="newPin2" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,4)" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="4 rəqəm">
+                        <input type="text" id="newPin2" maxlength="5" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,5)" class="w-full rounded-xl border border-gray-300 px-4 py-2 focus:border-brand-blue focus:outline-none" placeholder="5 rəqəm">
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">PUK</label>
