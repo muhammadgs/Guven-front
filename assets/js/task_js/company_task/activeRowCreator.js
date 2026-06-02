@@ -214,7 +214,7 @@ window.TaskTimerSystem = window.TaskTimerSystem || {
             }
 
             el.innerHTML = `
-                <div class="confirm-countdown ${cls}">
+                <div class="confirm-countdown ${cls}" style="width: 100% !important; box-sizing: border-box; justify-content: center;">
                     <i class="fas fa-hourglass-half"></i>
                     <span class="countdown-time">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</span>
                     <span class="countdown-label">İş vaxtı qaldı</span>
@@ -452,8 +452,33 @@ window.handleStartWork = async function(taskId) {
     try {
         const currentUserId = window.taskManager?.userData?.userId;
         if (currentUserId) {
+            let myActive = [];
             const cached = (typeof TaskCache !== 'undefined' && TaskCache?.get?.('active_tasks')) || [];
-            const myActive = cached.filter(t => t.assigned_to == currentUserId && t.status === 'in_progress' && t.id != taskId);
+            myActive = cached.filter(t => t.assigned_to == currentUserId && t.status === 'in_progress' && t.id != taskId);
+
+            if (myActive.length === 0) {
+                const runningDisplays = document.querySelectorAll('.work-timer-display:not(.paused-mode)');
+                for (const disp of runningDisplays) {
+                    const id = disp.getAttribute('data-work-timer-display');
+                    if (id && id != taskId) {
+                        const pauseBtn = document.querySelector(`[data-pause-btn="${id}"]`);
+                        if (pauseBtn) {
+                            let title = `#${id}`;
+                            const row = document.querySelector(`tr[data-task-id="${id}"]`);
+                            if (row) {
+                                const titleEl = row.querySelector('.fw-bold');
+                                if (titleEl) title = titleEl.textContent.trim();
+                            }
+                            myActive.push({ id: id, task_title: title });
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (typeof TaskCache !== 'undefined') TaskCache.clear();
+            if (window.dbManager) window.dbManager.clearCache().catch(e => console.error(e));
+
             if (myActive.length > 0) {
                 const confirmed = await showActiveTaskWarning(myActive[0].task_title || `#${myActive[0].id}`, myActive[0].id);
                 if (!confirmed) { if (btn) btn.disabled = false; return; }
@@ -461,14 +486,29 @@ window.handleStartWork = async function(taskId) {
                 try {
                     await makeApiRequest(`/tasks/${myActive[0].id}/pause`, 'POST', { reason: 'Yeni tapşırığa keçid' });
                     const pb = document.querySelector(`[data-pause-btn="${myActive[0].id}"]`);
-                    if (pb) { pb.classList.add('resume-mode'); pb.innerHTML = '<i class="fa-sharp fa-solid fa-play-pause"></i>'; }
+                    if (pb) { 
+                        pb.classList.add('resume-mode'); 
+                        pb.innerHTML = `
+                            <div style="position: relative; display: inline-flex; align-items: center; gap: 2px;">
+                                <i class="fa-solid fa-play" style="position: relative;"></i>
+                                <i class="fa-solid fa-pause" style="position: relative; font-size: 0.7em; margin-left: -6px;"></i>
+                            </div>
+                            <span style="margin-left: 4px;"></span>
+                        `;
+                    }
                     const disp = document.querySelector(`[data-work-timer-display="${myActive[0].id}"]`);
                     if (disp) disp.classList.add('paused-mode');
+                    const stEl = document.querySelector(`[data-timer-status="${myActive[0].id}"]`);
+                    if (stEl) stEl.textContent = 'Fasilə';
                     const tk = `work_${myActive[0].id}`;
                     if (window.TaskTimerSystem.workTimers[tk]) window.TaskTimerSystem.workTimers[tk].isPaused = true;
                 } catch(e) { showTimerNotification('❌ Aktiv tapşırıq fasilə edilə bilmədi', '#ef4444'); if (btn) btn.disabled = false; return; }
             }
+        } else {
+            if (typeof TaskCache !== 'undefined') TaskCache.clear();
+            if (window.dbManager) window.dbManager.clearCache().catch(e => console.error(e));
         }
+        
         if (typeof makeApiRequest !== 'function') throw new Error('makeApiRequest tapılmadı');
         const taskResp = await makeApiRequest(`/tasks/${taskId}`, 'GET', null, { silent: true });
         const cur = taskResp?.data || taskResp;
@@ -484,7 +524,6 @@ window.handleStartWork = async function(taskId) {
             if (sec) {
                 sec.innerHTML = `<div class="status-section" style="display:flex;flex-direction:column;gap:5px;">
                     ${buildWorkingHTML(taskId, false, true, true, 0)}
-                    <div style="display:flex;gap:3px;flex-wrap:wrap;"><button class="btn btn-sm btn-warning" onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə"><i class="fa-solid fa-edit"></i></button></div>
                 </div>`;
                 setTimeout(() => window.TaskTimerSystem.startWorkTimer(taskId, startedAt, pausedSec), 150);
             }
@@ -530,6 +569,65 @@ window.handlePauseToggle = async function(taskId) {
     const isPaused = btn.classList.contains('resume-mode');
     btn.disabled = true;
     try {
+        const currentUserId = window.taskManager?.userData?.userId;
+        if (isPaused && currentUserId) {
+            let myActive = [];
+            const cached = (typeof TaskCache !== 'undefined' && TaskCache?.get?.('active_tasks')) || [];
+            myActive = cached.filter(t => t.assigned_to == currentUserId && t.status === 'in_progress' && t.id != taskId);
+
+            if (myActive.length === 0) {
+                const runningDisplays = document.querySelectorAll('.work-timer-display:not(.paused-mode)');
+                for (const disp of runningDisplays) {
+                    const id = disp.getAttribute('data-work-timer-display');
+                    if (id && id != taskId) {
+                        const pauseBtn = document.querySelector(`[data-pause-btn="${id}"]`);
+                        if (pauseBtn) {
+                            let title = `#${id}`;
+                            const row = document.querySelector(`tr[data-task-id="${id}"]`);
+                            if (row) {
+                                const titleEl = row.querySelector('.fw-bold');
+                                if (titleEl) title = titleEl.textContent.trim();
+                            }
+                            myActive.push({ id: id, task_title: title });
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (typeof TaskCache !== 'undefined') TaskCache.clear();
+            if (window.dbManager) window.dbManager.clearCache().catch(e => console.error(e));
+
+            if (myActive.length > 0) {
+                const confirmed = await showActiveTaskWarning(myActive[0].task_title || `#${myActive[0].id}`, myActive[0].id);
+                if (!confirmed) { if (btn) btn.disabled = false; return; }
+                showTimerNotification('⏸️ Aktiv tapşırıq fasilə edilir...', '#f59e0b');
+                try {
+                    await makeApiRequest(`/tasks/${myActive[0].id}/pause`, 'POST', { reason: 'Yeni tapşırığa keçid' });
+                    const pb = document.querySelector(`[data-pause-btn="${myActive[0].id}"]`);
+                    if (pb) { 
+                        pb.classList.add('resume-mode'); 
+                        pb.innerHTML = `
+                            <div style="position: relative; display: inline-flex; align-items: center; gap: 2px;">
+                                <i class="fa-solid fa-play" style="position: relative;"></i>
+                                <i class="fa-solid fa-pause" style="position: relative; font-size: 0.7em; margin-left: -6px;"></i>
+                            </div>
+                            <span style="margin-left: 4px;"></span>
+                        `;
+                    }
+                    const disp = document.querySelector(`[data-work-timer-display="${myActive[0].id}"]`);
+                    if (disp) disp.classList.add('paused-mode');
+                    const stEl = document.querySelector(`[data-timer-status="${myActive[0].id}"]`);
+                    if (stEl) stEl.textContent = 'Fasilə';
+                    const tk = `work_${myActive[0].id}`;
+                    if (window.TaskTimerSystem.workTimers[tk]) window.TaskTimerSystem.workTimers[tk].isPaused = true;
+                } catch(e) { showTimerNotification('❌ Aktiv tapşırıq fasilə edilə bilmədi', '#ef4444'); if (btn) btn.disabled = false; return; }
+            }
+        } else {
+            if (typeof TaskCache !== 'undefined') TaskCache.clear();
+            if (window.dbManager) window.dbManager.clearCache().catch(e => console.error(e));
+        }
+
         if (typeof makeApiRequest !== 'function') throw new Error('makeApiRequest tapılmadı');
         if (isPaused) {
             const response = await makeApiRequest(`/tasks/${taskId}/resume`, 'POST', {});
@@ -573,11 +671,12 @@ window.handlePauseToggle = async function(taskId) {
  * 🔥 DÜZƏLİŞ: Edit düyməsini göstərmə məntiqi
  * canEdit = isAssignedToMe (icraçı) YAXUD isCreatedByMe (yaradan)
  */
-function _buildEditButton(taskId, canEdit) {
+function _buildEditButton(taskId, canEdit, isFlex = false) {
     if (!canEdit) return '';
     return `
         <button class="btn-edit-task" data-edit-btn="${taskId}"
-                onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə">
+                onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə"
+                ${isFlex ? 'style="flex:1; justify-content:center;"' : ''}>
             <i class="fa-solid fa-pen"></i>
         </button>
     `;
@@ -587,8 +686,8 @@ function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe, isCreatedB
     const canEdit = isAssignedToMe || isCreatedByMe;
 
     const overdueHtml = `
-        <div data-confirm-timer="${taskId}">
-            <div class="timer-delayed" style="background:#dc2626;">
+        <div data-confirm-timer="${taskId}" style="width: 100%;">
+            <div class="timer-delayed" style="background:#dc2626; width: 100% !important; box-sizing: border-box; justify-content: center;">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span class="delay-time">Təsdiq olunmayıb! Gecikmə: ${delayHours} saat</span>
             </div>
@@ -597,37 +696,43 @@ function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe, isCreatedB
 
     if (isAssignedToMe) {
         return `
-            ${overdueHtml}
-            <div class="confirm-actions" style="margin-top:-1px;">
-                <button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
-                    <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
-                </button>
-                <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})">
-                    <i class="fas fa-times"></i> İmtina
-                </button>
-                ${_buildEditButton(taskId, canEdit)}
+            <div style="width: 100%;">
+                ${overdueHtml}
+                <div class="confirm-actions" style="margin-top:3px; width:100%; display:flex; gap:6px;">
+                    <button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})" style="flex:1; justify-content:center;">
+                        <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
+                    </button>
+                    <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})" style="flex:1; justify-content:center;">
+                        <i class="fas fa-times"></i> İmtina
+                    </button>
+                    ${_buildEditButton(taskId, canEdit, true)}
+                </div>
             </div>`;
     }
 
     // Yaradan şəxs - sadəcə edit düyməsi görür
     if (isCreatedByMe) {
         return `
-            ${overdueHtml}
-            <div class="confirm-actions" style="margin-top:-1px;">
-                ${_buildEditButton(taskId, canEdit)}
+            <div style="width: 100%;">
+                ${overdueHtml}
+                <div class="confirm-actions" style="margin-top:3px; width:100%; display:flex; gap:6px;">
+                    ${_buildEditButton(taskId, canEdit, true)}
+                </div>
             </div>`;
     }
 
     return `
-        ${overdueHtml}
-        <div class="confirm-actions" style="margin-top:-1px;">
-            <button class="btn-take-task" data-take-btn="${taskId}"
-                    onclick="handleTakeOverdueTask(${taskId})"
-                    style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;
-                           padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;
-                           cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
-                <i class="fas fa-hand-paper"></i> Tapşırığı götür
-            </button>
+        <div style="width: 100%;">
+            ${overdueHtml}
+            <div class="confirm-actions" style="margin-top:3px; width:100%; display:flex; gap:6px;">
+                <button class="btn-take-task" data-take-btn="${taskId}"
+                        onclick="handleTakeOverdueTask(${taskId})"
+                        style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;
+                               padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;
+                               cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex:1;gap:4px;">
+                    <i class="fas fa-hand-paper"></i> Tapşırığı götür
+                </button>
+            </div>
         </div>`;
 }
 
@@ -642,15 +747,15 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe, isCreatedByMe) {
 
     let countdownHtml = '';
     if (delayInfo.isDelayed) {
-        countdownHtml = `<div data-confirm-timer="${taskId}">
-            <div class="timer-delayed">
+        countdownHtml = `<div data-confirm-timer="${taskId}" style="width: 100%;">
+            <div class="timer-delayed" style="width: 100% !important; box-sizing: border-box; justify-content: center;">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span class="delay-time">Gecikmə: ${delayInfo.delayHours} saat</span>
             </div>
         </div>`;
     } else {
-        countdownHtml = `<div data-confirm-timer="${taskId}">
-            <div class="confirm-countdown normal">
+        countdownHtml = `<div data-confirm-timer="${taskId}" style="width: 100%;">
+            <div class="confirm-countdown normal" style="width: 100% !important; box-sizing: border-box; justify-content: center;">
                 <i class="fas fa-hourglass-half"></i>
                 <span class="countdown-time">02:00:00</span>
                 <span class="countdown-label">İş vaxtı qaldı</span>
@@ -661,18 +766,18 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe, isCreatedByMe) {
     // İcraçı - bütün düymələr
     if (isAssignedToMe) {
         const approveBtn = delayInfo.isDelayed ?
-            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
-                <i class="fas fa-check"></i> Təsdiq et (Gecikmiş)
+            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})" style="flex: 1; justify-content: center;">
+                <i class="fas fa-check"></i> Təsdiq et
             </button>` :
-            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})">
+            `<button class="btn-approve" data-approve-btn="${taskId}" onclick="handleTaskApprove(${taskId})" style="flex: 1; justify-content: center;">
                 <i class="fas fa-check"></i> Təsdiq et
             </button>`;
 
-        return `<div class="pending-section">
+        return `<div class="pending-section" style="width: 100%;">
             ${countdownHtml}
-            <div class="confirm-actions" style="margin-top:-1px;">
+            <div class="confirm-actions" style="margin-top:-1px; width: 100%; display: flex;">
                 ${approveBtn}
-                <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})">
+                <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})" style="flex: 1; justify-content: center;">
                     <i class="fas fa-times"></i> İmtina
                 </button>
                 ${_buildEditButton(taskId, canEdit)}
@@ -682,16 +787,16 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe, isCreatedByMe) {
 
     // 🔥 Yaradan şəxs - countdown + edit düyməsi
     if (isCreatedByMe) {
-        return `<div class="pending-section">
+        return `<div class="pending-section" style="width: 100%;">
             ${countdownHtml}
-            <div class="confirm-actions" style="margin-top:-1px;">
-                ${_buildEditButton(taskId, canEdit)}
+            <div class="confirm-actions" style="margin-top:-1px; width: 100%; display: flex;">
+                ${_buildEditButton(taskId, canEdit, true)}
             </div>
         </div>`;
     }
 
     // Başqası - yalnız countdown
-    return `<div class="pending-section">
+    return `<div class="pending-section" style="width: 100%;">
         ${countdownHtml}
         <div class="confirm-actions" style="margin-top:-1px;"></div>
     </div>`;
@@ -700,33 +805,33 @@ function buildPendingApprovalHTML(taskId, isAssignedToMe, isCreatedByMe) {
 function buildWaitingHTML(taskId, isAssignedToMe, isCreatedByMe) {
     const canEdit = isAssignedToMe || isCreatedByMe;
 
-    const waitingHtml = `<span class="status-waiting-badge" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:6px 16px;border-radius:24px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7;height:25px;min-width:120px;">
+    const waitingHtml = `<span class="status-waiting-badge" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:6px 16px;border-radius:24px;font-size:13px;font-weight:600;background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border:1px solid #6ee7b7;height:25px;min-width:120px; width:100% !important; box-sizing:border-box;">
         <i class="fas fa-clock" style="font-size:12px;"></i> Gözləyir
     </span>`;
 
     if (isAssignedToMe) {
-        return `<div class="waiting-section">
+        return `<div class="waiting-section" style="width:100%;">
             ${waitingHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
-                <button class="btn-start-work" data-start-btn="${taskId}" onclick="handleStartWork(${taskId})">
-                    <i class="fas fa-play"></i> Başla
+            <div style="display:flex;gap:6px;align-items:stretch;margin-top:3px;width:100%;">
+                <button class="btn-start-work" data-start-btn="${taskId}" onclick="handleStartWork(${taskId})" style="flex:1; justify-content:center;">
+                    <i class="fas fa-play"></i>
                 </button>
-                ${_buildEditButton(taskId, canEdit)}
+                ${_buildEditButton(taskId, canEdit, true)}
             </div>
         </div>`;
     }
 
     // 🔥 Yaradan şəxs - status + edit düyməsi
     if (isCreatedByMe) {
-        return `<div class="waiting-section">
+        return `<div class="waiting-section" style="width:100%;">
             ${waitingHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
-                ${_buildEditButton(taskId, canEdit)}
+            <div style="display:flex;gap:6px;align-items:stretch;margin-top:3px;width:100%;">
+                ${_buildEditButton(taskId, canEdit, true)}
             </div>
         </div>`;
     }
 
-    return `<div class="waiting-section">
+    return `<div class="waiting-section" style="width:100%;">
         ${waitingHtml}
         <div style="margin-top:-1px;"></div>
     </div>`;
@@ -736,7 +841,7 @@ function buildWorkingHTML(taskId, isPaused, isAssignedToMe, isCreatedByMe, worke
     const canEdit = isAssignedToMe || isCreatedByMe;
 
     const timerHtml = `
-        <div class="work-timer-display ${isPaused ? 'paused-mode' : ''}" data-work-timer-display="${taskId}">
+        <div class="work-timer-display ${isPaused ? 'paused-mode' : ''}" data-work-timer-display="${taskId}" style="width:100% !important; justify-content:center; box-sizing:border-box;">
             <i class="fas fa-${isPaused ? 'pause' : 'spinner fa-spin'}" style="font-size:11px;"></i>
             <span class="work-timer-clock" data-work-timer="${taskId}">00:00:00</span>
             <span class="timer-status-label" data-timer-status="${taskId}">${isPaused ? 'Fasilə' : 'İşlənir'}</span>
@@ -756,34 +861,34 @@ function buildWorkingHTML(taskId, isPaused, isAssignedToMe, isCreatedByMe, worke
 
     if (isAssignedToMe) {
         const actionButton = `
-            <button class="btn-pause-toggle ${isPaused ? 'resume-mode' : ''}" data-pause-btn="${taskId}" onclick="handlePauseToggle(${taskId})">
+            <button class="btn-pause-toggle ${isPaused ? 'resume-mode' : ''}" data-pause-btn="${taskId}" onclick="handlePauseToggle(${taskId})" style="flex:1; justify-content:center;">
                 ${isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>'}
             </button>
         `;
 
-        return `<div class="working-section">
+        return `<div class="working-section" style="width:100%;">
             ${timerHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
+            <div style="display:flex;gap:6px;align-items:stretch;margin-top:3px;width:100%;">
                 ${actionButton}
-                ${_buildEditButton(taskId, canEdit)}
+                ${_buildEditButton(taskId, canEdit, true)}
             </div>
         </div>`;
     }
 
     // 🔥 Yaradan şəxs - timer + edit düyməsi (pause yox)
     if (isCreatedByMe) {
-        return `<div class="working-section">
+        return `<div class="working-section" style="width:100%;">
             ${timerHtml}
-            <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;">
-                ${_buildEditButton(taskId, canEdit)}
+            <div style="display:flex;gap:6px;align-items:stretch;margin-top:3px;width:100%;">
+                ${_buildEditButton(taskId, canEdit, true)}
             </div>
         </div>`;
     }
 
     // Başqası - yalnız timer
-    return `<div class="working-section">
+    return `<div class="working-section" style="width:100%;">
         ${timerHtml}
-        <div style="display:flex;gap:8px;align-items:center;margin-top:-1px;"></div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:3px;"></div>
     </div>`;
 }
 
@@ -843,17 +948,17 @@ function buildCompletedRejectedHTML(taskId, status, isAssignedToMe, isCreatedByM
     const statusIcon = status === 'completed' ? 'fa-check-circle' : 'fa-ban';
     const statusColor = status === 'completed' ? '#10b981' : '#ef4444';
 
-    const statusHtml = `<span class="status-badge" style="background:${statusColor}20;color:${statusColor};">
+    const statusHtml = `<span class="status-badge" style="background:${statusColor}20;color:${statusColor}; width:100% !important; box-sizing:border-box; justify-content:center;">
         <i class="fas ${statusIcon}"></i> ${statusText}
     </span>`;
 
     if (!canEdit) {
-        return `<div>${statusHtml}</div>`;
+        return `<div style="width: 100%;">${statusHtml}</div>`;
     }
 
-    return `<div>
+    return `<div style="width: 100%;">
         ${statusHtml}
-        <div style="margin-top:-1px;">${_buildEditButton(taskId, canEdit)}</div>
+        <div style="margin-top:3px; display:flex; gap:6px; width:100%;">${_buildEditButton(taskId, canEdit, true)}</div>
     </div>`;
 }
 
@@ -1038,12 +1143,12 @@ const ActiveRowCreator = {
 
         } else if (task.status === 'pending' || task.status === 'overdue') {
             if (isOverdue) {
-                statusBadgeHTML = `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Gecikmə</span>`;
+                statusBadgeHTML = `<span class="status-badge status-pending" style="width: 100% !important; box-sizing: border-box; justify-content: center;"><i class="fa-solid fa-clock"></i> Gecikmə</span>`;
                 if (isAssignedToMe || isCreatedByMe) {
                     statusButtonHTML = `<button class="btn btn-sm btn-warning" onclick="TableManager.startTaskWithNotification(${task.id})"><i class="fa-solid fa-hand-paper"></i></button>`;
                 }
             } else {
-                statusBadgeHTML = `<span class="status-badge status-pending"><i class="fa-solid fa-clock"></i> Gözləyir</span>`;
+                statusBadgeHTML = `<span class="status-badge status-pending" style="width: 100% !important; box-sizing: border-box; justify-content: center;"><i class="fa-solid fa-clock"></i> Gözləyir</span>`;
                 if (isAssignedToMe) {
                     statusButtonHTML = `<button class="btn btn-sm btn-success" onclick="TableManager.startTaskWithNotification(${task.id})"><i class="fa-solid fa-play"></i></button>`;
                 } else if (!isCreatedByMe) {
