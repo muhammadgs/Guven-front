@@ -486,9 +486,12 @@ class EmployeesService {
      */
     filterEmployees() {
         this.filteredEmployees = this.employees.filter(emp => {
+            // Status filteri
             if (this.filterStatus === 'active' && !emp.is_active) return false;
             if (this.filterStatus === 'inactive' && emp.is_active) return false;
+            // 'all' seçildikdə həm aktiv, həm də deaktiv işçiləri göstər (heç bir filter tətbiq etmə)
 
+            // Axtarış filteri
             if (this.searchTerm) {
                 const searchFields = [
                     emp.first_name, emp.last_name, emp.email, emp.phone,

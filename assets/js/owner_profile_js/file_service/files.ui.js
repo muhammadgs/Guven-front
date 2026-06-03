@@ -1278,48 +1278,85 @@ class FilesUI {
         return [];
     }
 
+    // files.ui.js - DÜZƏLDİLMİŞ showNewFolderDialog metodu
+
     async showNewFolderDialog(panelType) {
         const name = prompt('Yeni qovluq adını daxil edin:');
         if (!name || !name.trim()) return;
 
+        console.log('📁 Yeni qovluq yaradılır:', { panelType, name, selectedCompany: this.selectedCompany });
+
         try {
             if (panelType === 'company' && this.selectedCompany) {
+                // CompanyFolderService-i əldə et
                 let companyService = window.companyFolderService;
+
+                console.log('🔍 CompanyFolderService yoxlanılır:', companyService);
 
                 if (!companyService) {
                     if (window.CompanyFolderService) {
+                        console.log('✅ CompanyFolderService yaradılır...');
                         companyService = new window.CompanyFolderService();
                         window.companyFolderService = companyService;
                     } else {
-                        this.showNotification('Xəta: Service tapılmadı', 'error');
+                        console.error('❌ CompanyFolderService sinfi tapılmadı!');
+                        this.showNotification('Xəta: Service tapılmadı. Səhifəni yeniləyin.', 'error');
                         return;
                     }
                 }
 
+                // Əgər companyService loadUserPermissions metoduna malikdirsə, çağır
+                if (companyService.loadUserPermissions) {
+                    await companyService.loadUserPermissions(this.selectedCompany.code);
+                }
+
+                console.log('📤 Qovluq yaradılır:', {
+                    name: name.trim(),
+                    companyCode: this.selectedCompany.code,
+                    parentId: this.currentFolder
+                });
+
+                // Qovluq yarat
                 const result = await companyService.createFolder(
                     name.trim(),
                     this.selectedCompany.code,
                     this.currentFolder
                 );
 
+                console.log('📥 Qovluq yaratma cavabı:', result);
+
                 if (result && result.success) {
-                    this.showNotification(`"${name}" qovluğu yaradıldı`, 'success');
+                    this.showNotification(`"${name}" qovluğu uğurla yaradıldı`, 'success');
 
-                    if (companyService.loadUserPermissions) {
-                        companyService.loadUserPermissions(this.selectedCompany.code).catch(() => {});
-                    }
+                    // Cache-i təmizlə
+                    this.foldersCache.delete(this.selectedCompany.code);
 
+                    // Faylları yenidən yüklə
                     setTimeout(() => {
                         this.loadCompanyFiles(this.selectedCompany);
                     }, 500);
                 } else {
-                    const errorMsg = result?.error || 'Qovluq yaradıla bilmədi';
+                    const errorMsg = result?.message || result?.error || 'Qovluq yaradıla bilmədi';
+                    console.error('❌ Qovluq yaratma xətası:', errorMsg);
                     this.showNotification(errorMsg, 'error');
+                }
+            } else if (panelType === 'personal') {
+                // Şəxsi qovluq yaratma
+                console.log('📁 Şəxsi qovluq yaradılır:', name);
+                const result = await this.fileService.createFolder(name.trim(), this.currentFolder);
+
+                if (result && result.success) {
+                    this.showNotification(`"${name}" qovluğu yaradıldı`, 'success');
+                    setTimeout(() => {
+                        this.loadPersonalFiles();
+                    }, 500);
+                } else {
+                    this.showNotification(result?.message || 'Qovluq yaradıla bilmədi', 'error');
                 }
             }
         } catch (error) {
             console.error('❌ Qovluq yaratma xətası:', error);
-            this.showNotification('Xəta: ' + error.message, 'error');
+            this.showNotification('Xəta: ' + (error.message || 'Naməlum xəta'), 'error');
         }
     }
 

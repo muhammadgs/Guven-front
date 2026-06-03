@@ -95,7 +95,286 @@ class FileService {
     }
 
 
+    // file.service.js - createCompanyFolder metodunu ApiService ilə işləyən versiya
 
+    async createCompanyFolder(name, companyUuid, folderType = 'company', parentUuid = null) {
+        try {
+            console.log('📁 Şirkət qovluğu yaradılır:', { name, companyUuid, folderType, parentUuid });
+
+            // ApiService istifadə et
+            if (this.api) {
+                // Query parametrlərini qur
+                const params = new URLSearchParams();
+                params.append('name', name);
+                params.append('company_uuid', companyUuid);
+                params.append('folder_type', folderType);
+
+                if (parentUuid) {
+                    params.append('parent_uuid', parentUuid);
+                }
+
+                // POST sorğusu - body boş, parametrlər URL-də
+                const result = await this.api.post(`/company-folders?${params.toString()}`, {});
+
+                console.log('✅ Qovluq yaradıldı:', result);
+
+                return {
+                    success: true,
+                    data: result.data || result
+                };
+            } else {
+                // ApiService yoxdursa, birbaşa fetch
+                const token = localStorage.getItem('guven_token');
+
+                const params = new URLSearchParams();
+                params.append('name', name);
+                params.append('company_uuid', companyUuid);
+                params.append('folder_type', folderType);
+
+                if (parentUuid) {
+                    params.append('parent_uuid', parentUuid);
+                }
+
+                const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/company-folders?${params.toString()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                return {
+                    success: true,
+                    data: data.data || data
+                };
+            }
+        } catch (error) {
+            console.error('❌ Şirkət qovluğu yaratma xətası:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+
+    async getCompanyFolders(companyUuid, parentUuid = null) {
+        try {
+            console.log('📋 Şirkət qovluqları gətirilir:', { companyUuid, parentUuid });
+
+            const token = localStorage.getItem('guven_token');
+            if (!token) throw new Error('Token tapılmadı');
+
+            // DÜZGÜN ENDPOINT: /api/v1/company-folders/company/{companyUuid}
+            let url = `https://guvenfinans.az/proxy.php/api/v1/company-folders/company/${companyUuid}`;
+
+            if (parentUuid) {
+                url += `?parent_uuid=${parentUuid}`;
+            }
+
+            console.log('📡 URL:', url);
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('📦 Cavab:', data);
+
+            // Router cavabı: { success: true, data: [], total: 0 }
+            return {
+                success: true,
+                data: data.data || []
+            };
+
+        } catch (error) {
+            console.error('❌ Şirkət qovluqlarını gətirmə xətası:', error);
+            return {
+                success: false,
+                data: [],
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Faylı şirkət qovluğuna əlavə et
+     * @param {string} fileUuid - Fayl UUID-i
+     * @param {string} folderUuid - Qovluq UUID-i
+     */
+    async addFileToCompanyFolder(fileUuid, folderUuid) {
+        try {
+            const url = `/api/v1/company-folders/files/${fileUuid}/folders/${folderUuid}`;
+
+            console.log('📎 Adding file to company folder:', { fileUuid, folderUuid });
+
+            const response = await this.api.post(url);
+
+            return {
+                success: true,
+                data: response.data
+            };
+        } catch (error) {
+            console.error('❌ Add file to folder error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.detail || error.message
+            };
+        }
+    }
+
+    /**
+     * Qovluğun içindəkiləri gətir
+     * @param {string} folderUuid - Qovluq UUID-i
+     */
+    async getCompanyFolderContents(folderUuid) {
+        try {
+            const url = `/api/v1/company-folders/${folderUuid}/contents`;
+
+            console.log('📋 Getting folder contents:', folderUuid);
+
+            const response = await this.api.get(url);
+
+            if (response && response.data) {
+                return {
+                    success: true,
+                    data: response.data.data || response.data
+                };
+            }
+
+            return {
+                success: false,
+                error: 'Cavab alınmadı'
+            };
+        } catch (error) {
+            console.error('❌ Get folder contents error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.detail || error.message
+            };
+        }
+    }
+
+    /**
+     * Şirkət qovluğunu sil
+     * @param {string} folderUuid - Qovluq UUID-i
+     * @param {boolean} permanent - Tamamilə silinsin?
+     */
+    async deleteCompanyFolder(folderUuid, permanent = false) {
+        try {
+            const url = `/api/v1/company-folders/${folderUuid}?permanent=${permanent}`;
+
+            console.log('🗑️ Deleting company folder:', folderUuid);
+
+            const response = await this.api.delete(url);
+
+            return {
+                success: true,
+                data: response.data
+            };
+        } catch (error) {
+            console.error('❌ Delete company folder error:', error);
+            return {
+                success: false,
+                error: error.response?.data?.detail || error.message
+            };
+        }
+    }
+
+
+    async createFolder(name, parentUuid = null, options = {}) {
+        try {
+            const { isCompany = false, companyUuid = null } = options;
+
+            console.log('📁 Yeni qovluq yaradılır:', { name, parentUuid, isCompany, companyUuid });
+
+            const token = localStorage.getItem('guven_token');
+            if (!token) throw new Error('Token tapılmadı');
+
+            let payload;
+            let url;
+
+            if (isCompany && companyUuid) {
+                // ŞİRKƏT QOVLUĞU YARAT (bütün işçilər görsün)
+                url = `/api/v1/company-folders`;
+
+                // Query parametrləri
+                const params = new URLSearchParams();
+                params.append('name', name);
+                params.append('company_uuid', companyUuid);
+                params.append('folder_type', 'company');
+
+                if (parentUuid) {
+                    params.append('parent_uuid', parentUuid);
+                }
+
+                url = `/api/v1/company-folders?${params.toString()}`;
+                payload = {}; // Body boş olacaq, parametrlər URL-də
+            } else {
+                // ŞƏXSİ QOVLUQ YARAT (yalnız sizin üçün)
+                const users_uuid = await this.getUserUUIDFromId(this.getCurrentUserId());
+
+                if (!users_uuid) {
+                    throw new Error('UUID tapılmadı');
+                }
+
+                url = `/api/v1/folders`;
+                payload = {
+                    name: name,
+                    parent_uuid: parentUuid,
+                    users_uuid: users_uuid
+                };
+            }
+
+            console.log('📡 URL:', url);
+            console.log('📦 Payload:', payload);
+
+            const response = await fetch(`https://guvenfinans.az/proxy.php${url}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+            let responseData;
+
+            try {
+                responseData = JSON.parse(responseText);
+            } catch (e) {
+                console.log('Cavab JSON deyil:', responseText);
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${responseText}`);
+            }
+
+            console.log('✅ Qovluq yaradıldı:', responseData);
+            return { success: true, data: responseData.data || responseData };
+
+        } catch (error) {
+            console.error('❌ Qovluq yaratma xətası:', error);
+            return { success: false, error: error.message };
+        }
+    }
 
     // ==================== ƏSAS METODLAR ====================
 
@@ -135,7 +414,52 @@ class FileService {
         }
     }
 
+    async getCompanyFiles(companyCode, filter = 'all') {
+        try {
+            console.log(`🏢 Şirkət faylları yüklənir: ${companyCode}, filter: ${filter}`);
 
+            const token = localStorage.getItem('guven_token');
+
+            const url = `${this.baseUrl}/files/companies/${companyCode}/files?filter=${filter}&page=1&per_page=100`;
+
+            console.log('📡 URL:', url);
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return {
+                    success: false,
+                    folders: [],
+                    files: [],
+                    total: 0
+                };
+            }
+
+            const data = await response.json();
+
+            return {
+                success: true,
+                folders: data.folders || [],
+                files: data.files || [],
+                total: (data.folders?.length || 0) + (data.files?.length || 0)
+            };
+
+        } catch (error) {
+            console.error('❌ Company files error:', error);
+            return {
+                success: false,
+                folders: [],
+                files: [],
+                total: 0
+            };
+        }
+    }
 
     prepareResponse(filter) {
         const currentFolder = this.currentFolder;
@@ -227,28 +551,35 @@ class FileService {
     async loadFiles(userIdentifier, folderUuid = null) {
         try {
             console.log(`📁 Backend-dən real fayllar yüklənir... folderUuid: ${folderUuid}`);
-            console.log('👤 İstifadəçi identifikatoru:', userIdentifier);
+            
+            // Cari istifadəçinin ID-sini al
+            const userId = this.getCurrentUserId();
 
-            // 1. USER UUID-Nİ TAP - ƏN VACİB HİSSƏ!
+            // 🔥 YALNIZ ÖZ FAYLLARINI YÜKLƏ - başqalarınınkı yox
+            console.log('👤 Cari istifadəçi ID:', userId);
+
+            // UUID-ni tapmağa çalış (sorğu GÖNDƏRMƏ)
             let usersUuid = null;
-            let userId = this.getCurrentUserId();
-
-            // UUID formatındadırsa (d152b378-...), onu istifadə et
-            if (userIdentifier && typeof userIdentifier === 'string' && userIdentifier.includes('-') && userIdentifier.length > 30) {
-                usersUuid = userIdentifier;
-            } else {
-                // ID-dirsə, UUID-ni tapmağa çalış
-                usersUuid = await this.getUserUUIDFromId(userId);
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsed = JSON.parse(userData);
+                    usersUuid = parsed.user?.uuid || parsed.uuid;
+                    if (usersUuid && usersUuid.includes('-') && usersUuid.length > 30) {
+                        console.log('✅ UUID localStorage-dən:', usersUuid);
+                    }
+                }
+            } catch(e) {
+                console.warn('UUID oxuma xətası:', e);
             }
 
-            console.log('🎯 İstifadə olunacaq UUID:', usersUuid);
-
-            // 2. BÜTÜN FAYLLARI YÜKLƏ (ID ilə)
+            // 2. BÜTÜN FAYLLARI YÜKLƏ (yalnız öz ID ilə)
             let allFiles = [];
             try {
                 const token = localStorage.getItem('guven_token');
-                const filesUrl = `${this.baseUrl}/files/user/${userId}?per_page=100`;
+                if (!token) throw new Error('Token tapılmadı');
 
+                const filesUrl = `${this.baseUrl}/files/user/${userId}?per_page=100`;
                 console.log('📡 Fayl URL (ID ilə):', filesUrl);
 
                 const filesResponse = await fetch(filesUrl, {
@@ -257,6 +588,14 @@ class FileService {
                         'Accept': 'application/json'
                     }
                 });
+
+                // 403 xətasını SİL
+                if (filesResponse.status === 403) {
+                    console.warn('⚠️ 403 xətası, fayllar yüklənə bilmədi');
+                    this.files = [];
+                    this.folders = [];
+                    return [];
+                }
 
                 if (filesResponse.ok) {
                     const filesData = await filesResponse.json();
@@ -268,13 +607,11 @@ class FileService {
                 console.warn('Fayllar yüklənə bilmədi:', e);
             }
 
-            // 3. QOVLUQLARI YÜKLƏ - UUID İLƏ!
+            // 3. QOVLUQLARI YÜKLƏ (UUID varsa)
             let folders = [];
-            try {
-                const token = localStorage.getItem('guven_token');
-
-                // Əgər UUID varsa, onunla yüklə
-                if (usersUuid) {
+            if (usersUuid) {
+                try {
+                    const token = localStorage.getItem('guven_token');
                     let foldersUrl = `${this.baseUrl}/folders?users_uuid=${usersUuid}&per_page=100`;
 
                     if (folderUuid && folderUuid !== 'null' && folderUuid !== 'undefined') {
@@ -292,15 +629,7 @@ class FileService {
 
                     if (foldersResponse.ok) {
                         const foldersData = await foldersResponse.json();
-
-                        // Cavab strukturuna uyğunlaş
-                        let rawFolders = [];
-                        if (foldersData.folders) rawFolders = foldersData.folders;
-                        else if (foldersData.data) rawFolders = foldersData.data;
-                        else if (Array.isArray(foldersData)) rawFolders = foldersData;
-
-                        console.log('📦 Qovluq cavabı:', foldersData);
-
+                        let rawFolders = foldersData.folders || foldersData.data || [];
                         folders = rawFolders.map(f => ({
                             id: f.uuid || f.id,
                             uuid: f.uuid || f.id,
@@ -311,47 +640,23 @@ class FileService {
                             created_at: f.created_at,
                             is_local: f.is_local || false
                         }));
-
                         console.log(`📁 ${folders.length} qovluq tapıldı`);
-                    } else {
-                        console.warn('Qovluqlar yüklənə bilmədi, status:', foldersResponse.status);
                     }
-                } else {
-                    console.warn('⚠️ UUID tapılmadı, qovluqlar yüklənə bilməz');
+                } catch (e) {
+                    console.warn('Qovluqlar yüklənə bilmədi:', e);
                 }
-            } catch (e) {
-                console.warn('Qovluqlar yüklənə bilmədi:', e);
             }
 
             // 4. CACHE-İ YENİLƏ
             this._cache.allFiles = allFiles;
             this._cache.folders = folders;
-
-            // 5. CARI QOVLUQDAKI FAYLLARI TAP
-            let currentFolderFiles = [];
-
-            if (folderUuid && folderUuid !== 'null' && folderUuid !== 'undefined') {
-                currentFolderFiles = allFiles.filter(f => {
-                    const fileFolderId = f.folder_id || f.parent_id;
-                    return String(fileFolderId) === String(folderUuid);
-                });
-                console.log(`📂 Cari qovluqdakı fayllar: ${currentFolderFiles.length}`);
-            } else {
-                currentFolderFiles = allFiles.filter(f => {
-                    const hasFolder = f.folder_id || f.parent_id;
-                    return !hasFolder;
-                });
-                console.log(`🏠 Root fayllar: ${currentFolderFiles.length}`);
-            }
-
-            // 6. CACHE-İ YENİLƏ
-            this._cache.files = currentFolderFiles;
+            this._cache.files = allFiles;
             this._cache.lastRefresh = Date.now();
-            this.files = currentFolderFiles;
+            this.files = allFiles;
             this.folders = folders;
 
-            console.log(`📊 Ümumi: ${currentFolderFiles.length} fayl, ${folders.length} qovluq`);
-            return currentFolderFiles;
+            console.log(`📊 Ümumi: ${allFiles.length} fayl, ${folders.length} qovluq`);
+            return allFiles;
 
         } catch (error) {
             console.error('❌ loadFiles xətası:', error);
@@ -362,19 +667,25 @@ class FileService {
     // Yeni metod - ID-dən UUID tap
     async getUserUUIDFromId(userId) {
         try {
-            // Əvvəlcə localStorage-dən bax
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                const parsed = JSON.parse(userData);
-                const uuid = parsed.user?.uuid || parsed.uuid;
-                if (uuid && uuid.includes('-') && uuid.length > 30) {
-                    console.log('✅ UUID localStorage-dən tapıldı:', uuid);
-                    return uuid;
-                }
+            console.log(`🔍 İstifadəçi UUID-si axtarılır: ${userId}`);
+
+            // Cari istifadəçinin ID-sini al
+            const currentUserId = this.getCurrentUserId();
+
+            // 🔥 Əgər başqasının ID-sini istəyirsə, API-yə sorğu GÖNDƏRMƏ
+            if (String(currentUserId) !== String(userId)) {
+                console.warn(`⚠️ Başqa istifadəçinin məlumatına icazə yoxdur: ${userId} (cari: ${currentUserId})`);
+                return null;
             }
 
-            // API-dən yüklə
+            // Öz məlumatını al
             const token = localStorage.getItem('guven_token');
+            if (!token) {
+                console.warn('⚠️ Token tapılmadı');
+                return null;
+            }
+
+            // Öz məlumatını yüklə
             const response = await fetch(`https://guvenfinans.az/proxy.php/api/v1/users/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -382,27 +693,46 @@ class FileService {
                 }
             });
 
-            if (response.ok) {
-                const userData = await response.json();
-                const uuid = userData.uuid || userData.data?.uuid;
-                if (uuid) {
-                    console.log('✅ UUID API-dən tapıldı:', uuid);
+            // 403 xətasını SİL (loginə atmasın)
+            if (response.status === 403) {
+                console.warn('⚠️ 403 xətası: Başqa istifadəçinin məlumatına icazə yoxdur');
+                return null;
+            }
 
-                    // localStorage-ə yadda saxla
+            if (!response.ok) {
+                console.warn(`⚠️ HTTP ${response.status} xətası`);
+                return null;
+            }
+
+            const userData = await response.json();
+            const uuid = userData.uuid || userData.data?.uuid;
+
+            if (uuid && uuid.includes('-') && uuid.length > 30) {
+                console.log('✅ UUID tapıldı:', uuid);
+
+                // UUID-ni localStorage-ə yadda saxla
+                try {
                     const existingData = localStorage.getItem('userData');
                     let newData = existingData ? JSON.parse(existingData) : {};
                     if (!newData.user) newData.user = {};
                     newData.user.uuid = uuid;
                     newData.uuid = uuid;
+                    newData.id = userId;
                     localStorage.setItem('userData', JSON.stringify(newData));
-
-                    return uuid;
+                } catch (e) {
+                    console.warn('User data save xətası:', e);
                 }
+
+                return uuid;
             }
-        } catch (e) {
-            console.error('UUID tapma xətası:', e);
+
+            return null;
+
+        } catch (error) {
+            // BÜTÜN XƏTALARI SİL (loginə atmasın)
+            console.warn('⚠️ UUID alma xətası (ignore):', error.message);
+            return null;
         }
-        return null;
     }
 
 
@@ -610,7 +940,127 @@ class FileService {
         }
     }
 
+    // ==================== QOVLUQ ƏMƏLİYYATLARI ====================
 
+    async createFolder(folderName, parentId = null) {
+        console.log(`📁 Yeni qovluq yaradılır: "${folderName}", parentId: ${parentId}`);
+
+        try {
+            const token = localStorage.getItem('guven_token');
+            if (!token) throw new Error('Token tapılmadı');
+
+            // UUID-ni tap
+            const users_uuid = await this.getUserUUIDFromId(this.getCurrentUserId());
+
+            if (!users_uuid) {
+                throw new Error('UUID tapılmadı');
+            }
+
+            const payload = {
+                name: folderName,
+                parent_uuid: parentId,
+                users_uuid: users_uuid
+            };
+
+            console.log('📦 Payload:', payload);
+
+            const response = await fetch(`${this.baseUrl}/folders`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const responseText = await response.text();
+            let responseData;
+
+            try {
+                responseData = JSON.parse(responseText);
+            } catch (e) {
+                console.log('Cavab JSON deyil:', responseText);
+            }
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${responseText}`);
+            }
+
+            console.log('✅ Qovluq yaradıldı:', responseData);
+
+            // Yeni qovluğu cache-ə əlavə et
+            const newFolder = {
+                id: responseData.data?.uuid || responseData.uuid,
+                uuid: responseData.data?.uuid || responseData.uuid,
+                name: folderName,
+                type: 'folder',
+                parent_id: parentId,
+                item_count: 0,
+                created_at: new Date().toISOString(),
+                is_local: false
+            };
+
+            if (!this._cache.folders) this._cache.folders = [];
+            this._cache.folders.push(newFolder);
+            this._cache.lastRefresh = 0;
+
+            // UI-ı yenilə
+            if (this.onFileChange) {
+                this.onFileChange('folder_created', newFolder);
+            }
+
+            // Dərhal faylları yenidən yüklə - VACİB!
+            setTimeout(() => {
+                this.loadFiles(users_uuid, this.currentFolder);
+            }, 100);
+
+            if (window.filesUI?.showNotification) {
+                window.filesUI.showNotification(`"${folderName}" qovluğu yaradıldı`, 'success');
+            }
+
+            return { success: true, data: newFolder };
+
+        } catch (error) {
+            console.error('❌ Qovluq yaratma xətası:', error);
+
+            if (window.filesUI?.showNotification) {
+                window.filesUI.showNotification(`Qovluq yaradıla bilmədi: ${error.message}`, 'error');
+            }
+
+            return { success: false, error: error.message };
+        }
+    }
+
+    createLocalFolder(folderName, parentId = null) {
+        console.log('⚠️ Local qovluq yaradılır...');
+
+        const newFolder = {
+            id: 'local_' + Date.now(),
+            uuid: 'local_' + Date.now(),
+            name: folderName,
+            parent_id: parentId,
+            type: 'folder',
+            item_count: 0,
+            created_at: new Date().toISOString(),
+            is_local: true
+        };
+
+        if (!this._cache.folders) this._cache.folders = [];
+        this._cache.folders.push(newFolder);
+        this.saveLocalFolders();
+        this._cache.lastRefresh = 0;
+
+        if (this.onFileChange) {
+            this.onFileChange('folder_created_local', newFolder);
+        }
+
+        if (window.filesUI?.showNotification) {
+            window.filesUI.showNotification(`"${folderName}" qovluğu yaradıldı (lokal)`, 'info');
+        }
+
+        return { success: true, data: newFolder };
+    }
 
     /**
      * Qovluğu sil - UI-DA ÇAĞIRILIR (folder-item click-də)
@@ -794,7 +1244,235 @@ class FileService {
         }
     }
 
+    /**
+     * Partnyorları yüklə - /partners/?company_code=${companyCode}
+     */
+    async loadPartners(companyCode = null) {
+        try {
+            const code = companyCode || this.getUserCompanyCode();
+            console.log(`📥 Partnyorlar yüklənir: ${code}`);
 
+            if (!this.api) {
+                console.warn('⚠️ API service tapılmadı');
+                return this.getMockPartners();
+            }
+
+            const response = await this.api.get(`/partners/?company_code=${code}`);
+            console.log('📦 API cavabı (partnyorlar):', response);
+
+            let allPartners = [];
+
+            // Cavab formatını yoxla
+            if (response && response.items && Array.isArray(response.items)) {
+                allPartners = response.items;
+            } else if (Array.isArray(response)) {
+                allPartners = response;
+            } else if (response && response.data && Array.isArray(response.data)) {
+                allPartners = response.data;
+            } else if (response && response.partners && Array.isArray(response.partners)) {
+                allPartners = response.partners;
+            }
+
+            // Hər bir partnyor üçün məlumatları formatla (yalnız bu şirkətə aid olanlar)
+            const formattedPartners = allPartners
+                .filter(partner => partner.child_company_code === code)
+                .map(partner => ({
+                    id: partner.id || `partner_${Math.random()}`,
+                    name: partner.parent_company?.company_name || partner.parent_company_name || 'Adsız Partnyor',
+                    code: partner.parent_company_code || '',
+                    type: 'partner',
+                    relationship_type: partner.relationship_type || 'unknown',
+                    status: partner.status || 'active',
+                    contract_number: partner.contract_number || '',
+                    contact_person: partner.contact_person || '',
+                    contact_phone: partner.contact_phone || '',
+                    contact_email: partner.contact_email || '',
+                    description: partner.description || '',
+                    total_projects: partner.total_projects || 0,
+                    last_contact_date: partner.last_contact_date,
+                    created_at: partner.created_at,
+                    is_active: partner.status !== 'deactivated'
+                }));
+
+            console.log(`✅ ${formattedPartners.length} partnyor yükləndi`);
+            return formattedPartners;
+
+        } catch (error) {
+            console.error('❌ Partnyorlar yüklənmədi:', error);
+            return this.getMockPartners();
+        }
+    }
+
+    /**
+     * Bütün şirkət və partnyorları bir siyahıda yüklə
+     */
+    async loadAllCompaniesAndPartners(companyCode = null) {
+        try {
+            const code = companyCode || this.getUserCompanyCode();
+            console.log(`📥 Bütün şirkət və partnyorlar yüklənir: ${code}`);
+
+            // Paralel olaraq hər ikisini yüklə
+            const [companies, partners] = await Promise.all([
+                this.loadCompanies(code),
+                this.loadPartners(code)
+            ]);
+
+            // Birləşdir və qaytar
+            const allItems = [...companies, ...partners];
+            console.log(`✅ Ümumi ${allItems.length} şirkət və partnyor yükləndi`);
+
+            return allItems;
+
+        } catch (error) {
+            console.error('❌ Məlumatlar yüklənmədi:', error);
+            return [...this.getMockCompanies(), ...this.getMockPartners()];
+        }
+    }
+
+    /**
+     * Mock şirkət məlumatları (API xəta verəndə göstərmək üçün)
+     */
+    getMockCompanies() {
+        return [
+            {
+                id: 'comp1',
+                name: 'AzeriKori MMC',
+                code: 'AZE26003',
+                type: 'company',
+                is_active: true,
+                voen: '1242141241'
+            },
+            {
+                id: 'comp2',
+                name: 'Guven Finans',
+                code: 'GF12345',
+                type: 'company',
+                is_active: true,
+                voen: '9876543210'
+            },
+            {
+                id: 'comp3',
+                name: 'Tech Solutions',
+                code: 'TS78901',
+                type: 'company',
+                is_active: true,
+                voen: '4567891230'
+            }
+        ];
+    }
+
+    /**
+     * Mock partnyor məlumatları (API xəta verəndə göstərmək üçün)
+     */
+    getMockPartners() {
+        return [
+            {
+                id: 'part1',
+                name: 'ABC Corp',
+                code: 'ABC001',
+                type: 'partner',
+                relationship_type: 'distributor',
+                is_active: true,
+                contract_number: 'CTR-2023-001',
+                contact_person: 'John Doe',
+                contact_phone: '+994501234567'
+            },
+            {
+                id: 'part2',
+                name: 'XYZ Ltd',
+                code: 'XYZ002',
+                type: 'partner',
+                relationship_type: 'supplier',
+                is_active: true,
+                contract_number: 'CTR-2023-002',
+                contact_person: 'Jane Smith',
+                contact_phone: '+994507654321'
+            },
+            {
+                id: 'part3',
+                name: 'Global Trade',
+                code: 'GT003',
+                type: 'partner',
+                relationship_type: 'customer',
+                is_active: true,
+                contract_number: 'CTR-2023-003'
+            }
+        ];
+    }
+
+    /**
+     * Şirkətə aid faylları yüklə
+     */
+    async getCompanyFilesByCode(companyCode, filter = 'all', page = 1, perPage = 100) {
+        try {
+            console.log(`🏢 Şirkət faylları yüklənir: ${companyCode}, filter: ${filter}`);
+
+            const token = localStorage.getItem('guven_token');
+            const url = `${this.baseUrl}/files/companies/${companyCode}/files?filter=${filter}&page=${page}&per_page=${perPage}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return {
+                    success: true,
+                    folders: data.folders || [],
+                    files: this.formatFiles(data.files || []),
+                    total: data.total || 0,
+                    page: data.page || page,
+                    per_page: data.per_page || perPage
+                };
+            }
+
+            return { success: false, folders: [], files: [], total: 0 };
+
+        } catch (error) {
+            console.error('❌ Şirkət faylları yüklənmədi:', error);
+            return { success: false, folders: [], files: [], total: 0 };
+        }
+    }
+
+    /**
+     * Partnyora aid faylları yüklə
+     */
+    async getPartnerFiles(partnerId, filter = 'all', page = 1, perPage = 100) {
+        try {
+            console.log(`🤝 Partnyor faylları yüklənir: ${partnerId}, filter: ${filter}`);
+
+            const token = localStorage.getItem('guven_token');
+            const url = `${this.baseUrl}/partners/${partnerId}/files?filter=${filter}&page=${page}&per_page=${perPage}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return {
+                    success: true,
+                    folders: data.folders || [],
+                    files: this.formatFiles(data.files || []),
+                    total: data.total || 0,
+                    page: data.page || page,
+                    per_page: data.per_page || perPage
+                };
+            }
+
+            return { success: false, folders: [], files: [], total: 0 };
+
+        } catch (error) {
+            console.error('❌ Partnyor faylları yüklənmədi:', error);
+            return { success: false, folders: [], files: [], total: 0 };
+        }
+    }
 
 
 
@@ -988,7 +1666,6 @@ class FileService {
             };
         }
     }
-
     /**
      * Error notification göstər (əgər filesUI yoxdursa)
      */
@@ -1054,48 +1731,7 @@ class FileService {
         }
     }
 
-    /**
-     * Partnyor üçün fayl yüklə
-     */
-    async uploadFileForPartner(file, partnerId, category = 'PARTNER_FILE', folderId = null) {
-        try {
-            console.log(`📤 Partnyor üçün fayl yüklənir: ${partnerId}, file: ${file.name}`);
 
-            const token = localStorage.getItem('guven_token');
-            if (!token) throw new Error('Token tapılmadı');
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('category', category);
-            formData.append('partner_id', partnerId);
-
-            if (folderId && folderId !== 'null' && folderId !== 'undefined') {
-                formData.append('folder_uuid', folderId);
-            }
-
-            const url = `${this.baseUrl}/files/partner-upload`;
-
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` },
-                body: formData
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
-            }
-
-            const result = await response.json();
-            console.log('✅ Fayl yükləndi:', result);
-
-            return result;
-
-        } catch (error) {
-            console.error('❌ Yükləmə xətası:', error);
-            throw error;
-        }
-    }
 
     // ==================== KÖMƏKÇİ METODLAR ====================
 

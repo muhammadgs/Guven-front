@@ -63,6 +63,21 @@ class ReportModalManager  {
             const reportData = await this.api.fetchCompanyReport(companyId, this.manager.dateRange);
 
             if (reportData) {
+                const sanitizeStrings = (obj) => {
+                    if (!obj) return;
+                    if (Array.isArray(obj)) obj.forEach(item => sanitizeStrings(item));
+                    else if (typeof obj === 'object') {
+                        for (let key in obj) {
+                            if (typeof obj[key] === 'string') {
+                                if (/[\[\]👇]/.test(obj[key])) obj[key] = obj[key].replace(/[\[\]👇]/g, '').trim();
+                            } else if (typeof obj[key] === 'object') {
+                                sanitizeStrings(obj[key]);
+                            }
+                        }
+                    }
+                };
+                sanitizeStrings(reportData);
+
                 const company = reportData.company || {};
                 const companyName = company.company_name || company.name || 'Şirkət';
                 const content = this.generateCompanyDetailContent(reportData, company);
@@ -83,6 +98,21 @@ class ReportModalManager  {
             const reportData = await this.api.fetchEmployeeReport(employeeId, this.manager.dateRange);
 
             if (reportData) {
+                const sanitizeStrings = (obj) => {
+                    if (!obj) return;
+                    if (Array.isArray(obj)) obj.forEach(item => sanitizeStrings(item));
+                    else if (typeof obj === 'object') {
+                        for (let key in obj) {
+                            if (typeof obj[key] === 'string') {
+                                if (/[\[\]👇]/.test(obj[key])) obj[key] = obj[key].replace(/[\[\]👇]/g, '').trim();
+                            } else if (typeof obj[key] === 'object') {
+                                sanitizeStrings(obj[key]);
+                            }
+                        }
+                    }
+                };
+                sanitizeStrings(reportData);
+
                 const employee = reportData.employee || {};
                 const fullName = employee.name && employee.surname ?
                     `${employee.name} ${employee.surname}` :

@@ -1138,16 +1138,16 @@ class ProfileService {
         if (newPin2 && !/^\d+$/.test(newPin2)) {
             errors.push('PIN2 yalnız rəqəmlərdən ibarət olmalıdır');
         }
-        if (newPin2 && newPin2.length !== 4) {
-            errors.push('PIN2 4 rəqəm olmalıdır');
+        if (newPin2 && newPin2.length !== 5) {
+            errors.push('PIN2 5 rəqəm olmalıdır');
         }
 
         // PUK validasiyası
         if (newPuk && !/^\d+$/.test(newPuk)) {
             errors.push('PUK yalnız rəqəmlərdən ibarət olmalıdır');
         }
-        if (newPuk && (newPuk.length < 8 || newPuk.length > 12)) {
-            errors.push('PUK 8-12 rəqəm arasında olmalıdır');
+        if (newPuk && (newPuk.length < 8 || newPuk.length > 10)) {
+            errors.push('PUK 8-10 rəqəm arasında olmalıdır');
         }
 
         // Xəta varsa göstər və dayandır

@@ -58,6 +58,22 @@ class CompanyFolderService {
     _getToken() {
         return localStorage.getItem('guven_token');
     }
+    /**
+     * loadCompanyFolders - UI üçün asan istifadə metodu
+     * Bu, getFolders metoduna wrapper-dır
+     */
+    async loadCompanyFolders(companyCode, parentId = null) {
+        console.log('📂 loadCompanyFolders çağırıldı:', { companyCode, parentId });
+
+        const result = await this.getFolders(companyCode, parentId);
+
+        if (result.success) {
+            return result.data;
+        }
+
+        console.error('❌ loadCompanyFolders xətası:', result.error);
+        return [];
+    }
 
     async loadUserPermissions(companyCode) {
         console.log('🔐 İstifadəçi icazələri yüklənir:', {

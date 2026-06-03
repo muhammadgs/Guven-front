@@ -1,8 +1,8 @@
-// column-filter.js - DÜZƏLİŞ 2: Çoxlu seçim (multi-select) + HTML-də aktiv filtr badge
+// column-filter.js - CASCADING FILTERS (bir-birinə bağlı filtr siyahıları)
 (function() {
     'use strict';
 
-    console.log('🔍 MULTI-SELECT COLUMN FILTER yüklənir...');
+    console.log('🔍 CASCADING MULTI-SELECT COLUMN FILTER yüklənir...');
 
     // ==================== KONFİQURASİYA ====================
     const CONFIG = {
@@ -38,6 +38,7 @@
     const style = document.createElement('style');
     style.id = 'multi-filter-styles';
     style.textContent = `
+        /* Filtr düyməsi - əsas stil */
         .filter-dropdown-btn {
             position: absolute;
             top: 50%;
@@ -56,25 +57,46 @@
             align-items: center;
             gap: 3px;
         }
-        .filter-dropdown-btn:hover { background: #f1f5f9 !important; }
+        
+        .filter-dropdown-btn:hover { 
+            background: #f1f5f9 !important; 
+        }
+        
+        /* Aktiv filtr düyməsi - MAVİ (sakit rəng) */
         .filter-dropdown-btn.has-filter {
             color: #fff !important;
-            background: #ef4444 !important;
+            background: #3b82f6 !important;
             border-radius: 12px;
             font-weight: 700;
             font-size: 11px;
             padding: 3px 8px;
         }
-        .filter-dropdown-btn.has-filter .filter-icon { display: none; }
+        
+        .filter-dropdown-btn.has-filter .filter-icon { 
+            display: none; 
+        }
 
+        /* Dropdown menyu */
         .filter-dropdown {
             font-family: inherit;
             animation: filterFadeIn 0.18s ease;
         }
-        .filter-dropdown::-webkit-scrollbar { width: 5px; }
-        .filter-dropdown::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        .filter-dropdown::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .filter-dropdown::-webkit-scrollbar { 
+            width: 5px; 
+        }
+        
+        .filter-dropdown::-webkit-scrollbar-track { 
+            background: #f1f5f9; 
+            border-radius: 10px; 
+        }
+        
+        .filter-dropdown::-webkit-scrollbar-thumb { 
+            background: #cbd5e1; 
+            border-radius: 10px; 
+        }
 
+        /* Dropdown itemləri */
         .filter-dropdown-item {
             display: flex;
             align-items: center;
@@ -84,10 +106,16 @@
             font-size: 13px;
             gap: 8px;
         }
-        .filter-dropdown-item:hover { background: #f1f5f9; }
+        
+        .filter-dropdown-item:hover { 
+            background: #f1f5f9; 
+        }
+        
         .filter-dropdown-item.is-selected {
             background: #eff6ff;
         }
+        
+        /* Checkbox stili */
         .filter-dropdown-item .item-check {
             width: 16px;
             height: 16px;
@@ -99,10 +127,12 @@
             flex-shrink: 0;
             transition: all 0.15s;
         }
+        
         .filter-dropdown-item.is-selected .item-check {
             background: #3b82f6;
             border-color: #3b82f6;
         }
+        
         .filter-dropdown-item.is-selected .item-check::after {
             content: '';
             width: 8px;
@@ -112,12 +142,14 @@
             transform: rotate(-45deg) translateY(-1px);
             display: block;
         }
+        
         .filter-dropdown-item .item-text {
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        
         .filter-dropdown-item.all-item {
             border-bottom: 1px solid #e2e8f0;
             margin-bottom: 2px;
@@ -125,59 +157,70 @@
             color: #374151;
         }
 
-        /* Aktiv filtr badge-i - cədvəl başlığında */
+        /* Aktiv filtr paneli - MAVİ (sakit rəng) */
         .active-filters-bar {
             display: flex;
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
             padding: 6px 14px;
-            background: #fef2f2;
-            border-bottom: 1px solid #fecaca;
-            border-top: 1px solid #fecaca;
+            background: #eff6ff;
+            border-bottom: 1px solid #bfdbfe;
+            border-top: 1px solid #bfdbfe;
         }
+        
         .active-filters-bar .filter-bar-label {
             font-size: 12px;
             font-weight: 600;
-            color: #dc2626;
+            color: #2563eb;
             display: flex;
             align-items: center;
             gap: 4px;
         }
+        
+        /* Filtr çipləri - MAVİ (sakit rəng) */
         .active-filters-bar .filter-chip {
             display: inline-flex;
             align-items: center;
             gap: 4px;
-            background: #fee2e2;
-            border: 1px solid #fca5a5;
-            color: #b91c1c;
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1e40af;
             border-radius: 20px;
             padding: 2px 8px 2px 10px;
             font-size: 11px;
             font-weight: 500;
         }
+        
         .active-filters-bar .filter-chip .chip-col {
             font-weight: 700;
             margin-right: 2px;
         }
+        
         .active-filters-bar .filter-chip .chip-val {
             opacity: 0.85;
         }
+        
         .active-filters-bar .filter-chip .chip-remove {
             background: none;
             border: none;
             cursor: pointer;
-            color: #b91c1c;
+            color: #1e40af;
             font-size: 13px;
             padding: 0 0 0 4px;
             line-height: 1;
             display: flex;
             align-items: center;
         }
-        .active-filters-bar .filter-chip .chip-remove:hover { color: #7f1d1d; }
+        
+        .active-filters-bar .filter-chip .chip-remove:hover { 
+            color: #1e3a8a; 
+        }
+        
+        /* Hamısını sil düyməsi - MAVİ (sakit rəng) */
         .active-filters-bar .clear-all-btn {
             margin-left: auto;
-            background: #ef4444;
+            background: #3b82f6;
             color: white;
             border: none;
             border-radius: 6px;
@@ -189,14 +232,23 @@
             align-items: center;
             gap: 4px;
         }
-        .active-filters-bar .clear-all-btn:hover { background: #dc2626; }
+        
+        .active-filters-bar .clear-all-btn:hover { 
+            background: #2563eb; 
+        }
 
+        /* Nəticə tapılmadı mesajı */
         .no-filter-results td {
             text-align: center;
             padding: 40px;
             color: #94a3b8;
         }
+        
+        .no-filter-results td i {
+            color: #93c5fd !important;
+        }
 
+        /* Animasiya */
         @keyframes filterFadeIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
@@ -284,6 +336,67 @@
         }
     }
 
+    // ==================== ƏSAS YENİLİK: BAĞLI FİLTR SİYAHISI ====================
+    // Aktiv filtrlərə əsasən sütundan unikal dəyərləri qaytarır
+    function getFilteredUniqueValuesFromColumn(table, colIndex, storageKey, currentColumn = null) {
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return [];
+
+        // Bütün aktiv filtrləri topla (cari sütunu ÇIXARIŞ, çünki onun dropdown-ı açıqdır)
+        const activeFilters = {};
+        const allActive = filterValues[storageKey] || {};
+
+        for (const [col, selectedSet] of Object.entries(allActive)) {
+            if (selectedSet && selectedSet.size > 0 && col !== currentColumn) {
+                activeFilters[col] = selectedSet;
+            }
+        }
+
+        const rows = Array.from(tbody.querySelectorAll('tr')).filter(row =>
+            !row.classList.contains('loading-row') &&
+            !row.classList.contains('empty-row') &&
+            !row.classList.contains('no-filter-results') &&
+            row.cells.length > 0
+        );
+
+        const valueSet = new Set();
+
+        rows.forEach(row => {
+            // Əvvəlcə digər aktiv filtrlərə uyğunluğu yoxla
+            let matchesOtherFilters = true;
+
+            for (const [col, selectedSet] of Object.entries(activeFilters)) {
+                const colIdx = getColumnIndex(table, col);
+                if (colIdx === -1) continue;
+                const cell = row.cells[colIdx];
+                if (!cell) { matchesOtherFilters = false; break; }
+                const cellText = cell.innerText.trim();
+                if (!selectedSet.has(cellText)) {
+                    matchesOtherFilters = false;
+                    break;
+                }
+            }
+
+            // Əgər digər filtrlərə uyğundursa, bu sütundakı dəyəri əlavə et
+            if (matchesOtherFilters) {
+                const cell = row.cells[colIndex];
+                if (cell) {
+                    const val = cell.innerText.trim();
+                    if (val && val !== '-' && val !== '—') valueSet.add(val);
+                }
+            }
+        });
+
+        return Array.from(valueSet).sort((a, b) => {
+            if (a.includes('.') && b.includes('.')) {
+                const da = a.split('.').reverse().join('-');
+                const db = b.split('.').reverse().join('-');
+                return new Date(db) - new Date(da);
+            }
+            return a.localeCompare(b, 'az');
+        });
+    }
+
     // ==================== DROPDOWN ========================
     let openDropdown = null;
 
@@ -311,7 +424,8 @@
     function showDropdown(header, columnName, colIndex, btn, table, section, storageKey) {
         closeAllDropdowns();
 
-        const values = getUniqueValuesFromColumn(table, colIndex);
+        // BAĞLI FİLTR - cari sütuna görə filtr siyahısını digər aktiv filtrlərə əsasən al
+        const values = getFilteredUniqueValuesFromColumn(table, colIndex, storageKey, columnName);
         if (!values.length) return;
 
         const dropdown = document.createElement('div');
@@ -626,34 +740,6 @@
         });
     }
 
-    function getUniqueValuesFromColumn(table, colIndex) {
-        const tbody = table.querySelector('tbody');
-        if (!tbody) return [];
-
-        const valueSet = new Set();
-
-        tbody.querySelectorAll('tr').forEach(row => {
-            if (row.classList.contains('loading-row') ||
-                row.classList.contains('empty-row') ||
-                row.classList.contains('no-filter-results')) return;
-
-            const cell = row.cells[colIndex];
-            if (!cell) return;
-
-            const val = cell.innerText.trim();
-            if (val && val !== '-' && val !== '—') valueSet.add(val);
-        });
-
-        return Array.from(valueSet).sort((a, b) => {
-            if (a.includes('.') && b.includes('.')) {
-                const da = a.split('.').reverse().join('-');
-                const db = b.split('.').reverse().join('-');
-                return new Date(db) - new Date(da);
-            }
-            return a.localeCompare(b, 'az');
-        });
-    }
-
     function getColumnIndex(table, columnName) {
         const headers = table.querySelectorAll('thead th');
         for (let i = 0; i < headers.length; i++) {
@@ -696,13 +782,13 @@
                     }
                 }
             }
-            localStorage.setItem('super_column_filters_v2', JSON.stringify(toSave));
+            localStorage.setItem('super_column_filters_v3', JSON.stringify(toSave));
         } catch(e) {}
     }
 
     function loadFilterValues(tableName) {
         try {
-            const saved = localStorage.getItem('super_column_filters_v2');
+            const saved = localStorage.getItem('super_column_filters_v3');
             if (!saved) return;
             const all = JSON.parse(saved);
             if (!all[tableName]) return;
@@ -761,6 +847,6 @@
         }
     });
 
-    console.log('✅ MULTI-SELECT COLUMN FILTER hazırdır!');
+    console.log('✅ CASCADING MULTI-SELECT COLUMN FILTER hazırdır!');
 
 })();

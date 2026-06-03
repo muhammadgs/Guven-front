@@ -1,7 +1,7 @@
 // worker_profile_js/file_service/files.ui.js
 /**
  * Files UI - Professional Design with Fixed Sizes
- * FIXED VERSION - Breadcrumb, geri qayıtma və axtarış filtirasiyası
+ * YENİ DİZAYN - Geri qayıtma düyməsi, view toggle və təkmilləşdirilmiş UI
  */
 class FilesUI {
     // files.ui.js - constructor-da metodları bind edin
@@ -13,7 +13,7 @@ class FilesUI {
         this.currentFilter = 'all';
         this.selectedItems = new Set();
         this.viewMode = 'grid';
-        this.companyViewMode = 'grid';
+        this.companyViewMode = 'grid'; // Company panel üçün view mode
         this.activePanel = null;
         this.companyCode = 'AZE26003';
         this.currentFolder = null;
@@ -36,9 +36,9 @@ class FilesUI {
         this.userCompanyCode = null;
 
         // Cache for folders
-        this.foldersCache = new Map(); // companyCode üçün qovluqların cache-i
-        this.allFolders = []; // Bütün qovluqlar
-        this.allFiles = []; // Bütün fayllar
+        this.foldersCache = new Map();
+        this.allFolders = [];
+        this.allFiles = [];
 
         // Metodları bind et
         this.selectCompany = this.selectCompany.bind(this);
@@ -47,6 +47,7 @@ class FilesUI {
         this.loadCompaniesAndPartners = this.loadCompaniesAndPartners.bind(this);
         this.goToCompanyFolder = this.goToCompanyFolder.bind(this);
         this.goToCompanyRoot = this.goToCompanyRoot.bind(this);
+        this.goBack = this.goBack.bind(this);
         this.getFolderPath = this.getFolderPath.bind(this);
         this.updateCompanyBreadcrumb = this.updateCompanyBreadcrumb.bind(this);
         this.setCompanyViewMode = this.setCompanyViewMode.bind(this);
@@ -195,134 +196,167 @@ class FilesUI {
         `;
     }
 
-    // ==================== ŞİRKƏT FAYLLARI ÜÇÜN ====================
+    // ==================== ŞİRKƏT FAYLLARI ÜÇÜN - YENİ DİZAYN ====================
 
     getCompanyLayoutHTML() {
         return `
             <div class="flex h-full bg-white rounded-xl shadow-soft overflow-hidden">
                 <!-- SOL PANEL - Şirkətlər və Partnyorlar Listi -->
-                <div class="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
+                <div class="w-80 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 flex flex-col">
                     <!-- Header -->
-                    <div class="p-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+                    <div class="p-4 bg-gradient-to-r from-purple-600 to-purple-700 text-white">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
-                                <button id="closeCompanyPanelBtn" class="w-7 h-7 bg-white/20 rounded-lg hover:bg-white/30 flex items-center justify-center transition-colors">
-                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                <button id="closeCompanyPanelBtn" class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 flex items-center justify-center transition-all hover:scale-105" title="Geri qayıt">
+                                    <i class="fa-solid fa-arrow-left text-sm"></i>
                                 </button>
-                                <h3 class="text-base font-bold">Şirkətlər</h3>
+                                <h3 class="text-base font-bold tracking-wide">Şirkətlər</h3>
                             </div>
-                            <button id="refreshCompaniesBtn" class="w-7 h-7 bg-white/20 rounded-lg hover:bg-white/30 flex items-center justify-center transition-colors" title="Yenilə">
-                                <i class="fa-solid fa-rotate-right text-xs"></i>
+                            <button id="refreshCompaniesBtn" class="w-8 h-8 bg-white/20 rounded-lg hover:bg-white/30 flex items-center justify-center transition-all hover:rotate-90" title="Yenilə">
+                                <i class="fa-solid fa-rotate-right text-sm"></i>
                             </button>
                         </div>
+                        <p class="text-xs text-white/70 mt-1">Cari şirkət: ${this.userCompanyCode || 'AZE26003'}</p>
                     </div>
 
                     <!-- Axtarış və Filter -->
-                    <div class="p-2 border-b border-gray-200">
+                    <div class="p-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
                         <div class="relative mb-2">
-                            <i class="fa-solid fa-search absolute left-2 top-2 text-gray-400 text-xs"></i>
+                            <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
                             <input type="text" id="companySearch" placeholder="Şirkət və ya partnyor axtar..." 
-                                   class="w-full pl-7 pr-2 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500">
+                                   class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all">
                         </div>
-                        <select id="companyTypeFilter" class="w-full px-2 py-1.5 text-xs bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500">
-                            <option value="all">Bütün</option>
+                        <select id="companyTypeFilter" class="w-full px-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all appearance-none cursor-pointer">
+                            <option value="all">Bütün şirkətlər</option>
                             <option value="companies">Şirkətlər</option>
                             <option value="partners">Partnyorlar</option>
                         </select>
                     </div>
 
-                    <!-- Companies List -->
-                    <div id="companiesList" class="flex-1 overflow-y-auto p-2" style="max-height: 580px;">
+                    <!-- Companies List with Scrollbar -->
+                    <div class="flex-1 overflow-y-auto p-3 space-y-1" id="companiesList" style="max-height: 580px;">
                         <div class="flex justify-center items-center h-full">
                             <div class="text-center">
-                                <i class="fa-solid fa-spinner fa-spin text-purple-500 text-2xl"></i>
-                                <p class="text-xs text-gray-500 mt-2">Yüklənir...</p>
+                                <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                                <p class="text-xs text-gray-500">Yüklənir...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- SAĞ PANEL - Seçilmiş Şirkətin Faylları -->
-                <div class="flex-1 flex flex-col bg-white" id="companyFilesPanel">
+                <!-- SAĞ PANEL - Seçilmiş Şirkətin Faylları - YENİ DİZAYN -->
+                <div class="flex-1 flex flex-col bg-gray-50" id="companyFilesPanel">
                     <!-- Seçilməyib state -->
                     <div class="flex-1 flex items-center justify-center p-6" id="noCompanySelected">
-                        <div class="text-center">
-                            <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-100/30 flex items-center justify-center mb-3">
-                                <i class="fa-solid fa-building text-4xl text-purple-500/50"></i>
+                        <div class="text-center max-w-sm">
+                            <div class="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-purple-500/10 to-purple-100/30 flex items-center justify-center mb-4 animate-pulse">
+                                <i class="fa-solid fa-building text-5xl text-purple-500/50"></i>
                             </div>
-                            <h3 class="text-lg font-bold text-gray-800 mb-2">Şirkət seçin</h3>
-                            <p class="text-sm text-gray-500">Soldan bir şirkət və ya partnyor seçin</p>
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">Şirkət seçin</h3>
+                            <p class="text-sm text-gray-500 mb-4">Fayllara baxmaq üçün soldan bir şirkət və ya partnyor seçin</p>
+                            <div class="flex gap-2 justify-center">
+                                <span class="px-3 py-1 bg-purple-100 text-purple-600 rounded-full text-xs font-medium">
+                                    <i class="fa-regular fa-building mr-1"></i>Şirkətlər
+                                </span>
+                                <span class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs font-medium">
+                                    <i class="fa-regular fa-handshake mr-1"></i>Partnyorlar
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Seçilmiş şirkətin faylları -->
                     <div id="selectedCompanyFiles" class="hidden flex-1 flex flex-col h-full">
-                        <!-- Header -->
-                        <div class="p-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white" id="companyHeader">
+                        <!-- Header with Company Info -->
+                        <div class="p-4 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-600 text-white shadow-lg" id="companyHeader">
                             <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="text-base font-bold" id="selectedCompanyName"></h3>
-                                    <p class="text-xs text-white/80" id="selectedCompanyCode"></p>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                                        <i class="fa-solid fa-building text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-bold" id="selectedCompanyName"></h3>
+                                        <div class="flex items-center gap-2 text-xs text-white/80">
+                                            <i class="fa-regular fa-hashtag"></i>
+                                            <span id="selectedCompanyCode"></span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="flex gap-1">
-                                    <span class="px-2 py-0.5 bg-white/20 rounded-full text-xs" id="companyFileCount">0</span>
-                                    <span class="px-2 py-0.5 bg-white/20 rounded-full text-xs" id="companyFolderCount">0</span>
+                                <div class="flex gap-2">
+                                    <span class="px-3 py-1.5 bg-white/20 backdrop-blur rounded-xl text-xs font-medium flex items-center gap-1" id="companyFolderCount">
+                                        <i class="fa-regular fa-folder"></i> 0
+                                    </span>
+                                    <span class="px-3 py-1.5 bg-white/20 backdrop-blur rounded-xl text-xs font-medium flex items-center gap-1" id="companyFileCount">
+                                        <i class="fa-regular fa-file"></i> 0
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Toolbar -->
-                        <div class="p-2 border-b border-gray-200 flex items-center justify-between">
-                            <div class="flex gap-1">
-                                <select id="companyFileFilter" class="px-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded-lg w-24">
-                                    <option value="all">Bütün</option>
-                                    <option value="images">Şəkillər</option>
-                                    <option value="documents">Sənədlər</option>
-                                    <option value="videos">Videolar</option>
+                        <!-- Toolbar with Actions -->
+                        <div class="p-3 bg-white border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
+                            <div class="flex gap-2">
+                                <select id="companyFileFilter" class="px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all cursor-pointer">
+                                    <option value="all">📁 Bütün fayllar</option>
+                                    <option value="images">🖼️ Şəkillər</option>
+                                    <option value="documents">📄 Sənədlər</option>
+                                    <option value="videos">🎥 Videolar</option>
                                 </select>
-                                <button id="newCompanyFolderBtn" class="px-2 py-1 bg-purple-500 text-white rounded-lg text-xs">
-                                    <i class="fa-solid fa-folder-plus"></i> Yeni
+                                <button id="newCompanyFolderBtn" class="px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 flex items-center gap-1 text-xs font-medium transition-all hover:shadow-lg hover:scale-105">
+                                    <i class="fa-solid fa-folder-plus"></i>
+                                    <span>Yeni qovluq</span>
                                 </button>
-                                <button id="uploadCompanyFileBtn" class="px-2 py-1 bg-green-500 text-white rounded-lg text-xs">
-                                    <i class="fa-solid fa-cloud-upload-alt"></i> Yüklə
+                                <button id="uploadCompanyFileBtn" class="px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 flex items-center gap-1 text-xs font-medium transition-all hover:shadow-lg hover:scale-105">
+                                    <i class="fa-solid fa-cloud-upload-alt"></i>
+                                    <span>Fayl yüklə</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Search -->
-                        <div class="p-2 border-b border-gray-100">
+                        <!-- Search Bar -->
+                        <div class="p-3 bg-white border-b border-gray-200">
                             <div class="relative">
-                                <i class="fa-solid fa-search absolute left-2 top-1.5 text-gray-400 text-xs"></i>
-                                <input type="text" id="companyFileSearch" placeholder="Axtar (qovluq və ya fayl adı)..." class="w-full pl-7 pr-2 py-1 text-xs bg-gray-50 border border-gray-200 rounded-lg">
+                                <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                                <input type="text" id="companyFileSearch" placeholder="Qovluq və ya fayl adı ilə axtar..." 
+                                       class="w-full pl-9 pr-4 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all">
+                                <button id="clearSearchBtn" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 hidden">
+                                    <i class="fa-solid fa-times"></i>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Breadcrumb və View Düymələri - GERİ DÜYMƏSİ ƏLAVƏ EDİLDİ -->
-                        <div class="px-2 py-1 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <!-- Geri qayıtma düyməsi -->
-                                <button id="backButton" class="p-1 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors" title="Geri qayıt">
-                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                        <!-- Navigation Bar with Back Button and View Toggle -->
+                        <div class="px-3 py-2 bg-white border-b border-gray-200 flex items-center justify-between">
+                            <div class="flex items-center gap-2 flex-1">
+                                <button id="backButton" class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 hover:bg-purple-200 transition-all hover:scale-105 flex items-center justify-center" title="Geri qayıt">
+                                    <i class="fa-solid fa-arrow-left text-sm"></i>
                                 </button>
-                                <div class="text-xs text-gray-600 flex items-center gap-1 flex-wrap" id="companyBreadcrumb">
+                                <div class="text-sm text-gray-600 flex items-center gap-1 flex-wrap bg-gray-50 px-3 py-1.5 rounded-xl" id="companyBreadcrumb">
                                     <i class="fa-solid fa-folder-open text-purple-500"></i>
-                                    <span>Bütün Fayllar</span>
+                                    <span class="font-medium">Bütün Fayllar</span>
                                 </div>
                             </div>
                             
-                            <!-- View dəyişdirmə düymələri -->
-                            <div class="flex items-center gap-1">
-                                <button id="gridViewBtn" class="view-toggle-btn p-1.5 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors" title="Şəbəkə görünüşü">
-                                    <i class="fa-solid fa-grid-2 text-xs"></i>
+                            <!-- View Toggle Buttons -->
+                            <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                                <button id="gridViewBtn" class="view-toggle-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all bg-purple-500 text-white hover:bg-purple-600" title="Şəbəkə görünüşü">
+                                    <i class="fa-solid fa-grid-2 text-sm"></i>
                                 </button>
-                                <button id="listViewBtn" class="view-toggle-btn p-1.5 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors" title="Siyahı görünüşü">
-                                    <i class="fa-solid fa-list text-xs"></i>
+                                <button id="listViewBtn" class="view-toggle-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all text-gray-600 hover:bg-gray-200" title="Siyahı görünüşü">
+                                    <i class="fa-solid fa-list text-sm"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Files Container -->
-                        <div class="flex-1 p-2 overflow-y-auto" id="companyFilesContainer"></div>
+                        <!-- Files Container with Modern Cards -->
+                        <div class="flex-1 p-4 overflow-y-auto bg-gray-50" id="companyFilesContainer">
+                            <div class="flex justify-center items-center h-full">
+                                <div class="text-center">
+                                    <div class="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                                    <p class="text-sm text-gray-500">Fayllar yüklənir...</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -374,7 +408,6 @@ class FilesUI {
             this.showFileUploadDialog('personal');
         });
 
-        // Axtarış üçün
         let searchTimeout;
         document.getElementById('personalSearch')?.addEventListener('input', (e) => {
             clearTimeout(searchTimeout);
@@ -399,8 +432,8 @@ class FilesUI {
         container.innerHTML = `
             <div class="flex justify-center items-center h-full">
                 <div class="text-center">
-                    <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-blue"></i>
-                    <p class="text-xs mt-2">Fayllar yüklənir...</p>
+                    <div class="animate-spin w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full mx-auto mb-3"></div>
+                    <p class="text-sm text-gray-500">Fayllar yüklənir...</p>
                 </div>
             </div>
         `;
@@ -413,7 +446,6 @@ class FilesUI {
                 this.allFolders = result.folders || [];
                 this.allFiles = result.files || [];
 
-                // Axtarış varsa, filtirə et
                 if (this.searchTerm) {
                     this.filterPersonalItems();
                 } else {
@@ -434,12 +466,10 @@ class FilesUI {
         const container = document.getElementById('personalFilesContainer');
         const term = this.searchTerm.toLowerCase();
 
-        // Qovluqları filtrlə
         const filteredFolders = this.allFolders.filter(folder =>
             folder.name?.toLowerCase().includes(term)
         );
 
-        // Faylları filtrlə
         const filteredFiles = this.allFiles.filter(file =>
             file.name?.toLowerCase().includes(term) ||
             file.original_filename?.toLowerCase().includes(term)
@@ -452,7 +482,6 @@ class FilesUI {
         this.searchTerm = term;
 
         if (!term) {
-            // Axtarış yoxdursa, bütün faylları göstər
             this.loadPersonalFiles();
             return;
         }
@@ -465,7 +494,7 @@ class FilesUI {
             if (this.searchTerm) {
                 container.innerHTML = `
                     <div class="flex flex-col items-center justify-center h-full py-8">
-                        <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-2">
+                        <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
                             <i class="fa-solid fa-search text-3xl text-gray-400"></i>
                         </div>
                         <h4 class="text-sm font-semibold text-gray-700 mb-1">Nəticə tapılmadı</h4>
@@ -481,20 +510,18 @@ class FilesUI {
 
         let html = '';
 
-        // Qovluqlar
         if (folders.length > 0) {
-            html += '<div class="mb-3"><span class="text-xs font-semibold text-gray-500">Qovluqlar</span></div>';
-            html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">';
+            html += '<div class="mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📁 Qovluqlar</span></div>';
+            html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">';
             folders.forEach(item => {
                 html += this.getFolderCardHTML(item, 'personal');
             });
             html += '</div>';
         }
 
-        // Fayllar
         if (files.length > 0) {
-            html += '<div class="mb-3"><span class="text-xs font-semibold text-gray-500">Fayllar</span></div>';
-            html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">';
+            html += '<div class="mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📄 Fayllar</span></div>';
+            html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">';
             files.forEach(item => {
                 html += this.getFileCardHTML(item, 'personal');
             });
@@ -503,8 +530,6 @@ class FilesUI {
 
         container.innerHTML = html;
         this.attachItemListeners(container, 'personal');
-
-        // Breadcrumb yenilə
         this.updatePersonalBreadcrumb();
     }
 
@@ -512,8 +537,8 @@ class FilesUI {
         const fileSpan = document.getElementById('personalFileCount');
         const folderSpan = document.getElementById('personalFolderCount');
 
-        if (fileSpan) fileSpan.innerHTML = `<i class="fa-solid fa-file"></i> ${data.files?.length || 0}`;
-        if (folderSpan) folderSpan.innerHTML = `<i class="fa-solid fa-folder"></i> ${data.folders?.length || 0}`;
+        if (fileSpan) fileSpan.innerHTML = `<i class="fa-regular fa-file"></i> ${data.files?.length || 0}`;
+        if (folderSpan) folderSpan.innerHTML = `<i class="fa-regular fa-folder"></i> ${data.folders?.length || 0}`;
     }
 
     updatePersonalBreadcrumb() {
@@ -524,17 +549,17 @@ class FilesUI {
             const folder = this.fileService._cache.folders?.find(f => f.id == this.currentFolder);
             if (folder) {
                 nav.innerHTML = `
-                    <i class="fa-solid fa-folder-open text-brand-blue text-xs"></i>
-                    <a href="#" class="hover:text-brand-blue text-xs" onclick="window.filesUI.goToPersonalRoot();return false;">Bütün Fayllar</a>
-                    <i class="fa-solid fa-chevron-right text-[8px] text-gray-400"></i>
-                    <span class="font-medium text-xs">${folder.name}</span>
+                    <i class="fa-solid fa-folder-open text-brand-blue"></i>
+                    <a href="#" class="hover:text-brand-blue transition-colors" onclick="window.filesUI.goToPersonalRoot();return false;">Bütün Fayllar</a>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-gray-400"></i>
+                    <span class="font-medium">${folder.name}</span>
                 `;
                 return;
             }
         }
 
         nav.innerHTML = `
-            <i class="fa-solid fa-folder-open text-brand-blue text-xs"></i>
+            <i class="fa-solid fa-folder-open text-brand-blue"></i>
             <span class="font-medium">Bütün Fayllar</span>
         `;
     }
@@ -548,7 +573,7 @@ class FilesUI {
         this.loadPersonalFiles();
     }
 
-    // ==================== COMPANY PANEL ====================
+    // ==================== COMPANY PANEL - YENİ DİZAYN ====================
 
     async openCompanyPanel() {
         document.getElementById('mainPanels').style.display = 'none';
@@ -604,12 +629,10 @@ class FilesUI {
             }
         });
 
-        // Geri qayıtma düyməsi
         document.getElementById('backButton')?.addEventListener('click', () => {
             this.goBack();
         });
 
-        // View dəyişdirmə düymələri
         document.getElementById('gridViewBtn')?.addEventListener('click', () => {
             this.setCompanyViewMode('grid');
         });
@@ -618,62 +641,71 @@ class FilesUI {
             this.setCompanyViewMode('list');
         });
 
-        // Axtarış üçün
+        document.getElementById('clearSearchBtn')?.addEventListener('click', () => {
+            const searchInput = document.getElementById('companyFileSearch');
+            if (searchInput) {
+                searchInput.value = '';
+                this.searchTerm = '';
+                document.getElementById('clearSearchBtn')?.classList.add('hidden');
+                this.loadCompanyFiles(this.selectedCompany);
+            }
+        });
+
         let searchTimeout;
         document.getElementById('companyFileSearch')?.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
             this.searchTerm = e.target.value;
+
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (clearBtn) {
+                if (this.searchTerm) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+
+            clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 this.searchCompanyFiles(this.searchTerm);
             }, 300);
         });
     }
 
-    // Geri qayıtma funksiyası
-    goBack() {
-        console.log('⬅️ Geri qayıtma klikləndi, currentFolder:', this.currentFolder);
-
-        if (!this.currentFolder) {
-            // Artıq root-dadır, heç nə etmə
-            console.log('📂 Artıq root-dadır');
-            return;
-        }
-
-        // Parent qovluğu tap
-        const folder = this.allFolders.find(f => f.id == this.currentFolder);
-        if (folder && folder.parent_id) {
-            // Parent qovluğa get
-            console.log('📂 Parent qovluğa gedilir:', folder.parent_id);
-            this.goToCompanyFolder(folder.parent_id);
-        } else {
-            // Root-a get
-            console.log('📂 Root-a gedilir');
-            this.goToCompanyRoot();
-        }
-    }
-
     setCompanyViewMode(mode) {
         this.companyViewMode = mode;
 
-        // Düymə stillərini yenilə
         const gridBtn = document.getElementById('gridViewBtn');
         const listBtn = document.getElementById('listViewBtn');
 
         if (mode === 'grid') {
-            gridBtn?.classList.add('bg-purple-100', 'text-purple-600');
-            gridBtn?.classList.remove('bg-gray-100', 'text-gray-600');
-            listBtn?.classList.add('bg-gray-100', 'text-gray-600');
-            listBtn?.classList.remove('bg-purple-100', 'text-purple-600');
+            gridBtn?.classList.add('bg-purple-500', 'text-white');
+            gridBtn?.classList.remove('text-gray-600', 'hover:bg-gray-200');
+            listBtn?.classList.remove('bg-purple-500', 'text-white');
+            listBtn?.classList.add('text-gray-600', 'hover:bg-gray-200');
         } else {
-            listBtn?.classList.add('bg-purple-100', 'text-purple-600');
-            listBtn?.classList.remove('bg-gray-100', 'text-gray-600');
-            gridBtn?.classList.add('bg-gray-100', 'text-gray-600');
-            gridBtn?.classList.remove('bg-purple-100', 'text-purple-600');
+            listBtn?.classList.add('bg-purple-500', 'text-white');
+            listBtn?.classList.remove('text-gray-600', 'hover:bg-gray-200');
+            gridBtn?.classList.remove('bg-purple-500', 'text-white');
+            gridBtn?.classList.add('text-gray-600', 'hover:bg-gray-200');
         }
 
-        // Mövcud faylları yenidən göstər
         if (this.selectedCompany) {
             this.loadCompanyFiles(this.selectedCompany);
+        }
+    }
+
+    goBack() {
+        console.log('⬅️ Geri qayıtma, currentFolder:', this.currentFolder);
+
+        if (!this.currentFolder) {
+            return;
+        }
+
+        const folder = this.allFolders.find(f => f.id == this.currentFolder);
+        if (folder && folder.parent_id) {
+            this.goToCompanyFolder(folder.parent_id);
+        } else {
+            this.goToCompanyRoot();
         }
     }
 
@@ -685,7 +717,6 @@ class FilesUI {
         this.searchTerm = '';
         this.companySearchTerm = '';
 
-        // Cache-i təmizlə
         this.foldersCache.clear();
         this.allFolders = [];
         this.allFiles = [];
@@ -713,27 +744,22 @@ class FilesUI {
         companiesList.innerHTML = `
             <div class="flex justify-center items-center h-full">
                 <div class="text-center">
-                    <i class="fa-solid fa-spinner fa-spin text-purple-500 text-2xl"></i>
-                    <p class="text-xs text-gray-500 mt-2">Şirkətlər yüklənir...</p>
+                    <div class="animate-spin w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                    <p class="text-xs text-gray-500">Şirkətlər yüklənir...</p>
                 </div>
             </div>
         `;
 
         try {
-            const companyCode = this.userCompanyCode || await this.getUserCompanyCode();
+            const companyCode = this.userCompanyCode || 'AZE26003';
             console.log('🏢 User company code:', companyCode);
-
-            if (!companyCode) {
-                throw new Error('Şirkət kodu tapılmadı');
-            }
 
             const token = localStorage.getItem('guven_token');
 
-            // Öz şirkəti
             const ownCompany = {
                 id: 'own_' + companyCode,
                 uuid: companyCode,
-                name: 'Öz Şirkətim',
+                name: '🏢 Öz Şirkətim',
                 code: companyCode,
                 type: 'company',
                 is_active: true,
@@ -742,7 +768,6 @@ class FilesUI {
 
             console.log('🏢 Öz şirkəti əlavə edilir:', ownCompany);
 
-            // Sub-companies
             let companies = [];
             try {
                 const companiesResponse = await fetch(`https://guvenfinans.az/proxy.php/api/v1/companies/${companyCode}/sub-companies`, {
@@ -754,8 +779,6 @@ class FilesUI {
 
                 if (companiesResponse.ok) {
                     const companiesData = await companiesResponse.json();
-                    console.log('📦 Companies cavabı:', companiesData);
-
                     if (Array.isArray(companiesData)) {
                         companies = companiesData;
                     } else if (companiesData.sub_companies && Array.isArray(companiesData.sub_companies)) {
@@ -763,14 +786,11 @@ class FilesUI {
                     } else if (companiesData.data && Array.isArray(companiesData.data)) {
                         companies = companiesData.data;
                     }
-                } else {
-                    console.warn('Companies API xətası:', companiesResponse.status);
                 }
             } catch (e) {
                 console.warn('Companies fetch xətası:', e);
             }
 
-            // Partners
             let partners = [];
             try {
                 const partnersResponse = await fetch(`https://guvenfinans.az/proxy.php/api/v1/partners/?company_code=${companyCode}`, {
@@ -782,8 +802,6 @@ class FilesUI {
 
                 if (partnersResponse.ok) {
                     const partnersData = await partnersResponse.json();
-                    console.log('📦 Partners cavabı:', partnersData);
-
                     if (Array.isArray(partnersData)) {
                         partners = partnersData;
                     } else if (partnersData.items && Array.isArray(partnersData.items)) {
@@ -793,14 +811,11 @@ class FilesUI {
                     } else if (partnersData.partners && Array.isArray(partnersData.partners)) {
                         partners = partnersData.partners;
                     }
-                } else {
-                    console.warn('Partners API xətası:', partnersResponse.status);
                 }
             } catch (e) {
                 console.warn('Partners fetch xətası:', e);
             }
 
-            // Formatla
             this.companies = [
                 ownCompany,
                 ...companies.map(c => ({
@@ -832,31 +847,16 @@ class FilesUI {
 
         } catch (error) {
             console.error('❌ loadCompaniesAndPartners xətası:', error);
-
-            const companyCode = this.userCompanyCode || 'AZE26003';
-
-            this.companies = [
-                {
-                    id: 'own_' + companyCode,
-                    uuid: companyCode,
-                    name: 'Öz Şirkətim',
-                    code: companyCode,
-                    type: 'company',
-                    is_own: true
-                }
-            ];
+            this.companies = [{
+                id: 'own_' + (this.userCompanyCode || 'AZE26003'),
+                uuid: this.userCompanyCode || 'AZE26003',
+                name: '🏢 Öz Şirkətim',
+                code: this.userCompanyCode || 'AZE26003',
+                type: 'company',
+                is_own: true
+            }];
             this.partners = [];
             this.renderCompaniesList();
-
-            companiesList.innerHTML = `
-                <div class="text-center py-4">
-                    <i class="fa-solid fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
-                    <p class="text-xs text-gray-500">Məlumatlar yüklənə bilmədi</p>
-                    <button class="mt-2 px-3 py-1 bg-purple-500 text-white rounded-lg text-xs" onclick="window.filesUI.loadCompaniesAndPartners()">
-                        <i class="fa-solid fa-rotate-right"></i> Yenidən
-                    </button>
-                </div>
-            `;
         }
     }
 
@@ -865,7 +865,6 @@ class FilesUI {
         if (!container) return;
 
         let allItems = [...this.companies, ...this.partners];
-        console.log('📋 Göstəriləcək itemlər:', allItems);
 
         if (this.companySearchTerm) {
             const term = this.companySearchTerm.toLowerCase();
@@ -882,7 +881,7 @@ class FilesUI {
         }
 
         if (!allItems.length) {
-            container.innerHTML = '<div class="text-center py-8 text-gray-500 text-xs">Nəticə tapılmadı</div>';
+            container.innerHTML = '<div class="text-center py-8 text-gray-500 text-sm">🔍 Nəticə tapılmadı</div>';
             return;
         }
 
@@ -892,29 +891,30 @@ class FilesUI {
             const isOwn = item.is_own || item.code === this.userCompanyCode;
             const isSelected = this.selectedCompany?.id === item.id;
 
-            let bgClass = 'hover:bg-purple-50';
+            let bgClass = isSelected ? 'bg-purple-50 border-purple-300' : 'border-transparent hover:bg-purple-50';
             let iconBgClass = isPartner ? 'bg-green-100' : 'bg-purple-100';
             let iconClass = isPartner ? 'text-green-600' : 'text-purple-600';
+            let icon = isPartner ? 'fa-handshake' : 'fa-building';
 
             if (isOwn) {
-                bgClass = 'hover:bg-blue-50';
                 iconBgClass = 'bg-blue-100';
                 iconClass = 'text-blue-600';
+                icon = 'fa-star';
             }
 
             html += `
-                <div class="company-item p-2 rounded-lg cursor-pointer transition-all ${bgClass} border ${isSelected ? 'bg-purple-50 border-purple-300' : 'border-transparent'} mb-1"
+                <div class="company-item p-3 rounded-xl cursor-pointer transition-all ${bgClass} border ${isSelected ? 'border-purple-300 shadow-sm' : 'border-gray-200'} mb-2 hover:shadow-md"
                      data-id="${item.id}" data-uuid="${item.uuid || item.id}" data-type="${item.type}" data-code="${item.code || ''}" data-name="${item.name}" data-own="${isOwn}">
-                    <div class="flex items-center gap-2">
-                        <div class="h-8 w-8 rounded-lg ${iconBgClass} flex items-center justify-center flex-shrink-0">
-                            <i class="fa-solid ${isPartner ? 'fa-handshake' : 'fa-building'} ${iconClass}"></i>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl ${iconBgClass} flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid ${icon} ${iconClass}"></i>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-1">
-                                <span class="text-xs font-medium truncate ${isOwn ? 'text-blue-700' : ''}">${item.name}</span>
-                                ${isOwn ? '<span class="text-[8px] bg-blue-100 text-blue-700 px-1 rounded whitespace-nowrap">Sizin</span>' : ''}
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium truncate ${isOwn ? 'text-blue-700' : 'text-gray-800'}">${item.name}</span>
+                                ${isOwn ? '<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap">Sizin</span>' : ''}
                             </div>
-                            <p class="text-[9px] text-gray-500">${item.code || ''}</p>
+                            <p class="text-xs text-gray-500">${item.code || ''}</p>
                         </div>
                     </div>
                 </div>
@@ -929,7 +929,7 @@ class FilesUI {
                     id: el.dataset.id,
                     uuid: el.dataset.uuid,
                     type: el.dataset.type,
-                    name: el.dataset.name,
+                    name: el.dataset.name.replace('🏢 ', ''),
                     code: el.dataset.code,
                     is_own: el.dataset.own === 'true'
                 };
@@ -939,10 +939,12 @@ class FilesUI {
         });
     }
 
+
     async selectCompany(company) {
         console.log('🎯 selectCompany:', company);
 
         try {
+            // Şirkəti yadda saxla
             this.selectedCompany = company;
             this.selectedCompanyType = company.type;
             this.currentFolder = null;
@@ -952,20 +954,15 @@ class FilesUI {
             const searchInput = document.getElementById('companyFileSearch');
             if (searchInput) searchInput.value = '';
 
-            // Cache-i təmizlə
-            this.foldersCache.delete(company.code);
-            this.allFolders = [];
-            this.allFiles = [];
-
-            console.log('✅ Seçilmiş şirkət:', this.selectedCompany);
-            console.log('✅ Seçilmiş şirkət kodu:', this.selectedCompany.code);
-
+            // Paneli göstər
             document.getElementById('noCompanySelected')?.classList.add('hidden');
             document.getElementById('selectedCompanyFiles')?.classList.remove('hidden');
 
+            // Şirkət adını və kodunu göstər
             document.getElementById('selectedCompanyName').textContent = company.name;
             document.getElementById('selectedCompanyCode').textContent = company.code || '';
 
+            // Faylları yüklə
             await this.loadCompanyFiles(company);
 
         } catch (error) {
@@ -974,86 +971,60 @@ class FilesUI {
         }
     }
 
+
     async loadCompanyFiles(company) {
+        console.log('📂 loadCompanyFiles çağırıldı:', company);
+
         const container = document.getElementById('companyFilesContainer');
         if (!container) return;
-
-        console.log('📂 loadCompanyFiles çağırıldı:', company);
 
         container.innerHTML = `
             <div class="flex justify-center items-center h-full">
                 <div class="text-center">
-                    <i class="fa-solid fa-spinner fa-spin text-purple-500 text-2xl"></i>
-                    <p class="text-xs mt-2">Fayllar yüklənir...</p>
+                    <div class="animate-spin w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                    <p class="text-sm text-gray-500">Fayllar yüklənir...</p>
                 </div>
             </div>
         `;
 
         try {
+            if (!company || !company.code) {
+                console.error('❌ Şirkət kodu yoxdur');
+                container.innerHTML = this.getCompanyErrorStateHTML();
+                return;
+            }
+
             let companyService = window.companyFolderService;
+            if (!companyService && window.CompanyFolderService) {
+                companyService = new window.CompanyFolderService();
+                window.companyFolderService = companyService;
+            }
+
             if (!companyService) {
-                if (window.CompanyFolderService) {
-                    companyService = new window.CompanyFolderService();
-                    window.companyFolderService = companyService;
-                }
+                console.error('❌ CompanyFolderService tapılmadı');
+                container.innerHTML = this.getCompanyErrorStateHTML();
+                return;
             }
 
-            if (companyService && companyService.loadUserPermissions) {
-                await companyService.loadUserPermissions(company.code);
-            }
+            // ========== DƏYİŞİKLİK BURADADIR ==========
+            // parentId parametri ilə çağırın
+            const folders = await companyService.loadCompanyFolders(company.code, this.currentFolder);
+            console.log('📁 Yüklənən qovluqlar:', folders);
+            // ==========================================
 
-            let folders = [];
-            let files = [];
+            // Faylları yüklə - getFiles metodu artıq folder_id qəbul edir
+            const filesResult = await companyService.getFiles(company.code, this.currentFolder);
+            const files = filesResult.success ? filesResult.data : [];
 
-            if (companyService) {
-                const foldersResult = await companyService.getFolders(
-                    company.code,
-                    this.currentFolder
-                );
+            // Sayğacları yenilə
+            document.getElementById('companyFileCount').innerHTML = `<i class="fa-regular fa-file"></i> ${files.length}`;
+            document.getElementById('companyFolderCount').innerHTML = `<i class="fa-regular fa-folder"></i> ${folders.length}`;
 
-                if (foldersResult.success) {
-                    folders = foldersResult.data;
-                    console.log(`📁 ${folders.length} qovluq tapıldı`);
+            // Qovluqları və faylları cache-də saxla (breadcrumb üçün)
+            this.allFolders = folders;
+            this.allFiles = files;
 
-                    // Qovluqları cache-ə sal
-                    if (!this.foldersCache.has(company.code)) {
-                        this.foldersCache.set(company.code, []);
-                    }
-
-                    // Bütün qovluqları əlavə et
-                    const allFolders = this.foldersCache.get(company.code) || [];
-                    folders.forEach(f => {
-                        const existingIndex = allFolders.findIndex(ef => ef.id == f.id);
-                        if (existingIndex >= 0) {
-                            allFolders[existingIndex] = f;
-                        } else {
-                            allFolders.push(f);
-                        }
-                    });
-                    this.foldersCache.set(company.code, allFolders);
-
-                    // Cari qovluqdakı qovluqları saxla
-                    this.allFolders = folders;
-                }
-
-                const filesResult = await companyService.getFiles(
-                    company.code,
-                    this.currentFolder
-                );
-
-                if (filesResult.success) {
-                    files = filesResult.data;
-                    console.log(`📄 ${files.length} fayl tapıldı`);
-
-                    // Cari qovluqdakı faylları saxla
-                    this.allFiles = files;
-                }
-            }
-
-            document.getElementById('companyFileCount').innerHTML = `<i class="fa-solid fa-file"></i> ${files.length}`;
-            document.getElementById('companyFolderCount').innerHTML = `<i class="fa-solid fa-folder"></i> ${folders.length}`;
-
-            // Axtarış varsa, filtirə et
+            // Qovluqları göstər
             if (this.searchTerm) {
                 this.filterItemsBySearch();
             } else {
@@ -1069,16 +1040,13 @@ class FilesUI {
         }
     }
 
-    // Axtarış filtirasiyası
     filterItemsBySearch() {
         const term = this.searchTerm.toLowerCase();
 
-        // Qovluqları filtrlə
         const filteredFolders = this.allFolders.filter(folder =>
             folder.name?.toLowerCase().includes(term)
         );
 
-        // Faylları filtrlə
         const filteredFiles = this.allFiles.filter(file =>
             file.name?.toLowerCase().includes(term) ||
             file.original_filename?.toLowerCase().includes(term) ||
@@ -1092,7 +1060,6 @@ class FilesUI {
         this.searchTerm = term;
 
         if (!term) {
-            // Axtarış yoxdursa, bütün faylları göstər
             this.loadCompanyFiles(this.selectedCompany);
             return;
         }
@@ -1106,46 +1073,51 @@ class FilesUI {
 
         if (folders.length === 0 && files.length === 0) {
             if (this.searchTerm) {
-                container.innerHTML = this.getSearchEmptyHTML();
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full py-8">
+                        <div class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mb-3">
+                            <i class="fa-solid fa-search text-3xl text-gray-400"></i>
+                        </div>
+                        <h4 class="text-sm font-semibold text-gray-700 mb-1">Nəticə tapılmadı</h4>
+                        <p class="text-xs text-gray-400">"${this.searchTerm}" üçün heç nə tapılmadı</p>
+                    </div>
+                `;
                 return;
             }
+
             container.innerHTML = this.getCompanyEmptyStateHTML();
             return;
         }
 
         let html = '';
-        const isAdmin = this._checkIfAdmin();
 
-        // 🔧 DƏYİŞİKLİK: Admin deyilsə belə, can_view yoxlamasını SİL
         if (this.companyViewMode === 'list') {
             if (folders.length > 0) {
-                html += '<div class="mb-3"><span class="text-xs font-semibold text-gray-500">Qovluqlar</span></div>';
+                html += '<div class="mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📁 Qovluqlar</span></div>';
                 folders.forEach(item => {
-                    // 🔧 BURADAKİ YOXLAMANI SİL
                     html += this.getCompanyFolderListHTML(item);
                 });
             }
 
             if (files.length > 0) {
-                if (folders.length > 0) html += '<div class="mt-4 mb-3"><span class="text-xs font-semibold text-gray-500">Fayllar</span></div>';
+                if (folders.length > 0) html += '<div class="mt-6 mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📄 Fayllar</span></div>';
                 files.forEach(item => {
                     html += this.getCompanyFileListHTML(item);
                 });
             }
         } else {
             if (folders.length > 0) {
-                html += '<div class="mb-3"><span class="text-xs font-semibold text-gray-500">Qovluqlar</span></div>';
-                html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">';
+                html += '<div class="mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📁 Qovluqlar</span></div>';
+                html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">';
                 folders.forEach(item => {
-                    // 🔧 BURADAKİ YOXLAMANI SİL
                     html += this.getCompanyFolderCardHTML(item);
                 });
                 html += '</div>';
             }
 
             if (files.length > 0) {
-                html += '<div class="mb-3"><span class="text-xs font-semibold text-gray-500">Fayllar</span></div>';
-                html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">';
+                html += '<div class="mb-4"><span class="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">📄 Fayllar</span></div>';
+                html += '<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">';
                 files.forEach(item => {
                     html += this.getCompanyFileCardHTML(item);
                 });
@@ -1159,7 +1131,7 @@ class FilesUI {
         this.attachCompanyItemListeners(container, companyService, this.selectedCompany?.code);
     }
 
-    // ==================== BREADCRUMB METODLARI ====================
+    // ==================== YENİ BREADCRUMB METODU ====================
     async updateCompanyBreadcrumb(folderId) {
         const nav = document.getElementById('companyBreadcrumb');
         if (!nav || !this.selectedCompany) return;
@@ -1167,50 +1139,40 @@ class FilesUI {
         console.log('🍞 Breadcrumb yenilənir, folderId:', folderId);
 
         try {
-            let breadcrumbHtml = '<i class="fa-solid fa-folder-open text-purple-500 text-xs mr-1"></i>';
+            let breadcrumbHtml = '<i class="fa-solid fa-folder-open text-purple-500 mr-1"></i>';
 
             if (!folderId) {
-                // Root səviyyə
-                breadcrumbHtml += '<span class="font-medium text-xs">Bütün Fayllar</span>';
+                breadcrumbHtml += '<span class="font-medium">Bütün Fayllar</span>';
             } else {
-                // Root link
                 breadcrumbHtml += `
-                    <a href="#" class="hover:text-purple-500 text-xs breadcrumb-link" data-folder-id="">Bütün Fayllar</a>
-                    <i class="fa-solid fa-chevron-right text-[8px] text-gray-400 mx-1"></i>
+                    <a href="#" class="hover:text-purple-600 transition-colors breadcrumb-link" data-folder-id="">Bütün Fayllar</a>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 mx-1"></i>
                 `;
 
-                // Folder path-i tap
                 const folderPath = await this.getFolderPath(folderId);
-                console.log('📂 Folder path:', folderPath);
 
                 if (folderPath && folderPath.length > 0) {
-                    // Path-dəki hər bir qovluğu əlavə et
                     folderPath.forEach((folder, index) => {
                         if (index === folderPath.length - 1) {
-                            // Sonuncu qovluq (cari) - link deyil
-                            breadcrumbHtml += `<span class="font-medium text-xs">${this.escapeHtml(folder.name)}</span>`;
+                            breadcrumbHtml += `<span class="font-medium">${this.escapeHtml(folder.name)}</span>`;
                         } else {
-                            // Parent qovluqlar - link olsun
                             breadcrumbHtml += `
-                                <a href="#" class="hover:text-purple-500 text-xs breadcrumb-link" data-folder-id="${folder.id}">${this.escapeHtml(folder.name)}</a>
-                                <i class="fa-solid fa-chevron-right text-[8px] text-gray-400 mx-1"></i>
+                                <a href="#" class="hover:text-purple-600 transition-colors breadcrumb-link" data-folder-id="${folder.id}">${this.escapeHtml(folder.name)}</a>
+                                <i class="fa-solid fa-chevron-right text-[10px] text-gray-400 mx-1"></i>
                             `;
                         }
                     });
                 } else {
-                    // Path tapılmadısa, sadəcə ID-ni göstər
-                    breadcrumbHtml += `<span class="font-medium text-xs">Qovluq #${folderId}</span>`;
+                    breadcrumbHtml += `<span class="font-medium">Qovluq</span>`;
                 }
             }
 
             nav.innerHTML = breadcrumbHtml;
 
-            // Breadcrumb linklərinə event listener əlavə et
             nav.querySelectorAll('.breadcrumb-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     const targetFolderId = link.dataset.folderId;
-                    console.log('🍞 Breadcrumb klik:', targetFolderId);
 
                     if (targetFolderId === '') {
                         this.goToCompanyRoot();
@@ -1222,27 +1184,23 @@ class FilesUI {
 
         } catch (error) {
             console.error('❌ Breadcrumb xətası:', error);
-            // Fallback
             nav.innerHTML = `
-                <i class="fa-solid fa-folder-open text-purple-500 text-xs mr-1"></i>
-                <a href="#" class="hover:text-purple-500 text-xs" onclick="window.filesUI.goToCompanyRoot();return false;">Bütün Fayllar</a>
+                <i class="fa-solid fa-folder-open text-purple-500 mr-1"></i>
+                <a href="#" class="hover:text-purple-600 transition-colors" onclick="window.filesUI.goToCompanyRoot();return false;">Bütün Fayllar</a>
             `;
         }
     }
 
     async getFolderPath(folderId) {
         if (!folderId || !this.selectedCompany) return [];
-
-        console.log('🔍 Folder path axtarılır ID:', folderId);
-
+    
         try {
-            // Cache-dən qovluqları götür
             let allFolders = this.foldersCache.get(this.selectedCompany.code) || [];
 
-            // Əgər cache boşdursa, yüklə
             if (allFolders.length === 0) {
                 const companyService = window.companyFolderService;
                 if (companyService) {
+                    // parentId = null ilə bütün qovluqları yüklə
                     const result = await companyService.getFolders(this.selectedCompany.code, null);
                     if (result.success) {
                         allFolders = result.data;
@@ -1251,29 +1209,20 @@ class FilesUI {
                 }
             }
 
-            console.log(`📚 Cache-də ${allFolders.length} qovluq var`);
-
-            // Folder path-i qur
             const path = [];
             let currentId = folderId;
             let maxDepth = 10;
 
             while (currentId && maxDepth > 0) {
                 const folder = allFolders.find(f => f.id == currentId);
-
-                if (!folder) {
-                    console.log(`⚠️ Folder tapılmadı ID: ${currentId}`);
-                    break;
-                }
-
-                console.log(`📁 Tapıldı: ${folder.name} (ID: ${folder.id}, parent: ${folder.parent_id})`);
+                if (!folder) break;
 
                 path.unshift(folder);
                 currentId = folder.parent_id;
                 maxDepth--;
             }
 
-            console.log('📂 Tam path:', path.map(f => f.name).join(' → '));
+            console.log('🗺️ Qovluq yolu:', path.map(p => p.name));
             return path;
 
         } catch (error) {
@@ -1285,12 +1234,12 @@ class FilesUI {
     goToCompanyFolder(folderId) {
         if (!this.selectedCompany) return;
 
-        console.log('📂 Gedilən qovluq ID:', folderId);
-
-        // Axtarışı təmizlə
         this.searchTerm = '';
         const searchInput = document.getElementById('companyFileSearch');
-        if (searchInput) searchInput.value = '';
+        if (searchInput) {
+            searchInput.value = '';
+            document.getElementById('clearSearchBtn')?.classList.add('hidden');
+        }
 
         this.currentFolder = folderId;
         this.updateCompanyBreadcrumb(folderId);
@@ -1298,12 +1247,12 @@ class FilesUI {
     }
 
     goToCompanyRoot() {
-        console.log('🏠 Root-a qayıdılır');
-
-        // Axtarışı təmizlə
         this.searchTerm = '';
         const searchInput = document.getElementById('companyFileSearch');
-        if (searchInput) searchInput.value = '';
+        if (searchInput) {
+            searchInput.value = '';
+            document.getElementById('clearSearchBtn')?.classList.add('hidden');
+        }
 
         this.currentFolder = null;
         this.updateCompanyBreadcrumb(null);
@@ -1321,7 +1270,6 @@ class FilesUI {
             );
 
             if (result.success) {
-                console.log(`📁 ${result.data.length} qovluq yeniləndi`);
                 return result.data;
             }
         } catch (error) {
@@ -1336,34 +1284,15 @@ class FilesUI {
 
         try {
             if (panelType === 'company' && this.selectedCompany) {
-                console.log('🏢 Şirkət qovluğu yaradılır:', {
-                    name: name.trim(),
-                    companyCode: this.selectedCompany.code,
-                    parentId: this.currentFolder
-                });
-
                 let companyService = window.companyFolderService;
+
                 if (!companyService) {
                     if (window.CompanyFolderService) {
                         companyService = new window.CompanyFolderService();
                         window.companyFolderService = companyService;
                     } else {
-                        console.error('❌ CompanyFolderService tapılmadı');
                         this.showNotification('Xəta: Service tapılmadı', 'error');
                         return;
-                    }
-                }
-
-                console.log('🔐 İcazələr yüklənir...');
-                await companyService.loadUserPermissions(this.selectedCompany.code);
-
-                if (this.currentFolder) {
-                    const hasPerm = companyService.hasPermission(this.currentFolder, 'create');
-                    console.log(`🔐 Folder ${this.currentFolder} üçün create icazəsi:`, hasPerm);
-
-                    if (!hasPerm && !companyService._isAdmin()) {
-                        const confirmForce = confirm('İcazəniz yoxdur. Yenə də davam etmək istəyirsiniz?');
-                        if (!confirmForce) return;
                     }
                 }
 
@@ -1373,17 +1302,19 @@ class FilesUI {
                     this.currentFolder
                 );
 
-                if (result.success) {
+                if (result && result.success) {
                     this.showNotification(`"${name}" qovluğu yaradıldı`, 'success');
 
-                    // Cache-i təmizlə
-                    this.foldersCache.delete(this.selectedCompany.code);
+                    if (companyService.loadUserPermissions) {
+                        companyService.loadUserPermissions(this.selectedCompany.code).catch(() => {});
+                    }
 
                     setTimeout(() => {
                         this.loadCompanyFiles(this.selectedCompany);
-                    }, 1000);
+                    }, 500);
                 } else {
-                    this.showNotification(result.error || 'Qovluq yaradıla bilmədi', 'error');
+                    const errorMsg = result?.error || 'Qovluq yaradıla bilmədi';
+                    this.showNotification(errorMsg, 'error');
                 }
             }
         } catch (error) {
@@ -1404,16 +1335,10 @@ class FilesUI {
                 }
 
                 if (companyService) {
-                    console.log('🗑️ Silinəcək qovluq ID:', folderId);
-
                     const result = await companyService.deleteFolder(folderId, companyCode);
 
                     if (result.success) {
                         this.showNotification('Qovluq silindi', 'success');
-
-                        // Cache-i təmizlə
-                        this.foldersCache.delete(companyCode);
-
                         setTimeout(() => {
                             this.loadCompanyFiles(this.selectedCompany);
                         }, 500);
@@ -1464,43 +1389,36 @@ class FilesUI {
         }
     }
 
+    // ==================== YENİ KART DİZAYNLARI ====================
+
     getCompanyFolderListHTML(item) {
         const createdByName = item.created_by_name || 'Naməlum';
         const itemCount = item.item_count || 0;
-        const isAdmin = this._checkIfAdmin();
 
         return `
-            <div class="folder-list-item group relative bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-all cursor-pointer p-2 mb-1" 
+            <div class="folder-list-item group bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all cursor-pointer mb-2 overflow-hidden" 
                  data-id="${item.id}" data-uuid="${item.uuid}" data-type="folder">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-folder text-purple-600"></i>
+                <div class="flex items-center p-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0 mr-3">
+                        <i class="fa-solid fa-folder text-purple-600 text-xl"></i>
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-gray-700 truncate" title="${item.name}">${item.name}</p>
+                            <p class="text-sm font-medium text-gray-800 truncate" title="${item.name}">${item.name}</p>
                             <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                ${isAdmin ? `
-                                <button class="permission-btn text-purple-500 hover:text-purple-700" data-id="${item.id}" data-name="${item.name}" title="İcazə ver">
+                                <button class="permission-btn w-7 h-7 rounded-lg bg-purple-100 text-purple-600 hover:bg-purple-200 transition-colors flex items-center justify-center" data-id="${item.id}" data-name="${item.name}" title="İcazə ver">
                                     <i class="fa-solid fa-user-lock text-xs"></i>
                                 </button>
-                                ` : ''}
-                                ${(isAdmin || item.can_create_folder) ? `
-                                <button class="create-subfolder-btn text-orange-500 hover:text-orange-700" data-id="${item.id}" title="Alt qovluq yarat">
-                                    <i class="fa-solid fa-folder-plus text-xs"></i>
-                                </button>
-                                ` : ''}
-                                ${(isAdmin || item.can_delete) ? `
-                                <button class="delete-folder-btn text-red-500 hover:text-red-700" data-id="${item.id}" title="Sil">
+                                <button class="delete-folder-btn w-7 h-7 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center" data-id="${item.id}" title="Sil">
                                     <i class="fa-solid fa-trash text-xs"></i>
                                 </button>
-                                ` : ''}
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                        <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
                             <span>${this.formatDate(item.created_at)}</span>
-                            ${itemCount > 0 ? `<span>• ${itemCount} fayl</span>` : ''}
-                            <span>• ${createdByName}</span>
+                            ${itemCount > 0 ? `<span class="w-1 h-1 rounded-full bg-gray-300"></span><span>${itemCount} fayl</span>` : ''}
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                            <span>${createdByName}</span>
                         </div>
                     </div>
                 </div>
@@ -1513,44 +1431,35 @@ class FilesUI {
         const icon = isImage ? 'fa-file-image' : 'fa-file';
         const size = this.formatFileSize(item.file_size || 0);
         const fileExt = item.file_extension || item.name?.split('.').pop() || 'FILE';
-        const folderId = item.folder_id;
-
-        let canDelete = false;
-        if (window.companyFolderService && typeof window.companyFolderService.hasPermission === 'function') {
-            canDelete = window.companyFolderService.hasPermission(folderId, 'delete');
-        }
-        const isAdmin = this._checkIfAdmin();
 
         return `
-            <div class="file-list-item group relative bg-white rounded-lg border border-gray-200 hover:shadow-sm transition-all cursor-pointer p-2 mb-1" 
+            <div class="file-list-item group bg-white rounded-xl border border-gray-200 hover:shadow-md transition-all cursor-pointer mb-2 overflow-hidden" 
                  data-id="${item.file_uuid || item.uuid}" data-uuid="${item.file_uuid || item.uuid}" data-type="file">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <div class="flex items-center p-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0 mr-3 overflow-hidden">
                         ${isImage ? 
                             `<img src="${this.fileService?.getFileUrl({uuid: item.file_uuid}) || '#'}" class="w-full h-full object-cover" alt="${item.original_filename}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : 
-                            `<i class="fa-solid ${icon} text-purple-600"></i>`
+                            `<i class="fa-solid ${icon} text-purple-600 text-xl"></i>`
                         }
-                        ${isImage ? `<i class="fa-solid ${icon} text-purple-600 hidden"></i>` : ''}
+                        ${isImage ? `<i class="fa-solid ${icon} text-purple-600 text-xl hidden"></i>` : ''}
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-gray-700 truncate" title="${item.original_filename}">${item.original_filename}</p>
+                            <p class="text-sm font-medium text-gray-800 truncate" title="${item.original_filename}">${item.original_filename}</p>
                             <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button class="download-btn text-purple-500 hover:text-purple-700" data-id="${item.file_uuid || item.uuid}" title="Yüklə">
+                                <button class="download-btn w-7 h-7 rounded-lg bg-green-100 text-green-600 hover:bg-green-200 transition-colors flex items-center justify-center" data-id="${item.file_uuid || item.uuid}" title="Yüklə">
                                     <i class="fa-solid fa-download text-xs"></i>
                                 </button>
-                                ${(canDelete || isAdmin) ? `
-                                <button class="delete-file-btn text-red-500 hover:text-red-700" data-id="${item.file_uuid || item.uuid}" data-folder="${folderId || ''}" title="Sil">
+                                <button class="delete-file-btn w-7 h-7 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center" data-id="${item.file_uuid || item.uuid}" title="Sil">
                                     <i class="fa-solid fa-trash text-xs"></i>
                                 </button>
-                                ` : ''}
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 text-[10px] text-gray-400">
-                            <span>${fileExt.toUpperCase()}</span>
-                            <span>•</span>
+                        <div class="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                            <span class="uppercase">${fileExt}</span>
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                             <span>${size}</span>
-                            <span>•</span>
+                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                             <span>${item.uploaded_by_name || 'Naməlum'}</span>
                         </div>
                     </div>
@@ -1564,58 +1473,42 @@ class FilesUI {
         const icon = isImage ? 'fa-file-image' : 'fa-file';
         const size = this.formatFileSize(item.file_size || 0);
         const fileExt = item.file_extension || item.name?.split('.').pop() || 'FILE';
-        const folderId = item.folder_id;
-
-        let canDelete = false;
-        if (window.companyFolderService && typeof window.companyFolderService.hasPermission === 'function') {
-            canDelete = window.companyFolderService.hasPermission(folderId, 'delete');
-        }
-        const isAdmin = this._checkIfAdmin();
 
         return `
-            <div class="file-item group relative bg-white rounded-lg border border-gray-200 hover:shadow transition-all cursor-pointer p-2" 
-                 data-id="${item.file_uuid || item.uuid}" data-uuid="${item.file_uuid || item.uuid}" data-type="file" data-folder="${folderId || ''}">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center mb-1 overflow-hidden">
-                        ${isImage ? 
-                            `<img src="${this.fileService?.getFileUrl({uuid: item.file_uuid}) || '#'}" class="w-full h-full object-cover" alt="${item.original_filename}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : 
-                            `<i class="fa-solid ${icon} text-xl text-purple-600"></i>`
-                        }
-                        ${isImage ? `<i class="fa-solid ${icon} text-xl text-purple-600 hidden"></i>` : ''}
+            <div class="file-item group relative bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden" 
+                 data-id="${item.file_uuid || item.uuid}" data-uuid="${item.file_uuid || item.uuid}" data-type="file">
+                <div class="p-4">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center mb-3 overflow-hidden shadow-sm">
+                            ${isImage ? 
+                                `<img src="${this.fileService?.getFileUrl({uuid: item.file_uuid}) || '#'}" class="w-full h-full object-cover" alt="${item.original_filename}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : 
+                                `<i class="fa-solid ${icon} text-2xl text-purple-600"></i>`
+                            }
+                            ${isImage ? `<i class="fa-solid ${icon} text-2xl text-purple-600 hidden"></i>` : ''}
+                        </div>
+                        <p class="text-sm font-medium text-gray-800 truncate w-full mb-1" title="${item.original_filename}">${item.original_filename}</p>
+                        <div class="flex items-center justify-center gap-2 text-xs text-gray-500">
+                            <span class="uppercase bg-gray-100 px-2 py-0.5 rounded-full">${fileExt}</span>
+                            <span>•</span>
+                            <span>${size}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">${item.uploaded_by_name || ''}</p>
                     </div>
-                    <p class="text-xs font-medium text-gray-700 truncate w-full" title="${item.original_filename}">${item.original_filename}</p>
-                    <div class="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                        <span>${fileExt.toUpperCase()}</span>
-                        <span>•</span>
-                        <span>${size}</span>
-                    </div>
-                    <p class="text-[8px] text-gray-400 mt-1">${item.uploaded_by_name || ''}</p>
                 </div>
                 
-                <div class="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors action-btn" 
+                <!-- Hover Actions -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-500 hover:text-white transition-colors shadow-lg transform hover:scale-110" 
                             data-action="info" data-id="${item.file_uuid || item.uuid}" title="Məlumat">
-                        <i class="fa-solid fa-info text-xs"></i>
+                        <i class="fa-solid fa-info"></i>
                     </button>
-                    
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors action-btn" 
-                            data-action="share" data-id="${item.file_uuid || item.uuid}" title="Paylaş">
-                        <i class="fa-solid fa-share-nodes text-xs"></i>
-                    </button>
-                    
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-purple-500 hover:bg-purple-500 hover:text-white transition-colors download-btn" 
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-green-600 hover:bg-green-500 hover:text-white transition-colors shadow-lg transform hover:scale-110 download-btn" 
                             data-id="${item.file_uuid || item.uuid}" title="Yüklə">
-                        <i class="fa-solid fa-download text-xs"></i>
+                        <i class="fa-solid fa-download"></i>
                     </button>
-                    
-                    ${(canDelete || isAdmin) ? `
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors delete-file-btn" 
-                            data-id="${item.file_uuid || item.uuid}" data-folder="${folderId || ''}" title="Sil">
-                        <i class="fa-solid fa-trash text-xs"></i>
-                    </button>
-                    ` : ''}
-                    <button class="delete-file-btn text-red-500 hover:text-red-700" data-id="${item.file_uuid || item.uuid}" data-folder="${folderId || ''}" title="Sil">
-                        <i class="fa-solid fa-trash text-xs"></i>
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-red-600 hover:bg-red-500 hover:text-white transition-colors shadow-lg transform hover:scale-110 delete-file-btn" 
+                            data-id="${item.file_uuid || item.uuid}" title="Sil">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -1625,57 +1518,38 @@ class FilesUI {
     getCompanyFolderCardHTML(item) {
         const createdByName = item.created_by_name || 'Naməlum';
         const itemCount = item.item_count || 0;
-        const isAdmin = this._checkIfAdmin();
 
         return `
-            <div class="folder-item group relative bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all cursor-pointer p-3" 
+            <div class="folder-item group relative bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all cursor-pointer overflow-hidden" 
                  data-id="${item.id}" data-uuid="${item.uuid}" data-type="folder">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-folder text-3xl text-purple-600"></i>
+                <div class="p-4">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-100 to-purple-50 flex items-center justify-center mb-3 shadow-sm">
+                            <i class="fa-solid fa-folder text-3xl text-purple-600"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-800 truncate w-full mb-1" title="${item.name}">${item.name}</p>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <span>${this.formatDate(item.created_at)}</span>
+                            ${itemCount > 0 ? `<span class="bg-gray-100 px-2 py-0.5 rounded-full">${itemCount} fayl</span>` : ''}
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">${createdByName}</p>
                     </div>
-                    <p class="text-sm font-medium text-gray-700 truncate w-full mb-1" title="${item.name}">${item.name}</p>
-                    <div class="flex items-center gap-1 text-[10px] text-gray-400">
-                        <span>${this.formatDate(item.created_at)}</span>
-                        ${itemCount > 0 ? `<span>• ${itemCount} fayl</span>` : ''}
-                    </div>
-                    <p class="text-[8px] text-gray-400 mt-1">${createdByName}</p>
                 </div>
                 
-                <div class="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                    
-                    ${isAdmin ? `
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-purple-500 hover:bg-purple-500 hover:text-white transition-colors permission-btn" 
+                <!-- Hover Actions -->
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-purple-600 hover:bg-purple-500 hover:text-white transition-colors shadow-lg transform hover:scale-110 permission-btn" 
                             data-id="${item.id}" data-name="${item.name}" title="İcazə ver">
-                        <i class="fa-solid fa-user-lock text-xs"></i>
+                        <i class="fa-solid fa-user-lock"></i>
                     </button>
-                    ` : ''}
-                    
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors action-btn" 
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-500 hover:text-white transition-colors shadow-lg transform hover:scale-110 action-btn" 
                             data-action="info" data-id="${item.id}" title="Məlumat">
-                        <i class="fa-solid fa-info text-xs"></i>
+                        <i class="fa-solid fa-info"></i>
                     </button>
-                    
-                    ${(isAdmin || item.can_upload) ? `
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors upload-btn" 
-                            data-id="${item.id}" title="Fayl yüklə">
-                        <i class="fa-solid fa-upload text-xs"></i>
+                    <button class="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-red-600 hover:bg-red-500 hover:text-white transition-colors shadow-lg transform hover:scale-110 delete-folder-btn" 
+                            data-id="${item.id}" title="Sil">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
-                    ` : ''}
-                    
-                    ${(isAdmin || item.can_create_folder) ? `
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-orange-500 hover:bg-orange-500 hover:text-white transition-colors create-subfolder-btn" 
-                            data-id="${item.id}" title="Alt qovluq yarat">
-                        <i class="fa-solid fa-folder-plus text-xs"></i>
-                    </button>
-                    ` : ''}
-                    
-                    ${(isAdmin || item.can_delete) ? `
-                    <button class="w-6 h-6 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors delete-folder-btn" 
-                            data-id="${item.id}" data-uuid="${item.uuid}" title="Sil">
-                        <i class="fa-solid fa-trash text-xs"></i>
-                    </button>
-                    ` : ''}
                 </div>
             </div>
         `;
@@ -1769,64 +1643,62 @@ class FilesUI {
             });
         });
 
+        // files.ui.js - attachCompanyItemListeners metodunda İCAZƏ DÜYMƏSİ hissəsi (DÜZƏLDİLMİŞ)
+
+        // İcazə düyməsi
         container.querySelectorAll('.permission-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const folderId = btn.dataset.id;
                 const folderName = btn.dataset.name;
 
+                console.log('🔐 İcazə düyməsi klikləndi:', { folderId, folderName });
+
+                // Folder obyekti yarat
                 const folder = {
                     id: folderId,
-                    name: folderName
+                    name: folderName || 'Qovluq'
                 };
 
-                if (window.folderPermissionModal) {
-                    window.folderPermissionModal.open(
-                        folder,
-                        this.selectedCompany.code,
-                        () => {
-                            this.loadCompanyFiles(this.selectedCompany);
-                        }
-                    );
-                } else {
-                    const modal = new FolderPermissionModal(window.companyFolderService);
-                    modal.open(
-                        folder,
-                        this.selectedCompany.code,
-                        () => {
-                            this.loadCompanyFiles(this.selectedCompany);
-                        }
-                    );
+                // CompanyFolderService-i əldə et
+                let companyService = window.companyFolderService;
+                if (!companyService) {
+                    if (window.CompanyFolderService) {
+                        companyService = new window.CompanyFolderService();
+                        window.companyFolderService = companyService;
+                    } else {
+                        console.error('❌ CompanyFolderService tapılmadı');
+                        this.showNotification('Xəta: Service tapılmadı', 'error');
+                        return;
+                    }
                 }
-            });
-        });
 
-        container.querySelectorAll('.create-subfolder-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const folderId = btn.dataset.id;
+                // FolderPermissionModal instance yarat və global olaraq təyin et
+                if (!window.folderPermissionModal) {
+                    window.folderPermissionModal = new FolderPermissionModal(companyService);
+                }
 
-                this.currentFolder = folderId;
-                this.showNewFolderDialog('company');
-            });
-        });
-
-        container.querySelectorAll('.upload-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const folderId = btn.dataset.id;
-
-                this.currentFolder = folderId;
-                this.showFileUploadDialog('company');
+                // Modalı aç
+                window.folderPermissionModal.open(
+                    folder,
+                    this.selectedCompany.code,
+                    () => {
+                        // İcazələr yadda saxlanandan sonra yenilə
+                        console.log('✅ İcazələr yadda saxlandı, panel yenilənir...');
+                        this.loadCompanyFiles(this.selectedCompany);
+                    }
+                );
             });
         });
     }
+
+    // ==================== KÖMƏKÇİ METODLAR ====================
 
     formatDate(dateString) {
         if (!dateString) return '-';
         try {
             const date = new Date(dateString);
-            return date.toLocaleDateString('az-AZ');
+            return date.toLocaleDateString('az-AZ', { day: '2-digit', month: '2-digit', year: 'numeric' });
         } catch {
             return '-';
         }
@@ -1882,22 +1754,16 @@ class FilesUI {
                 let errorCount = 0;
 
                 if (panelType === 'company' && this.selectedCompany) {
-                    console.log('🏢 Şirkət faylı yüklənir');
-                    console.log('📂 Cari qovluq (currentFolder):', this.currentFolder);
-
                     let folderIdToSend = this.currentFolder;
 
                     if (folderIdToSend && folderIdToSend !== 'null' && folderIdToSend !== 'undefined') {
                         console.log('📂 Qovluq ID göndəriləcək:', folderIdToSend);
                     } else {
-                        console.log('📂 Qovluq yoxdur, root-a yüklənəcək');
                         folderIdToSend = null;
                     }
 
                     for (const file of files) {
                         try {
-                            console.log(`📤 Fayl yüklənir: ${file.name}, folderId: ${folderIdToSend}`);
-
                             const result = await this.fileService?.uploadFileForCompany(
                                 file,
                                 this.selectedCompany.code || this.selectedCompany.id,
@@ -1907,18 +1773,14 @@ class FilesUI {
 
                             if (result?.success) {
                                 uploadedCount++;
-                                console.log(`✅ ${file.name} yükləndi`);
                             } else {
                                 errorCount++;
-                                console.error(`❌ ${file.name} yüklənmədi:`, result?.error);
                             }
                         } catch (error) {
                             errorCount++;
-                            console.error(`❌ ${file.name} xətası:`, error);
                         }
                     }
 
-                    // Cache-i təmizlə
                     this.foldersCache.delete(this.selectedCompany.code);
 
                 } else {
@@ -1937,7 +1799,6 @@ class FilesUI {
                             }
                         } catch (error) {
                             errorCount++;
-                            console.error(`❌ ${file.name} xətası:`, error);
                         }
                     }
                 }
@@ -1955,7 +1816,6 @@ class FilesUI {
                     if (panelType === 'personal') {
                         this.loadPersonalFiles();
                     } else if (this.selectedCompany) {
-                        console.log('🔄 Company files yenilənir, cari qovluq:', this.currentFolder);
                         this.loadCompanyFiles(this.selectedCompany);
                     }
                 }, 2000);
@@ -1975,18 +1835,18 @@ class FilesUI {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-white rounded-xl max-w-md w-full p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-base font-bold text-gray-800">${title}</h3>
-                    <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+            <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">${title}</h3>
+                    <button class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex items-center justify-center" onclick="this.closest('.fixed').remove()">
                         <i class="fa-solid fa-times"></i>
                     </button>
                 </div>
-                <p class="text-xs text-gray-600 mb-3">
+                <p class="text-sm text-gray-600 mb-4">
                     Paylaşma funksiyası hazırlanır
                 </p>
-                <div class="flex justify-end gap-2 mt-4">
-                    <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs" onclick="this.closest('.fixed').remove()">Bağla</button>
+                <div class="flex justify-end gap-2">
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors" onclick="this.closest('.fixed').remove()">Bağla</button>
                 </div>
             </div>
         `;
@@ -1998,37 +1858,37 @@ class FilesUI {
         const modal = document.createElement('div');
         modal.className = 'fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4';
         modal.innerHTML = `
-            <div class="bg-white rounded-xl max-w-md w-full p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-base font-bold text-gray-800">Fayl məlumatları</h3>
-                    <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('.fixed').remove()">
+            <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">Fayl məlumatları</h3>
+                    <button class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex items-center justify-center" onclick="this.closest('.fixed').remove()">
                         <i class="fa-solid fa-times"></i>
                     </button>
                 </div>
-                <div class="space-y-2 text-sm">
+                <div class="space-y-3 text-sm">
                     <div class="flex">
-                        <span class="w-24 text-gray-500 text-xs">Ad:</span>
-                        <span class="flex-1 font-medium text-xs">${item.name}</span>
+                        <span class="w-24 text-gray-500">Ad:</span>
+                        <span class="flex-1 font-medium text-gray-800">${item.name}</span>
                     </div>
                     <div class="flex">
-                        <span class="w-24 text-gray-500 text-xs">Tip:</span>
-                        <span class="flex-1 text-xs">${item.type === 'folder' ? 'Qovluq' : (item.file_extension || 'Fayl')}</span>
+                        <span class="w-24 text-gray-500">Tip:</span>
+                        <span class="flex-1 text-gray-800">${item.type === 'folder' ? 'Qovluq' : (item.file_extension || 'Fayl')}</span>
                     </div>
                     <div class="flex">
-                        <span class="w-24 text-gray-500 text-xs">Ölçü:</span>
-                        <span class="flex-1 text-xs">${item.type === 'folder' ? '-' : (this.fileService?.formatFileSize(item.size) || '0 B')}</span>
+                        <span class="w-24 text-gray-500">Ölçü:</span>
+                        <span class="flex-1 text-gray-800">${item.type === 'folder' ? '-' : (this.fileService?.formatFileSize(item.size) || '0 B')}</span>
                     </div>
                     <div class="flex">
-                        <span class="w-24 text-gray-500 text-xs">Tarix:</span>
-                        <span class="flex-1 text-xs">${this.fileService?.formatDate(item.created_at) || '-'}</span>
+                        <span class="w-24 text-gray-500">Tarix:</span>
+                        <span class="flex-1 text-gray-800">${this.fileService?.formatDate(item.created_at) || '-'}</span>
                     </div>
                     <div class="flex">
-                        <span class="w-24 text-gray-500 text-xs">Yer:</span>
-                        <span class="flex-1 text-xs">${isPersonal ? 'Şəxsi' : 'Şirkət'}</span>
+                        <span class="w-24 text-gray-500">Yer:</span>
+                        <span class="flex-1 text-gray-800">${isPersonal ? 'Şəxsi' : 'Şirkət'}</span>
                     </div>
                 </div>
                 <div class="flex justify-end mt-4">
-                    <button class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-xs" onclick="this.closest('.fixed').remove()">Bağla</button>
+                    <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors" onclick="this.closest('.fixed').remove()">Bağla</button>
                 </div>
             </div>
         `;
@@ -2040,11 +1900,11 @@ class FilesUI {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center p-4';
             modal.innerHTML = `
-                <div class="relative max-w-3xl max-h-[90vh]">
-                    <button class="absolute -top-8 right-0 text-white text-xl hover:text-gray-300" onclick="this.closest('.fixed').remove()">
+                <div class="relative max-w-4xl max-h-[90vh]">
+                    <button class="absolute -top-10 right-0 text-white text-xl hover:text-gray-300 transition-colors" onclick="this.closest('.fixed').remove()">
                         <i class="fa-solid fa-times"></i>
                     </button>
-                    <img src="${this.fileService?.getFileUrl(file)}" class="max-w-full max-h-[80vh] object-contain rounded-lg" alt="${file.name}">
+                    <img src="${this.fileService?.getFileUrl(file)}" class="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl" alt="${file.name}">
                 </div>
             `;
             modal.addEventListener('click', (e) => {
@@ -2061,16 +1921,16 @@ class FilesUI {
         if (oldNotification) oldNotification.remove();
 
         const notification = document.createElement('div');
-        notification.className = `files-notification fixed top-4 right-4 z-[9999] px-4 py-2 rounded-lg shadow-2xl transform transition-all duration-300 text-sm ${
+        notification.className = `files-notification fixed top-4 right-4 z-[9999] px-4 py-3 rounded-xl shadow-2xl transform transition-all duration-300 text-sm font-medium ${
             type === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' : 
             type === 'error' ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 
-            'bg-gradient-to-r from-brand-blue to-blue-600 text-white'
+            'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
         }`;
 
         notification.innerHTML = `
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} text-sm"></i>
-                <span class="text-xs font-medium">${message}</span>
+                <i class="fa-solid fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
             </div>
         `;
 
@@ -2105,13 +1965,13 @@ class FilesUI {
 
         return `
             <div class="flex flex-col items-center justify-center h-full py-8">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-2">
-                    <i class="fa-solid ${icon} text-3xl ${iconColor}"></i>
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-4">
+                    <i class="fa-solid ${icon} text-4xl ${iconColor}"></i>
                 </div>
-                <h4 class="text-sm font-semibold text-gray-700 mb-1">${title}</h4>
-                <p class="text-xs text-gray-400 mb-3">Fayl yükləyin</p>
-                <button class="px-3 py-1.5 ${btnColor} text-white rounded-lg hover:opacity-90 text-xs upload-panel-btn" onclick="document.getElementById('upload${isPersonal ? 'Personal' : 'Company'}FileBtn').click()">
-                    <i class="fa-solid fa-upload"></i> Yüklə
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4>
+                <p class="text-sm text-gray-400 mb-4">Fayl yükləyin</p>
+                <button class="px-4 py-2 ${btnColor} text-white rounded-xl hover:opacity-90 text-sm font-medium transition-all hover:scale-105 upload-panel-btn" onclick="document.getElementById('upload${isPersonal ? 'Personal' : 'Company'}FileBtn').click()">
+                    <i class="fa-solid fa-upload mr-1"></i> Yüklə
                 </button>
             </div>
         `;
@@ -2120,13 +1980,13 @@ class FilesUI {
     getCompanyEmptyStateHTML() {
         return `
             <div class="flex flex-col items-center justify-center h-full py-8">
-                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-100/30 flex items-center justify-center mb-2">
-                    <i class="fa-solid fa-cloud-upload-alt text-3xl text-purple-500/50"></i>
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/10 to-purple-100/30 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-cloud-upload-alt text-4xl text-purple-500/50"></i>
                 </div>
-                <h4 class="text-sm font-semibold text-gray-700 mb-1">Fayl yoxdur</h4>
-                <p class="text-xs text-gray-400 mb-3">Fayl yükləyin</p>
-                <button class="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:opacity-90 text-xs upload-company-btn" onclick="document.getElementById('uploadCompanyFileBtn').click()">
-                    <i class="fa-solid fa-upload"></i> Yüklə
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">Fayl yoxdur</h4>
+                <p class="text-sm text-gray-400 mb-4">Fayl yükləyin</p>
+                <button class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 text-sm font-medium transition-all hover:scale-105 upload-company-btn" onclick="document.getElementById('uploadCompanyFileBtn').click()">
+                    <i class="fa-solid fa-upload mr-1"></i> Yüklə
                 </button>
             </div>
         `;
@@ -2135,12 +1995,12 @@ class FilesUI {
     getCompanyErrorStateHTML() {
         return `
             <div class="flex flex-col items-center justify-center h-full py-8">
-                <div class="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-2">
-                    <i class="fa-solid fa-exclamation-triangle text-3xl text-red-500"></i>
+                <div class="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500"></i>
                 </div>
-                <h4 class="text-sm font-semibold text-gray-700 mb-1">Yükləmə xətası</h4>
-                <button class="px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:opacity-90 text-xs" onclick="window.filesUI.loadCompanyFiles(window.filesUI.selectedCompany)">
-                    <i class="fa-solid fa-rotate-right"></i> Yenidən
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">Yükləmə xətası</h4>
+                <button class="px-4 py-2 bg-purple-500 text-white rounded-xl hover:opacity-90 text-sm font-medium transition-all hover:scale-105" onclick="window.filesUI.loadCompanyFiles(window.filesUI.selectedCompany)">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Yenidən
                 </button>
             </div>
         `;
@@ -2152,12 +2012,12 @@ class FilesUI {
 
         return `
             <div class="flex flex-col items-center justify-center h-full py-8">
-                <div class="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mb-2">
-                    <i class="fa-solid fa-exclamation-triangle text-3xl text-red-500"></i>
+                <div class="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-exclamation-triangle text-4xl text-red-500"></i>
                 </div>
-                <h4 class="text-sm font-semibold text-gray-700 mb-1">Yükləmə xətası</h4>
-                <button class="px-3 py-1.5 ${btnColor} text-white rounded-lg hover:opacity-90 text-xs" onclick="window.filesUI.${isPersonal ? 'loadPersonalFiles' : 'loadCompanyFiles'}(window.filesUI.selectedCompany)">
-                    <i class="fa-solid fa-rotate-right"></i> Yenidən
+                <h4 class="text-lg font-semibold text-gray-700 mb-2">Yükləmə xətası</h4>
+                <button class="px-4 py-2 ${btnColor} text-white rounded-xl hover:opacity-90 text-sm font-medium transition-all hover:scale-105" onclick="window.filesUI.${isPersonal ? 'loadPersonalFiles' : 'loadCompanyFiles'}(window.filesUI.selectedCompany)">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Yenidən
                 </button>
             </div>
         `;
@@ -2170,33 +2030,32 @@ class FilesUI {
         const iconColor = isPersonal ? 'text-brand-blue' : 'text-purple-500';
 
         return `
-            <div class="folder-item group relative bg-white rounded-lg border ${isSelected ? 'border-brand-blue ring-1 ring-brand-blue/20' : 'border-gray-200'} hover:shadow transition-all cursor-pointer p-2" data-id="${item.id}" data-type="folder" data-panel="${panelType}">
-                <div class="absolute top-1 right-1 z-10">
-                    <input type="checkbox" class="item-checkbox w-3 h-3 rounded border-gray-300 text-brand-blue" ${isSelected ? 'checked' : ''} data-id="${item.id}">
+            <div class="folder-item group relative bg-white rounded-xl border ${isSelected ? 'border-brand-blue ring-2 ring-brand-blue/20' : 'border-gray-200'} hover:shadow-lg transition-all cursor-pointer overflow-hidden" data-id="${item.id}" data-type="folder" data-panel="${panelType}">
+                <div class="absolute top-2 right-2 z-10">
+                    <input type="checkbox" class="item-checkbox w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue" ${isSelected ? 'checked' : ''} data-id="${item.id}">
                 </div>
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${bgColor} flex items-center justify-center mb-1">
-                        <i class="fa-solid fa-folder text-2xl ${iconColor}"></i>
+                <div class="p-3">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br ${bgColor} flex items-center justify-center mb-2">
+                            <i class="fa-solid fa-folder text-2xl ${iconColor}"></i>
+                        </div>
+                        <p class="text-sm font-medium text-gray-700 truncate w-full mb-1" title="${item.name}">${item.name}</p>
+                        <p class="text-xs text-gray-400">${this.fileService?.formatDate(item.created_at) || '-'}</p>
                     </div>
-                    <p class="text-xs font-medium text-gray-700 truncate w-full mb-0.5" title="${item.name}">${item.name}</p>
-                    <p class="text-[10px] text-gray-400">${this.fileService?.formatDate(item.created_at) || '-'}</p>
                 </div>
                 <!-- Hover Actions -->
-                <div class="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors action-btn" data-action="info" data-id="${item.id}" title="Məlumat">
-                        <i class="fa-solid fa-info text-[8px]"></i>
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-500 hover:text-white transition-colors shadow-lg action-btn" data-action="info" data-id="${item.id}" title="Məlumat">
+                        <i class="fa-solid fa-info text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors action-btn" data-action="share" data-id="${item.id}" title="Paylaş">
-                        <i class="fa-solid fa-share-nodes text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-green-600 hover:bg-green-500 hover:text-white transition-colors shadow-lg action-btn" data-action="share" data-id="${item.id}" title="Paylaş">
+                        <i class="fa-solid fa-share-nodes text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-purple-500 hover:bg-purple-500 hover:text-white transition-colors action-btn" data-action="send" data-id="${item.id}" title="Göndər">
-                        <i class="fa-solid fa-paper-plane text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-brand-blue hover:bg-brand-blue hover:text-white transition-colors shadow-lg download-btn" data-id="${item.id}" title="Yüklə">
+                        <i class="fa-solid fa-download text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-brand-blue hover:bg-brand-blue hover:text-white transition-colors download-btn" data-id="${item.id}" title="Yüklə">
-                        <i class="fa-solid fa-download text-[8px]"></i>
-                    </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors delete-btn" data-id="${item.id}" title="Sil">
-                        <i class="fa-solid fa-trash text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-red-600 hover:bg-red-500 hover:text-white transition-colors shadow-lg delete-btn" data-id="${item.id}" title="Sil">
+                        <i class="fa-solid fa-trash text-xs"></i>
                     </button>
                 </div>
             </div>
@@ -2212,41 +2071,40 @@ class FilesUI {
         const bgColor = isPersonal ? 'from-brand-blue/10 to-blue-100/30' : 'from-purple-500/10 to-purple-100/30';
 
         return `
-            <div class="file-item group relative bg-white rounded-lg border ${isSelected ? 'border-brand-blue ring-1 ring-brand-blue/20' : 'border-gray-200'} hover:shadow transition-all cursor-pointer p-2" data-id="${item.id}" data-type="file" data-panel="${panelType}">
-                <div class="absolute top-1 right-1 z-10">
-                    <input type="checkbox" class="item-checkbox w-3 h-3 rounded border-gray-300 text-brand-blue" ${isSelected ? 'checked' : ''} data-id="${item.id}">
+            <div class="file-item group relative bg-white rounded-xl border ${isSelected ? 'border-brand-blue ring-2 ring-brand-blue/20' : 'border-gray-200'} hover:shadow-lg transition-all cursor-pointer overflow-hidden" data-id="${item.id}" data-type="file" data-panel="${panelType}">
+                <div class="absolute top-2 right-2 z-10">
+                    <input type="checkbox" class="item-checkbox w-4 h-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue" ${isSelected ? 'checked' : ''} data-id="${item.id}">
                 </div>
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br ${bgColor} flex items-center justify-center mb-1 overflow-hidden">
-                        ${isImage ? 
-                            `<img src="${this.fileService?.getFileUrl(item) || '#'}" class="w-full h-full object-cover" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : 
-                            `<i class="fa-solid ${icon} text-xl text-gray-500"></i>`
-                        }
-                        ${isImage ? `<i class="fa-solid ${icon} text-xl text-gray-500 hidden"></i>` : ''}
-                    </div>
-                    <p class="text-xs font-medium text-gray-700 truncate w-full mb-0.5" title="${item.name}">${item.name}</p>
-                    <div class="flex items-center justify-center gap-1 text-[10px] text-gray-400">
-                        <span>${item.file_extension?.toUpperCase() || item.name?.split('.').pop()?.toUpperCase() || 'FILE'}</span>
-                        <span>•</span>
-                        <span>${size}</span>
+                <div class="p-3">
+                    <div class="flex flex-col items-center text-center">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br ${bgColor} flex items-center justify-center mb-2 overflow-hidden">
+                            ${isImage ? 
+                                `<img src="${this.fileService?.getFileUrl(item) || '#'}" class="w-full h-full object-cover" alt="${item.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">` : 
+                                `<i class="fa-solid ${icon} text-2xl text-gray-500"></i>`
+                            }
+                            ${isImage ? `<i class="fa-solid ${icon} text-2xl text-gray-500 hidden"></i>` : ''}
+                        </div>
+                        <p class="text-sm font-medium text-gray-700 truncate w-full mb-1" title="${item.name}">${item.name}</p>
+                        <div class="flex items-center justify-center gap-1 text-xs text-gray-400">
+                            <span class="uppercase">${item.file_extension?.toUpperCase() || item.name?.split('.').pop()?.toUpperCase() || 'FILE'}</span>
+                            <span>•</span>
+                            <span>${size}</span>
+                        </div>
                     </div>
                 </div>
                 <!-- Hover Actions -->
-                <div class="absolute inset-0 bg-black/30 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-blue-500 hover:bg-blue-500 hover:text-white transition-colors action-btn" data-action="info" data-id="${item.id}" title="Məlumat">
-                        <i class="fa-solid fa-info text-[8px]"></i>
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-500 hover:text-white transition-colors shadow-lg action-btn" data-action="info" data-id="${item.id}" title="Məlumat">
+                        <i class="fa-solid fa-info text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-green-500 hover:bg-green-500 hover:text-white transition-colors action-btn" data-action="share" data-id="${item.id}" title="Paylaş">
-                        <i class="fa-solid fa-share-nodes text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-green-600 hover:bg-green-500 hover:text-white transition-colors shadow-lg action-btn" data-action="share" data-id="${item.id}" title="Paylaş">
+                        <i class="fa-solid fa-share-nodes text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-purple-500 hover:bg-purple-500 hover:text-white transition-colors action-btn" data-action="send" data-id="${item.id}" title="Göndər">
-                        <i class="fa-solid fa-paper-plane text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-brand-blue hover:bg-brand-blue hover:text-white transition-colors shadow-lg download-btn" data-id="${item.id}" title="Yüklə">
+                        <i class="fa-solid fa-download text-xs"></i>
                     </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-brand-blue hover:bg-brand-blue hover:text-white transition-colors download-btn" data-id="${item.id}" title="Yüklə">
-                        <i class="fa-solid fa-download text-[8px]"></i>
-                    </button>
-                    <button class="w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors delete-btn" data-id="${item.id}" title="Sil">
-                        <i class="fa-solid fa-trash text-[8px]"></i>
+                    <button class="w-7 h-7 bg-white rounded-lg flex items-center justify-center text-red-600 hover:bg-red-500 hover:text-white transition-colors shadow-lg delete-btn" data-id="${item.id}" title="Sil">
+                        <i class="fa-solid fa-trash text-xs"></i>
                     </button>
                 </div>
             </div>
@@ -2328,7 +2186,7 @@ class FilesUI {
                         this.updatePersonalBreadcrumb();
                         this.loadPersonalFiles();
                     } else if (this.selectedCompany) {
-                        this.updateCompanyBreadcrumb(folder);
+                        this.updateCompanyBreadcrumb(folder.id);
                         this.loadCompanyFiles(this.selectedCompany);
                     }
                 }
@@ -2350,9 +2208,9 @@ class FilesUI {
         const items = document.querySelectorAll(`[data-id="${id}"]`);
         items.forEach(item => {
             if (selected) {
-                item.classList.add('border-brand-blue', 'ring-1', 'ring-brand-blue/20');
+                item.classList.add('border-brand-blue', 'ring-2', 'ring-brand-blue/20');
             } else {
-                item.classList.remove('border-brand-blue', 'ring-1', 'ring-brand-blue/20');
+                item.classList.remove('border-brand-blue', 'ring-2', 'ring-brand-blue/20');
             }
         });
     }
