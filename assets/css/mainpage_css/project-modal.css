@@ -1,0 +1,518 @@
+/* =============================================
+   PROJECT MODAL CSS - Layihə modal stilləri
+   Tarix: 13 Fevral 2026
+   ============================================= */
+
+/* === MODAL ƏSAS STİLLƏR === */
+.gti-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.gti-modal:not(.hidden) {
+    visibility: visible;
+    opacity: 1;
+}
+
+.gti-modal.hidden {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* === MODAL OVERLAY === */
+.gti-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* === MODAL KONTEYNER === */
+.gti-modal-container {
+    position: relative;
+    background: white;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 1000px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    animation: gtiModalSlideIn 0.4s ease;
+}
+
+.gti-modal-lg {
+    max-width: 900px;
+}
+
+.gti-modal-video {
+    max-width: 1100px;
+    width: 95%;
+}
+
+@keyframes gtiModalSlideIn {
+    from {
+        transform: translateY(-50px) scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* === MODAL BAŞLIQ === */
+.gti-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gti-modal-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: white;
+    letter-spacing: 0.5px;
+}
+
+/* === MODAL BAĞLAMA DÜYMƏSİ === */
+.gti-modal-close {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: white;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.3s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gti-modal-close:hover {
+    background: #e74c3c;
+    transform: rotate(90deg) scale(1.1);
+    border-color: transparent;
+}
+
+/* === MODAL BODY === */
+.gti-modal-body {
+    padding: 30px;
+    overflow-y: auto;
+    max-height: calc(90vh - 80px);
+    background: #f5f7fa;
+}
+
+/* === LOADING SPINNER === */
+.gti-modal-loading {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.gti-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e1e5e9;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: gtiSpinner 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes gtiSpinner {
+    to { transform: rotate(360deg); }
+}
+
+/* === VİDEO WRAPPER === */
+.gti-video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    height: 0;
+    overflow: hidden;
+    background: #000;
+    border-radius: 16px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.gti-video-wrapper video,
+.gti-video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* === PLAY DÜYMƏLƏRİ === */
+.gti-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.gti-play-btn i {
+    color: #3498db;
+    font-size: 35px;
+    margin-left: 5px;
+}
+
+.gti-play-btn:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    background: white;
+}
+
+.gti-youtube-btn {
+    background: rgba(255, 0, 0, 0.95);
+}
+
+.gti-youtube-btn i {
+    color: white;
+    font-size: 45px;
+    margin-left: 0;
+}
+
+.gti-youtube-btn:hover {
+    background: #ff3333;
+}
+
+/* === LAYİHƏ DETAYLARI === */
+.gti-project-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.gti-detail-media {
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #e9ecef;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.gti-detail-media img,
+.gti-detail-media video {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    display: block;
+}
+
+.gti-detail-info {
+    display: grid;
+    gap: 25px;
+}
+
+.gti-detail-card {
+    background: white;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eef2f6;
+}
+
+.gti-detail-card h4 {
+    margin: 0 0 20px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 12px;
+}
+
+.gti-detail-card h4:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 70px;
+    height: 4px;
+    background: linear-gradient(90deg, #3498db, #9b59b6);
+    border-radius: 2px;
+}
+
+/* === AÇIQLAMA MƏTNİ === */
+.gti-description {
+    line-height: 1.8;
+    color: #34495e;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* === META MƏLUMATLAR === */
+.gti-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.gti-meta-item {
+    background: #f8fafd;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s;
+}
+
+.gti-meta-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(52, 152, 219, 0.15);
+    border-color: #3498db;
+}
+
+.gti-meta-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.gti-meta-value {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* === TEXNOLOGİYA TAQLARI === */
+.gti-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.gti-tag {
+    background: linear-gradient(135deg, #e8f0fe 0%, #e6e9f0 100%);
+    color: #2c3e50;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 0.95rem;
+    border: 1px solid #dde4ec;
+    transition: all 0.2s;
+    cursor: default;
+}
+
+.gti-tag:hover {
+    background: linear-gradient(135deg, #3498db 0%, #9b59b6 100%);
+    color: white;
+    border-color: transparent;
+}
+
+/* === MOBİL VERSİYA === */
+@media (max-width: 768px) {
+    .gti-modal-header {
+        padding: 15px 20px;
+    }
+
+    .gti-modal-title {
+        font-size: 1.2rem;
+    }
+
+    .gti-modal-body {
+        padding: 20px;
+    }
+
+    .gti-detail-card {
+        padding: 18px;
+    }
+
+    .gti-meta-item {
+        padding: 15px;
+    }
+
+    .gti-play-btn {
+        width: 60px;
+        height: 60px;
+    }
+
+    .gti-play-btn i {
+        font-size: 25px;
+    }
+
+    .gti-youtube-btn i {
+        font-size: 30px;
+    }
+}
+
+/* === KİÇİK EKRANLAR === */
+@media (max-width: 480px) {
+    .gti-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gti-detail-card h4 {
+        font-size: 1.1rem;
+    }
+
+    .gti-description {
+        font-size: 1rem;
+    }
+}
+
+/* === YOUTUBE THUMBNAIL === */
+.gti-youtube-thumbnail {
+    position: relative;
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.gti-youtube-thumbnail img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.gti-youtube-thumbnail:hover img {
+    transform: scale(1.05);
+}
+
+.gti-youtube-thumbnail .gti-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.gti-youtube-thumbnail:hover .gti-play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* === VİDEO KONTROLLARI === */
+.gti-video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.gti-video-container video {
+    width: 100%;
+    display: block;
+}
+
+.gti-video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.gti-video-container:hover .gti-video-overlay {
+    opacity: 1;
+}
+
+/* === LAYİHƏ KARTLARI ÜÇƏN PLAY DÜYMƏLƏRİ === */
+.project-item {
+    position: relative;
+    cursor: pointer;
+}
+
+.project-media-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px 12px 0 0;
+}
+
+.video-play-btn-overlay,
+.youtube-play-btn-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 5;
+    opacity: 0.9;
+}
+
+.video-play-btn-overlay i {
+    color: #3498db;
+    font-size: 28px;
+    margin-left: 3px;
+}
+
+.youtube-play-btn-overlay {
+    background: rgba(255, 0, 0, 0.95);
+}
+
+.youtube-play-btn-overlay i {
+    color: white;
+    font-size: 32px;
+}
+
+.video-play-btn-overlay:hover,
+.youtube-play-btn-overlay:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+}
+
+/* === PLACEHOLDER STİLLƏRİ === */
+.project-placeholder {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    font-weight: bold;
+    border-radius: 12px;
+}

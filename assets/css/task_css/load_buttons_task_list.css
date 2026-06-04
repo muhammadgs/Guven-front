@@ -1,0 +1,222 @@
+/* Select button styles */
+.task-limit-select {
+    padding: 8px 32px 8px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1e293b;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 14px;
+    min-width: 130px;
+}
+
+.task-limit-select:hover {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e9eef3 100%);
+    border-color: #cbd5e1;
+}
+
+.task-limit-select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+body .table-card {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Task Manager table: ekranın qalan hündürlüyünü tam tutsun */
+html,
+body {
+    min-height: 100vh;
+}
+
+body {
+    overflow: hidden;
+}
+
+/* Daxili / Şirkət / Partnyor / Arxiv cədvəl kartları ekranı doldursun */
+body .table-card:not(.new-task-section):not(.report-section) {
+    height: calc(100vh - 112px) !important;
+    min-height: calc(100vh - 112px) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header sabit qalsın, cədvəl hissəsi böyüsün */
+body .table-card:not(.new-task-section):not(.report-section) .table-header {
+    flex: 0 0 auto;
+}
+
+/* Əsas fix: 500px limiti silinir, ekranın qalan hissəsini tutur */
+body .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow: auto !important;
+}
+
+/* Table yuxarıdan aşağıya qədər normal yayılsın */
+body .table-card:not(.new-task-section):not(.report-section) .data-table {
+    width: 100%;
+}
+
+/* Sticky header scroll içində düzgün işləsin */
+body .table-card:not(.new-task-section):not(.report-section) .data-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+/* ===== Unified Task Manager scrolling system ===== */
+:root { --tm-section-gap: 80px; }
+body { overflow: hidden; }
+body .table-card { min-height: 0; }
+body .table-card:not(.new-task-section):not(.report-section) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--tm-section-gap));
+  height: calc(100vh - var(--tm-section-gap));
+  overflow: hidden;
+}
+body .table-card:not(.new-task-section):not(.report-section) .table-header,
+body .table-card:not(.new-task-section):not(.report-section) .table-meta,
+body .table-card:not(.new-task-section):not(.report-section) .table-footer { flex: 0 0 auto; }
+body .table-card:not(.new-task-section):not(.report-section) .table-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  max-height: none;
+}
+body .table-card:not(.new-task-section):not(.report-section) .data-table,
+body .table-card:not(.new-task-section):not(.report-section) .excel-table { width: max-content; min-width: 100%; }
+body .table-card:not(.new-task-section):not(.report-section) .data-table thead,
+body .table-card:not(.new-task-section):not(.report-section) .excel-table thead { position: sticky; top: 0; z-index: 10; }
+
+
+#newTaskCreateSection {
+  max-height: calc(100vh - var(--tm-section-gap));
+  overflow: auto;
+}
+
+@media (max-width: 768px) {
+  :root { --tm-section-gap: 100px; }
+}
+
+/* ===== Report section scroll fix (Hesabat only) ===== */
+#reportTableSection.table-card.report-section {
+  flex-direction: column;
+  height: calc(100vh - var(--tm-section-gap));
+  max-height: calc(100vh - var(--tm-section-gap));
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+#reportTableSection.table-card.report-section > * {
+  flex: 0 0 auto;
+}
+
+#reportTableSection.report-section .report-table-wrapper,
+#reportTableSection.report-section .tab-content,
+#reportTableSection.report-section .tab-content.active {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+#reportTableSection.report-section .report-data-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.task-section-hidden {
+  display: none !important;
+}
+
+.task-manager-section-active .task-section-active.table-card {
+  display: flex;
+}
+
+.task-manager-section-active .task-section-active:not(.table-card) {
+  display: block;
+}
+
+
+/* ===== Task Manager active table sections: fill remaining viewport cleanly ===== */
+:root {
+  --task-section-top-gap: 0px;
+  --task-bottom-gap: 0px;
+}
+
+#activeTableSection,
+#externalTableSection,
+#partnerTableSection,
+#archiveTableSection {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection,
+.task-manager-section-active .task-section-active#externalTableSection,
+.task-manager-section-active .task-section-active#partnerTableSection,
+.task-manager-section-active .task-section-active#archiveTableSection {
+  margin-top: var(--task-section-top-gap) !important;
+  height: calc(100vh - var(--tm-section-gap) - var(--task-bottom-gap)) !important;
+  max-height: calc(100vh - var(--tm-section-gap) - var(--task-bottom-gap)) !important;
+  min-height: calc(100vh - var(--tm-section-gap) - var(--task-bottom-gap)) !important;
+  margin-bottom: var(--task-bottom-gap) !important;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#externalTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#partnerTableSection .table-wrapper,
+.task-manager-section-active .task-section-active#archiveTableSection .table-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .table-header,
+.task-manager-section-active .task-section-active#externalTableSection .table-header,
+.task-manager-section-active .task-section-active#partnerTableSection .table-header,
+.task-manager-section-active .task-section-active#archiveTableSection .table-header,
+.task-manager-section-active .task-section-active#archiveTableSection .archive-tabs,
+.task-manager-section-active .task-section-active#activeTableSection .filter-bar,
+.task-manager-section-active .task-section-active#externalTableSection .filter-bar,
+.task-manager-section-active .task-section-active#partnerTableSection .filter-bar {
+  flex: 0 0 auto;
+}
+
+.task-manager-section-active .task-section-active#activeTableSection .data-table,
+.task-manager-section-active .task-section-active#externalTableSection .data-table,
+.task-manager-section-active .task-section-active#partnerTableSection .excel-table,
+.task-manager-section-active .task-section-active#archiveTableSection .data-table,
+.task-manager-section-active .task-section-active#archiveTableSection .excel-table {
+  width: max-content;
+  min-width: 100%;
+  margin-bottom: 0 !important;
+}
+
+/* Səhifənin altındakı boşluğu tamamilə silmək üçün */
+body .page-content {
+    padding-bottom: 0 !important;
+}
