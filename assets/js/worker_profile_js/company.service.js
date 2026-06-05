@@ -1390,7 +1390,7 @@ class CompaniesService {
     <div style="background:#fff;border:.5px solid #e5e7eb;border-radius:12px;overflow:hidden;">
         <div style="display:flex;border-bottom:.5px solid #e5e7eb;padding:0 8px;overflow-x:auto;" id="cdpTabBar">
             <button class="cdp-tab on" data-tab="info"><i class="fa-solid fa-circle-info" style="font-size:12px;margin-right:5px;"></i>Məlumatlar</button>
-            <button class="cdp-tab" data-tab="services"><i class="fa-solid fa-handshake" style="font-size:12px;margin-right:5px;"></i>Xidmətlər</button>
+            <button class="cdp-tab" data-tab="services"><i class="fa-solid fa-file-contract" style="font-size:12px;margin-right:5px;"></i>Müqavilələr</button>
             <button class="cdp-tab" data-tab="employees"><i class="fa-solid fa-users" style="font-size:12px;margin-right:5px;"></i>Əməkdaşlar</button>
             <button class="cdp-tab" data-tab="files"><i class="fa-solid fa-folder-open" style="font-size:12px;margin-right:5px;"></i>Fayllar</button>
         </div>
@@ -1398,6 +1398,184 @@ class CompaniesService {
     </div>
     <div id="cdpModal"></div>
         `;
+    }
+
+    getCurrentCompanyId() {
+        const token = localStorage.getItem('guven_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.company_id) return payload.company_id;
+                if (payload.company?.id) return payload.company.id;
+            } catch(e) {}
+        }
+
+        try {
+            const ud = JSON.parse(localStorage.getItem('userData') || '{}');
+            return ud?.company_id || ud?.user?.company_id || ud?.company?.id || ud?.user?.company?.id || null;
+        } catch(e) {
+            return null;
+        }
+    }
+
+    getCurrentCompanyCode() {
+        if (this.userCompanyCode) return this.userCompanyCode;
+        const token = localStorage.getItem('guven_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.company_code) return payload.company_code;
+                if (payload.company?.company_code) return payload.company.company_code;
+            } catch(e) {}
+        }
+
+        try {
+            const ud = JSON.parse(localStorage.getItem('userData') || '{}');
+            return ud?.company_code || ud?.user?.company_code || ud?.company?.company_code || ud?.user?.company?.company_code || '';
+        } catch(e) {
+            return '';
+        }
+    }
+
+    getCurrentUserId() {
+        const token = localStorage.getItem('guven_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                if (payload.user_id) return payload.user_id;
+                if (payload.id) return payload.id;
+                if (payload.sub) return payload.sub;
+            } catch(e) {}
+        }
+
+        try {
+            const ud = JSON.parse(localStorage.getItem('userData') || '{}');
+            return ud?.id || ud?.user_id || ud?.user?.id || ud?.user?.user_id || null;
+        } catch(e) {
+            return null;
+        }
+    }
+
+    getRelationshipRole(company) {
+        if (!company) return 'unknown';
+        if (company.is_child === true || company.relationship_type === 'child') return 'executor';
+        if (company.is_parent === true || company.relationship_type === 'parent') return 'customer';
+        if (company.relationship_type === 'main') return 'main';
+        return 'unknown';
+    }
+
+    canCreateContract(company) {
+        return this.getRelationshipRole(company) === 'executor';
+    }
+
+    canConfirmContract(company, contract) {
+        const currentCompanyId = this.getCurrentCompanyId();
+        return this.getRelationshipRole(company) === 'customer' &&
+            !this._isContractConfirmed(contract) &&
+            String(contract?.partner_company_id || '') === String(currentCompanyId || '');
+    }
+
+    canAddServiceToContract(company, contract) {
+        const currentCompanyId = this.getCurrentCompanyId();
+        return this.getRelationshipRole(company) === 'executor' &&
+            this._isContractConfirmed(contract) &&
+            String(contract?.creator_company_id || '') === String(currentCompanyId || '');
+    }
+
+    _isContractConfirmed(contract) {
+        return contract?.is_confirmed === true || contract?.is_confirmed === 'true' || contract?.is_confirmed === 1 || contract?.is_confirmed === '1';
+    }
+
+    _escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    _getApiItems(response) {
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.items)) return response.items;
+        if (Array.isArray(response?.data)) return response.data;
+        if (Array.isArray(response?.data?.items)) return response.data.items;
+        return [];
+    }
+
+    _buildContractPayload(company, formValues) {
+        const amount = String(formValues.amount || '').trim();
+        return {
+            service_name: formValues.contractName.trim(),
+            service_type: 'other',
+            contract_code: formValues.contractCode.trim(),
+            start_date: formValues.startDate || null,
+            end_date: formValues.endDate || null,
+            service_amount: amount !== '' ? parseFloat(amount) : null,
+            currency: formValues.currency || 'AZN',
+            description: formValues.description?.trim() || null,
+            creator_company_id: this.getCurrentCompanyId(),
+            partner_company_id: company.id,
+            is_active: true,
+            status: 'active'
+        };
+    }
+
+    async _fetchContractsBetween(company) {
+        const currentCompanyId = this.getCurrentCompanyId();
+        const viewedCompanyId = company?.id;
+        if (!currentCompanyId || !viewedCompanyId || !this.apiService) return [];
+
+        let allContracts = [];
+        try {
+            const res = await this.apiService.get(`/company-services/?company_id=${encodeURIComponent(currentCompanyId)}&per_page=100`);
+            if (res?.success === false) throw new Error(res.error || 'Filtrli sorğu uğursuz oldu');
+            allContracts = this._getApiItems(res);
+        } catch(e) {
+            console.warn('Müqavilələr filtrli sorğu ilə yüklənmədi, fallback istifadə olunur:', e);
+            const fallback = await this.apiService.get('/company-services/');
+            if (fallback?.success === false) throw new Error(fallback.error || 'Müqavilələr yüklənmədi');
+            allContracts = this._getApiItems(fallback);
+        }
+
+        return allContracts.filter(item => {
+            const isBetween =
+                (item.creator_company_id == currentCompanyId && item.partner_company_id == viewedCompanyId) ||
+                (item.creator_company_id == viewedCompanyId && item.partner_company_id == currentCompanyId);
+            return isBetween;
+        });
+    }
+
+    async _loadWorkTypesForCurrentCompany() {
+        const companyId = this.getCurrentCompanyId();
+        if (!companyId) return [];
+        if (typeof window.getWorkTypesWithCache === 'function') {
+            const list = await window.getWorkTypesWithCache(companyId);
+            return Array.isArray(list) ? list : [];
+        }
+        if (this.apiService) {
+            const response = await this.apiService.get(`/worktypes/company/${companyId}`);
+            return this._getApiItems(response);
+        }
+        return [];
+    }
+
+    async createServiceForContract(company, contract, workType) {
+        const workTypeName = workType?.work_type_name || workType?.name || workType?.title || workType?.value || String(workType || '').trim();
+        const currentCompanyId = this.getCurrentCompanyId();
+        // TODO: Backend contract_id / dedicated services endpoint təqdim edəndə yalnız bu helper-in payload-u dəyişdiriləcək.
+        const payload = {
+            service_name: contract?.service_name || workTypeName,
+            service_type: 'other',
+            contract_code: contract?.contract_code || null,
+            creator_company_id: currentCompanyId,
+            partner_company_id: company.id,
+            notes: workTypeName,
+            description: `Xidmət növü: ${workTypeName}`,
+            is_active: true,
+            status: 'active'
+        };
+        return this.apiService.post('/company-services/', payload);
     }
 
     _cdpBindTabs(company, companyCode) {
@@ -1409,375 +1587,236 @@ class CompaniesService {
                 btn.classList.add('on');
                 const tab = btn.dataset.tab;
                 if (tab === 'info') this._cdpRenderServices(companyCode);
-                if (tab === 'services') this._cdpRenderServicesList(company);
+                if (tab === 'services') this._cdpRenderContractsList(company);
                 if (tab === 'employees') this._cdpRenderEmployees();
                 if (tab === 'files') this._cdpRenderFiles(companyCode);
             });
         });
     }
 
-    async _cdpRenderServicesList(company) {
+
+    async _cdpRenderContractsList(company) {
         const body = document.getElementById('cdpBody');
         if (!body) return;
-        body.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Xidmətlər yüklənir...</div>';
+        body.innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Müqavilələr yüklənir...</div>';
 
-        let services = [];
+        let contracts = [];
         try {
-            if (this.apiService) {
-                // Fetch without query param to prevent 500 error, and filter locally
-                const res = await this.apiService.get(`/company-services/`);
-                let allServices = res?.items || (Array.isArray(res) ? res : []);
-                services = allServices.filter(s => s.partner_company_id == company.id);
-            }
+            contracts = await this._fetchContractsBetween(company);
         } catch(e) {
-            console.error('Xidmətləri yükləmə xətası:', e);
-            body.innerHTML = '<div style="color:red;text-align:center;padding:20px;">Məlumatları yükləmək mümkün olmadı</div>';
+            console.error('Müqavilələri yükləmə xətası:', e);
+            body.innerHTML = '<div style="color:#991b1b;text-align:center;padding:20px;background:#fef2f2;border-radius:12px;">Müqavilələri yükləmək mümkün olmadı. Zəhmət olmasa bir az sonra yenidən yoxlayın.</div>';
             return;
         }
 
-        const formatMoney = (m, curr) => {
-            if (!m) return '—';
-            return Number(m).toLocaleString('az-AZ', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + (curr || '');
-        };
-
+        const role = this.getRelationshipRole(company);
+        const roleText = role === 'executor' ? 'Siz icraçı tərəfsiniz' : role === 'customer' ? 'Siz sifarişçi tərəfsiniz' : 'Əlaqə rolu müəyyən edilməyib';
+        const formatMoney = (m, curr) => (m === null || m === undefined || m === '') ? '—' : Number(m).toLocaleString('az-AZ', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + (curr || '');
         const formatDate = d => d ? new Date(d).toLocaleDateString('az-AZ') : '—';
 
-        const serviceCards = services.length ? services.map(s => {
-            const isConfirmed = s.is_confirmed;
-            const statusColor = s.is_active ? '#10b981' : '#ef4444';
-            const statusText = s.is_active ? 'Aktiv' : 'Deaktiv';
-            
+        const contractCards = contracts.length ? contracts.map(contract => {
+            const isConfirmed = this._isContractConfirmed(contract);
+            const statusBg = isConfirmed ? '#DCFCE7' : '#FEF3C7';
+            const statusColor = isConfirmed ? '#166534' : '#92400E';
+            const statusText = isConfirmed ? 'Təsdiq edilmişdir' : 'Təsdiq gözləyir';
+            const canConfirm = this.canConfirmContract(company, contract);
+            const canAdd = this.canAddServiceToContract(company, contract);
+            const showDisabledAdd = role === 'executor' && String(contract.creator_company_id || '') === String(this.getCurrentCompanyId() || '') && !isConfirmed;
+            const contractName = this._escapeHtml(contract.service_name || contract.contract_name || 'Adsız müqavilə');
+            const contractCode = this._escapeHtml(contract.contract_code || '—');
+            const description = this._escapeHtml(contract.description || contract.notes || '');
+
             return `
-            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;border-bottom:1px solid #f3f4f6;padding-bottom:12px;">
-                    <div>
-                        <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:4px;">${s.service_name || 'Adsız Xidmət'}</div>
-                        <div style="display:flex;gap:8px;align-items:center;">
-                            <span style="font-size:11px;background:#f3f4f6;color:#4b5563;padding:2px 8px;border-radius:12px;">${s.service_type || '—'}</span>
-                            <span style="font-size:11px;color:#6b7280;"><i class="fa-solid fa-file-contract"></i> ${s.contract_code || '—'}</span>
+            <div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 8px 24px rgba(15,23,42,0.04);">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px;">
+                    <div style="min-width:0;">
+                        <div style="font-size:17px;font-weight:700;color:#111827;margin-bottom:6px;word-break:break-word;">${contractName}</div>
+                        <div style="font-size:12px;color:#6b7280;display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+                            <span style="background:#EFF6FF;color:#185FA5;padding:4px 9px;border-radius:999px;"><i class="fa-solid fa-file-contract" style="margin-right:5px;"></i>${contractCode}</span>
+                            <span>${this._escapeHtml(roleText)}</span>
                         </div>
                     </div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-                        <span style="font-size:12px;background:${statusColor}20;color:${statusColor};padding:4px 10px;border-radius:12px;font-weight:500;">${statusText}</span>
-                        ${isConfirmed 
-                            ? '<span style="font-size:11px;color:#10b981;"><i class="fa-solid fa-check-circle"></i> Təsdiqlənib</span>' 
-                            : '<span style="font-size:11px;color:#f59e0b;"><i class="fa-solid fa-clock"></i> Gözləyir</span>'}
-                    </div>
+                    <span style="font-size:12px;background:${statusBg};color:${statusColor};padding:6px 12px;border-radius:999px;font-weight:700;white-space:nowrap;">${statusText}</span>
                 </div>
-                
-                <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-bottom:16px;">
-                    <div style="background:#f9fafb;padding:10px;border-radius:8px;">
-                        <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">Məbləğ</div>
-                        <div style="font-size:14px;font-weight:600;color:#111;">${formatMoney(s.service_amount, s.currency)}</div>
-                    </div>
-                    <div style="background:#f9fafb;padding:10px;border-radius:8px;">
-                        <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">Başlama</div>
-                        <div style="font-size:13px;font-weight:500;color:#111;">${formatDate(s.start_date)}</div>
-                    </div>
-                    <div style="background:#f9fafb;padding:10px;border-radius:8px;">
-                        <div style="font-size:11px;color:#6b7280;margin-bottom:2px;">Bitmə</div>
-                        <div style="font-size:13px;font-weight:500;color:#111;">${formatDate(s.end_date)}</div>
-                    </div>
+
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px;">
+                    <div style="background:#f9fafb;border-radius:12px;padding:11px;"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Başlama tarixi</div><div style="font-size:13px;font-weight:600;color:#111827;">${formatDate(contract.start_date)}</div></div>
+                    <div style="background:#f9fafb;border-radius:12px;padding:11px;"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Bitmə tarixi</div><div style="font-size:13px;font-weight:600;color:#111827;">${formatDate(contract.end_date)}</div></div>
+                    <div style="background:#f9fafb;border-radius:12px;padding:11px;"><div style="font-size:11px;color:#6b7280;margin-bottom:4px;">Məbləğ</div><div style="font-size:13px;font-weight:600;color:#111827;">${formatMoney(contract.service_amount, contract.currency)}</div></div>
                 </div>
-                
-                ${s.description ? `<div style="font-size:12px;color:#4b5563;margin-bottom:12px;background:#f8fafc;padding:8px;border-left:3px solid #cbd5e1;border-radius:0 8px 8px 0;">${s.description}</div>` : ''}
-                
-                <div style="display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #f3f4f6;padding-top:12px;">
-                    ${!isConfirmed ? `<button onclick="window.guvenCompanyServiceConfirm(${s.id})" style="padding:6px 12px;background:#10b981;color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;"><i class="fa-solid fa-check"></i> Təsdiqlə</button>` : ''}
-                    <button onclick="window.guvenCompanyServiceEdit(${s.id})" style="padding:6px 12px;background:#f3f4f6;color:#374151;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;"><i class="fa-solid fa-pen"></i> Redaktə</button>
-                    <button onclick="window.guvenCompanyServiceDelete(${s.id})" style="padding:6px 12px;background:#fef2f2;color:#ef4444;border:none;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s;"><i class="fa-solid fa-trash"></i> Sil</button>
+
+                ${description ? `<div style="font-size:12px;color:#4b5563;margin-bottom:14px;background:#f8fafc;padding:10px 12px;border-left:3px solid #185FA5;border-radius:0 10px 10px 0;">${description}</div>` : ''}
+
+                <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f3f4f6;padding-top:14px;">
+                    ${canConfirm ? `<button onclick="window.guvenCompanyContractConfirm(${contract.id})" style="padding:8px 14px;background:#16a34a;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;"><i class="fa-solid fa-check" style="margin-right:6px;"></i>Təsdiqlə</button>` : ''}
+                    ${canAdd ? `<button onclick="window.guvenCompanyContractAddService(${contract.id})" style="padding:8px 14px;background:#185FA5;color:white;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;"><i class="fa-solid fa-plus" style="margin-right:6px;"></i>Xidmət əlavə et</button>` : ''}
+                    ${showDisabledAdd ? `<div style="display:flex;align-items:center;gap:8px;color:#6b7280;font-size:12px;"><button disabled style="padding:8px 14px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-weight:600;cursor:not-allowed;"><i class="fa-solid fa-lock" style="margin-right:6px;"></i>Xidmət əlavə et</button><span>Əvvəlcə sifarişçi təsdiqləməlidir</span></div>` : ''}
                 </div>
-            </div>
-            `;
-        }).join('') : '<div style="text-align:center;padding:40px;color:#9ca3af;background:#f9fafb;border-radius:12px;"><i class="fa-solid fa-box-open" style="font-size:32px;margin-bottom:12px;display:block;color:#d1d5db;"></i>Hələ xidmət əlavə edilməyib</div>';
+            </div>`;
+        }).join('') : '<div style="text-align:center;padding:42px;color:#9ca3af;background:#f9fafb;border:1px dashed #d1d5db;border-radius:16px;"><i class="fa-solid fa-file-contract" style="font-size:34px;margin-bottom:12px;display:block;color:#d1d5db;"></i>Bu şirkətlə hələ müqavilə yoxdur</div>';
 
         body.innerHTML = `
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-                <h3 style="margin:0;font-size:16px;color:#111;">Şirkət Xidmətləri</h3>
-                <button id="cdpAddServiceBtn" style="padding:8px 16px;background:#185FA5;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;">
-                    <i class="fa-solid fa-plus"></i> Yeni Xidmət
-                </button>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap;">
+                <div>
+                    <h3 style="margin:0 0 6px;font-size:20px;font-weight:700;color:#111827;">Müqavilələr</h3>
+                    <p style="margin:0;font-size:13px;color:#6b7280;">Bu şirkətlə qarşılıqlı müqavilələr və xidmət növləri</p>
+                </div>
+                ${this.canCreateContract(company) ? `<button id="cdpAddContractBtn" style="padding:10px 16px;background:#185FA5;color:white;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 8px 18px rgba(24,95,165,0.18);"><i class="fa-solid fa-plus"></i> Yeni müqavilə</button>` : ''}
             </div>
-            <div id="servicesListContainer">
-                ${serviceCards}
-            </div>
+            <div id="contractsListContainer">${contractCards}</div>
         `;
 
-        window.guvenCompanyServiceEdit = async (id) => {
-            const svc = services.find(x => x.id === id);
-            if (svc) this._cdpShowServiceModal(company, svc);
-        };
-        
-        window.guvenCompanyServiceDelete = async (id) => {
-            if(confirm('Bu xidməti silmək istədiyinizə əminsiniz?')) {
-                try {
-                    await this.apiService.delete(`/company-services/${id}`);
-                    this._cdpRenderServicesList(company);
-                } catch(e) {
-                    alert('Silmə zamanı xəta oldu.');
-                }
+        window.guvenCompanyContractConfirm = async (id) => {
+            const contract = contracts.find(x => String(x.id) === String(id));
+            if (!contract || !this.canConfirmContract(company, contract)) return;
+            if (!confirm('Bu müqaviləni təsdiqləmək istədiyinizə əminsiniz?')) return;
+            try {
+                const result = await this.apiService.post(`/company-services/${id}/confirm`, { confirmed_by: this.getCurrentUserId() });
+                if (result?.success === false) throw new Error(result.error || 'Təsdiqləmə uğursuz oldu');
+                await this._cdpRenderContractsList(company);
+            } catch(e) {
+                console.error('Müqavilə təsdiqləmə xətası:', e);
+                alert('Müqaviləni təsdiqləmək mümkün olmadı. Zəhmət olmasa yenidən cəhd edin.');
             }
         };
 
-        window.guvenCompanyServiceConfirm = async (id) => {
-            if(confirm('Bu xidməti təsdiqləmək istədiyinizə əminsiniz?')) {
-                try {
-                    let userData = {};
-                    try { userData = JSON.parse(localStorage.getItem('userData') || '{}'); } catch(e){}
-                    await this.apiService.post(`/company-services/${id}/confirm`, {
-                        confirmed_by: userData.id || userData.user?.id || 1
-                    });
-                    this._cdpRenderServicesList(company);
-                } catch(e) {
-                    alert('Təsdiqləmə zamanı xəta oldu.');
-                }
+        window.guvenCompanyContractAddService = (id) => {
+            const contract = contracts.find(x => String(x.id) === String(id));
+            if (contract && this.canAddServiceToContract(company, contract)) {
+                this._cdpShowContractServiceModal(company, contracts, contract);
             }
         };
 
-        document.getElementById('cdpAddServiceBtn')?.addEventListener('click', () => {
-            this._cdpShowServiceModal(company, null);
+        document.getElementById('cdpAddContractBtn')?.addEventListener('click', () => {
+            this._cdpShowContractModal(company);
         });
     }
 
-    _cdpShowServiceModal(company, serviceData = null) {
-        const isEdit = !!serviceData;
+    _cdpShowContractModal(company) {
+        if (!this.canCreateContract(company)) return;
         const m = document.getElementById('cdpModal');
         if (!m) return;
-
-        const f = (key) => serviceData ? (serviceData[key] || '') : '';
-        const chk = (key, defaultVal) => serviceData ? (serviceData[key] ? 'checked' : '') : (defaultVal ? 'checked' : '');
-
         m.innerHTML = `
-            <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(2px);" id="serviceAddOverlay">
-                <div style="background:#fff;border-radius:16px;width:600px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(2px);" id="contractAddOverlay">
+                <div style="background:#fff;border-radius:16px;width:620px;max-width:92vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 24px 48px rgba(15,23,42,0.18);">
                     <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;">
-                        <h3 style="margin:0;font-size:16px;font-weight:600;">${isEdit ? 'Xidməti Redaktə Et' : 'Yeni Xidmət Əlavə Et'}</h3>
-                        <button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;font-size:20px;color:#6b7280;cursor:pointer;transition:0.2s;">&times;</button>
+                        <h3 style="margin:0;font-size:18px;font-weight:700;color:#111827;">Yeni müqavilə</h3>
+                        <button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;font-size:22px;color:#6b7280;cursor:pointer;">&times;</button>
                     </div>
-                    
                     <div style="padding:20px 24px;overflow-y:auto;flex:1;">
-                        <form id="serviceForm">
-                            <input type="hidden" id="srv_id" value="${f('id')}">
-                            
+                        <form id="contractForm">
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Xidmətin Adı *</label>
-                                    <input required id="srv_name" type="text" value="${f('service_name')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" placeholder="Məs: Kredit Sığortası">
-                                </div>
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Xidmətin Növü *</label>
-                                    <select required id="srv_type" data-selected-val="${f('service_type')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;">
-                                        <option value="">Yüklənir...</option>
-                                    </select>
-                                </div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Müqavilə adı *</label><input required id="contract_name" type="text" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;" placeholder="Məs: İllik xidmət müqaviləsi"></div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Müqavilə kodu *</label><input required id="contract_code" type="text" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;" placeholder="Məs: GF-2026-001"></div>
                             </div>
-
-                            <div style="margin-bottom:16px;">
-                                <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Müqavilə Kodu</label>
-                                <input id="srv_contract" type="text" value="${f('contract_code')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" placeholder="Məs: GF-2026-001">
-                            </div>
-
                             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Başlama Tarixi</label>
-                                    <input id="srv_start" type="date" value="${f('start_date')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;">
-                                </div>
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Bitmə Tarixi</label>
-                                    <input id="srv_end" type="date" value="${f('end_date')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;">
-                                </div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Başlama tarixi</label><input id="contract_start" type="date" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;"></div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Bitmə tarixi</label><input id="contract_end" type="date" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;"></div>
                             </div>
-
                             <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;">
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Məbləğ <span style="font-size:11px;color:#9ca3af;font-weight:400;">(ixtiyari)</span></label>
-                                    <input id="srv_amount" type="number" step="0.01" value="${f('service_amount')}" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" placeholder="0.00">
-                                </div>
-                                <div>
-                                    <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Valyuta</label>
-                                    <select id="srv_currency" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;">
-                                        <option value="AZN" ${f('currency')==='AZN'?'selected':''}>AZN</option>
-                                        <option value="USD" ${f('currency')==='USD'?'selected':''}>USD</option>
-                                        <option value="EUR" ${f('currency')==='EUR'?'selected':''}>EUR</option>
-                                    </select>
-                                </div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Məbləğ</label><input id="contract_amount" type="number" step="0.01" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;" placeholder="0.00"></div>
+                                <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Valyuta</label><select id="contract_currency" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;"><option value="AZN">AZN</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
                             </div>
-                            
-                            <div style="margin-bottom:16px;">
-                                <label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:500;">Təsvir</label>
-                                <textarea id="srv_desc" rows="3" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;resize:vertical;" placeholder="Xidmət haqqında qısa məlumat...">${f('description')}</textarea>
-                            </div>
-                            
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <input type="checkbox" id="srv_active" ${chk('is_active', true)} style="width:16px;height:16px;accent-color:#185FA5;">
-                                <label for="srv_active" style="font-size:13px;color:#374151;cursor:pointer;">Xidmət Aktivdir</label>
-                            </div>
+                            <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Açıqlama / qeyd</label><textarea id="contract_description" rows="4" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;resize:vertical;" placeholder="Müqavilə haqqında əlavə məlumat..."></textarea></div>
                         </form>
                     </div>
-                    
                     <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:12px;background:#f9fafb;border-bottom-left-radius:16px;border-bottom-right-radius:16px;">
-                        <button type="button" onclick="document.getElementById('cdpModal').innerHTML=''" style="padding:10px 16px;background:white;border:1px solid #d1d5db;color:#374151;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:0.2s;">Ləğv Et</button>
-                        <button type="button" id="saveServiceBtn" style="padding:10px 20px;background:#185FA5;color:white;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:0.2s;">${isEdit ? 'Yadda Saxla' : 'Əlavə Et'}</button>
+                        <button type="button" onclick="document.getElementById('cdpModal').innerHTML=''" style="padding:10px 16px;background:white;border:1px solid #d1d5db;color:#374151;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Ləğv et</button>
+                        <button type="button" id="saveContractBtn" style="padding:10px 20px;background:#185FA5;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Yarat</button>
                     </div>
                 </div>
-            </div>
-        `;
-
-        document.getElementById('serviceAddOverlay')?.addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) m.innerHTML = '';
-        });
-
-        // Xidmət növlərini (İş növlərini) tapşırıq dialogu ilə eyni mənbədən gətir
-        (async () => {
-            try {
-                // company_id-ni müəyyən et (tapşırıq dialogu ilə eyni yanaşma)
-                let companyId = null;
-
-                // 1. Token-dan al (ən etibarlı)
-                const token = localStorage.getItem('guven_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
-                if (token) {
-                    try {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        if (payload.company_id) companyId = payload.company_id;
-                    } catch(e) {}
-                }
-
-                // 2. localStorage userData-dan al (fallback)
-                if (!companyId) {
-                    try {
-                        const ud = JSON.parse(localStorage.getItem('userData') || '{}');
-                        companyId = ud?.company_id || ud?.user?.company_id;
-                    } catch(e) {}
-                }
-
-                // 3. Global cache funksiyasından istifadə et (tapşırıq dialogu ilə eyni)
-                let list = [];
-                if (companyId && typeof window.getWorkTypesWithCache === 'function') {
-                    list = await window.getWorkTypesWithCache(companyId);
-                } else if (companyId && this.apiService) {
-                    const response = await this.apiService.get(`/worktypes/company/${companyId}`);
-                    list = Array.isArray(response) ? response : (response?.data || response?.items || []);
-                }
-                
-                const srvTypeSelect = document.getElementById('srv_type');
-                if (srvTypeSelect) {
-                    const selectedVal = srvTypeSelect.getAttribute('data-selected-val');
-                    let html = '<option value="">İş növü seçin</option>';
-                    if (list.length > 0) {
-                        list.forEach(wt => {
-                            if (wt.is_active !== false) {
-                                const name = wt.work_type_name || wt.name || `İş növü ${wt.id}`;
-                                const isSelected = (selectedVal === name || selectedVal === wt.id.toString()) ? 'selected' : '';
-                                html += `<option value="${name}" ${isSelected}>${name}</option>`;
-                            }
-                        });
-                    } else {
-                        html += '<option value="">İş növü tapılmadı</option>';
-                    }
-                    srvTypeSelect.innerHTML = html;
-                }
-            } catch(e) {
-                console.error('Work types yüklənə bilmədi', e);
-                const srvTypeSelect = document.getElementById('srv_type');
-                if (srvTypeSelect) srvTypeSelect.innerHTML = '<option value="">Xəta baş verdi</option>';
-            }
-        })();
-
-        document.getElementById('saveServiceBtn')?.addEventListener('click', async () => {
-            const form = document.getElementById('serviceForm');
-            if (!form.checkValidity()) {
-                form.reportValidity();
+            </div>`;
+        document.getElementById('contractAddOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) m.innerHTML = ''; });
+        document.getElementById('saveContractBtn')?.addEventListener('click', async () => {
+            const contractName = document.getElementById('contract_name').value.trim();
+            const contractCode = document.getElementById('contract_code').value.trim();
+            if (!contractName || !contractCode) {
+                alert('Müqavilə adı və Müqavilə kodu mütləq doldurulmalıdır.');
                 return;
             }
-
-            const srvId = document.getElementById('srv_id').value;
-            
-            // creator_company_id-ni etibarlı şəkildə al (token → localStorage)
-            let creatorId = null;
-            const token = localStorage.getItem('guven_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    if (payload.company_id) creatorId = payload.company_id;
-                } catch(e) {}
-            }
-            if (!creatorId) {
-                try {
-                    const ud = JSON.parse(localStorage.getItem('userData') || '{}');
-                    creatorId = ud?.company_id || ud?.user?.company_id;
-                } catch(e) {}
-            }
-
-            // İş növü dəyərini al (worktypes dropdown-dan)
-            const workTypeName = document.getElementById('srv_type').value;
-
-            // Backend enum dəyərləri
-            const validEnumValues = ['consulting', 'insurance', 'leasing', 'factoring', 'loan', 'guarantee', 'other'];
-            // Əgər seçilən dəyər enum-a uyğundursa onu göndər, əks halda "other" göndər
-            const serviceTypeEnum = validEnumValues.includes(workTypeName.toLowerCase()) 
-                ? workTypeName.toLowerCase() 
-                : 'other';
-
-            const amountVal = document.getElementById('srv_amount').value.trim();
-            const payload = {
-                service_name: document.getElementById('srv_name').value.trim(),
-                service_type: serviceTypeEnum,
-                service_type_date: new Date().toISOString(),
-                contract_code: document.getElementById('srv_contract').value.trim() || null,
-                start_date: document.getElementById('srv_start').value || null,
-                end_date: document.getElementById('srv_end').value || null,
-                service_amount: amountVal !== '' ? parseFloat(amountVal) : null,
-                currency: document.getElementById('srv_currency').value,
-                description: document.getElementById('srv_desc').value.trim() || null,
-                is_active: document.getElementById('srv_active').checked,
-                notes: workTypeName || null
-            };
-
-            console.log('📤 Xidmət payload:', JSON.stringify(payload, null, 2));
-
+            const payload = this._buildContractPayload(company, {
+                contractName,
+                contractCode,
+                startDate: document.getElementById('contract_start').value,
+                endDate: document.getElementById('contract_end').value,
+                amount: document.getElementById('contract_amount').value,
+                currency: document.getElementById('contract_currency').value,
+                description: document.getElementById('contract_description').value
+            });
             try {
-                let result;
-                if (srvId) {
-                    result = await this.apiService.patch(`/company-services/${srvId}`, payload);
-                } else {
-                    payload.service_name_date = new Date().toISOString();
-                    payload.creator_company_id = creatorId;
-                    payload.partner_company_id = company.id;
-                    
-                    console.log('📤 Yeni xidmət yaradılır:', {
-                        creator_company_id: creatorId,
-                        partner_company_id: company.id,
-                        service_type: serviceTypeEnum,
-                        work_type: workTypeName
-                    });
-
-                    result = await this.apiService.post('/company-services/', payload);
-                }
-
-                console.log('📦 API cavabı:', result);
-
-                // ApiService xəta zamanı throw etmir, { success: false } qaytarır
-                if (result && result.success === false) {
-                    const detail = result.data?.detail;
-                    let errMsg = result.error || 'Xəta baş verdi';
-                    if (detail && Array.isArray(detail)) {
-                        errMsg = detail.map(d => `${(d.loc || []).join('.')}: ${d.msg}`).join('\n');
-                    } else if (typeof detail === 'string') {
-                        errMsg = detail;
-                    }
-                    console.error('❌ Xidmət yaratma xətası:', errMsg, result);
-                    alert('Xəta baş verdi: ' + errMsg);
-                    return;
-                }
-
-                console.log('✅ Xidmət uğurla yaradıldı');
+                const result = await this.apiService.post('/company-services/', payload);
+                if (result?.success === false) throw new Error(result.error || 'Müqavilə yaradılmadı');
                 m.innerHTML = '';
-                this._cdpRenderServicesList(company);
+                await this._cdpRenderContractsList(company);
             } catch(e) {
-                console.error('❌ Xidmət yaratma xətası (catch):', e);
-                alert('Xəta baş verdi: ' + (e.message || 'Şəbəkə xətası'));
+                console.error('Müqavilə yaratma xətası:', e, payload);
+                alert('Müqaviləni yaratmaq mümkün olmadı. Məlumatları yoxlayıb yenidən cəhd edin.');
             }
         });
+    }
+
+    async _cdpShowContractServiceModal(company, contracts, selectedContract = null) {
+        if (!selectedContract || !this.canAddServiceToContract(company, selectedContract)) return;
+        const m = document.getElementById('cdpModal');
+        if (!m) return;
+        const confirmedContracts = contracts.filter(contract => this.canAddServiceToContract(company, contract));
+        const options = confirmedContracts.map(contract => `<option value="${contract.id}" ${String(contract.id) === String(selectedContract.id) ? 'selected' : ''}>${this._escapeHtml(contract.service_name || 'Adsız müqavilə')} — ${this._escapeHtml(contract.contract_code || '—')}</option>`).join('');
+        m.innerHTML = `
+            <div style="position:fixed;inset:0;background:rgba(15,23,42,0.55);display:flex;align-items:center;justify-content:center;z-index:10000;backdrop-filter:blur(2px);" id="contractServiceOverlay">
+                <div style="background:#fff;border-radius:16px;width:520px;max-width:92vw;display:flex;flex-direction:column;box-shadow:0 24px 48px rgba(15,23,42,0.18);">
+                    <div style="padding:20px 24px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;font-size:18px;font-weight:700;color:#111827;">Xidmət əlavə et</h3><button onclick="document.getElementById('cdpModal').innerHTML=''" style="background:none;border:none;font-size:22px;color:#6b7280;cursor:pointer;">&times;</button></div>
+                    <div style="padding:20px 24px;"><form id="contractServiceForm">
+                        <div style="margin-bottom:16px;"><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Müqavilə seçimi *</label><select required id="contract_service_contract" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;"><option value="">Müqavilə seçin</option>${options}</select></div>
+                        <div><label style="display:block;margin-bottom:6px;font-size:12px;color:#4b5563;font-weight:600;">Xidmət növü *</label><select required id="contract_service_worktype" style="width:100%;padding:11px;border:1px solid #d1d5db;border-radius:10px;font-size:13px;"><option value="">Yüklənir...</option></select></div>
+                    </form></div>
+                    <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:12px;background:#f9fafb;border-bottom-left-radius:16px;border-bottom-right-radius:16px;"><button type="button" onclick="document.getElementById('cdpModal').innerHTML=''" style="padding:10px 16px;background:white;border:1px solid #d1d5db;color:#374151;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">Ləğv et</button><button type="button" id="saveContractServiceBtn" style="padding:10px 20px;background:#185FA5;color:white;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Əlavə et</button></div>
+                </div>
+            </div>`;
+        document.getElementById('contractServiceOverlay')?.addEventListener('click', e => { if (e.target === e.currentTarget) m.innerHTML = ''; });
+        try {
+            const workTypes = await this._loadWorkTypesForCurrentCompany();
+            const activeWorkTypes = workTypes.filter(wt => wt?.is_active !== false);
+            const workTypeSelect = document.getElementById('contract_service_worktype');
+            if (workTypeSelect) {
+                workTypeSelect.innerHTML = '<option value="">Xidmət növü seçin</option>' + activeWorkTypes.map(wt => {
+                    const id = wt.id ?? (wt.work_type_name || wt.name || '');
+                    const name = wt.work_type_name || wt.name || wt.title || `İş növü ${wt.id}`;
+                    return `<option value="${this._escapeHtml(id)}" data-name="${this._escapeHtml(name)}">${this._escapeHtml(name)}</option>`;
+                }).join('');
+                if (!activeWorkTypes.length) workTypeSelect.innerHTML += '<option value="" disabled>İş növü tapılmadı</option>';
+            }
+        } catch(e) {
+            console.error('İş növləri yüklənmədi:', e);
+            const workTypeSelect = document.getElementById('contract_service_worktype');
+            if (workTypeSelect) workTypeSelect.innerHTML = '<option value="">İş növləri yüklənmədi</option>';
+        }
+        document.getElementById('saveContractServiceBtn')?.addEventListener('click', async () => {
+            const contractId = document.getElementById('contract_service_contract').value;
+            const workTypeSelect = document.getElementById('contract_service_worktype');
+            const workTypeValue = workTypeSelect.value;
+            const workTypeName = workTypeSelect.options[workTypeSelect.selectedIndex]?.dataset?.name || workTypeSelect.options[workTypeSelect.selectedIndex]?.textContent || '';
+            if (!contractId || !workTypeValue) {
+                alert('Müqavilə və xidmət növü seçilməlidir.');
+                return;
+            }
+            const contract = confirmedContracts.find(item => String(item.id) === String(contractId));
+            if (!contract) return;
+            try {
+                const result = await this.createServiceForContract(company, contract, { id: workTypeValue, work_type_name: workTypeName });
+                if (result?.success === false) throw new Error(result.error || 'Xidmət əlavə edilmədi');
+                m.innerHTML = '';
+                await this._cdpRenderContractsList(company);
+            } catch(e) {
+                console.error('Xidmət əlavə etmə xətası:', e);
+                alert('Xidməti əlavə etmək mümkün olmadı. Zəhmət olmasa yenidən cəhd edin.');
+            }
+        });
+    }
+
+
+    _cdpShowServiceModal(company, serviceData = null) {
+        // Köhnə xidmət modalı saxlanılmır; müqavilə axını yeni modal helper-lərindən istifadə edir.
+        this._cdpRenderContractsList(company);
     }
 
     async _cdpRenderServices(companyCode) {
