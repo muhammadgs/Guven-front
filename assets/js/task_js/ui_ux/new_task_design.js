@@ -241,6 +241,7 @@
 
         console.log('🚀 new_task_design.js init başladı...');
         createModal();
+        initCustomSelects();
         attachCardEvents();
         await waitForTaskManager();
         console.log('✅ TaskManager hazırdır');
@@ -512,6 +513,7 @@
     }
 
     function closeModal() {
+        closeAllCustomSelects();
         if (isRecording) stopRecording(true);
         if (modalOverlay) modalOverlay.classList.remove('active');
         resetForm();
@@ -538,7 +540,10 @@
         if (otherExecutorSelect) {
             otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
             otherExecutorSelect.disabled = false;
+            refreshCustomSelectById('newtaskOtherExecutorSelect');
         }
+
+        refreshCustomSelects();
 
         const audioStatusEl = getSelect('newtaskAudioStatus');
         if (audioStatusEl) audioStatusEl.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
@@ -946,6 +951,306 @@
         console.log('workTypes count', ensureArray(workTypes).length);
         console.log('parents count', ensureArray(parentCompanies).length);
         console.log('partners count', ensureArray(partners).length);
+        refreshCustomSelects();
+    }
+
+    // ================= CUSTOM LIQUID SELECTS =================
+    const CUSTOM_SELECT_IDS = [
+        'newtaskCompanySelect',
+        'newtaskParentSelect',
+        'newtaskPartnerSelect',
+        'newtaskExecutorSelect',
+        'newtaskOtherExecutorSelect',
+        'newtaskDepartmentSelect',
+        'newtaskTaskTypeSelect'
+    ];
+
+    let customSelectsInitialized = false;
+    let customSelectDocumentHandlersAttached = false;
+
+    function initCustomSelects() {
+        CUSTOM_SELECT_IDS.forEach((selectId) => {
+            const select = getSelect(selectId);
+            if (select) buildCustomSelect(select);
+        });
+
+        if (!customSelectDocumentHandlersAttached) {
+            customSelectDocumentHandlersAttached = true;
+            document.addEventListener('click', handleCustomSelectDocumentClick);
+            document.addEventListener('keydown', handleCustomSelectDocumentKeydown);
+            window.addEventListener('resize', () => closeAllCustomSelects());
+        }
+
+        customSelectsInitialized = true;
+        refreshCustomSelects();
+    }
+
+    function buildCustomSelect(select) {
+        if (!select || select.dataset.customSelectReady === 'true') return select?.nextElementSibling;
+
+        const field = select.closest('.glass-field') || select.parentElement;
+        if (field) field.classList.add('has-custom-select');
+
+        select.classList.add('nt-native-select-hidden');
+        select.setAttribute('tabindex', '-1');
+        select.setAttribute('aria-hidden', 'true');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'nt-custom-select';
+        wrapper.dataset.selectId = select.id;
+
+        wrapper.innerHTML = `
+            <button type="button" class="nt-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="nt-select-value"></span>
+                <i class="fas fa-chevron-down nt-select-arrow" aria-hidden="true"></i>
+            </button>
+            <div class="nt-select-menu" aria-hidden="true">
+                <div class="nt-select-highlight"></div>
+                <div class="nt-select-options" role="listbox"></div>
+            </div>
+        `;
+
+        select.insertAdjacentElement('afterend', wrapper);
+        select.dataset.customSelectReady = 'true';
+
+        const trigger = wrapper.querySelector('.nt-select-trigger');
+        trigger?.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (wrapper.classList.contains('is-open')) {
+                closeCustomSelect(wrapper);
+            } else {
+                openCustomSelect(wrapper);
+            }
+        });
+
+        wrapper.addEventListener('mousemove', handleCustomSelectMouseMove);
+        wrapper.addEventListener('mouseleave', () => moveCustomSelectHighlight(wrapper, getActiveCustomOption(wrapper), true));
+        select.addEventListener('change', () => syncCustomSelectValue(select));
+
+        const observer = new MutationObserver(() => refreshCustomSelectById(select.id));
+        observer.observe(select, { childList: true, subtree: true, attributes: true });
+        refreshCustomSelectById(select.id);
+        return wrapper;
+    }
+
+    function refreshCustomSelects() {
+        if (!customSelectsInitialized && !document.getElementById('newtaskModalOverlay')) return;
+        CUSTOM_SELECT_IDS.forEach(refreshCustomSelectById);
+    }
+
+    function refreshCustomSelectById(selectId) {
+        const select = getSelect(selectId);
+        if (!select) return;
+
+        if (select.dataset.customSelectReady !== 'true') {
+            buildCustomSelect(select);
+            return;
+        }
+
+        const wrapper = getCustomSelectWrapper(select);
+        const optionsContainer = wrapper?.querySelector('.nt-select-options');
+        if (!wrapper || !optionsContainer) return;
+
+        wrapper.classList.toggle('is-disabled', select.disabled);
+        wrapper.querySelector('.nt-select-trigger')?.toggleAttribute('disabled', select.disabled);
+
+        const fragment = document.createDocumentFragment();
+        Array.from(select.options || []).forEach((option, index) => {
+            const customOption = document.createElement('button');
+            customOption.type = 'button';
+            customOption.className = 'nt-select-option';
+            customOption.dataset.value = option.value;
+            customOption.dataset.optionIndex = String(index);
+            customOption.setAttribute('role', 'option');
+            customOption.textContent = option.textContent || '';
+            customOption.disabled = option.disabled;
+            customOption.setAttribute('aria-disabled', option.disabled ? 'true' : 'false');
+
+            Array.from(option.attributes || []).forEach((attr) => {
+                if (attr.name.startsWith('data-')) customOption.setAttribute(attr.name, attr.value);
+            });
+
+            customOption.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!customOption.disabled) handleCustomOptionSelect(select, option.value);
+            });
+
+            fragment.appendChild(customOption);
+        });
+
+        optionsContainer.replaceChildren(fragment);
+        syncCustomSelectValue(select);
+    }
+
+    function openCustomSelect(wrapper) {
+        if (!wrapper || wrapper.classList.contains('is-disabled')) return;
+        const select = getSelect(wrapper.dataset.selectId);
+        if (!select || select.disabled) return;
+
+        closeAllCustomSelects(wrapper);
+        wrapper.classList.remove('is-closing', 'open-up');
+        positionCustomSelect(wrapper);
+        wrapper.classList.add('is-open');
+        wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'true');
+        wrapper.querySelector('.nt-select-menu')?.setAttribute('aria-hidden', 'false');
+
+        const activeOption = getActiveCustomOption(wrapper) || getFirstEnabledCustomOption(wrapper);
+        setFocusedCustomOption(wrapper, activeOption);
+        requestAnimationFrame(() => moveCustomSelectHighlight(wrapper, activeOption, true));
+    }
+
+    function closeCustomSelect(wrapper) {
+        if (!wrapper || !wrapper.classList.contains('is-open')) return;
+        wrapper.classList.remove('is-open');
+        wrapper.classList.add('is-closing');
+        wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'false');
+        wrapper.querySelector('.nt-select-menu')?.setAttribute('aria-hidden', 'true');
+        window.setTimeout(() => wrapper.classList.remove('is-closing', 'open-up'), 260);
+    }
+
+    function closeAllCustomSelects(exceptWrapper = null) {
+        document.querySelectorAll('.nt-custom-select.is-open').forEach((wrapper) => {
+            if (wrapper !== exceptWrapper) closeCustomSelect(wrapper);
+        });
+    }
+
+    function syncCustomSelectValue(select) {
+        if (!select) return;
+        const wrapper = getCustomSelectWrapper(select);
+        if (!wrapper) return;
+
+        const selectedOption = select.options?.[select.selectedIndex] || select.options?.[0];
+        const valueEl = wrapper.querySelector('.nt-select-value');
+        if (valueEl) valueEl.textContent = selectedOption?.textContent || '';
+
+        wrapper.querySelectorAll('.nt-select-option').forEach((option) => {
+            const isSelected = String(option.dataset.value || '') === String(select.value || '')
+                && Number(option.dataset.optionIndex) === select.selectedIndex;
+            option.classList.toggle('is-selected', isSelected);
+            option.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+        });
+
+        if (wrapper.classList.contains('is-open')) {
+            moveCustomSelectHighlight(wrapper, getActiveCustomOption(wrapper), true);
+        }
+    }
+
+    function handleCustomOptionSelect(select, optionValue) {
+        if (!select || select.disabled) return;
+        const matchingOption = Array.from(select.options || []).find((option) => String(option.value) === String(optionValue) && !option.disabled);
+        if (!matchingOption) return;
+
+        select.value = matchingOption.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncCustomSelectValue(select);
+        closeCustomSelect(getCustomSelectWrapper(select));
+    }
+
+    function handleCustomSelectDocumentClick(event) {
+        if (!event.target.closest?.('.nt-custom-select')) closeAllCustomSelects();
+    }
+
+    function handleCustomSelectDocumentKeydown(event) {
+        const openWrapper = document.querySelector('.nt-custom-select.is-open');
+        const focusedWrapper = event.target.closest?.('.nt-custom-select');
+        const wrapper = openWrapper || focusedWrapper;
+        if (!wrapper) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            closeAllCustomSelects();
+            wrapper.querySelector('.nt-select-trigger')?.focus();
+            return;
+        }
+
+        if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        if (!wrapper.classList.contains('is-open')) {
+            openCustomSelect(wrapper);
+            return;
+        }
+
+        const enabledOptions = getEnabledCustomOptions(wrapper);
+        if (!enabledOptions.length) return;
+        const current = wrapper.querySelector('.nt-select-option.is-focused') || getActiveCustomOption(wrapper) || enabledOptions[0];
+        const currentIndex = Math.max(0, enabledOptions.indexOf(current));
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            const direction = event.key === 'ArrowDown' ? 1 : -1;
+            const next = enabledOptions[(currentIndex + direction + enabledOptions.length) % enabledOptions.length];
+            setFocusedCustomOption(wrapper, next);
+            moveCustomSelectHighlight(wrapper, next, true);
+            next.scrollIntoView({ block: 'nearest' });
+            return;
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            const select = getSelect(wrapper.dataset.selectId);
+            const target = wrapper.querySelector('.nt-select-option.is-focused') || getActiveCustomOption(wrapper);
+            if (select && target) handleCustomOptionSelect(select, target.dataset.value || '');
+        }
+    }
+
+    function handleCustomSelectMouseMove(event) {
+        const option = event.target.closest?.('.nt-select-option');
+        if (!option || option.disabled) return;
+        const wrapper = option.closest('.nt-custom-select');
+        setFocusedCustomOption(wrapper, option);
+        moveCustomSelectHighlight(wrapper, option, true);
+    }
+
+    function getCustomSelectWrapper(select) {
+        return select?.nextElementSibling?.classList?.contains('nt-custom-select')
+            ? select.nextElementSibling
+            : document.querySelector(`.nt-custom-select[data-select-id="${select?.id}"]`);
+    }
+
+    function getEnabledCustomOptions(wrapper) {
+        return Array.from(wrapper?.querySelectorAll('.nt-select-option') || []).filter(option => !option.disabled);
+    }
+
+    function getFirstEnabledCustomOption(wrapper) {
+        return getEnabledCustomOptions(wrapper)[0] || null;
+    }
+
+    function getActiveCustomOption(wrapper) {
+        return wrapper?.querySelector('.nt-select-option.is-selected') || null;
+    }
+
+    function setFocusedCustomOption(wrapper, option) {
+        wrapper?.querySelectorAll('.nt-select-option.is-focused').forEach(item => item.classList.remove('is-focused'));
+        option?.classList.add('is-focused');
+    }
+
+    function moveCustomSelectHighlight(wrapper, option, visible = false) {
+        const highlight = wrapper?.querySelector('.nt-select-highlight');
+        const optionsContainer = wrapper?.querySelector('.nt-select-options');
+        if (!highlight || !optionsContainer || !option) {
+            if (highlight) highlight.style.opacity = '0';
+            return;
+        }
+
+        const top = optionsContainer.offsetTop + option.offsetTop - optionsContainer.scrollTop;
+        highlight.style.transform = `translate3d(0, ${top}px, 0)`;
+        highlight.style.height = `${option.offsetHeight}px`;
+        highlight.style.opacity = visible ? '1' : '0';
+    }
+
+    function positionCustomSelect(wrapper) {
+        const menu = wrapper?.querySelector('.nt-select-menu');
+        if (!wrapper || !menu) return;
+
+        const rect = wrapper.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const menuHeight = Math.min(280, Math.max(120, menu.scrollHeight || 280));
+        const spaceBelow = viewportHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        wrapper.classList.toggle('open-up', spaceBelow < menuHeight + 18 && spaceAbove > spaceBelow);
     }
 
     function updateModalFileList() {
@@ -1224,12 +1529,14 @@
 
         otherSelect.innerHTML = '<option value="">Yüklənir...</option>';
         otherSelect.disabled = true;
+        refreshCustomSelectById('newtaskOtherExecutorSelect');
 
         try {
             if (!companyCode) {
                 otherExecutorEmployees = [];
                 otherSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
                 otherSelect.disabled = false;
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
                 return;
             }
 
@@ -1254,12 +1561,14 @@
             const html = buildEmployeeOptions(otherExecutorEmployees, 'İşçi seçin (boş qoymaq olar)');
             otherSelect.innerHTML = otherExecutorEmployees.length ? html : '<option value="">İşçi tapılmadı</option>';
             otherSelect.disabled = false;
+            refreshCustomSelectById('newtaskOtherExecutorSelect');
             console.log('employees count', otherExecutorEmployees.length);
         } catch (error) {
             console.error('❌ target company employees xətası:', error);
             otherExecutorEmployees = [];
             otherSelect.innerHTML = '<option value="">Xəta baş verdi</option>';
             otherSelect.disabled = false;
+            refreshCustomSelectById('newtaskOtherExecutorSelect');
         }
     }
 
@@ -1289,6 +1598,7 @@
 
         departmentSelect.value = targetDepartmentId;
         departmentSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        syncCustomSelectValue(departmentSelect);
         showAutoSelectNotification('departament', formatEmployeeName(emp));
     }
 
@@ -1323,6 +1633,7 @@
             if (!companyCode) {
                 otherExecutorEmployees = [];
                 if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
                 return;
             }
             await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: false });
@@ -1334,6 +1645,7 @@
             if (!companyCode) {
                 otherExecutorEmployees = [];
                 if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
                 return;
             }
             await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: true });
@@ -1345,6 +1657,7 @@
             if (!companyCode) {
                 otherExecutorEmployees = [];
                 if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
                 return;
             }
             await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: true });
