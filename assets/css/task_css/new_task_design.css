@@ -15,7 +15,19 @@
     --nt-field-bg: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(250,250,250,0.92));
     --nt-success: #76e25c;
     --nt-danger: #ef767a;
+    --nt-modal-width: 940px;
+    --nt-modal-padding: 30px;
+    --nt-modal-radius: 38px;
+    --nt-field-height: 52px;
+    --nt-field-radius: 26px;
+    --nt-label-size: 16px;
+    --nt-input-size: 14px;
+    --nt-grid-row-gap: 16px;
+    --nt-grid-col-gap: 22px;
+    --nt-textarea-height: 112px;
+    --nt-button-height: 44px;
 }
+
 
 * {
     box-sizing: border-box;
@@ -156,9 +168,12 @@
     pointer-events: auto;
 }
 
-.newtask-modal {
-    width: min(1180px, calc(100vw - 32px));
-    max-height: calc(100vh - 32px);
+.newtask-modal,
+.liquid-task-modal,
+.newtask-modal-container {
+    width: min(var(--nt-modal-width), calc(100vw - 180px));
+    max-width: var(--nt-modal-width);
+    max-height: 84vh;
     color: var(--nt-ink);
 }
 
@@ -168,7 +183,7 @@
     width: 100%;
     max-height: inherit;
     overflow: hidden;
-    border-radius: 56px;
+    border-radius: var(--nt-modal-radius);
     background: var(--nt-glass-bg);
     border: 1px solid var(--nt-glass-border);
     box-shadow: var(--nt-glass-shadow), inset 0 1px 0 rgba(255,255,255,0.88);
@@ -198,20 +213,20 @@
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    padding: 28px 32px 18px;
+    padding: var(--nt-modal-padding) var(--nt-modal-padding) 16px;
 }
 
 .newtask-modal-title {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     min-width: 0;
 }
 
 .newtask-title-icon {
-    width: 68px;
-    height: 68px;
-    border-radius: 24px;
+    width: 50px;
+    height: 50px;
+    border-radius: 18px;
     background: rgba(255,255,255,0.88);
     border: 1px solid rgba(255,255,255,0.72);
     display: inline-flex;
@@ -219,7 +234,7 @@
     justify-content: center;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.96), 0 12px 28px rgba(15, 19, 31, 0.08);
     color: var(--nt-ink);
-    font-size: 1.55rem;
+    font-size: 1.2rem;
     flex: 0 0 auto;
 }
 
@@ -231,7 +246,7 @@
     display: block;
     margin-bottom: 4px;
     color: var(--nt-muted);
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
@@ -239,18 +254,18 @@
 .newtask-modal-title h3 {
     margin: 0;
     color: var(--nt-ink);
-    font-size: clamp(1.8rem, 1.3vw + 1rem, 2.4rem);
+    font-size: clamp(1.625rem, 0.8vw + 1.15rem, 1.875rem);
     line-height: 1;
 }
 
 .newtask-modal-close {
-    width: 58px;
-    height: 58px;
+    width: 44px;
+    height: 44px;
     border: none;
     border-radius: 50%;
     background: rgba(255,255,255,0.92);
     color: var(--nt-ink);
-    font-size: 1.8rem;
+    font-size: 1.35rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -266,8 +281,25 @@
 }
 
 .newtask-modal-body {
-    padding: 8px 32px 30px;
-    overflow: auto;
+    padding: 4px var(--nt-modal-padding) 18px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(84vh - 90px);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0,0,0,0.15) transparent;
+}
+
+.newtask-modal-body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.newtask-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.newtask-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 999px;
 }
 
 .glass-task-form {
@@ -277,13 +309,13 @@
 .newtask-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 22px 24px;
+    gap: var(--nt-grid-row-gap) var(--nt-grid-col-gap);
 }
 
 .newtask-form-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -294,14 +326,14 @@
 .newtask-form-label {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     color: var(--nt-ink);
-    font-size: clamp(1.02rem, 0.5vw + 0.9rem, 1.3rem);
-    line-height: 1.1;
+    font-size: var(--nt-label-size);
+    line-height: 1.08;
 }
 
 .newtask-form-label i {
-    font-size: 1.15em;
+    font-size: 1.12em;
 }
 
 .newtask-form-text {
@@ -315,9 +347,9 @@
     position: relative;
     display: flex;
     align-items: center;
-    min-height: 68px;
-    padding: 0 20px 0 22px;
-    border-radius: 999px;
+    min-height: var(--nt-field-height);
+    padding: 0 18px;
+    border-radius: var(--nt-field-radius);
     background: var(--nt-field-bg);
     border: 1px solid rgba(255,255,255,0.88);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 20px rgba(13,18,31,0.08);
@@ -346,9 +378,9 @@
 
 .newtask-select,
 .newtask-input {
-    min-height: 60px;
+    min-height: var(--nt-field-height);
     line-height: 1.15;
-    font-size: 1.02rem;
+    font-size: var(--nt-input-size);
 }
 
 .newtask-select {
@@ -378,17 +410,17 @@
 }
 
 .glass-textarea-field {
-    border-radius: 42px;
-    padding: 18px 22px;
-    min-height: 180px;
+    border-radius: calc(var(--nt-field-radius) + 4px);
+    padding: 18px 20px;
+    min-height: calc(var(--nt-textarea-height) + 36px);
     align-items: stretch;
 }
 
 .newtask-textarea {
-    min-height: 140px;
+    min-height: var(--nt-textarea-height);
     resize: vertical;
-    line-height: 1.5;
-    font-size: 1rem;
+    line-height: 1.42;
+    font-size: var(--nt-input-size);
 }
 
 .newtask-textarea::placeholder {
@@ -397,14 +429,14 @@
 
 .newtask-visibility-group {
     justify-content: flex-end;
-    padding-top: 10px;
+    padding-top: 4px;
 }
 
 .newtask-checkbox-group {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
+    gap: 9px;
+    padding: 10px 14px;
     border-radius: 999px;
     background: rgba(255,255,255,0.78);
     border: 1px solid rgba(255,255,255,0.82);
@@ -412,8 +444,8 @@
 }
 
 .newtask-checkbox {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     accent-color: #111;
 }
 
@@ -422,13 +454,13 @@
     align-items: center;
     gap: 10px;
     color: var(--nt-ink);
-    font-size: 0.92rem;
+    font-size: 13px;
 }
 
 .newtask-media-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 22px;
+    gap: var(--nt-grid-col-gap);
     grid-column: 1 / -1;
     align-items: start;
 }
@@ -436,7 +468,7 @@
 .newtask-media-column {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     min-width: 0;
 }
 
@@ -444,10 +476,10 @@
 .glass-audio-zone {
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    min-height: 210px;
-    border-radius: 40px;
-    padding: 22px;
+    gap: 10px;
+    min-height: 86px;
+    border-radius: 28px;
+    padding: 14px 16px;
     background: rgba(255,255,255,0.9);
     border: 1px solid rgba(255,255,255,0.85);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.96), 0 10px 24px rgba(13,18,31,0.08);
@@ -459,7 +491,7 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    min-height: 240px;
+    min-height: 88px;
 }
 
 .newtask-file-zone.drag-over {
@@ -469,28 +501,28 @@
 }
 
 .glass-upload-icon {
-    width: 84px;
-    height: 84px;
-    border-radius: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
     background: rgba(10,10,10,0.06);
     color: var(--nt-ink);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.25rem;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.95);
 }
 
 .glass-upload-copy {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     max-width: 360px;
 }
 
 .glass-upload-copy strong {
     color: var(--nt-ink);
-    font-size: 1rem;
+    font-size: 14px;
     line-height: 1.2;
 }
 
@@ -511,8 +543,8 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 18px;
-    border-radius: 24px;
+    padding: 10px 14px;
+    border-radius: 20px;
     background: rgba(255,255,255,0.8);
     border: 1px solid rgba(255,255,255,0.84);
     color: var(--nt-ink);
@@ -527,18 +559,18 @@
 .newtask-file-item {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 14px 16px;
-    border-radius: 24px;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 20px;
     background: rgba(255,255,255,0.86);
     border: 1px solid rgba(255,255,255,0.86);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.95);
 }
 
 .newtask-file-item-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 16px;
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
     background: rgba(10,10,10,0.06);
     display: inline-flex;
     align-items: center;
@@ -555,7 +587,7 @@
 
 .newtask-file-item-name {
     color: var(--nt-ink);
-    font-size: 0.92rem;
+    font-size: 13px;
     line-height: 1.25;
     word-break: break-word;
 }
@@ -567,8 +599,8 @@
 }
 
 .newtask-file-remove {
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     border: none;
     border-radius: 50%;
     background: rgba(255,255,255,0.92);
@@ -592,7 +624,7 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
+    padding: 9px 13px;
     border-radius: 999px;
     background: rgba(10,10,10,0.05);
     color: var(--nt-ink);
@@ -631,12 +663,12 @@
 }
 
 .newtask-audio-btn.record {
-    width: 84px;
-    height: 84px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: #050505;
     color: #fff;
-    font-size: 1.9rem;
+    font-size: 1.3rem;
     flex: 0 0 auto;
 }
 
@@ -648,10 +680,10 @@
 .newtask-audio-btn.secondary,
 .newtask-btn.primary,
 .newtask-btn.secondary {
-    min-height: 54px;
-    padding: 0 22px;
-    border-radius: 999px;
-    font-size: 0.92rem;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: 22px;
+    font-size: 13px;
 }
 
 .newtask-audio-btn.primary,
@@ -683,9 +715,9 @@
 
 #newtaskAudioVisualizer {
     width: 100%;
-    height: 44px;
+    height: 36px;
     display: block;
-    border-radius: 18px;
+    border-radius: 16px;
     background: linear-gradient(180deg, rgba(245,245,245,0.92), rgba(232,232,232,0.86));
 }
 
@@ -693,8 +725,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
-    padding: 12px 32px 30px;
+    gap: 14px;
+    padding: 0 var(--nt-modal-padding) var(--nt-modal-padding);
 }
 
 .newtask-btn {
@@ -704,12 +736,12 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    min-width: 210px;
-    min-height: 60px;
-    padding: 0 24px;
+    min-width: 160px;
+    min-height: var(--nt-button-height);
+    padding: 0 20px;
     border-radius: 999px;
     font: inherit;
-    font-size: 1rem;
+    font-size: 14px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.95), 0 12px 26px rgba(13,18,31,0.10);
 }
 
@@ -727,7 +759,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 18px;
-    border-radius: 18px;
+    border-radius: 16px;
     background: rgba(255,255,255,0.88);
     border: 1px solid rgba(255,255,255,0.9);
     box-shadow: 0 16px 32px rgba(13,18,31,0.14);
@@ -744,44 +776,60 @@
     transform: translateY(0) scale(1);
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
+    :root {
+        --nt-modal-width: 900px;
+        --nt-modal-padding: 26px;
+    }
+
     .task-type-cards-container {
         grid-template-columns: 1fr;
     }
 
-    .newtask-modal {
-        width: min(980px, calc(100vw - 24px));
+    .newtask-modal,
+    .liquid-task-modal,
+    .newtask-modal-container {
+        width: min(var(--nt-modal-width), calc(100vw - 120px));
+        max-width: var(--nt-modal-width);
     }
 
     .newtask-form-grid,
     .newtask-media-grid {
-        gap: 18px;
+        gap: 16px 20px;
     }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 900px) {
+    :root {
+        --nt-modal-padding: 22px;
+        --nt-modal-radius: 32px;
+        --nt-field-height: 48px;
+        --nt-field-radius: 24px;
+        --nt-label-size: 15px;
+        --nt-textarea-height: 100px;
+        --nt-grid-row-gap: 14px;
+        --nt-grid-col-gap: 16px;
+    }
+
     .newtask-modal-overlay {
-        padding: 12px;
+        padding: 16px;
     }
 
-    .newtask-modal-surface {
-        border-radius: 36px;
+    .newtask-modal,
+    .liquid-task-modal,
+    .newtask-modal-container {
+        width: calc(100vw - 32px);
+        max-width: calc(100vw - 32px);
+        max-height: 88vh;
     }
 
-    .newtask-modal-header,
-    .newtask-modal-body,
-    .newtask-modal-footer {
-        padding-left: 18px;
-        padding-right: 18px;
+    .newtask-modal-body {
+        max-height: calc(88vh - 86px);
     }
 
     .newtask-form-grid,
     .newtask-media-grid {
         grid-template-columns: 1fr;
-    }
-
-    .glass-field {
-        min-height: 62px;
     }
 
     .newtask-btn {
@@ -804,28 +852,30 @@
         justify-self: end;
     }
 
-    .newtask-modal-surface {
-        border-radius: 30px;
-    }
-
     .newtask-modal-header {
         align-items: flex-start;
     }
 
     .newtask-modal-title {
-        gap: 12px;
+        gap: 10px;
     }
 
     .newtask-title-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 20px;
+        width: 46px;
+        height: 46px;
+        border-radius: 16px;
     }
 
     .newtask-modal-close {
-        width: 50px;
-        height: 50px;
-        font-size: 1.55rem;
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+
+    .glass-upload-zone,
+    .glass-audio-zone {
+        min-height: 82px;
+        padding: 12px 14px;
     }
 
     .newtask-audio-buttons {
@@ -841,11 +891,5 @@
     .newtask-modal-footer {
         flex-direction: column;
         align-items: stretch;
-    }
-
-    .newtask-file-zone,
-    .glass-audio-zone {
-        min-height: 210px;
-        padding: 18px;
     }
 }
