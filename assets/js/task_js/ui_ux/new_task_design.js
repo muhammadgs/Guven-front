@@ -2,290 +2,254 @@
     'use strict';
 
     let currentTaskType = null;
+    let modalInitialized = false;
+    let eventsAttached = false;
+
     let mediaRecorder = null;
     let audioChunks = [];
-    let isRecording = false;
     let audioStream = null;
+    let recordedAudioBlob = null;
+    let recordedAudioUrl = '';
     let animationId = null;
+    let isRecording = false;
+    let pendingAudioFile = null;
+    let discardAudioOnStop = false;
+    let audioRecorderSupported = typeof navigator !== 'undefined' && !!navigator.mediaDevices;
 
     let modalOverlay = null;
     let modalTitleIcon = null;
     let modalTitleText = null;
 
-    let companyGroup, parentGroup, partnerGroup, executorGroup, otherExecutorGroup;
-    let startBtn, stopBtn, saveBtn, cancelBtn, audioStatus, audioPreview, recordedAudio, audioData, audioFilename, visualizer;
-    let fileZone, fileInput, fileList;
+    let companyGroup;
+    let parentGroup;
+    let partnerGroup;
+    let executorGroup;
+    let otherExecutorGroup;
+    let startBtn;
+    let stopBtn;
+    let saveBtn;
+    let cancelBtn;
+    let audioStatus;
+    let audioPreview;
+    let recordedAudio;
+    let audioData;
+    let audioFilename;
+    let visualizer;
+    let fileZone;
+    let fileInput;
+    let fileList;
 
     let myCompany = null;
+    let userData = null;
     let subsidiaryCompanies = [];
     let departments = [];
     let employees = [];
     let workTypes = [];
     let parentCompanies = [];
     let partners = [];
+    let otherExecutorEmployees = [];
 
-    async function init() {
-        console.log('🚀 new_task_modal.js init başladı...');
-        createModal();
-        attachCardEvents    ();
+    const loadFailures = {
+        companies: false,
+        departments: false,
+        employees: false,
+        workTypes: false,
+        parents: false,
+        partners: false
+    };
 
-        await waitForTaskManager();
-        console.log('✅ TaskManager hazırdır');
-
-        await loadDataFromTaskManager();
-
-        console.log('📊 employees sayı init-də:', employees.length);
-
-        await loadWorkTypes();
-        await loadParentCompanies();
-        await loadPartnerCompanies();
-
-        // ✅ FIX: employees hələ boşdursa, birbaşa API-dan yüklə
-        if (!employees || employees.length === 0) {
-            console.warn('⚠️ employees boşdur, birbaşa API-dan yüklənir...');
-            await loadMyCompanyEmployees();
-        }
-
-        populateSelects();
-        setupPrintScreenCapture();
-        attachModalEvents();
-        setupAudioRecorder();
-        setupFileUpload();
-        console.log('✅ new_task_modal.js hazırdır, employees:', employees.length);
+    function getSelect(id) {
+        return document.getElementById(id);
     }
 
-    async function loadMyCompanyEmployees() {
+    function ensureArray(input) {
+        if (Array.isArray(input)) return input;
+        if (!input) return [];
+        if (Array.isArray(input.data)) return input.data;
+        if (Array.isArray(input.items)) return input.items;
+        if (Array.isArray(input.sub_companies)) return input.sub_companies;
+        if (Array.isArray(input.parent_companies)) return input.parent_companies;
+        return [];
+    }
+
+    function getTokenContext() {
         try {
-            const companyCode = myCompany?.company_code
-                || window.taskManager?.userData?.companyCode;
-
-            if (!companyCode) return;
-
-            console.log(`🔄 İşçilər yüklənir: ${companyCode}`);
-
-            let list = [];
-
-            // ✅ 1. Birinci cəhd: requestOneC ilə (baza_id ilə - əsas endpoint)
-            try {
-                    const r1 = await makeApiRequest(`/users/company/${companyCode}`, 'GET');
-                    console.log('🔍 RAW cavab:', r1);  // ← ƏLAVƏ EDİN
-                    const arr = Array.isArray(r1) ? r1 : (r1?.data || r1?.items || []);
-                    console.log('🔍 Array:', arr);     // ← ƏLAVƏ EDİN
-                    if (arr.length > 0) {
-                        list = arr;
-                        console.log(`✅ makeApiRequest: ${list.length} işçi`);
-                    }
-                } catch(e) {
-                    console.warn('makeApiRequest failed:', e.message);  // ← bu artıq var
-                }
-
-            // ✅ 2. İkinci cəhd: window._apiGet ilə (baza_id-siz)
-            if (list.length === 0 && window._apiGet) {
-                try {
-                    const r2 = await window._apiGet(`/users/company/${companyCode}`);
-                    const arr = Array.isArray(r2) ? r2 : (r2?.data || r2?.items || []);
-                    if (arr.length > 0) { list = arr; console.log(`✅ _apiGet: ${list.length} işçi`); }
-                } catch(e) { console.warn('_apiGet failed:', e.message); }
-            }
-
-            // ✅ 3. Üçüncü cəhd: getEmployeesWithCache (api.service.js-dən)
-            if (list.length === 0) {
-                try {
-                    const r3 = await window.getEmployeesWithCache(companyCode);
-                    const arr = Array.isArray(r3) ? r3 : (r3?.data || []);
-                    if (arr.length > 0) { list = arr; console.log(`✅ getEmployeesWithCache: ${list.length} işçi`); }
-                } catch(e) { console.warn('getEmployeesWithCache failed:', e.message); }
-            }
-
-            // ✅ 4. Son fallback: taskManager.employees (report.js yükləyib)
-            if (list.length === 0 && window.taskManager?.employees?.length > 0) {
-                list = window.taskManager.employees;
-                console.log(`✅ taskManager.employees fallback: ${list.length} işçi`);
-            }
-
-            if (list.length > 0) {
-                employees = list;
-                console.log(`✅ ${employees.length} işçi yükləndi`);
-                populateSelects();
-            } else {
-                console.warn('⚠️ Heç bir mənbədən işçi tapılmadı');
-            }
-        } catch (err) {
-            console.error('❌ loadMyCompanyEmployees xətası:', err);
-            if (window.taskManager?.employees?.length > 0) {
-                employees = window.taskManager.employees;
-                populateSelects();
-            }
+            const token = typeof getAuthToken === 'function' ? getAuthToken() : window.getAuthToken?.();
+            if (!token) return {};
+            const payload = typeof parseTokenPayload === 'function' ? parseTokenPayload(token) : window.parseTokenPayload?.(token);
+            return payload || {};
+        } catch (error) {
+            console.warn('⚠️ Token payload oxuna bilmədi:', error);
+            return {};
         }
+    }
+
+    function normalizeCompanyContext() {
+        const tmUser = window.taskManager?.userData || {};
+        const tmCompany = window.taskManager?.myCompany || {};
+        const token = getTokenContext();
+
+        const resolvedUser = {
+            userId: tmUser.userId || tmUser.user_id || token.user_id || token.sub || null,
+            companyId: tmUser.companyId || tmUser.company_id || tmCompany.id || token.company_id || null,
+            companyCode: tmUser.companyCode || tmUser.company_code || tmCompany.company_code || token.company_code || null,
+            companyName: tmUser.companyName || tmUser.company_name || tmCompany.company_name || token.company_name || null,
+            fullName: tmUser.fullName || tmUser.name || token.ceo_name || token.name || null,
+            role: tmUser.role || token.role || null
+        };
+
+        const resolvedCompany = {
+            id: tmCompany.id || resolvedUser.companyId,
+            company_code: tmCompany.company_code || resolvedUser.companyCode,
+            company_name: tmCompany.company_name || resolvedUser.companyName || resolvedUser.companyCode
+        };
+
+        if (!resolvedCompany.id && token.company_id) resolvedCompany.id = token.company_id;
+        if (!resolvedCompany.company_code && token.company_code) resolvedCompany.company_code = token.company_code;
+        if (!resolvedCompany.company_name && token.company_name) resolvedCompany.company_name = token.company_name;
+
+        return { user: resolvedUser, company: resolvedCompany };
+    }
+
+    function formatCompanyName(company) {
+        return company?.company_name || company?.name || company?.title || company?.companyCode || company?.company_code || '';
+    }
+
+    function formatEmployeeName(emp) {
+        return [emp?.ceo_name, emp?.ceo_lastname].filter(Boolean).join(' ')
+            || emp?.full_name
+            || emp?.name
+            || emp?.username
+            || emp?.email
+            || emp?.ceo_email
+            || `İşçi ${emp?.id || ''}`.trim();
+    }
+
+    function formatDepartmentName(dep) {
+        return dep?.department_name || dep?.name || dep?.title || `Şöbə ${dep?.id || ''}`;
+    }
+
+    function formatWorkTypeName(item) {
+        return item?.work_type_name || item?.name || item?.title || `İş növü ${item?.id || ''}`;
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes && bytes !== 0) return '0 B';
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.max(0, Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k))));
+        return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function showNotification(message, type = 'success') {
+        document.querySelectorAll('.task-notification').forEach(n => n.remove());
+        const notification = document.createElement('div');
+        notification.className = `task-notification task-notification-${type}`;
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        notification.innerHTML = `<i class="fas ${icons[type] || icons.success}"></i><span>${message}</span><button class="task-notification-close"><i class="fas fa-times"></i></button>`;
+        notification.style.cssText = `
+            position:fixed; bottom:20px; right:20px;
+            background:${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+            color:white; padding:12px 20px; border-radius:8px;
+            display:flex; align-items:center; gap:12px; z-index:10001;
+            box-shadow:0 4px 12px rgba(0,0,0,0.15); animation:slideIn 0.3s ease; font-size:14px;
+        `;
+        if (!document.querySelector('#ntm-anim')) {
+            const s = document.createElement('style');
+            s.id = 'ntm-anim';
+            s.textContent = '@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}';
+            document.head.appendChild(s);
+        }
+        document.body.appendChild(notification);
+        const closeBtn = notification.querySelector('.task-notification-close');
+        if (closeBtn) closeBtn.onclick = () => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        };
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 4000);
+    }
+
+    function showAutoSelectNotification(type, name) {
+        const toast = document.createElement('div');
+        toast.className = 'newtask-toast';
+        toast.innerHTML = `<i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${escapeHtml(name)} üçün ${type === 'departament' ? 'şöbə' : 'şirkət'} avtomatik seçildi</span>`;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('is-visible'));
+        setTimeout(() => {
+            toast.classList.remove('is-visible');
+            setTimeout(() => toast.remove(), 240);
+        }, 2000);
     }
 
     function waitForTaskManager() {
         return new Promise((resolve) => {
             let attempts = 0;
-            const maxAttempts = 50;
-            console.log('⏳ TaskManager hazır olana qədər gözlənilir...');
-            const checkInterval = setInterval(() => {
+            const timer = setInterval(() => {
                 attempts++;
-                const hasData = window.taskManager &&
-                               window.taskManager.myCompany &&
-                               window.taskManager.subsidiaryCompanies &&
-                               window.taskManager.departments &&
-                               window.taskManager.employees;
-                if (hasData) {
-                    clearInterval(checkInterval);
-                    resolve();
-                } else if (attempts >= maxAttempts) {
-                    console.warn('⚠️ TaskManager hazır olmadı, davam edilir...');
-                    clearInterval(checkInterval);
+                const ready = window.taskManager && (window.taskManager.myCompany || window.taskManager.userData);
+                if (ready || attempts >= 50) {
+                    clearInterval(timer);
                     resolve();
                 }
             }, 100);
         });
     }
 
-    async function loadDataFromTaskManager() {
+    async function safeRun(loader, errorKey, label) {
         try {
-            if (!window.taskManager) {
-                console.warn('⚠️ window.taskManager mövcud deyil');
-                return;
-            }
-
-            // 1. Token-dan company məlumatlarını al
-            const token = getAuthToken();
-            let companyId = null;
-            let companyCode = null;
-            let companyName = null;
-
-            if (token) {
-                const payload = parseTokenPayload(token);
-                if (payload) {
-                    companyId = payload.company_id;
-                    companyCode = payload.company_code;
-                    companyName = payload.company_name;
-                    console.log('🔑 Token-dan company:', { companyId, companyCode, companyName });
-                }
-            }
-
-            // 2. Token-da company_name yoxdursa, API-dən al
-            if ((!companyName || !companyId) && companyCode) {
-                try {
-                    const response = await makeApiRequest(`/companies/code/${companyCode}`, 'GET');
-                    if (response && response.data) {
-                        companyName = response.data.company_name;
-                        companyId = response.data.id;
-                    }
-                } catch (err) {
-                    console.error('Company API xətası:', err);
-                }
-            }
-
-            // 3. TaskManager-dan gələn məlumatları da yoxla
-            if (window.taskManager.myCompany) {
-                const tmCompany = window.taskManager.myCompany;
-                console.log('📦 TaskManager-dan company:', tmCompany);
-
-                // Token-dakı məlumatlar üstünlük təşkil edir
-                if (!companyId && tmCompany.id) companyId = tmCompany.id;
-                if (!companyCode && tmCompany.company_code) companyCode = tmCompany.company_code;
-                if (!companyName && (tmCompany.company_name || tmCompany.name)) {
-                    companyName = tmCompany.company_name || tmCompany.name;
-                }
-            }
-
-            // 4. UserData-dan da yoxla
-            if (window.taskManager.userData) {
-                const userData = window.taskManager.userData;
-                console.log('👤 UserData:', userData);
-                if (!companyId && userData.companyId) companyId = userData.companyId;
-                if (!companyCode && userData.companyCode) companyCode = userData.companyCode;
-                if (!companyName && userData.companyName) companyName = userData.companyName;
-            }
-
-            // 5. LocalStorage-dan yoxla
-            if (!companyName) {
-                const storedUserData = localStorage.getItem('guven_user_data');
-                if (storedUserData) {
-                    try {
-                        const parsed = JSON.parse(storedUserData);
-                        if (parsed.company_name) companyName = parsed.company_name;
-                        if (parsed.company_id) companyId = parsed.company_id;
-                        if (parsed.company_code) companyCode = parsed.company_code;
-                    } catch(e) {}
-                }
-            }
-
-            // 6. myCompany obyektini yarat
-            if (companyId && companyCode) {
-                // ✅ FIX: şirkət adını düzgün mənbədən al
-                // userData.name = şəxsin adı, companyName = şirkət adı - bunları qarışdırma!
-                let finalName = null;
-
-                // 1. Birbaşa API-dan al (ən etibarlı)
-                try {
-                    const companyResp = await makeApiRequest(`/companies/code/${companyCode}`, 'GET');
-                    if (companyResp?.company_name) {
-                        finalName = companyResp.company_name;
-                        console.log('✅ Şirkət adı API-dan alındı:', finalName);
-                    } else if (companyResp?.data?.company_name) {
-                        finalName = companyResp.data.company_name;
-                    }
-                } catch(e) {
-                    console.warn('⚠️ Company API xətası:', e);
-                }
-
-                // 2. Fallback: localStorage-dan al
-                if (!finalName) {
-                    try {
-                        const stored = localStorage.getItem('guven_user_data')
-                            || localStorage.getItem('profileData');
-                        if (stored) {
-                            const parsed = JSON.parse(stored);
-                            finalName = parsed?.company_name
-                                || parsed?.companyName
-                                || parsed?.user?.company_name;
-                        }
-                    } catch(e) {}
-                }
-
-                // 3. Fallback: taskManager myCompany-dən (əgər artıq yüklənibsə)
-                if (!finalName && window.taskManager?.myCompany?.company_name) {
-                    finalName = window.taskManager.myCompany.company_name;
-                }
-
-                // 4. Son fallback: kompanyCode (addan daha yaxşıdır)
-                if (!finalName) finalName = companyCode;
-
-                myCompany = {
-                    id: companyId,
-                    company_name: finalName,
-                    company_code: companyCode,
-                    name: finalName
-                };
-                console.log('✅ myCompany yaradıldı:', myCompany);
-            }
-
-            // Alt məlumatları yüklə
-            subsidiaryCompanies = window.taskManager.subsidiaryCompanies || [];
-            departments = window.taskManager.departments || [];
-            employees = window.taskManager.employees || [];
-
-            console.log('📊 Yüklənən məlumatlar:', {
-                myCompany: myCompany,
-                myCompanyName: myCompany?.company_name,
-                myCompanyId: myCompany?.id,
-                myCompanyCode: myCompany?.company_code,
-                subsidiaryCount: subsidiaryCompanies.length,
-                departmentsCount: departments.length,
-                employeesCount: employees.length
-            });
-
+            await loader();
+            loadFailures[errorKey] = false;
         } catch (error) {
-            console.error('❌ TaskManager məlumat alma xətası:', error);
-            myCompany = null;
+            loadFailures[errorKey] = true;
+            console.error(`❌ ${label} xətası:`, error);
         }
     }
 
+    async function init() {
+        if (modalInitialized) return;
+        modalInitialized = true;
+
+        console.log('🚀 new_task_design.js init başladı...');
+        createModal();
+        attachCardEvents();
+        await waitForTaskManager();
+        console.log('✅ TaskManager hazırdır');
+
+        await safeRun(loadDataFromTaskManager, 'companies', 'loadDataFromTaskManager');
+        await safeRun(loadWorkTypes, 'workTypes', 'loadWorkTypes');
+        await safeRun(loadParentCompanies, 'parents', 'loadParentCompanies');
+        await safeRun(loadPartnerCompanies, 'partners', 'loadPartnerCompanies');
+
+        await safeRun(async () => populateSelects(), 'companies', 'populateSelects');
+        await safeRun(setupPrintScreenCapture, 'companies', 'setupPrintScreenCapture');
+        await safeRun(attachModalEvents, 'companies', 'attachModalEvents');
+        await safeRun(setupAudioRecorder, 'companies', 'setupAudioRecorder');
+        await safeRun(setupFileUpload, 'companies', 'setupFileUpload');
+
+        console.log('✅ new_task_design.js hazırdır');
+    }
+
     function createModal() {
+        if (document.getElementById('newtaskModalOverlay')) {
+            bindModalRefs();
+            return;
+        }
+
         const modalHTML = `
             <div class="newtask-modal-overlay liquid-task-modal-overlay" id="newtaskModalOverlay">
                 <div class="newtask-modal liquid-task-modal" role="dialog" aria-modal="true" aria-labelledby="newtaskModalTitle">
@@ -336,8 +300,6 @@
                                         <div class="newtask-form-text">Şirkətlərinizə task göndərin</div>
                                     </div>
 
-
-
                                     <div class="newtask-form-group" id="newtaskPartnerGroup" style="display:none;">
                                         <label class="newtask-form-label" for="newtaskPartnerSelect"><i class="fas fa-handshake"></i> Partnyor</label>
                                         <div class="glass-field">
@@ -347,6 +309,7 @@
                                             <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
                                         </div>
                                     </div>
+
                                     <div class="newtask-form-group" id="newtaskOtherExecutorGroup">
                                         <label class="newtask-form-label" for="newtaskOtherExecutorSelect"><i class="fas fa-users"></i> Digər şirkətin işçisi</label>
                                         <div class="glass-field">
@@ -454,7 +417,10 @@
         `;
 
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+        bindModalRefs();
+    }
 
+    function bindModalRefs() {
         modalOverlay = document.getElementById('newtaskModalOverlay');
         modalTitleIcon = document.getElementById('newtaskModalIcon');
         modalTitleText = document.getElementById('newtaskModalTitle');
@@ -478,78 +444,6 @@
         fileList = document.getElementById('newtaskFileList');
     }
 
-
-
-    function showAutoSelectNotification(type, name) {
-        const toast = document.createElement('div');
-        toast.className = 'newtask-toast';
-        toast.innerHTML = `<i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${escapeHtml(name)} üçün ${type === 'departament' ? 'şöbə' : 'şirkət'} avtomatik seçildi</span>`;
-        document.body.appendChild(toast);
-        requestAnimationFrame(() => toast.classList.add('is-visible'));
-        setTimeout(() => {
-            toast.classList.remove('is-visible');
-            setTimeout(() => toast.remove(), 240);
-        }, 2000);
-    }
-
-    function escapeHtml(value) {
-        return String(value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function formatFileSize(bytes) {
-        if (!bytes) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
-    }
-
-    function updateModalFileList() {
-        const fileListEl = document.getElementById('newtaskFileList');
-        if (!fileListEl) return;
-
-        if (!window.modalSelectedFiles || window.modalSelectedFiles.length === 0) {
-            fileListEl.innerHTML = '<div class="newtask-file-list-empty"><i class="fas fa-inbox"></i><span>Heç bir fayl seçilməyib</span></div>';
-            return;
-        }
-
-        let html = '<div class="newtask-file-list-header"><i class="fas fa-paperclip"></i><span>Seçilmiş fayllar</span></div>';
-        window.modalSelectedFiles.forEach((file, index) => {
-            const isAudio = file.type.startsWith('audio/') || file.name.includes('recording') || file.name.includes('webm');
-            const isImage = file.type.startsWith('image/');
-            const icon = isAudio ? 'fas fa-microphone' : (isImage ? 'fas fa-image' : 'fas fa-file-lines');
-            const iconClass = isAudio ? 'audio' : (isImage ? 'image' : 'file');
-            const size = formatFileSize(file.size);
-            html += `
-                <div class="newtask-file-item ${iconClass}" data-index="${index}">
-                    <div class="newtask-file-item-icon"><i class="${icon}" aria-hidden="true"></i></div>
-                    <div class="newtask-file-item-meta">
-                        <div class="newtask-file-item-name">${escapeHtml(file.name)}</div>
-                        <div class="newtask-file-item-size">${size}</div>
-                    </div>
-                    <button type="button" class="newtask-file-remove" onclick="removeModalFile(${index})" aria-label="Faylı sil">
-                        <i class="fas fa-circle-xmark" aria-hidden="true"></i>
-                    </button>
-                </div>
-            `;
-        });
-
-        fileListEl.innerHTML = html;
-    }
-
-    function removeModalFile(index) {
-        if (!window.modalSelectedFiles) return;
-        window.modalSelectedFiles.splice(index, 1);
-        updateModalFileList();
-    }
-
-    window.removeModalFile = removeModalFile;
-
     function attachCardEvents() {
         const cards = document.querySelectorAll('.task-type-card');
         cards.forEach(card => {
@@ -557,6 +451,18 @@
                 openModal(card.getAttribute('data-task-type'));
             });
         });
+    }
+
+    function setRequiredFields(taskType) {
+        const companySelect = getSelect('newtaskCompanySelect');
+        const parentSelect = getSelect('newtaskParentSelect');
+        const partnerSelect = getSelect('newtaskPartnerSelect');
+        if (companySelect) companySelect.required = false;
+        if (parentSelect) parentSelect.required = false;
+        if (partnerSelect) partnerSelect.required = false;
+        if (taskType === 'internal' && companySelect) companySelect.required = true;
+        else if (taskType === 'parent' && parentSelect) parentSelect.required = true;
+        else if (taskType === 'partner' && partnerSelect) partnerSelect.required = true;
     }
 
     function openModal(taskType) {
@@ -578,16 +484,6 @@
             if (otherExecutorGroup) otherExecutorGroup.style.display = 'block';
             if (modalTitleIcon) modalTitleIcon.className = 'fas fa-sitemap';
             if (modalTitleText) modalTitleText.textContent = 'Şirkət Tapşırığı';
-
-            const parentSelect = document.getElementById('newtaskParentSelect');
-            if (parentSelect) {
-                const newSelect = parentSelect.cloneNode(true);
-                parentSelect.parentNode.replaceChild(newSelect, parentSelect);
-                newSelect.id = 'newtaskParentSelect';
-                newSelect.addEventListener('change', async (e) => {
-                    if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
-                });
-            }
         } else if (taskType === 'partner') {
             if (partnerGroup) partnerGroup.style.display = 'block';
             if (otherExecutorGroup) otherExecutorGroup.style.display = 'block';
@@ -595,484 +491,1109 @@
             if (modalTitleText) modalTitleText.textContent = 'Partnyor Tapşırığı';
         }
 
-        setRequiredFields(taskType);
         if (modalOverlay) modalOverlay.classList.add('active');
+        setRequiredFields(taskType);
         resetForm();
-    }
-
-    function setRequiredFields(taskType) {
-        const companySelect = document.getElementById('newtaskCompanySelect');
-        const parentSelect = document.getElementById('newtaskParentSelect');
-        const partnerSelect = document.getElementById('newtaskPartnerSelect');
-        if (companySelect) companySelect.required = false;
-        if (parentSelect) parentSelect.required = false;
-        if (partnerSelect) partnerSelect.required = false;
-        if (taskType === 'internal' && companySelect) companySelect.required = true;
-        else if (taskType === 'parent' && parentSelect) parentSelect.required = true;
-        else if (taskType === 'partner' && partnerSelect) partnerSelect.required = true;
     }
 
     function closeModal() {
+        if (isRecording) stopRecording(true);
         if (modalOverlay) modalOverlay.classList.remove('active');
         resetForm();
-        if (mediaRecorder && isRecording) stopRecording();
     }
 
     function resetForm() {
-        const form = document.getElementById('newtaskForm');
+        const form = getSelect('newtaskForm');
         if (form) form.reset();
 
-        if (window.modalSelectedFiles) {
-            window.modalSelectedFiles = [];
-        }
+        if (fileInput) fileInput.value = '';
+        window.modalSelectedFiles = [];
         updateModalFileList();
 
-        const audioDataInput = document.getElementById('newtaskAudioData');
-        const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-        const audioPreviewEl = document.getElementById('newtaskAudioPreview');
-        const recordedAudioEl = document.getElementById('newtaskRecordedAudio');
-        const audioStatusEl = document.getElementById('newtaskAudioStatus');
-        const visualizerEl = document.getElementById('newtaskAudioVisualizer');
-        const startBtnEl = document.getElementById('newtaskStartRecord');
-        const stopBtnEl = document.getElementById('newtaskStopRecord');
-        const saveBtnEl = document.getElementById('newtaskSaveRecord');
-        const cancelBtnEl = document.getElementById('newtaskCancelRecord');
+        clearAudioState(true);
 
-        if (audioDataInput) audioDataInput.value = '';
-        if (audioFilenameInput) audioFilenameInput.value = '';
-        if (audioPreviewEl) audioPreviewEl.style.display = 'none';
-        if (recordedAudioEl) recordedAudioEl.src = '';
-        if (audioStatusEl) audioStatusEl.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
-        if (startBtnEl) startBtnEl.disabled = false;
-        if (stopBtnEl) stopBtnEl.disabled = true;
-        if (saveBtnEl) saveBtnEl.disabled = true;
-        if (cancelBtnEl) cancelBtnEl.disabled = true;
-
-        if (visualizerEl) {
-            const ctx = visualizerEl.getContext('2d');
-            ctx.fillStyle = '#e9ecef';
-            ctx.fillRect(0, 0, visualizerEl.width, visualizerEl.height);
-        }
-
-        const dueDateInput = document.getElementById('newtaskDueDate');
+        const dueDateInput = getSelect('newtaskDueDate');
         if (dueDateInput) {
             const d = new Date();
             d.setDate(d.getDate() + 1);
             dueDateInput.value = d.toISOString().split('T')[0];
         }
 
-        console.log('✅ Form təmizləndi');
+        const otherExecutorSelect = getSelect('newtaskOtherExecutorSelect');
+        if (otherExecutorSelect) {
+            otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+            otherExecutorSelect.disabled = false;
+        }
+
+        const audioStatusEl = getSelect('newtaskAudioStatus');
+        if (audioStatusEl) audioStatusEl.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
+
+        const audioPreviewEl = getSelect('newtaskAudioPreview');
+        if (audioPreviewEl) audioPreviewEl.style.display = 'none';
+
+        const recordedAudioEl = getSelect('newtaskRecordedAudio');
+        if (recordedAudioEl) recordedAudioEl.src = '';
+
+        const startBtnEl = getSelect('newtaskStartRecord');
+        const stopBtnEl = getSelect('newtaskStopRecord');
+        const saveBtnEl = getSelect('newtaskSaveRecord');
+        const cancelBtnEl = getSelect('newtaskCancelRecord');
+        if (startBtnEl) startBtnEl.disabled = false;
+        if (stopBtnEl) stopBtnEl.disabled = true;
+        if (saveBtnEl) saveBtnEl.disabled = true;
+        if (cancelBtnEl) cancelBtnEl.disabled = true;
+
+        if (visualizer) {
+            const ctx = visualizer.getContext('2d');
+            ctx.clearRect(0, 0, visualizer.width, visualizer.height);
+            ctx.fillStyle = '#e9ecef';
+            ctx.fillRect(0, 0, visualizer.width, visualizer.height);
+        }
     }
 
-    function stopRecording() {
+    function stopRecording(discard = false) {
+        if (discard) discardAudioOnStop = true;
         if (mediaRecorder && isRecording) {
-            mediaRecorder.stop();
+            try {
+                mediaRecorder.stop();
+            } catch (error) {
+                console.warn('⚠️ MediaRecorder stop xətası:', error);
+            }
             if (audioStream) audioStream.getTracks().forEach(track => track.stop());
             if (animationId) cancelAnimationFrame(animationId);
             isRecording = false;
         }
     }
 
-    function attachModalEvents() {
-        const closeBtn = document.getElementById('newtaskModalClose');
-        const cancelBtnModal = document.getElementById('newtaskCancelBtn');
-        const saveBtnModal = document.getElementById('newtaskSaveBtn');
+    function normalizeListResponse(response) {
+        if (Array.isArray(response)) return response;
+        return response?.data || response?.items || response?.sub_companies || response?.parent_companies || [];
+    }
 
-        if (closeBtn) closeBtn.onclick = closeModal;
-        if (cancelBtnModal) cancelBtnModal.onclick = closeModal;
-        if (saveBtnModal) saveBtnModal.onclick = handleSubmit;
+    async function loadDataFromTaskManager() {
+        try {
+            const ctx = normalizeCompanyContext();
+            userData = ctx.user;
+            myCompany = ctx.company;
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) closeModal();
-        });
-        modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+            if (!myCompany?.id || !myCompany?.company_code) {
+                console.warn('⚠️ Company məlumatı tam deyil');
+            }
 
-        const companySelect = document.getElementById('newtaskCompanySelect');
-        if (companySelect) {
-            companySelect.addEventListener('change', async (e) => {
-                const companyId = e.target.value;
-                if (companyId && companyId != myCompany?.id) {
-                    await loadCompanyEmployees(companyId);
-                } else {
-                    const otherEl = document.getElementById('newtaskOtherExecutorSelect');
-                    if (otherEl) otherEl.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+            const tm = window.taskManager || {};
+
+            // Şirkət / alt şirkətlər
+            try {
+                const tmSubs = ensureArray(tm.subsidiaryCompanies);
+                if (tmSubs.length) {
+                    subsidiaryCompanies = tmSubs.map(item => ({
+                        id: item.id || item.company_id,
+                        company_code: item.company_code || item.code,
+                        company_name: item.company_name || item.name,
+                        is_my_company: false,
+                        relationship_status: item.relationship_status || item.status || 'active'
+                    })).filter(item => item.id || item.company_code || item.company_name);
+                } else if (myCompany?.company_code && typeof window.getSubCompaniesWithCache === 'function') {
+                    const subResp = await window.getSubCompaniesWithCache(myCompany.company_code);
+                    const arr = normalizeListResponse(subResp);
+                    subsidiaryCompanies = arr.map(item => ({
+                        id: item.id || item.company_id,
+                        company_code: item.company_code || item.code,
+                        company_name: item.company_name || item.name,
+                        is_my_company: false,
+                        relationship_status: item.relationship_status || item.status || 'active'
+                    })).filter(item => item.id || item.company_code || item.company_name);
                 }
-            });
-        }
+            } catch (error) {
+                subsidiaryCompanies = [];
+                console.error('⚠️ Alt şirkətlər yüklənmədi:', error);
+            }
 
-        const executorSelect = document.getElementById('newtaskExecutorSelect');
-        if (executorSelect) {
-            executorSelect.addEventListener('change', async (e) => {
-                if (e.target.value) await autoSelectDepartmentByEmployee(e.target.value);
-            });
-        }
+            // Şöbələr
+            try {
+                const tmDepartments = ensureArray(tm.departments);
+                if (tmDepartments.length) {
+                    departments = tmDepartments;
+                } else if (myCompany?.company_code && typeof window.getDepartmentsWithCache === 'function') {
+                    const depResp = await window.getDepartmentsWithCache(myCompany.company_code);
+                    departments = normalizeListResponse(depResp);
+                }
+            } catch (error) {
+                departments = [];
+                console.error('⚠️ Şöbələr yüklənmədi:', error);
+            }
 
-        const otherExecutorSelect = document.getElementById('newtaskOtherExecutorSelect');
-        if (otherExecutorSelect) {
-            otherExecutorSelect.addEventListener('change', async (e) => {
-                if (e.target.value) await autoSelectDepartmentByEmployee(e.target.value);
+            // İşçilər
+            try {
+                const tmEmployees = ensureArray(tm.employees);
+                if (tmEmployees.length) {
+                    employees = tmEmployees;
+                } else if (myCompany?.company_code && typeof window.getEmployeesWithCache === 'function') {
+                    const empResp = await window.getEmployeesWithCache(myCompany.company_code);
+                    employees = normalizeListResponse(empResp);
+                }
+            } catch (error) {
+                employees = [];
+                console.error('⚠️ İşçilər yüklənmədi:', error);
+            }
+
+            if (!myCompany?.company_name && tm.myCompany) {
+                myCompany.company_name = formatCompanyName(tm.myCompany) || myCompany.company_code;
+            }
+
+            if (!myCompany?.id && userData?.companyId) myCompany.id = userData.companyId;
+            if (!myCompany?.company_code && userData?.companyCode) myCompany.company_code = userData.companyCode;
+            if (!myCompany?.company_name && userData?.companyName) myCompany.company_name = userData.companyName;
+
+            const totalCompanies = (myCompany?.id ? 1 : 0) + subsidiaryCompanies.length;
+            console.log('companies count', totalCompanies);
+            console.log('departments count', ensureArray(departments).length);
+            console.log('employees count', ensureArray(employees).length);
+
+            window.taskManager = window.taskManager || {};
+            window.taskManager.userData = {
+                ...window.taskManager.userData,
+                userId: userData.userId,
+                companyId: myCompany?.id || userData.companyId,
+                companyCode: myCompany?.company_code || userData.companyCode,
+                companyName: myCompany?.company_name || userData.companyName,
+                fullName: userData.fullName,
+                name: userData.fullName,
+                role: userData.role
+            };
+            window.taskManager.myCompany = {
+                ...window.taskManager.myCompany,
+                id: myCompany?.id,
+                company_code: myCompany?.company_code,
+                company_name: myCompany?.company_name
+            };
+            window.taskManager.subsidiaryCompanies = subsidiaryCompanies;
+            window.taskManager.departments = departments;
+            window.taskManager.employees = employees;
+
+            console.log('✅ Yüklənən məlumatlar:', {
+                myCompany,
+                subsidiaryCount: subsidiaryCompanies.length,
+                departmentsCount: departments.length,
+                employeesCount: employees.length
             });
+        } catch (error) {
+            loadFailures.companies = true;
+            console.error('❌ TaskManager məlumat alma xətası:', error);
         }
     }
 
-    async function loadCompanyEmployees(companyId) {
+    async function loadWorkTypes() {
         try {
-            const otherExecutorSelect = document.getElementById('newtaskOtherExecutorSelect');
-            if (!otherExecutorSelect) return;
-
-            otherExecutorSelect.innerHTML = '<option value="">Yüklənir...</option>';
-            otherExecutorSelect.disabled = true;
-
-            // ✅ FIX: Əgər öz şirkəti seçilibsə, artıq yüklənmiş employees-i istifadə et
-            if (myCompany?.id && parseInt(companyId) === parseInt(myCompany.id)) {
-                console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
-                if (employees && employees.length > 0) {
-                    let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-                    employees.forEach(emp => {
-                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
-                        if (name) {
-                            html += `<option value="${emp.id}">👤 ${name}</option>`;
-                        }
-                    });
-                    otherExecutorSelect.innerHTML = html;
-                    otherExecutorSelect.disabled = false;
-                    return;
-                }
-            }
-
-            // ✅ FIX: Əgər öz şirkəti seçilibsə, artıq yüklənmiş employees-i istifadə et
-            if (myCompany?.id && parseInt(companyId) === parseInt(myCompany.id)) {
-                console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
-                if (employees && employees.length > 0) {
-                    let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-                    employees.forEach(emp => {
-                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
-                        if (name) {
-                            html += `<option value="${emp.id}">👤 ${name}</option>`;
-                        }
-                    });
-                    otherExecutorSelect.innerHTML = html;
-                    otherExecutorSelect.disabled = false;
-                    return;
-                }
-            }
-
-            let companyCode = null, companyName = '';
-
-            if (myCompany?.id == companyId) {
-                companyCode = myCompany.company_code; companyName = myCompany.company_name;
+            const companyId = myCompany?.id || window.taskManager?.myCompany?.id || userData?.companyId || window.taskManager?.userData?.companyId;
+            const tmWorkTypes = ensureArray(window.taskManager?.workTypes);
+            if (tmWorkTypes.length) {
+                workTypes = tmWorkTypes;
+            } else if (companyId && typeof window.getWorkTypesWithCache === 'function') {
+                const response = await window.getWorkTypesWithCache(companyId);
+                workTypes = normalizeListResponse(response);
             } else {
-                const subsidiary = subsidiaryCompanies.find(s => s.id == companyId);
-                if (subsidiary) { companyCode = subsidiary.company_code; companyName = subsidiary.company_name; }
+                workTypes = [];
+            }
+            loadFailures.workTypes = false;
+            console.log('workTypes count', workTypes.length);
+            populateSelects();
+        } catch (error) {
+            loadFailures.workTypes = true;
+            workTypes = [];
+            console.error('❌ loadWorkTypes xətası:', error);
+            populateSelects();
+        }
+    }
+
+    async function loadParentCompanies() {
+        try {
+            const companyCode = myCompany?.company_code || window.taskManager?.myCompany?.company_code || userData?.companyCode || window.taskManager?.userData?.companyCode;
+            const tmParents = ensureArray(window.taskManager?.parentCompanies);
+            if (tmParents.length) {
+                parentCompanies = tmParents;
+            } else if (companyCode && typeof window.getParentCompaniesWithCache === 'function') {
+                const response = await window.getParentCompaniesWithCache(companyCode);
+                parentCompanies = normalizeListResponse(response);
+            } else {
+                parentCompanies = [];
+            }
+            loadFailures.parents = false;
+            console.log('parents count', parentCompanies.length);
+            populateSelects();
+        } catch (error) {
+            loadFailures.parents = true;
+            parentCompanies = [];
+            console.error('❌ loadParentCompanies xətası:', error);
+            populateSelects();
+        }
+    }
+
+    async function loadPartnerCompanies() {
+        try {
+            const companyCode = myCompany?.company_code || window.taskManager?.myCompany?.company_code || userData?.companyCode || window.taskManager?.userData?.companyCode;
+            const tmPartners = ensureArray(window.taskManager?.partners);
+            if (tmPartners.length) {
+                partners = tmPartners;
+            } else if (companyCode && typeof window.getPartnersWithCache === 'function') {
+                const response = await window.getPartnersWithCache(companyCode);
+                partners = normalizeListResponse(response);
+            } else {
+                partners = [];
+            }
+            loadFailures.partners = false;
+            console.log('partners count', partners.length);
+            populateSelects();
+        } catch (error) {
+            loadFailures.partners = true;
+            partners = [];
+            console.error('❌ loadPartnerCompanies xətası:', error);
+            populateSelects();
+        }
+    }
+
+    function buildCompanyOptions() {
+        const currentCompany = myCompany || window.taskManager?.myCompany || null;
+        let html = '<option value="">Şirkət seçin</option>';
+
+        if (currentCompany?.id) {
+            html += `<option value="${currentCompany.id}" data-company-code="${escapeHtml(currentCompany.company_code || '')}" data-company-name="${escapeHtml(currentCompany.company_name || '')}" data-is-my-company="true">🏢 ${escapeHtml(currentCompany.company_name || currentCompany.company_code || 'Mənim şirkətim')}</option>`;
+        }
+
+        const seen = new Set([String(currentCompany?.id || '')]);
+        subsidiaryCompanies.forEach((company) => {
+            const id = company.id || company.company_id;
+            const code = company.company_code || company.code || '';
+            const name = company.company_name || company.name || code || `Şirkət ${id || ''}`;
+            if (!id && !code && !name) return;
+            const key = String(id || code || name);
+            if (seen.has(key)) return;
+            seen.add(key);
+            html += `<option value="${escapeHtml(id || '')}" data-company-code="${escapeHtml(code)}" data-company-name="${escapeHtml(name)}" data-is-my-company="false">🏢 ${escapeHtml(name)}</option>`;
+        });
+
+        return html;
+    }
+
+    function buildDepartmentOptions() {
+        const failed = loadFailures.departments;
+        if (failed) return '<option value="">Xəta baş verdi</option>';
+
+        const arr = ensureArray(departments).filter(d => d.is_active !== false);
+        let html = '<option value="">Şöbə seçin</option>';
+        arr.forEach(dep => {
+            const id = dep.id || dep.department_id;
+            const name = formatDepartmentName(dep);
+            html += `<option value="${escapeHtml(id || '')}">${escapeHtml(name)}</option>`;
+        });
+        if (arr.length === 0) html = '<option value="">Şöbə tapılmadı</option>';
+        return html;
+    }
+
+    function buildEmployeeOptions(list, emptyLabel = 'İşçi seçin (boş qoymaq olar)') {
+        const arr = ensureArray(list).filter(emp => emp && emp.id !== undefined && emp.id !== null);
+        if (!arr.length) return '<option value="">İşçi tapılmadı</option>';
+        let html = `<option value="">${escapeHtml(emptyLabel)}</option>`;
+        arr.forEach(emp => {
+            const id = emp.id;
+            const name = formatEmployeeName(emp);
+            const departmentId = emp.department_id || emp.departmentId || emp.department?.id || '';
+            html += `<option value="${escapeHtml(id)}" data-department-id="${escapeHtml(departmentId)}" data-employee-name="${escapeHtml(name)}">👤 ${escapeHtml(name)}</option>`;
+        });
+        return html;
+    }
+
+    function buildWorkTypeOptions() {
+        if (loadFailures.workTypes) return '<option value="">Xəta baş verdi</option>';
+        const arr = ensureArray(workTypes).filter(w => w.is_active !== false);
+        let html = '<option value="">İş növü seçin</option>';
+        arr.forEach(item => {
+            const id = item.id || item.work_type_id;
+            const name = formatWorkTypeName(item);
+            html += `<option value="${escapeHtml(id || '')}">${escapeHtml(name)}</option>`;
+        });
+        if (!arr.length) html = '<option value="">İş növü tapılmadı</option>';
+        return html;
+    }
+
+    function buildParentOptions() {
+        if (loadFailures.parents) return '<option value="">Xəta baş verdi</option>';
+        const arr = ensureArray(parentCompanies);
+        let html = '<option value="">Şirkət seçin</option>';
+        arr.forEach(item => {
+            const targetCompanyId = item.company_id || item.id || item.target_company_id || item.parent_company_id;
+            const companyCode = item.company_code || item.parent_company_code || item.code || item.target_company_code || '';
+            const companyName = item.company_name || item.name || item.target_company_name || item.parent_company_name || companyCode || `Şirkət ${targetCompanyId || ''}`;
+            if (!targetCompanyId && !companyCode && !companyName) return;
+            html += `<option value="${escapeHtml(targetCompanyId || '')}" data-company-code="${escapeHtml(companyCode)}" data-company-name="${escapeHtml(companyName)}">⬆️ ${escapeHtml(companyName)}</option>`;
+        });
+        if (!arr.length) html = '<option value="">Şirkət tapılmadı</option>';
+        return html;
+    }
+
+    function getPartnerCounterparty(partner) {
+        const currentCode = myCompany?.company_code || userData?.companyCode || window.taskManager?.userData?.companyCode || '';
+        const requesterCode = partner.requester_company_code || partner.company_code || partner.requester?.company_code || '';
+        const targetCode = partner.target_company_code || partner.partner_company_code || partner.partner_code || '';
+
+        if (requesterCode && requesterCode === currentCode) {
+            return {
+                companyId: partner.target_company_id || partner.partner_company_id || partner.company_id || partner.id,
+                companyCode: targetCode || partner.target_company_code || partner.partner_code || '',
+                companyName: partner.partner_company_name || partner.target_company_name || partner.partner_name || partner.company_name || ''
+            };
+        }
+
+        if (targetCode && targetCode === currentCode) {
+            return {
+                companyId: partner.requester_company_id || partner.partner_company_id || partner.company_id || partner.id,
+                companyCode: requesterCode || partner.requester_company_code || '',
+                companyName: partner.requester_company_name || partner.partner_company_name || partner.requester_name || partner.company_name || ''
+            };
+        }
+
+        return {
+            companyId: partner.partner_company_id || partner.target_company_id || partner.requester_company_id || partner.company_id || partner.id,
+            companyCode: partner.partner_company_code || partner.target_company_code || partner.requester_company_code || partner.company_code || '',
+            companyName: partner.partner_company_name || partner.target_company_name || partner.requester_company_name || partner.company_name || ''
+        };
+    }
+
+    function buildPartnerOptions() {
+        if (loadFailures.partners) return '<option value="">Xəta baş verdi</option>';
+        const arr = ensureArray(partners);
+        let html = '<option value="">Partnyor seçin</option>';
+        arr.forEach(item => {
+            const relationId = item.id || item.partner_id || item.relation_id || item.partner_relation_id;
+            const counterparty = getPartnerCounterparty(item);
+            const name = counterparty.companyName || item.partner_company_name || item.target_company_name || item.requester_company_name || item.company_name || `Partnyor ${relationId || ''}`;
+            const code = counterparty.companyCode || item.partner_company_code || item.target_company_code || item.requester_company_code || item.company_code || '';
+            const companyId = counterparty.companyId || item.partner_company_id || item.target_company_id || item.requester_company_id || item.company_id || relationId || '';
+            html += `<option value="${escapeHtml(relationId || '')}" data-partner-company-id="${escapeHtml(companyId || '')}" data-company-code="${escapeHtml(code)}" data-company-name="${escapeHtml(name)}">🤝 ${escapeHtml(name)}</option>`;
+        });
+        if (!arr.length) html = '<option value="">Partnyor tapılmadı</option>';
+        return html;
+    }
+
+    function populateSelects() {
+        const companySelect = getSelect('newtaskCompanySelect');
+        const parentSelect = getSelect('newtaskParentSelect');
+        const partnerSelect = getSelect('newtaskPartnerSelect');
+        const executorSelect = getSelect('newtaskExecutorSelect');
+        const departmentSelect = getSelect('newtaskDepartmentSelect');
+        const taskTypeSelect = getSelect('newtaskTaskTypeSelect');
+        const otherExecutorSelect = getSelect('newtaskOtherExecutorSelect');
+
+        const currentCompanyValue = companySelect?.value || '';
+        const currentParentValue = parentSelect?.value || '';
+        const currentPartnerValue = partnerSelect?.value || '';
+        const currentExecutorValue = executorSelect?.value || '';
+        const currentDepartmentValue = departmentSelect?.value || '';
+        const currentWorkTypeValue = taskTypeSelect?.value || '';
+        const currentOtherExecutorValue = otherExecutorSelect?.value || '';
+
+        if (companySelect) {
+            companySelect.innerHTML = buildCompanyOptions();
+            companySelect.value = currentCompanyValue || companySelect.value;
+        }
+        if (parentSelect) {
+            parentSelect.innerHTML = buildParentOptions();
+            parentSelect.value = currentParentValue || parentSelect.value;
+        }
+        if (partnerSelect) {
+            partnerSelect.innerHTML = buildPartnerOptions();
+            partnerSelect.value = currentPartnerValue || partnerSelect.value;
+        }
+        if (executorSelect) {
+            executorSelect.innerHTML = buildEmployeeOptions(employees, 'İşçi seçin (boş qoymaq olar)');
+            executorSelect.value = currentExecutorValue || executorSelect.value;
+        }
+        if (departmentSelect) {
+            departmentSelect.innerHTML = buildDepartmentOptions();
+            departmentSelect.value = currentDepartmentValue || departmentSelect.value;
+        }
+        if (taskTypeSelect) {
+            taskTypeSelect.innerHTML = buildWorkTypeOptions();
+            taskTypeSelect.value = currentWorkTypeValue || taskTypeSelect.value;
+        }
+        if (otherExecutorSelect) {
+            const list = otherExecutorEmployees.length ? otherExecutorEmployees : [];
+            otherExecutorSelect.innerHTML = list.length
+                ? buildEmployeeOptions(list, 'İşçi seçin (boş qoymaq olar)')
+                : '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+            otherExecutorSelect.value = currentOtherExecutorValue || '';
+            otherExecutorSelect.disabled = false;
+        }
+
+        console.log('companies count', (myCompany?.id ? 1 : 0) + subsidiaryCompanies.length);
+        console.log('departments count', ensureArray(departments).length);
+        console.log('employees count', ensureArray(employees).length);
+        console.log('workTypes count', ensureArray(workTypes).length);
+        console.log('parents count', ensureArray(parentCompanies).length);
+        console.log('partners count', ensureArray(partners).length);
+    }
+
+    function updateModalFileList() {
+        const fileListEl = getSelect('newtaskFileList');
+        if (!fileListEl) return;
+
+        if (!window.modalSelectedFiles || window.modalSelectedFiles.length === 0) {
+            fileListEl.innerHTML = '<div class="newtask-file-list-empty"><i class="fas fa-inbox"></i><span>Heç bir fayl seçilməyib</span></div>';
+            return;
+        }
+
+        let html = '<div class="newtask-file-list-header"><i class="fas fa-paperclip"></i><span>Seçilmiş fayllar</span></div>';
+        window.modalSelectedFiles.forEach((file, index) => {
+            const isAudio = file.type?.startsWith('audio/') || file.name?.includes('recording') || file.name?.includes('webm');
+            const isImage = file.type?.startsWith('image/');
+            const icon = isAudio ? 'fas fa-microphone' : (isImage ? 'fas fa-image' : 'fas fa-file-lines');
+            const iconClass = isAudio ? 'audio' : (isImage ? 'image' : 'file');
+            const size = formatFileSize(file.size);
+            html += `
+                <div class="newtask-file-item ${iconClass}" data-index="${index}">
+                    <div class="newtask-file-item-icon"><i class="${icon}" aria-hidden="true"></i></div>
+                    <div class="newtask-file-item-meta">
+                        <div class="newtask-file-item-name">${escapeHtml(file.name)}</div>
+                        <div class="newtask-file-item-size">${size}</div>
+                    </div>
+                    <button type="button" class="newtask-file-remove" onclick="removeModalFile(${index})" aria-label="Faylı sil">
+                        <i class="fas fa-circle-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        fileListEl.innerHTML = html;
+    }
+
+    function fileSignature(file) {
+        return [file.name, file.size, file.type, file.lastModified || ''].join('|');
+    }
+
+    function addFilesToModal(files) {
+        if (!files || !files.length) return;
+        window.modalSelectedFiles = window.modalSelectedFiles || [];
+        const existing = new Set(window.modalSelectedFiles.map(fileSignature));
+        files.forEach(file => {
+            const sig = fileSignature(file);
+            if (!existing.has(sig)) {
+                existing.add(sig);
+                window.modalSelectedFiles.push(file);
+            }
+        });
+        updateModalFileList();
+    }
+
+    function removeModalFile(index) {
+        if (!window.modalSelectedFiles) return;
+        window.modalSelectedFiles.splice(index, 1);
+        updateModalFileList();
+    }
+
+    window.removeModalFile = removeModalFile;
+
+    function clearAudioState(removeSavedAudio = false) {
+        if (recordedAudioUrl) {
+            URL.revokeObjectURL(recordedAudioUrl);
+            recordedAudioUrl = '';
+        }
+        recordedAudioBlob = null;
+        pendingAudioFile = null;
+        audioChunks = [];
+
+        if (audioData) audioData.value = '';
+        if (audioFilename) audioFilename.value = '';
+
+        if (removeSavedAudio && window.modalSelectedFiles?.length) {
+            window.modalSelectedFiles = window.modalSelectedFiles.filter(file => !(file.type?.startsWith('audio/') || file.name?.includes('recording') || file.name?.includes('webm')));
+            updateModalFileList();
+        }
+
+        if (audioPreview) audioPreview.style.display = 'none';
+        if (recordedAudio) recordedAudio.src = '';
+        if (audioStatus) audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
+
+        const startBtnEl = getSelect('newtaskStartRecord');
+        const stopBtnEl = getSelect('newtaskStopRecord');
+        const saveBtnEl = getSelect('newtaskSaveRecord');
+        const cancelBtnEl = getSelect('newtaskCancelRecord');
+        if (startBtnEl) startBtnEl.disabled = false;
+        if (stopBtnEl) stopBtnEl.disabled = true;
+        if (saveBtnEl) saveBtnEl.disabled = true;
+        if (cancelBtnEl) cancelBtnEl.disabled = true;
+    }
+
+    async function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async function saveRecordedAudio() {
+        if (!recordedAudioBlob) {
+            showNotification('Səs qeydi tapılmadı', 'error');
+            return;
+        }
+
+        const timestamp = new Date();
+        const filename = `recording-${timestamp.getFullYear()}${String(timestamp.getMonth() + 1).padStart(2, '0')}${String(timestamp.getDate()).padStart(2, '0')}-${String(timestamp.getHours()).padStart(2, '0')}${String(timestamp.getMinutes()).padStart(2, '0')}${String(timestamp.getSeconds()).padStart(2, '0')}.webm`;
+        const file = new File([recordedAudioBlob], filename, { type: 'audio/webm' });
+        const base64 = await blobToBase64(recordedAudioBlob);
+
+        if (audioData) audioData.value = base64;
+        if (audioFilename) audioFilename.value = filename;
+
+        pendingAudioFile = file;
+        addFilesToModal([file]);
+        showNotification('Səs qeydi saxlandı', 'success');
+    }
+
+    async function startAudioRecording() {
+        try {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                throw new Error('Brauzer səs yazmanı dəstəkləmir');
             }
 
-            if (!companyCode) {
-                for (const parent of parentCompanies) {
-                    if ((parent.company_id || parent.id) == companyId) {
-                        companyCode = parent.company_code; companyName = parent.company_name; break;
-                    }
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioStream = stream;
+            audioChunks = [];
+            recordedAudioBlob = null;
+            pendingAudioFile = null;
+            discardAudioOnStop = false;
+            if (audioData) audioData.value = '';
+            if (audioFilename) audioFilename.value = '';
+
+            const preferredMimeType = (typeof MediaRecorder !== 'undefined' && typeof MediaRecorder.isTypeSupported === 'function' && MediaRecorder.isTypeSupported('audio/webm')) ? 'audio/webm' : '';
+            mediaRecorder = preferredMimeType ? new MediaRecorder(stream, { mimeType: preferredMimeType }) : new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data && event.data.size > 0) audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                if (discardAudioOnStop) {
+                    discardAudioOnStop = false;
+                    audioChunks = [];
+                    recordedAudioBlob = null;
+                    pendingAudioFile = null;
+                    if (audioData) audioData.value = '';
+                    if (audioFilename) audioFilename.value = '';
+                    if (audioPreview) audioPreview.style.display = 'none';
+                    if (recordedAudio) recordedAudio.src = '';
+                    return;
                 }
-            }
+                recordedAudioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+                recordedAudioUrl = URL.createObjectURL(recordedAudioBlob);
+                if (recordedAudio) recordedAudio.src = recordedAudioUrl;
+                if (audioPreview) audioPreview.style.display = 'block';
+                if (audioStatus) audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Qeyd dayandırıldı</span>';
+                if (saveBtn) saveBtn.disabled = false;
+                if (cancelBtn) cancelBtn.disabled = false;
+            };
 
+            mediaRecorder.start();
+            isRecording = true;
+            if (audioStatus) audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Yazılır...</span>';
+            if (startBtn) startBtn.disabled = true;
+            if (stopBtn) stopBtn.disabled = false;
+            if (saveBtn) saveBtn.disabled = true;
+            if (cancelBtn) cancelBtn.disabled = false;
+        } catch (error) {
+            console.error('❌ Səs yazma xətası:', error);
+            showNotification('Mikrofon icazəsi alınmadı və ya brauzer səs yazmanı dəstəkləmir', 'error');
+            clearAudioState(false);
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+                audioStream = null;
+            }
+        }
+    }
+
+    function stopAudioRecording(discard = false) {
+        stopRecording(discard);
+        if (audioStream) {
+            audioStream.getTracks().forEach(track => track.stop());
+            audioStream = null;
+        }
+        if (animationId) cancelAnimationFrame(animationId);
+        isRecording = false;
+    }
+
+    function setupAudioRecorder() {
+        if (!audioRecorderSupported) return;
+        if (!startBtn || !stopBtn || !saveBtn || !cancelBtn) bindModalRefs();
+
+        if (!startBtn || !stopBtn || !saveBtn || !cancelBtn) return;
+
+        startBtn.addEventListener('click', startAudioRecording);
+        stopBtn.addEventListener('click', () => stopAudioRecording(false));
+        saveBtn.addEventListener('click', saveRecordedAudio);
+        cancelBtn.addEventListener('click', () => {
+            stopAudioRecording(true);
+            clearAudioState(true);
+        });
+
+        window.audioRecorder = {
+            reset: () => clearAudioState(true)
+        };
+    }
+
+    function setupFileUpload() {
+        window.modalSelectedFiles = window.modalSelectedFiles || [];
+        if (!fileZone || !fileInput || !fileList) bindModalRefs();
+        if (!fileZone || !fileInput || !fileList) return;
+
+        const openPicker = (event) => {
+            event.preventDefault();
+            fileInput.click();
+        };
+
+        const onInputChange = (event) => {
+            const files = Array.from(event.target.files || []);
+            addFilesToModal(files);
+            fileInput.value = '';
+        };
+
+        const onDragOver = (event) => {
+            event.preventDefault();
+            fileZone.classList.add('is-dragover');
+        };
+
+        const onDragLeave = () => {
+            fileZone.classList.remove('is-dragover');
+        };
+
+        const onDrop = (event) => {
+            event.preventDefault();
+            fileZone.classList.remove('is-dragover');
+            const files = Array.from(event.dataTransfer?.files || []);
+            addFilesToModal(files);
+        };
+
+        fileZone.addEventListener('click', openPicker);
+        fileInput.addEventListener('change', onInputChange);
+        fileZone.addEventListener('dragover', onDragOver);
+        fileZone.addEventListener('dragleave', onDragLeave);
+        fileZone.addEventListener('drop', onDrop);
+
+        updateModalFileList();
+    }
+
+    function setupPrintScreenCapture() {
+        if (window.__newTaskPasteHandlerAttached) return;
+        window.__newTaskPasteHandlerAttached = true;
+
+        document.addEventListener('paste', async (event) => {
+            if (!modalOverlay?.classList.contains('active')) return;
+            const clipboardItems = Array.from(event.clipboardData?.items || []);
+            const imageItem = clipboardItems.find(item => item.kind === 'file' && item.type.startsWith('image/'));
+            if (!imageItem) return;
+
+            const blob = imageItem.getAsFile();
+            if (!blob) return;
+
+            const now = new Date();
+            const filename = `screenshot-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.png`;
+            const file = new File([blob], filename, { type: blob.type || 'image/png' });
+            addFilesToModal([file]);
+        });
+    }
+
+    async function loadTargetCompanyEmployeesByCompanyCode(companyCode, options = {}) {
+        const otherSelect = getSelect('newtaskOtherExecutorSelect');
+        if (!otherSelect) return;
+
+        otherSelect.innerHTML = '<option value="">Yüklənir...</option>';
+        otherSelect.disabled = true;
+
+        try {
             if (!companyCode) {
-                const parentSelect = document.getElementById('newtaskParentSelect');
-                if (parentSelect?.selectedIndex > 0) {
-                    const opt = parentSelect.options[parentSelect.selectedIndex];
-                    const code = opt.getAttribute('data-company-code');
-                    if (code && code !== 'undefined' && code !== '') {
-                        companyCode = code;
-                        companyName = opt.getAttribute('data-company-name') || opt.text.replace('⬆️','').trim();
-                    }
-                }
-            }
-
-            if (!companyCode && partners.length > 0) {
-                const myCompanyCode = window.taskManager?.userData?.companyCode;
-                for (const partner of partners) {
-                    const pid = partner.partner_company_id || partner.company_id || partner.target_company_id;
-                    if (pid == companyId) {
-                        companyCode = partner.requester_company_code === myCompanyCode
-                            ? partner.target_company_code
-                            : partner.requester_company_code;
-                        companyName = partner.partner_company_name || partner.target_company_name;
-                        break;
-                    }
-                }
-            }
-
-            if (!companyCode) {
-                otherExecutorSelect.innerHTML = `<option value="">İşçi tapılmadı (${companyName || companyId} üçün kod tapılmadı)</option>`;
-                otherExecutorSelect.disabled = false;
+                otherExecutorEmployees = [];
+                otherSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                otherSelect.disabled = false;
                 return;
             }
 
-            const response = await makeApiRequest(`/users/company/${companyCode}`, 'GET');
-            const employeesList = response?.data || (Array.isArray(response) ? response : []);
-
-            if (employeesList.length > 0) {
-                let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-                let ceoId = null, ceoName = '';
-                employeesList.forEach(emp => {
-                    const name = emp.full_name || emp.name || emp.ceo_name || emp.email || 'Ad yoxdur';
-                    const role = (emp.role || emp.user_role || emp.position || emp.employment_type || '').toLowerCase();
-                    const isCeo = role.includes('ceo') || role.includes('rəhbər') || role.includes('director') || role.includes('baş') || emp.is_admin === true || emp.user_type === 'ceo';
-                    html += `<option value="${emp.id}" ${isCeo ? 'data-is-ceo="true"' : ''}>👤 ${name}${isCeo ? ' (Rəhbər)' : ''}</option>`;
-                    if (isCeo && !ceoId) { ceoId = emp.id; ceoName = name; }
-                });
-                otherExecutorSelect.innerHTML = html;
-                if (ceoId) {
-                    otherExecutorSelect.value = ceoId;
-                    showAutoSelectNotification('rəhbər', ceoName);
-                } else if (employeesList.length > 0) {
-                    otherExecutorSelect.value = employeesList[0].id;
-                }
+            const ownCode = myCompany?.company_code || userData?.companyCode || window.taskManager?.userData?.companyCode;
+            if (options.excludeOwnCompany && ownCode && String(companyCode) === String(ownCode)) {
+                otherExecutorEmployees = ensureArray(employees);
             } else {
-                otherExecutorSelect.innerHTML = '<option value="">İşçi tapılmadı</option>';
+                let response = [];
+                if (typeof window.getEmployeesWithCache === 'function') {
+                    response = await window.getEmployeesWithCache(companyCode);
+                }
+                response = normalizeListResponse(response);
+
+                if (!response.length && typeof window._apiGet === 'function') {
+                    const fallback = await window._apiGet(`/users/company/${companyCode}`);
+                    response = normalizeListResponse(fallback);
+                }
+
+                otherExecutorEmployees = response.filter(emp => emp && emp.id !== undefined && emp.id !== null);
             }
-            otherExecutorSelect.disabled = false;
+
+            const html = buildEmployeeOptions(otherExecutorEmployees, 'İşçi seçin (boş qoymaq olar)');
+            otherSelect.innerHTML = otherExecutorEmployees.length ? html : '<option value="">İşçi tapılmadı</option>';
+            otherSelect.disabled = false;
+            console.log('employees count', otherExecutorEmployees.length);
         } catch (error) {
-            console.error('❌ Şirkət işçiləri xətası:', error);
-            const el = document.getElementById('newtaskOtherExecutorSelect');
-            if (el) {
-                // 403 = icazə yoxdur, digər xəta = texniki problem
-                const msg = error.message?.includes('403')
-                    ? 'Bu şirkətin işçilərinə baxmaq icazəniz yoxdur'
-                    : 'İşçilər yüklənə bilmədi';
-                el.innerHTML = `<option value="">${msg}</option>`;
-                el.disabled = false;
+            console.error('❌ target company employees xətası:', error);
+            otherExecutorEmployees = [];
+            otherSelect.innerHTML = '<option value="">Xəta baş verdi</option>';
+            otherSelect.disabled = false;
+        }
+    }
+
+    function getCompanyCodeFromSelect(selectEl) {
+        if (!selectEl) return '';
+        const option = selectEl.options?.[selectEl.selectedIndex];
+        return option?.dataset?.companyCode || option?.dataset?.code || '';
+    }
+
+    function getCompanyNameFromSelect(selectEl) {
+        if (!selectEl) return '';
+        const option = selectEl.options?.[selectEl.selectedIndex];
+        return option?.dataset?.companyName || option?.dataset?.name || option?.textContent?.replace(/^[🏢⬆️🤝]\s*/g, '').trim() || '';
+    }
+
+    function autoSelectDepartmentByEmployee(employeeId) {
+        const departmentSelect = getSelect('newtaskDepartmentSelect');
+        if (!departmentSelect || !employeeId) return;
+
+        const allEmployees = [...ensureArray(employees), ...ensureArray(otherExecutorEmployees)];
+        const emp = allEmployees.find(item => String(item.id) === String(employeeId));
+        if (!emp?.department_id) return;
+
+        const targetDepartmentId = String(emp.department_id);
+        const hasOption = Array.from(departmentSelect.options || []).some(opt => String(opt.value) === targetDepartmentId);
+        if (!hasOption) return;
+
+        departmentSelect.value = targetDepartmentId;
+        departmentSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        showAutoSelectNotification('departament', formatEmployeeName(emp));
+    }
+
+    function attachModalEvents() {
+        if (eventsAttached) return;
+        eventsAttached = true;
+
+        const closeBtn = getSelect('newtaskModalClose');
+        const cancelBtnModal = getSelect('newtaskCancelBtn');
+        const saveBtnModal = getSelect('newtaskSaveBtn');
+        const companySelect = getSelect('newtaskCompanySelect');
+        const parentSelect = getSelect('newtaskParentSelect');
+        const partnerSelect = getSelect('newtaskPartnerSelect');
+        const executorSelect = getSelect('newtaskExecutorSelect');
+        const otherExecutorSelect = getSelect('newtaskOtherExecutorSelect');
+
+        closeBtn?.addEventListener('click', closeModal);
+        cancelBtnModal?.addEventListener('click', closeModal);
+        saveBtnModal?.addEventListener('click', handleSubmit);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay?.classList.contains('active')) closeModal();
+        });
+
+        modalOverlay?.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeModal();
+        });
+
+        companySelect?.addEventListener('change', async (e) => {
+            const selectedOption = e.target.options?.[e.target.selectedIndex];
+            const companyCode = selectedOption?.dataset?.companyCode || selectedOption?.dataset?.code || '';
+            if (!companyCode) {
+                otherExecutorEmployees = [];
+                if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                return;
+            }
+            await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: false });
+        });
+
+        parentSelect?.addEventListener('change', async (e) => {
+            const selectedOption = e.target.options?.[e.target.selectedIndex];
+            const companyCode = selectedOption?.dataset?.companyCode || '';
+            if (!companyCode) {
+                otherExecutorEmployees = [];
+                if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                return;
+            }
+            await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: true });
+        });
+
+        partnerSelect?.addEventListener('change', async (e) => {
+            const selectedOption = e.target.options?.[e.target.selectedIndex];
+            const companyCode = selectedOption?.dataset?.companyCode || '';
+            if (!companyCode) {
+                otherExecutorEmployees = [];
+                if (otherExecutorSelect) otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                return;
+            }
+            await loadTargetCompanyEmployeesByCompanyCode(companyCode, { excludeOwnCompany: true });
+        });
+
+        executorSelect?.addEventListener('change', async (e) => {
+            if (e.target.value) autoSelectDepartmentByEmployee(e.target.value);
+        });
+
+        otherExecutorSelect?.addEventListener('change', async (e) => {
+            if (e.target.value) autoSelectDepartmentByEmployee(e.target.value);
+        });
+    }
+
+    function collectFilesForUpload() {
+        const files = [];
+        const seen = new Set();
+
+        const pushFile = (file) => {
+            if (!file) return;
+            const sig = fileSignature(file);
+            if (seen.has(sig)) return;
+            seen.add(sig);
+            files.push(file);
+        };
+
+        if (fileInput?.files?.length) {
+            Array.from(fileInput.files).forEach(pushFile);
+        }
+        if (window.modalSelectedFiles?.length) {
+            window.modalSelectedFiles.forEach(pushFile);
+        }
+
+        if (audioData?.value && audioFilename?.value && !files.some(file => file.name === audioFilename.value)) {
+            try {
+                const base64 = audioData.value.includes(',') ? audioData.value.split(',')[1] : audioData.value;
+                const byteCharacters = atob(base64);
+                const byteArray = new Uint8Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteArray[i] = byteCharacters.charCodeAt(i);
+                }
+                const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
+                pushFile(new File([audioBlob], audioFilename.value, { type: 'audio/webm' }));
+            } catch (error) {
+                console.error('❌ Audio file bərpası xətası:', error);
             }
         }
+
+        return files;
+    }
+
+    function resolveSelectedTargetForSubmit() {
+        const companySelect = getSelect('newtaskCompanySelect');
+        const parentSelect = getSelect('newtaskParentSelect');
+        const partnerSelect = getSelect('newtaskPartnerSelect');
+
+        if (currentTaskType === 'internal') {
+            const targetCompanyId = toIntOrNull(companySelect?.value);
+            const selectedOption = companySelect?.options?.[companySelect.selectedIndex];
+            return {
+                targetCompanyId: Number.isNaN(targetCompanyId) ? null : targetCompanyId,
+                targetCompanyCode: selectedOption?.dataset?.companyCode || '',
+                selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[🏢]\s*/g, '').replace('(Mənim şirkətim)', '').trim() || selectedOption?.textContent?.trim() || ''
+            };
+        }
+
+        if (currentTaskType === 'parent') {
+            const targetCompanyId = toIntOrNull(parentSelect?.value);
+            const selectedOption = parentSelect?.options?.[parentSelect.selectedIndex];
+            return {
+                targetCompanyId: Number.isNaN(targetCompanyId) ? null : targetCompanyId,
+                targetCompanyCode: selectedOption?.dataset?.companyCode || '',
+                selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[⬆️]\s*/g, '').trim() || selectedOption?.textContent?.trim() || ''
+            };
+        }
+
+        const partnerRelationId = toIntOrNull(partnerSelect?.value);
+        const selectedOption = partnerSelect?.options?.[partnerSelect.selectedIndex];
+        const partnerCompanyId = selectedOption?.dataset?.partnerCompanyId || selectedOption?.dataset?.companyId || selectedOption?.dataset?.companyCode || '';
+        return {
+            partnerRelationId: Number.isNaN(partnerRelationId) ? null : partnerRelationId,
+            targetCompanyId: partnerCompanyId || (Number.isNaN(partnerRelationId) ? null : partnerRelationId),
+            targetCompanyCode: selectedOption?.dataset?.companyCode || '',
+            selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[🤝]\s*/g, '').trim() || selectedOption?.textContent?.trim() || ''
+        };
+    }
+
+    function getAssignedToValue() {
+        const executorSelect = getSelect('newtaskExecutorSelect');
+        const otherExecutorSelect = getSelect('newtaskOtherExecutorSelect');
+        const executorId = parseInt(executorSelect?.value, 10);
+        const otherExecutorId = parseInt(otherExecutorSelect?.value, 10);
+        if (!Number.isNaN(executorId) && executorId) return executorId;
+        if (!Number.isNaN(otherExecutorId) && otherExecutorId) return otherExecutorId;
+        return null;
+    }
+
+    async function uploadFilesAndCollectUuids(files) {
+        const uploadedUuids = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const isAudio = file.type?.startsWith('audio/') || file.name?.includes('recording') || file.name?.includes('.webm');
+                formData.append('category', isAudio ? 'audio_recording' : 'company_file');
+                if (isAudio) formData.append('is_audio_recording', 'true');
+
+                const uploadResponse = await window.makeApiRequest('/files/simple-upload', 'POST', formData, true);
+                const fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id || uploadResponse?.data?.file_id;
+                if (fileUuid) {
+                    uploadedUuids.push(fileUuid);
+                } else {
+                    console.error(`❌ ${file.name} üçün UUID tapılmadı`, uploadResponse);
+                }
+            } catch (error) {
+                console.error(`❌ Fayl yükləmə xətası (${file.name}):`, error);
+            }
+        }
+        return uploadedUuids;
     }
 
     async function handleSubmit() {
         try {
-            // ========== 1. VALİDASİYALAR ==========
-            const form = document.getElementById('newtaskForm');
-            if (!form.checkValidity()) { form.reportValidity(); return; }
+            const companySelect = getSelect('newtaskCompanySelect');
+            const parentSelect = getSelect('newtaskParentSelect');
+            const partnerSelect = getSelect('newtaskPartnerSelect');
+            const departmentSelect = getSelect('newtaskDepartmentSelect');
+            const taskTypeSelect = getSelect('newtaskTaskTypeSelect');
+            const dueDateInput = getSelect('newtaskDueDate');
+            const descriptionInput = getSelect('newtaskDescription');
+            const isVisibleInput = getSelect('newtaskIsVisible');
 
-            if (currentTaskType === 'internal') {
-                if (!document.getElementById('newtaskCompanySelect').value) {
-                    showNotification('Şirkət seçin', 'error');
-                    return;
-                }
-            } else if (currentTaskType === 'parent') {
-                if (!document.getElementById('newtaskParentSelect').value) {
-                    showNotification('Şirkət seçin', 'error');
-                    return;
-                }
-            } else if (currentTaskType === 'partner') {
-                if (!document.getElementById('newtaskPartnerSelect').value) {
-                    showNotification('Partnyor seçin', 'error');
-                    return;
-                }
+            if (!departmentSelect?.value) {
+                showNotification('Şöbə seçin', 'error');
+                return;
+            }
+            if (!taskTypeSelect?.value) {
+                showNotification('İş növü seçin', 'error');
+                return;
+            }
+            if (!dueDateInput?.value) {
+                showNotification('Son müddət seçin', 'error');
+                return;
+            }
+            if (!descriptionInput?.value) {
+                showNotification('Tapşırıq açıqlamasını daxil edin', 'error');
+                return;
             }
 
-            const departmentId = document.getElementById('newtaskDepartmentSelect').value;
-            if (!departmentId) { showNotification('Şöbə seçin', 'error'); return; }
-
-            const taskTypeId = document.getElementById('newtaskTaskTypeSelect').value;
-            if (!taskTypeId) { showNotification('İş növü seçin', 'error'); return; }
-
-            const dueDate = document.getElementById('newtaskDueDate').value;
-            if (!dueDate) { showNotification('Son müddət seçin', 'error'); return; }
-
-            const description = document.getElementById('newtaskDescription').value;
-            if (!description) { showNotification('Tapşırıq açıqlamasını daxil edin', 'error'); return; }
-
-            const executorId = document.getElementById('newtaskExecutorSelect').value;
-            let assignedTo = executorId ? parseInt(executorId) : null;
-
-            const otherExecutor = document.getElementById('newtaskOtherExecutorSelect').value;
-            let otherExecutorId = otherExecutor ? parseInt(otherExecutor) : null;
-
-            const isVisible = document.getElementById('newtaskIsVisible').checked;
-
-            // ========== 2. BÜTÜN FAYLLARI TOPLA ==========
-            const allFiles = [];
-
-            // File input-dan fayllar
-            const fileInput = document.getElementById('newtaskFileInput');
-            if (fileInput && fileInput.files && fileInput.files.length > 0) {
-                Array.from(fileInput.files).forEach(f => allFiles.push(f));
+            if (currentTaskType === 'internal' && !companySelect?.value) {
+                showNotification('Şirkət seçin', 'error');
+                return;
+            }
+            if (currentTaskType === 'parent' && !parentSelect?.value) {
+                showNotification('Şirkət seçin', 'error');
+                return;
+            }
+            if (currentTaskType === 'partner' && !partnerSelect?.value) {
+                showNotification('Partnyor seçin', 'error');
+                return;
             }
 
-            // modalSelectedFiles (drag-drop, PrtScn)
-            if (window.modalSelectedFiles && window.modalSelectedFiles.length > 0) {
-                window.modalSelectedFiles.forEach(f => {
-                    const isDuplicate = allFiles.some(af => af.name === f.name && af.size === f.size);
-                    if (!isDuplicate) allFiles.push(f);
-                });
-            }
+            const selectedTarget = resolveSelectedTargetForSubmit();
+            const assignedTo = getAssignedToValue();
+            const isVisible = !!isVisibleInput?.checked;
+            const filesToUpload = collectFilesForUpload();
 
-            // Audio data (əgər varsa)
-            const audioDataInput = document.getElementById('newtaskAudioData');
-            const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-
-            if (audioDataInput?.value && audioFilenameInput?.value) {
-                const alreadyAdded = allFiles.some(f => f.name === audioFilenameInput.value);
-                if (!alreadyAdded) {
-                    try {
-                        let base64Data = audioDataInput.value;
-                        if (base64Data.includes(',')) base64Data = base64Data.split(',')[1];
-                        const byteCharacters = atob(base64Data);
-                        const byteArray = new Uint8Array(byteCharacters.length);
-                        for (let i = 0; i < byteCharacters.length; i++) {
-                            byteArray[i] = byteCharacters.charCodeAt(i);
-                        }
-                        const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
-                        const audioFile = new File([audioBlob], audioFilenameInput.value, { type: 'audio/webm' });
-                        allFiles.push(audioFile);
-                    } catch (err) {
-                        console.error('Audio xətası:', err);
-                    }
-                }
-            }
-
-            console.log(`📎 ${allFiles.length} fayl yüklənəcək`);
-
-            // ========== 3. BÜTÜN FAYLLARI YÜKLƏ (SIRAYLA) ==========
-            if (allFiles.length > 0) {
-                showNotification(`${allFiles.length} fayl yüklənir...`, 'info');
-            }
-
-            const uploadedUuids = [];
-
-            for (let i = 0; i < allFiles.length; i++) {
-                const file = allFiles[i];
-                try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    const isAudio = file.type.startsWith('audio/') ||
-                                   file.name.includes('recording') ||
-                                   file.name.includes('.webm');
-
-                    formData.append('category', isAudio ? 'audio_recording' : 'company_file');
-                    if (isAudio) formData.append('is_audio_recording', 'true');
-
-                    console.log(`📤 Fayl yüklənir (${i+1}/${allFiles.length}): ${file.name}`);
-
-                    const uploadResponse = await makeApiRequest('/files/simple-upload', 'POST', formData, true);
-
-                    const fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id;
-                    if (fileUuid) {
-                        uploadedUuids.push(fileUuid);
-                        console.log(`✅ ${file.name} -> ${fileUuid}`);
-                    } else {
-                        console.error(`❌ ${file.name} UUID alınmadı!`);
-                    }
-                } catch (fileErr) {
-                    console.error(`❌ ${file.name} xətası:`, fileErr);
-                }
-            }
-
-            console.log(`📦 Yüklənmiş UUID-lər: ${uploadedUuids.length} ədəd`, uploadedUuids);
-
-            // ========== 4. TASK MƏLUMATLARINI HAZIRLA ==========
-            let targetCompanyId = null;
-            let selectedCompanyName = '';
-
-            if (currentTaskType === 'internal') {
-                const companySelect = document.getElementById('newtaskCompanySelect');
-                if (companySelect && companySelect.selectedIndex > 0) {
-                    const opt = companySelect.options[companySelect.selectedIndex];
-                    // "🏢 Güvən Finans MMC (Mənim şirkətim)" → "Güvən Finans MMC"
-                    selectedCompanyName = opt.text
-                        .replace('🏢', '')
-                        .replace('(Mənim şirkətim)', '')
-                        .trim();
-                }
-            } else if (currentTaskType === 'parent') {
-                const parentSelect = document.getElementById('newtaskParentSelect');
-                if (parentSelect && parentSelect.selectedIndex > 0) {
-                    selectedCompanyName = parentSelect.options[parentSelect.selectedIndex]
-                        .getAttribute('data-company-name')
-                        || parentSelect.options[parentSelect.selectedIndex].text
-                            .replace(/⬆️/g, '').trim();
-                }
-            } else if (currentTaskType === 'partner') {
-                const partnerSelect = document.getElementById('newtaskPartnerSelect');
-                if (partnerSelect && partnerSelect.selectedIndex > 0) {
-                    selectedCompanyName = partnerSelect.options[partnerSelect.selectedIndex].text
-                        .replace(/🤝/g, '').trim();
-                }
-            }
-
-            // ========== 5. TASK YARAT (YÜKLƏNMİŞ UUID-LƏR İLƏ) ==========
             showNotification('Tapşırıq yaradılır...', 'info');
+            if (filesToUpload.length) {
+                showNotification(`${filesToUpload.length} fayl yüklənir...`, 'info');
+            }
 
-            let endpoint = '';
-            let apiData = {};
+            const uploadedUuids = await uploadFilesAndCollectUuids(filesToUpload);
+            const selectedCompanyName = selectedTarget.selectedCompanyName || '';
+            const currentCompanyId = toIntOrNull(myCompany?.id || window.taskManager?.userData?.companyId || userData?.companyId || null);
+            const currentCompanyCode = myCompany?.company_code || window.taskManager?.userData?.companyCode || userData?.companyCode || null;
 
             const metadata = {
                 display_company_name: selectedCompanyName,
                 target_company_name: selectedCompanyName,
                 original_company_name: selectedCompanyName,
                 company_name: selectedCompanyName,
-                company_id: targetCompanyId,
-                created_by_company: window.taskManager?.userData?.companyName || window.taskManager?.userData?.companyCode,
-                created_by_company_id: window.taskManager?.userData?.companyId,
-                target_company_id: targetCompanyId,
-                created_by_user_id: window.taskManager?.userData?.userId,
-                created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name,
+                company_id: currentTaskType === 'internal' ? selectedTarget.targetCompanyId : currentCompanyId,
+                created_by_company: window.taskManager?.userData?.companyName || currentCompany?.company_name || currentCompanyCode,
+                created_by_company_id: currentCompanyId,
+                target_company_id: selectedTarget.targetCompanyId,
+                target_company_code: selectedTarget.targetCompanyCode || null,
+                created_by_user_id: window.taskManager?.userData?.userId || userData?.userId || null,
+                created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || userData?.fullName || 'Sistem',
                 created_at: new Date().toISOString(),
                 task_type: currentTaskType,
-                due_date: dueDate
+                due_date: dueDateInput.value,
+                is_visible_to_selected_company: isVisible,
+                partner_relation_id: selectedTarget.partnerRelationId || null
             };
 
             const baseData = {
-                task_title: `  [${selectedCompanyName}]`,  // ← Arxiv ilə eyni format
-                task_description: description,
-                assigned_to: assignedTo || otherExecutorId,
-                priority: "medium",
-                status: "pending_approval",
-                due_date: dueDate,
+                task_title: `  [${selectedCompanyName}]`,
+                task_description: descriptionInput.value,
+                assigned_to: assignedTo,
+                priority: 'medium',
+                status: 'pending_approval',
+                due_date: dueDateInput.value,
                 progress_percentage: 0,
                 is_billable: false,
-                department_id: parseInt(departmentId),
-                work_type_id: parseInt(taskTypeId),
-                created_by: window.taskManager?.userData?.userId,
-                creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || 'Sistem',
+                is_company_viewable: isVisible,
+                department_id: parseInt(departmentSelect.value, 10),
+                work_type_id: parseInt(taskTypeSelect.value, 10),
+                created_by: window.taskManager?.userData?.userId || userData?.userId || null,
+                creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || userData?.fullName || 'Sistem',
                 metadata: JSON.stringify(metadata),
                 file_uuids: uploadedUuids
             };
 
+            let endpoint = '';
+            let apiData = {};
+
             if (currentTaskType === 'internal') {
-                    endpoint = '/tasks/';
-                    apiData = {
-                        ...baseData,
-                        company_id: targetCompanyId,  // Bu əsl sahib şirkət (Güvən Finans)
-                        company_name: selectedCompanyName,
-                        is_company_viewable: true,     // ✅ Dəyişdirildi: false → true
-                        viewable_company_id: targetCompanyId  // ✅ Bu göstəriləcək şirkət (DRM MMC)
-                    };
-                } else if (currentTaskType === 'parent') {
+                endpoint = '/tasks/';
+                apiData = {
+                    ...baseData,
+                    company_id: selectedTarget.targetCompanyId,
+                    company_name: selectedCompanyName,
+                    target_company_id: selectedTarget.targetCompanyId,
+                    target_company_name: selectedCompanyName,
+                    display_company_name: selectedCompanyName,
+                    is_company_viewable: true,
+                    viewable_company_id: selectedTarget.targetCompanyId,
+                    company_code: selectedTarget.targetCompanyCode || currentCompanyCode
+                };
+            } else if (currentTaskType === 'parent') {
                 endpoint = '/tasks-external/';
                 apiData = {
                     ...baseData,
-                    company_id: window.taskManager?.userData?.companyId,
-                    target_company_id: targetCompanyId,
+                    company_id: currentCompanyId,
+                    target_company_id: selectedTarget.targetCompanyId,
                     target_company_name: selectedCompanyName,
-                    viewable_company_id: targetCompanyId,
-                    is_for_subsidiary: false
+                    target_company_code: selectedTarget.targetCompanyCode || null,
+                    viewable_company_id: selectedTarget.targetCompanyId,
+                    is_for_subsidiary: false,
+                    display_company_name: selectedCompanyName
                 };
             } else if (currentTaskType === 'partner') {
                 endpoint = '/partner-tasks/';
                 apiData = {
                     ...baseData,
-                    company_id: window.taskManager?.userData?.companyId,
-                    partner_id: targetCompanyId,
+                    company_id: currentCompanyId,
+                    partner_id: selectedTarget.partnerRelationId || selectedTarget.targetCompanyId,
                     partner_name: selectedCompanyName,
+                    partner_company_id: selectedTarget.targetCompanyId,
+                    partner_company_code: selectedTarget.targetCompanyCode || null,
+                    display_company_name: selectedCompanyName,
+                    target_company_id: selectedTarget.targetCompanyId,
+                    target_company_name: selectedCompanyName,
                     product_serial: `SN-${Date.now()}`,
-                    product_model: "Default Model",
-                    product_category: "General",
+                    product_model: 'Default Model',
+                    product_category: 'General',
                     contract_number: `CT-${Date.now()}`,
                     purchase_order_number: `PO-${Date.now()}`
                 };
             }
 
-            // NULL field-ları sil
-            Object.keys(apiData).forEach(key => {
+            Object.keys(apiData).forEach((key) => {
                 if (apiData[key] === null || apiData[key] === undefined || apiData[key] === '') {
                     delete apiData[key];
                 }
@@ -1080,114 +1601,39 @@
 
             console.log(`📤 ${currentTaskType.toUpperCase()} TASK:`, JSON.stringify(apiData, null, 2));
 
-            const response = await makeApiRequest(endpoint, 'POST', apiData);
+            const response = await window.makeApiRequest(endpoint, 'POST', apiData);
             console.log('📥 API cavabı:', response);
 
             const taskId = response?.task?.id || response?.id || response?.data?.id;
-
             if (!taskId) {
                 throw new Error(response?.detail || response?.message || 'Task ID alınmadı');
             }
 
             console.log(`✅ Task yaradıldı (ID: ${taskId}) ${uploadedUuids.length} fayl ilə`);
-
-            // ========== 6. UĞUR BİLDİRİŞİ ==========
             showNotification(`✅ Tapşırıq uğurla yaradıldı! ${uploadedUuids.length} fayl əlavə edildi.`, 'success');
 
-            // ========== 7. SİYAHILARI YENİLƏ ==========
             if (window.taskManager?.loadActiveTasks) {
                 setTimeout(() => window.taskManager.loadActiveTasks(1, true), 1000);
             }
 
-            // ========== 8. MODALI BAĞLA ==========
             closeModal();
-
-            // ========== 9. SEÇİLMİŞ FAYLLARI TƏMİZLƏ ==========
-            window.modalSelectedFiles = [];
-            updateModalFileList();
-
         } catch (error) {
             console.error('❌ Xəta:', error);
             showNotification('❌ ' + (error.message || 'Tapşırıq yaradılarkən xəta baş verdi'), 'error');
         }
     }
 
-    async function addUuidToTask(taskId, uuid) {
-        try {
-            console.log(`📝 Task ${taskId}-ə UUID əlavə edilir: ${uuid}`);
-
-            // 🔥 1. Əvvəlcə mövcud file_uuids-ləri al
-            let currentFileUuids = [];
-            try {
-                const taskResponse = await makeApiRequest(`/tasks/${taskId}`, 'GET', null, true);
-                if (!taskResponse.error && taskResponse.data) {
-                    const task = taskResponse.data;
-                    if (task.file_uuids && Array.isArray(task.file_uuids)) {
-                        currentFileUuids = task.file_uuids;
-                        console.log(`📋 Mövcud file_uuids:`, currentFileUuids);
-                    }
-                }
-            } catch (err) {
-                console.warn('⚠️ Task məlumatları alınarkən xəta:', err);
-            }
-
-            // 🔥 2. Yeni UUID-ni əlavə et (təkrarlanmasın)
-            if (!currentFileUuids.includes(uuid)) {
-                currentFileUuids.push(uuid);
-            }
-
-            // 🔥 3. Birbaşa file_uuids sahəsini yenilə
-            const updateResponse = await makeApiRequest(`/tasks/${taskId}/add-file-uuid`, 'POST', {
-                file_uuid: uuid
-            }, true);
-
-            if (updateResponse.error) {
-                console.error('❌ UUID əlavə edilə bilmədi:', updateResponse.error);
-                return false;
-            }
-
-            console.log(`✅ UUID ${uuid} task ${taskId}-yə əlavə edildi (file_uuids)`);
-            return true;
-
-        } catch (error) {
-            console.error('❌ UUID əlavə etmə xətası:', error);
-            return false;
-        }
-    }
-
-
-    function showNotification(message, type = 'success') {
-        document.querySelectorAll('.task-notification').forEach(n => n.remove());
-        const notification = document.createElement('div');
-        notification.className = `task-notification task-notification-${type}`;
-        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
-        notification.innerHTML = `<i class="fas ${icons[type] || icons.success}"></i><span>${message}</span><button class="task-notification-close"><i class="fas fa-times"></i></button>`;
-        notification.style.cssText = `
-            position:fixed; bottom:20px; right:20px;
-            background:${type==='success'?'#28a745':type==='error'?'#dc3545':'#17a2b8'};
-            color:white; padding:12px 20px; border-radius:8px;
-            display:flex; align-items:center; gap:12px; z-index:10001;
-            box-shadow:0 4px 12px rgba(0,0,0,0.15); animation:slideIn 0.3s ease; font-size:14px;
-        `;
-        if (!document.querySelector('#ntm-anim')) {
-            const s = document.createElement('style');
-            s.id = 'ntm-anim';
-            s.textContent = '@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}';
-            document.head.appendChild(s);
-        }
-        document.body.appendChild(notification);
-        const closeBtn = notification.querySelector('.task-notification-close');
-        if (closeBtn) closeBtn.onclick = () => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        };
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, 4000);
-    }
+    window.loadDataFromTaskManager = loadDataFromTaskManager;
+    window.loadWorkTypes = loadWorkTypes;
+    window.loadParentCompanies = loadParentCompanies;
+    window.loadPartnerCompanies = loadPartnerCompanies;
+    window.populateSelects = populateSelects;
+    window.setupPrintScreenCapture = setupPrintScreenCapture;
+    window.attachModalEvents = attachModalEvents;
+    window.setupAudioRecorder = setupAudioRecorder;
+    window.setupFileUpload = setupFileUpload;
+    window.autoSelectDepartmentByEmployee = autoSelectDepartmentByEmployee;
+    window.openNewTaskModal = openModal;
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
