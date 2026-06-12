@@ -287,129 +287,167 @@
 
     function createModal() {
         const modalHTML = `
-            <div class="newtask-modal-overlay" id="newtaskModalOverlay">
-                <div class="newtask-modal">
-                    <div class="newtask-modal-header">
-                        <div class="newtask-modal-title">
-                            <i class="fas fa-edit" id="newtaskModalIcon"></i>
-                            <h3 id="newtaskModalTitle">Daxili Tapşırıq</h3>
-                        </div>
-                        <button class="newtask-modal-close" id="newtaskModalClose">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="newtask-modal-body">
-                        <form id="newtaskForm">
-                            <div class="newtask-form-grid">
-                                <div class="newtask-form-group" id="newtaskCompanyGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-building"></i> Şirkət</label>
-                                    <select id="newtaskCompanySelect" class="newtask-select" required>
-                                        <option value="">Şirkət seçin</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group" id="newtaskParentGroup" style="display:none;">
-                                    <label class="newtask-form-label"><i class="fas fa-arrow-up"></i> Şirkət</label>
-                                    <select id="newtaskParentSelect" class="newtask-select" required>
-                                        <option value="">Şirkət seçin</option>
-                                    </select>
-                                    <div class="newtask-form-text">Şirkətlərinizə task göndərin</div>
-                                </div>
-
-                                <div class="newtask-form-group" id="newtaskPartnerGroup" style="display:none;">
-                                    <label class="newtask-form-label"><i class="fas fa-handshake"></i> Partnyor</label>
-                                    <select id="newtaskPartnerSelect" class="newtask-select" required>
-                                        <option value="">Partnyor seçin</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group" id="newtaskExecutorGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-user-tie"></i> İcra Edən</label>
-                                    <select id="newtaskExecutorSelect" class="newtask-select">
-                                        <option value="">İşçi seçin (boş qoymaq olar)</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group" id="newtaskOtherExecutorGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-users"></i> Digər Şirkətin İşçisi</label>
-                                    <select id="newtaskOtherExecutorSelect" class="newtask-select">
-                                        <option value="">İşçi seçin (boş qoymaq olar)</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-sitemap"></i> Şöbə</label>
-                                    <select id="newtaskDepartmentSelect" class="newtask-select" required>
-                                        <option value="">Şöbə seçin</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-tasks"></i> İşin Növü</label>
-                                    <select id="newtaskTaskTypeSelect" class="newtask-select" required>
-                                        <option value="">İş növü seçin</option>
-                                    </select>
-                                </div>
-
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-calendar-times"></i> Son Müddət</label>
-                                    <input type="date" id="newtaskDueDate" class="newtask-input" required />
-                                </div>
-
-                                <div class="newtask-form-group">
-                                    <div class="newtask-checkbox-group">
-                                        <input type="checkbox" id="newtaskIsVisible" class="newtask-checkbox">
-                                        <label for="newtaskIsVisible" class="newtask-checkbox-label">
-                                            <i class="fas fa-eye"></i> Seçilmiş şirkətə göstər
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-align-left"></i> Tapşırıq Açıqlaması</label>
-                                    <textarea id="newtaskDescription" rows="3" class="newtask-textarea" placeholder="Tapşırığın detallı təsvirini yazın..." required></textarea>
-                                </div>
-
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-paperclip"></i> Fayl Əlavəsi</label>
-                                    <div class="newtask-file-zone" id="newtaskFileZone">
-                                        <div class="newtask-file-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                        <div class="newtask-file-text">Faylı buraya sürüşdürün və ya klikləyin</div>
-                                        <input type="file" id="newtaskFileInput" multiple hidden accept=".xlsx,.xls,.pdf,.jpg,.png,.jpeg,.doc,.docx,.webm,.mp3" />
-                                    </div>
-                                    <div class="newtask-file-list" id="newtaskFileList"></div>
-                                </div>
-
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-microphone"></i> Səs Qeydi Əlavəsi</label>
-                                    <div class="newtask-audio-container">
-                                        <div class="newtask-audio-status" id="newtaskAudioStatus">
-                                            <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
-                                        </div>
-                                        <div class="newtask-audio-buttons">
-                                            <button type="button" id="newtaskStartRecord" class="newtask-audio-btn primary"><i class="fas fa-microphone"></i> Başla</button>
-                                            <button type="button" id="newtaskStopRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-stop"></i> Dayandır</button>
-                                            <button type="button" id="newtaskSaveRecord" class="newtask-audio-btn primary" disabled><i class="fas fa-save"></i> Saxla</button>
-                                            <button type="button" id="newtaskCancelRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-times"></i> Ləğv et</button>
-                                        </div>
-                                        <div id="newtaskAudioPreview" style="display:none;">
-                                            <audio id="newtaskRecordedAudio" controls></audio>
-                                        </div>
-                                        <canvas id="newtaskAudioVisualizer" width="600" height="40"></canvas>
-                                        <input type="hidden" id="newtaskAudioData" />
-                                        <input type="hidden" id="newtaskAudioFilename" />
-                                    </div>
+            <div class="newtask-modal-overlay liquid-task-modal-overlay" id="newtaskModalOverlay">
+                <div class="newtask-modal liquid-task-modal" role="dialog" aria-modal="true" aria-labelledby="newtaskModalTitle">
+                    <div class="newtask-modal-surface">
+                        <div class="newtask-modal-header">
+                            <div class="newtask-modal-title">
+                                <span class="newtask-title-icon"><i class="fas fa-sparkles" id="newtaskModalIcon" aria-hidden="true"></i></span>
+                                <div class="newtask-title-copy">
+                                    <span class="newtask-modal-eyebrow">Yeni tapşırıq</span>
+                                    <h3 id="newtaskModalTitle">Daxili Tapşırıq</h3>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-                    <div class="newtask-modal-footer">
-                        <button type="button" class="newtask-btn secondary" id="newtaskCancelBtn">
-                            <i class="fas fa-times"></i> Ləğv et
-                        </button>
-                        <button type="button" class="newtask-btn primary" id="newtaskSaveBtn">
-                            <i class="fas fa-save"></i> Tapşırıq Yarat
-                        </button>
+                            <button type="button" class="newtask-modal-close" id="newtaskModalClose" aria-label="Modalı bağla">
+                                <i class="fas fa-circle-xmark" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="newtask-modal-body">
+                            <form id="newtaskForm" class="glass-task-form">
+                                <div class="newtask-form-grid glass-form-grid">
+                                    <div class="newtask-form-group" id="newtaskCompanyGroup">
+                                        <label class="newtask-form-label" for="newtaskCompanySelect"><i class="fas fa-building"></i> Şirkət</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskCompanySelect" class="newtask-select" required>
+                                                <option value="">Şirkət seçin</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group" id="newtaskExecutorGroup">
+                                        <label class="newtask-form-label" for="newtaskExecutorSelect"><i class="fas fa-user-tie"></i> İcra edən</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskExecutorSelect" class="newtask-select">
+                                                <option value="">İşçi seçin (boş qoymaq olar)</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group" id="newtaskParentGroup" style="display:none;">
+                                        <label class="newtask-form-label" for="newtaskParentSelect"><i class="fas fa-sitemap"></i> Şirkət</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskParentSelect" class="newtask-select" required>
+                                                <option value="">Şirkət seçin</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                        <div class="newtask-form-text">Şirkətlərinizə task göndərin</div>
+                                    </div>
+
+
+
+                                    <div class="newtask-form-group" id="newtaskPartnerGroup" style="display:none;">
+                                        <label class="newtask-form-label" for="newtaskPartnerSelect"><i class="fas fa-handshake"></i> Partnyor</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskPartnerSelect" class="newtask-select" required>
+                                                <option value="">Partnyor seçin</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+                                    <div class="newtask-form-group" id="newtaskOtherExecutorGroup">
+                                        <label class="newtask-form-label" for="newtaskOtherExecutorSelect"><i class="fas fa-users"></i> Digər şirkətin işçisi</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskOtherExecutorSelect" class="newtask-select">
+                                                <option value="">İşçi seçin (boş qoymaq olar)</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group">
+                                        <label class="newtask-form-label" for="newtaskDepartmentSelect"><i class="fas fa-sitemap"></i> Şöbə</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskDepartmentSelect" class="newtask-select" required>
+                                                <option value="">Şöbə seçin</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group">
+                                        <label class="newtask-form-label" for="newtaskTaskTypeSelect"><i class="fas fa-list-check"></i> İşin növü</label>
+                                        <div class="glass-field">
+                                            <select id="newtaskTaskTypeSelect" class="newtask-select" required>
+                                                <option value="">İş növü seçin</option>
+                                            </select>
+                                            <i class="fas fa-chevron-down glass-field-chevron" aria-hidden="true"></i>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group">
+                                        <label class="newtask-form-label" for="newtaskDueDate"><i class="fas fa-calendar-days"></i> Son müddət</label>
+                                        <div class="glass-field">
+                                            <input type="date" id="newtaskDueDate" class="newtask-input" required />
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group newtask-visibility-group">
+                                        <div class="newtask-checkbox-group">
+                                            <input type="checkbox" id="newtaskIsVisible" class="newtask-checkbox">
+                                            <label for="newtaskIsVisible" class="newtask-checkbox-label">
+                                                <i class="fas fa-eye"></i> Seçilmiş şirkətə göstər
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group full-width">
+                                        <label class="newtask-form-label" for="newtaskDescription"><i class="fas fa-align-left"></i> Tapşırıq açıqlaması</label>
+                                        <div class="glass-field glass-textarea-field">
+                                            <textarea id="newtaskDescription" rows="4" class="newtask-textarea" placeholder="Tapşırığın detallı təsvirini yazın..." required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="newtask-form-group full-width">
+                                        <div class="newtask-media-grid">
+                                            <div class="newtask-media-column">
+                                                <label class="newtask-form-label" for="newtaskFileInput"><i class="fas fa-paperclip"></i> Fayl yükləmə</label>
+                                                <div class="newtask-file-zone glass-upload-zone" id="newtaskFileZone">
+                                                    <input type="file" id="newtaskFileInput" multiple hidden accept=".xlsx,.xls,.pdf,.jpg,.png,.jpeg,.doc,.docx,.webm,.mp3" />
+                                                    <div class="glass-upload-icon"><i class="fas fa-file-arrow-up" aria-hidden="true"></i></div>
+                                                    <div class="glass-upload-copy">
+                                                        <strong>Faylı buraya sürüşdürün və ya klikləyin</strong>
+                                                        <span>Dokument, şəkil, arxiv, səs və ekran görüntüsü əlavə edin</span>
+                                                    </div>
+                                                </div>
+                                                <div class="newtask-file-list" id="newtaskFileList"></div>
+                                            </div>
+
+                                            <div class="newtask-media-column">
+                                                <label class="newtask-form-label" for="newtaskStartRecord"><i class="fas fa-waveform-lines"></i> Səs qeydi</label>
+                                                <div class="newtask-audio-container glass-audio-zone">
+                                                    <div class="newtask-audio-status" id="newtaskAudioStatus">
+                                                        <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
+                                                    </div>
+                                                    <div class="newtask-audio-buttons">
+                                                        <button type="button" id="newtaskStartRecord" class="newtask-audio-btn record" aria-label="Səs qeydinə başla"><i class="fas fa-microphone" aria-hidden="true"></i></button>
+                                                        <button type="button" id="newtaskStopRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-stop" aria-hidden="true"></i> Dayandır</button>
+                                                        <button type="button" id="newtaskSaveRecord" class="newtask-audio-btn primary" disabled><i class="fas fa-save" aria-hidden="true"></i> Saxla</button>
+                                                        <button type="button" id="newtaskCancelRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-times" aria-hidden="true"></i> Ləğv et</button>
+                                                    </div>
+                                                    <div class="newtask-audio-preview" id="newtaskAudioPreview" style="display:none;">
+                                                        <audio id="newtaskRecordedAudio" controls></audio>
+                                                    </div>
+                                                    <canvas id="newtaskAudioVisualizer" width="600" height="40"></canvas>
+                                                    <input type="hidden" id="newtaskAudioData" />
+                                                    <input type="hidden" id="newtaskAudioFilename" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="newtask-modal-footer">
+                            <button type="button" class="newtask-btn secondary" id="newtaskCancelBtn">
+                                <i class="fas fa-circle-xmark"></i> Ləğv et
+                            </button>
+                            <button type="button" class="newtask-btn primary" id="newtaskSaveBtn">
+                                <i class="fas fa-floppy-disk"></i> Tapşırıq Yarat
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -438,227 +476,79 @@
         fileZone = document.getElementById('newtaskFileZone');
         fileInput = document.getElementById('newtaskFileInput');
         fileList = document.getElementById('newtaskFileList');
-
-
-        // Uğurlu task yaradıldıqdan sonra (təxminən 450-470-ci sətirlər)
-
-        if (window.taskManager) {
-            // 🔥 TaskManager-in refreshAllTaskLists metodunu çağır
-            if (typeof window.taskManager.refreshAllTaskLists === 'function') {
-                 window.taskManager.refreshAllTaskLists();
-
-            } else {
-                // Fallback: əgər refreshAllTaskLists yoxdursa, birbaşa load et
-                console.log('⚠️ refreshAllTaskLists tapılmadı, fallback yükləmə...');
-
-                // Cache təmizlə
-                if (window.TaskCache && window.TaskCache.clear) {
-                    window.TaskCache.clear();
-                }
-
-                // Force refresh ilə yüklə
-                 window.taskManager.loadActiveTasks(1, true);
-
-                if (window.ExternalTableManager && window.ExternalTableManager.loadTasks) {
-                     window.ExternalTableManager.loadTasks(true);
-                }
-
-                if (window.PartnerTableManager && window.PartnerTableManager.loadTasks) {
-                     window.PartnerTableManager.loadTasks(1, true);
-                }
-            }
-        }
     }
 
-    async function loadWorkTypes() {
-        try {
-            const companyId = myCompany?.id || 51;
-            const response = await makeApiRequest(`/worktypes/company/${companyId}`, 'GET');
-            const taskTypeSelect = document.getElementById('newtaskTaskTypeSelect');
-            if (taskTypeSelect && response) {
-                let list = Array.isArray(response) ? response : (response.data || response.items || []);
-                if (list.length > 0) {
-                    let html = '<option value="">İş növü seçin</option>';
-                    list.forEach(wt => {
-                        if (wt.is_active !== false) {
-                            html += `<option value="${wt.id}">${wt.work_type_name || wt.name || `İş növü ${wt.id}`}</option>`;
-                        }
-                    });
-                    taskTypeSelect.innerHTML = html;
-                    workTypes = list;
-                } else {
-                    taskTypeSelect.innerHTML = '<option value="">İş növü tapılmadı</option>';
-                }
-            }
-        } catch (error) {
-            console.error('❌ İş növləri xətası:', error);
-            const el = document.getElementById('newtaskTaskTypeSelect');
-            if (el) el.innerHTML = '<option value="">Xəta baş verdi</option>';
-        }
+
+
+    function showAutoSelectNotification(type, name) {
+        const toast = document.createElement('div');
+        toast.className = 'newtask-toast';
+        toast.innerHTML = `<i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>${escapeHtml(name)} üçün ${type === 'departament' ? 'şöbə' : 'şirkət'} avtomatik seçildi</span>`;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('is-visible'));
+        setTimeout(() => {
+            toast.classList.remove('is-visible');
+            setTimeout(() => toast.remove(), 240);
+        }, 2000);
     }
 
-    async function loadParentCompanies() {
-        try {
-            const companyCode = window.taskManager?.userData?.companyCode;
-            const response = await makeApiRequest(`/companies/${companyCode}/parent-companies`, 'GET');
-            const parentSelect = document.getElementById('newtaskParentSelect');
-            if (parentSelect) {
-                let list = response?.data?.parent_companies || response?.data || (Array.isArray(response) ? response : []);
-                if (list.length > 0) {
-                    let html = '<option value="">Şirkət seçin</option>';
-                    list.forEach(company => {
-                        const id = company.company_id || company.id;
-                        const name = company.company_name || company.name;
-                        const code = company.company_code || company.code || company.parent_company_code || '';
-                        html += `<option value="${id}" data-company-code="${code}" data-company-name="${name}">${name} ⬆️</option>`;
-                    });
-                    parentSelect.innerHTML = html;
-                    parentCompanies = list;
-                } else {
-                    parentSelect.innerHTML = '<option value="">Şirkət tapılmadı</option>';
-                }
-            }
-        } catch (error) {
-            console.error('❌ şirkətlər xətası:', error);
-        }
+    function escapeHtml(value) {
+        return String(value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
-    async function loadPartnerCompanies() {
-        try {
-            const companyCode = window.taskManager?.userData?.companyCode;
-            const response = await makeApiRequest(`/partners/?company_code=${companyCode}`, 'GET');
-            const partnerSelect = document.getElementById('newtaskPartnerSelect');
-            if (partnerSelect) {
-                let list = response?.items || (Array.isArray(response) ? response : response?.data || []);
-                if (list.length > 0) {
-                    let html = '<option value="">Partnyor seçin</option>';
-                    list.forEach(partner => {
-                        let name = partner.requester_company_code === companyCode
-                            ? (partner.partner_company_name || partner.target_company_name || `Şirkət ${partner.target_company_code}`)
-                            : (partner.partner_company_name || partner.requester_company_name || `Şirkət ${partner.requester_company_code}`);
-                        html += `<option value="${partner.id}">${name}🤝</option>`;
-                    });
-                    partnerSelect.innerHTML = html;
-                    partners = list;
-                } else {
-                    partnerSelect.innerHTML = '<option value="">Partnyor tapılmadı</option>';
-                }
-            }
-        } catch (error) {
-            console.error('❌ Partnyorlar xətası:', error);
-        }
+    function formatFileSize(bytes) {
+        if (!bytes) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return `${(bytes / Math.pow(k, i)).toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
     }
 
-    function populateSelects() {
-        // Şirkət select
-        const companySelect = document.getElementById('newtaskCompanySelect');
-        if (companySelect) {
-            let html = '<option value="">Şirkət seçin</option>';
+    function updateModalFileList() {
+        const fileListEl = document.getElementById('newtaskFileList');
+        if (!fileListEl) return;
 
-            // myCompany məlumatını yoxla
-            if (myCompany && myCompany.id) {
-                // Şirkət adını tap
-                let companyName = myCompany.company_name || myCompany.name;
-
-                // Hələ də yoxdursa, token-dan və ya API-dan al
-                if (!companyName || companyName === 'undefined') {
-                    companyName = window.taskManager?.userData?.companyName
-                        || window.taskManager?.userData?.companyCode
-                        || myCompany.company_code;
-                    // myCompany-ni də yenilə ki növbəti dəfə düzgün olsun
-                    myCompany.company_name = companyName;
-                    myCompany.name = companyName;
-                }
-
-                // Əgər hələ də yoxdursa, default
-                if (!companyName || companyName === 'undefined') {
-                }
-
-                console.log('🏢 Göstəriləcək şirkət:', {
-                    id: myCompany.id,
-                    name: companyName,
-                    code: myCompany.company_code
-                });
-
-                html += `<option value="${myCompany.id}" data-is-my="true" selected>🏢 ${companyName} (Mənim şirkətim)</option>`;
-            } else {
-                console.error('❌ myCompany məlumatları tam deyil:', myCompany);
-                // Token-dan company məlumatını almağa çalış
-                const token = getAuthToken();
-                if (token) {
-                    const payload = parseTokenPayload(token);
-                    if (payload && payload.company_id) {
-                        const companyName = payload.company_name || payload.company_code;
-                        html += `<option value="${payload.company_id}" data-is-my="true" selected>🏢 ${companyName} (Mənim şirkətim)</option>`;
-                        // myCompany-ni yenilə
-                        myCompany = {
-                            id: payload.company_id,
-                            company_name: payload.company_name || payload.company_code,
-                            company_code: payload.company_code,
-                            name: payload.company_name || payload.company_code
-                        };
-                    } else {
-                        html += `<option value="51" data-is-my="true" selected>🏢 Güvən Finans MMC (Mənim şirkətim)</option>`;
-                        myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
-                    }
-                } else {
-                    html += `<option value="51" data-is-my="true" selected>🏢 Güvən Finans MMC (Mənim şirkətim)</option>`;
-                    myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
-                }
-            }
-
-            // Alt şirkətləri əlavə et
-            if (subsidiaryCompanies && subsidiaryCompanies.length > 0) {
-                subsidiaryCompanies.forEach(s => {
-                    const name = s.company_name || s.name;
-                    const id = s.id;
-                    if (id && name) {
-                        html += `<option value="${id}" data-is-my="false">${name}</option>`;
-                    }
-                });
-            }
-
-            companySelect.innerHTML = html;
-            console.log('📋 Company select dolduruldu, seçim sayı:', companySelect.options.length);
-            console.log('📋 Seçilən option:', companySelect.options[companySelect.selectedIndex]?.text);
+        if (!window.modalSelectedFiles || window.modalSelectedFiles.length === 0) {
+            fileListEl.innerHTML = '<div class="newtask-file-list-empty"><i class="fas fa-inbox"></i><span>Heç bir fayl seçilməyib</span></div>';
+            return;
         }
 
-        // İşçi select
-        const executorSelect = document.getElementById('newtaskExecutorSelect');
-        if (executorSelect) {
-            let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-            if (employees && employees.length > 0) {
-                employees.forEach(emp => {
-                    const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
-                    if (name) {
-                        html += `<option value="${emp.id}">${name} 👤</option>`;
-                    }
-                });
-            }
-            executorSelect.innerHTML = html;
-        }
+        let html = '<div class="newtask-file-list-header"><i class="fas fa-paperclip"></i><span>Seçilmiş fayllar</span></div>';
+        window.modalSelectedFiles.forEach((file, index) => {
+            const isAudio = file.type.startsWith('audio/') || file.name.includes('recording') || file.name.includes('webm');
+            const isImage = file.type.startsWith('image/');
+            const icon = isAudio ? 'fas fa-microphone' : (isImage ? 'fas fa-image' : 'fas fa-file-lines');
+            const iconClass = isAudio ? 'audio' : (isImage ? 'image' : 'file');
+            const size = formatFileSize(file.size);
+            html += `
+                <div class="newtask-file-item ${iconClass}" data-index="${index}">
+                    <div class="newtask-file-item-icon"><i class="${icon}" aria-hidden="true"></i></div>
+                    <div class="newtask-file-item-meta">
+                        <div class="newtask-file-item-name">${escapeHtml(file.name)}</div>
+                        <div class="newtask-file-item-size">${size}</div>
+                    </div>
+                    <button type="button" class="newtask-file-remove" onclick="removeModalFile(${index})" aria-label="Faylı sil">
+                        <i class="fas fa-circle-xmark" aria-hidden="true"></i>
+                    </button>
+                </div>
+            `;
+        });
 
-        // Şöbə select
-        const departmentSelect = document.getElementById('newtaskDepartmentSelect');
-        if (departmentSelect) {
-            let html = '<option value="">Şöbə seçin</option>';
-            if (departments && departments.length > 0) {
-                departments.forEach(dept => {
-                    const name = dept.department_name || dept.name;
-                    if (name) {
-                        html += `<option value="${dept.id}">${name}</option>`;
-                    }
-                });
-            }
-            departmentSelect.innerHTML = html;
-        }
-
-        // Digər şirkət işçisi
-        const otherExecutorSelect = document.getElementById('newtaskOtherExecutorSelect');
-        if (otherExecutorSelect) {
-            otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-        }
+        fileListEl.innerHTML = html;
     }
+
+    function removeModalFile(index) {
+        if (!window.modalSelectedFiles) return;
+        window.modalSelectedFiles.splice(index, 1);
+        updateModalFileList();
+    }
+
+    window.removeModalFile = removeModalFile;
 
     function attachCardEvents() {
         const cards = document.querySelectorAll('.task-type-card');
@@ -686,7 +576,7 @@
         } else if (taskType === 'parent') {
             if (parentGroup) parentGroup.style.display = 'block';
             if (otherExecutorGroup) otherExecutorGroup.style.display = 'block';
-            if (modalTitleIcon) modalTitleIcon.className = 'fas fa-arrow-up';
+            if (modalTitleIcon) modalTitleIcon.className = 'fas fa-sitemap';
             if (modalTitleText) modalTitleText.textContent = 'Şirkət Tapşırığı';
 
             const parentSelect = document.getElementById('newtaskParentSelect');
@@ -706,34 +596,8 @@
         }
 
         setRequiredFields(taskType);
-        modalOverlay.classList.add('active');
+        if (modalOverlay) modalOverlay.classList.add('active');
         resetForm();
-    }
-
-    async function selectCompanyCEO(companyId) {
-        try {
-            const otherExecutorSelect = document.getElementById('newtaskOtherExecutorSelect');
-            if (!otherExecutorSelect) return;
-            let ceoOption = null, ceoId = null;
-            for (let i = 0; i < otherExecutorSelect.options.length; i++) {
-                const opt = otherExecutorSelect.options[i];
-                const text = opt.text.toLowerCase();
-                if (text.includes('ceo') || text.includes('rəhbər') || text.includes('director') || text.includes('baş')) {
-                    ceoOption = opt; ceoId = opt.value; break;
-                }
-            }
-            if (!ceoOption && otherExecutorSelect.options.length > 1) {
-                ceoOption = otherExecutorSelect.options[1];
-                ceoId = ceoOption?.value;
-            }
-            if (ceoId && ceoOption) {
-                otherExecutorSelect.value = ceoId;
-                otherExecutorSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                showAutoSelectNotification('rəhbər', ceoOption.text.replace('👤', '').trim());
-            }
-        } catch (error) {
-            console.error('❌ Rəhbər seçmə xətası:', error);
-        }
     }
 
     function setRequiredFields(taskType) {
@@ -749,7 +613,7 @@
     }
 
     function closeModal() {
-        modalOverlay.classList.remove('active');
+        if (modalOverlay) modalOverlay.classList.remove('active');
         resetForm();
         if (mediaRecorder && isRecording) stopRecording();
     }
@@ -758,45 +622,38 @@
         const form = document.getElementById('newtaskForm');
         if (form) form.reset();
 
-        // Fayl siyahısını təmizlə
         if (window.modalSelectedFiles) {
             window.modalSelectedFiles = [];
         }
-        const fileList = document.getElementById('newtaskFileList');
-        if (fileList) {
-            updateModalFileList(); // Bu artıq boş siyahını göstərəcək
-        }
-        if (fileList) fileList.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
+        updateModalFileList();
 
-        // 🔥 AUDIO MƏLUMATLARINI TƏMİZLƏ
         const audioDataInput = document.getElementById('newtaskAudioData');
         const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-        const audioPreview = document.getElementById('newtaskAudioPreview');
-        const recordedAudio = document.getElementById('newtaskRecordedAudio');
-        const audioStatus = document.getElementById('newtaskAudioStatus');
-        const visualizer = document.getElementById('newtaskAudioVisualizer');
-        const startBtn = document.getElementById('newtaskStartRecord');
-        const stopBtn = document.getElementById('newtaskStopRecord');
-        const saveBtn = document.getElementById('newtaskSaveRecord');
-        const cancelBtn = document.getElementById('newtaskCancelRecord');
+        const audioPreviewEl = document.getElementById('newtaskAudioPreview');
+        const recordedAudioEl = document.getElementById('newtaskRecordedAudio');
+        const audioStatusEl = document.getElementById('newtaskAudioStatus');
+        const visualizerEl = document.getElementById('newtaskAudioVisualizer');
+        const startBtnEl = document.getElementById('newtaskStartRecord');
+        const stopBtnEl = document.getElementById('newtaskStopRecord');
+        const saveBtnEl = document.getElementById('newtaskSaveRecord');
+        const cancelBtnEl = document.getElementById('newtaskCancelRecord');
 
         if (audioDataInput) audioDataInput.value = '';
         if (audioFilenameInput) audioFilenameInput.value = '';
-        if (audioPreview) audioPreview.style.display = 'none';
-        if (recordedAudio) recordedAudio.src = '';
-        if (audioStatus) audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
-        if (startBtn) startBtn.disabled = false;
-        if (stopBtn) stopBtn.disabled = true;
-        if (saveBtn) saveBtn.disabled = true;
-        if (cancelBtn) cancelBtn.disabled = true;
+        if (audioPreviewEl) audioPreviewEl.style.display = 'none';
+        if (recordedAudioEl) recordedAudioEl.src = '';
+        if (audioStatusEl) audioStatusEl.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
+        if (startBtnEl) startBtnEl.disabled = false;
+        if (stopBtnEl) stopBtnEl.disabled = true;
+        if (saveBtnEl) saveBtnEl.disabled = true;
+        if (cancelBtnEl) cancelBtnEl.disabled = true;
 
-        if (visualizer) {
-            const ctx = visualizer.getContext('2d');
+        if (visualizerEl) {
+            const ctx = visualizerEl.getContext('2d');
             ctx.fillStyle = '#e9ecef';
-            ctx.fillRect(0, 0, visualizer.width, visualizer.height);
+            ctx.fillRect(0, 0, visualizerEl.width, visualizerEl.height);
         }
 
-        // Default due date (sabah)
         const dueDateInput = document.getElementById('newtaskDueDate');
         if (dueDateInput) {
             const d = new Date();
@@ -815,372 +672,6 @@
             isRecording = false;
         }
     }
-
-
-    // ========== PRTSCN (EKRAIN ŞƏKİLİ) CAPTURE ==========
-    function setupPrintScreenCapture() {
-        console.log('📸 PrtScn capture modal üçün aktiv edilir...');
-
-        // Qlobal paste eventini dinlə
-        document.addEventListener('paste', (event) => {
-            // Yalnız modal açıq olduqda işlə
-            const modal = document.getElementById('newtaskModalOverlay');
-            if (!modal || !modal.classList.contains('active')) {
-                return; // Modal açıq deyil, ignore et
-            }
-
-            console.log('📋 Modalda paste edildi');
-
-            const items = event.clipboardData?.items;
-            if (!items) return;
-
-            let imageFound = false;
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                if (item.type.indexOf('image') !== -1) {
-                    imageFound = true;
-                    const file = item.getAsFile();
-                    if (file) {
-                        // Unikal fayl adı yarat
-                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                        const fileName = `prtscrn-${timestamp}.png`;
-                        const imageFile = new File([file], fileName, { type: 'image/png' });
-
-                        console.log(`📸 PrtScn şəkli tapıldı: ${fileName}, ölçü: ${formatFileSize(imageFile.size)}`);
-
-                        // Faylı modal siyahısına əlavə et
-                        if (!window.modalSelectedFiles) {
-                            window.modalSelectedFiles = [];
-                        }
-
-                        // Dublikat yoxla
-                        const isDuplicate = window.modalSelectedFiles.some(f => f.name === fileName);
-                        if (!isDuplicate) {
-                            window.modalSelectedFiles.push(imageFile);
-                            console.log(`✅ PrtScn şəkli modal siyahısına əlavə edildi: ${fileName}`);
-                            updateModalFileList(); // Fayl siyahısını yenilə
-                        }
-
-                        // Event-in default davranışını dayandır
-                        event.preventDefault();
-                    }
-                    break;
-                }
-            }
-
-            if (!imageFound) {
-                console.log('ℹ️ Clipboard-da şəkil yoxdur');
-            }
-        });
-
-        console.log('✅ PrtScn capture modal üçün hazırdır');
-    }
-
-    function setupAudioRecorder() {
-        if (!startBtn) return;
-
-        startBtn.onclick = async () => {
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(audioStream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    recordedAudio.src = URL.createObjectURL(blob);
-                    audioPreview.style.display = 'block';
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        audioData.value = reader.result;
-                        audioFilename.value = `recording_${Date.now()}.webm`;
-                    };
-                    reader.readAsDataURL(blob);
-                    saveBtn.disabled = false;
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                startBtn.disabled = true; stopBtn.disabled = false; cancelBtn.disabled = false; saveBtn.disabled = true;
-                audioStatus.innerHTML = '<i class="fas fa-circle" style="color:#dc3545;"></i><span>Qeyd edilir...</span>';
-
-                const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(audioStream);
-                const analyser = audioContext.createAnalyser();
-                source.connect(analyser);
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                const ctx = visualizer.getContext('2d');
-                function draw() {
-                    animationId = requestAnimationFrame(draw);
-                    analyser.getByteFrequencyData(dataArray);
-                    ctx.fillStyle = '#e9ecef';
-                    ctx.fillRect(0, 0, visualizer.width, visualizer.height);
-                    const barWidth = (visualizer.width / bufferLength) * 2;
-                    let x = 0;
-                    for (let i = 0; i < bufferLength; i++) {
-                        ctx.fillStyle = '#007bff';
-                        ctx.fillRect(x, visualizer.height - dataArray[i]/2, barWidth, dataArray[i]/2);
-                        x += barWidth + 1;
-                    }
-                }
-                draw();
-            } catch (err) {
-                alert('Mikrofon icazəsi tələb olunur!');
-            }
-        };
-
-        stopBtn.onclick = () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                if (animationId) cancelAnimationFrame(animationId);
-                isRecording = false;
-                startBtn.disabled = false; stopBtn.disabled = true; cancelBtn.disabled = false;
-                audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Qeyd dayandırıldı</span>';
-            }
-        };
-
-        cancelBtn.onclick = () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                if (animationId) cancelAnimationFrame(animationId);
-            }
-            audioPreview.style.display = 'none'; recordedAudio.src = '';
-            audioData.value = ''; audioFilename.value = '';
-            startBtn.disabled = false; stopBtn.disabled = true; saveBtn.disabled = true; cancelBtn.disabled = true;
-            isRecording = false;
-            audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
-            const ctx = visualizer.getContext('2d');
-            ctx.fillStyle = '#e9ecef';
-            ctx.fillRect(0, 0, visualizer.width, visualizer.height);
-        };
-
-        // 🔥 SAVE BTN EVENT-İ BURADA OLMALIDIR!
-        saveBtn.onclick = () => {
-            console.log('💾 Saxla düyməsi basıldı');
-
-            const audioDataInput = document.getElementById('newtaskAudioData');
-            const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-
-            if (audioDataInput && audioDataInput.value && audioFilenameInput && audioFilenameInput.value) {
-                console.log(`✅ Audio saxlanıldı! Uzunluq: ${audioDataInput.value.length}`);
-                console.log(`   Filename: ${audioFilenameInput.value}`);
-
-                try {
-                    let base64Data = audioDataInput.value;
-                    if (base64Data.includes(',')) {
-                        base64Data = base64Data.split(',')[1];
-                    }
-
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
-                    const audioFile = new File([audioBlob], audioFilenameInput.value, { type: 'audio/webm' });
-
-                    if (!window.modalSelectedFiles) {
-                        window.modalSelectedFiles = [];
-                    }
-
-                    const isDuplicate = window.modalSelectedFiles.some(f => f.name === audioFile.name);
-                    if (!isDuplicate) {
-                        window.modalSelectedFiles.push(audioFile);
-                        console.log(`🎤 Audio fayl siyahısına əlavə edildi: ${audioFile.name}`);
-                        updateModalFileList();
-                    }
-                } catch (err) {
-                    console.error('❌ Audio fayl yaradılarkən xəta:', err);
-                }
-
-                saveBtn.disabled = true;
-                cancelBtn.disabled = false;
-            } else {
-                console.error('❌ Audio saxlanılmadı!');
-            }
-        };
-    }
-
-    // ========== UPDATE MODAL FILE LIST ==========
-    function updateModalFileList() {
-        const fileList = document.getElementById('newtaskFileList');
-        if (!fileList) return;
-
-        if (!window.modalSelectedFiles || window.modalSelectedFiles.length === 0) {
-            fileList.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
-            return;
-        }
-
-        let html = '<div class="newtask-file-list-header">📎 Seçilmiş fayllar:</div>';
-
-        window.modalSelectedFiles.forEach((file, index) => {
-            const isAudio = file.type.startsWith('audio/') || file.name.includes('recording') || file.name.includes('webm');
-            const isImage = file.type.startsWith('image/');
-            const icon = isAudio ? 'fas fa-microphone' : (isImage ? 'fas fa-image' : 'fas fa-file');
-            const iconColor = isAudio ? '#3b82f6' : (isImage ? '#10b981' : '#64748b');
-            const size = formatFileSize(file.size);
-
-            html += `
-                <div class="newtask-file-item" data-index="${index}" style="
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 10px;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    margin-bottom: 8px;
-                    background: white;
-                ">
-                    <div style="font-size: 20px; width: 32px;">
-                        <i class="${icon}" style="color: ${iconColor};"></i>
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 500; color: #334155; font-size: 13px;">${escapeHtml(file.name)}</div>
-                        <div style="font-size: 11px; color: #64748b;">${size}</div>
-                    </div>
-                    <button class="newtask-file-remove" onclick="removeModalFile(${index})" 
-                            style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 5px;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-        });
-
-        fileList.innerHTML = html;
-        console.log(`📊 File list yeniləndi: ${window.modalSelectedFiles.length} fayl`);
-    }
-
-    function formatFileSize(bytes) {
-        if (!bytes) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Global silmə funksiyası
-    window.removeModalFile = function(index) {
-        if (index >= 0 && window.modalSelectedFiles && index < window.modalSelectedFiles.length) {
-            const removed = window.modalSelectedFiles.splice(index, 1);
-            console.log(`🗑️ Fayl silindi: ${removed[0]?.name}`);
-            updateModalFileList();
-        }
-    };
-
-    async function autoSelectDepartmentByEmployee(employeeId) {
-        try {
-            let employee = employees.find(emp => emp.id == employeeId);
-            if (employee) {
-                const departmentId = employee.department_id || employee.departmentId || employee.department?.id;
-                if (departmentId) {
-                    const departmentSelect = document.getElementById('newtaskDepartmentSelect');
-                    if (departmentSelect) {
-                        departmentSelect.value = departmentId;
-                        departmentSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                        showAutoSelectNotification('departament', employee.full_name || employee.name);
-                    }
-                }
-            } else {
-                const response = await makeApiRequest(`/users/${employeeId}`, 'GET');
-                const userData = response.data || response;
-                const departmentId = userData.department_id || userData.departmentId || userData.department?.id;
-                if (departmentId) {
-                    const departmentSelect = document.getElementById('newtaskDepartmentSelect');
-                    if (departmentSelect) {
-                        departmentSelect.value = departmentId;
-                        departmentSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                        showAutoSelectNotification('departament', userData.full_name || userData.name);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('❌ Departament seçmə xətası:', error);
-        }
-    }
-
-    function showAutoSelectNotification(type, name) {
-        const n = document.createElement('div');
-        n.innerHTML = `<i class="fas fa-magic"></i> <span>${name} üçün ${type === 'departament' ? 'şöbə' : 'şirkət'} avtomatik seçildi</span>`;
-        n.style.cssText = 'position:fixed;bottom:20px;left:20px;background:#28a745;color:white;padding:8px 16px;border-radius:20px;font-size:12px;z-index:10002;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.15);';
-        document.body.appendChild(n);
-        setTimeout(() => n.remove(), 2000);
-    }
-
-    function setupFileUpload() {
-        console.log('📁 File upload setup başlayır...');
-
-        const fileZone = document.getElementById('newtaskFileZone');
-        const fileInput = document.getElementById('newtaskFileInput');
-
-        if (!fileZone || !fileInput) {
-            console.error('❌ File upload elementləri tapılmadı!');
-            return;
-        }
-
-        // Faylları saxlamaq üçün array
-        window.modalSelectedFiles = window.modalSelectedFiles || [];
-
-        // File zone-a klik
-        fileZone.onclick = () => {
-            fileInput.click();
-        };
-
-        // Drag over
-        fileZone.ondragover = (e) => {
-            e.preventDefault();
-            fileZone.classList.add('drag-over');
-        };
-
-        fileZone.ondragleave = () => {
-            fileZone.classList.remove('drag-over');
-        };
-
-        fileZone.ondrop = (e) => {
-            e.preventDefault();
-            fileZone.classList.remove('drag-over');
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                addFilesToModal(Array.from(e.dataTransfer.files));
-            }
-        };
-
-        // File input change
-        fileInput.onchange = (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-                addFilesToModal(Array.from(e.target.files));
-                fileInput.value = '';
-            }
-        };
-
-        function addFilesToModal(newFiles) {
-            if (!newFiles || newFiles.length === 0) return;
-
-            for (const file of newFiles) {
-                const isDuplicate = window.modalSelectedFiles.some(f => f.name === file.name && f.size === file.size);
-                if (!isDuplicate) {
-                    window.modalSelectedFiles.push(file);
-                    console.log(`✅ Fayl əlavə edildi: ${file.name}`);
-                }
-            }
-            updateModalFileList();
-        }
-
-        // İlk dəfə listi yenilə
-        updateModalFileList();
-
-        console.log('✅ File upload setup tamamlandı!');
-    }
-
 
     function attachModalEvents() {
         const closeBtn = document.getElementById('newtaskModalClose');
@@ -1613,8 +1104,7 @@
 
             // ========== 9. SEÇİLMİŞ FAYLLARI TƏMİZLƏ ==========
             window.modalSelectedFiles = [];
-            const fileListEl = document.getElementById('newtaskFileList');
-            if (fileListEl) fileListEl.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
+            updateModalFileList();
 
         } catch (error) {
             console.error('❌ Xəta:', error);
