@@ -1454,7 +1454,11 @@
                 if (isAudio) formData.append('is_audio_recording', 'true');
 
                 const uploadResponse = await window.makeApiRequest('/files/simple-upload', 'POST', formData, true);
-                const fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id || uploadResponse?.data?.file_id;
+                if (uploadResponse?.success === false || uploadResponse?.error || uploadResponse?.detail) {
+                    throw new Error(uploadResponse?.error || uploadResponse?.detail || uploadResponse?.message || `${file.name} yüklənə bilmədi`);
+                }
+
+                const fileUuid = uploadResponse?.data?.uuid || uploadResponse?.uuid || uploadResponse?.file_id || uploadResponse?.data?.file_id || uploadResponse?.data?.id || uploadResponse?.id;
                 if (fileUuid) {
                     uploadedUuids.push(fileUuid);
                 } else {
@@ -1467,7 +1471,224 @@
         return uploadedUuids;
     }
 
+
+    function getTaskEndpoint(taskType, taskId) {
+        if (taskType === 'parent') return `/tasks-external/${taskId}`;
+        if (taskType === 'partner') return `/partner-tasks/${taskId}`;
+        return `/tasks/${taskId}`;
+    }
+
+    function parsePgArrayValues(value) {
+        if (!value) return [];
+        if (Array.isArray(value)) return value.filter(Boolean);
+        if (typeof value !== 'string') return [];
+
+        const cleaned = value.trim();
+        if (!cleaned) return [];
+
+        const normalized = cleaned.replace(/^\{/, '').replace(/\}$/, '').trim();
+        if (!normalized) return [];
+
+        return normalized.split(',').map(item => item.trim().replace(/^"(.*)"$/, '$1')).filter(Boolean);
+    }
+
+    function sanitizePayload(payload, requiredKeys = []) {
+        const cleaned = { ...payload };
+        Object.keys(cleaned).forEach((key) => {
+            if (requiredKeys.includes(key)) return;
+            const value = cleaned[key];
+            if (value === undefined || value === null || value === '' || Number.isNaN(value)) {
+                delete cleaned[key];
+            }
+        });
+        return cleaned;
+    }
+
+    function parseTaskIdFromResponse(response) {
+        return response?.task?.id || response?.id || response?.data?.id || response?.task_id || response?.data?.task_id || response?.data?.task?.id || null;
+    }
+
+    function getApiErrorMessage(response, fallback = 'Task yaradıla bilmədi') {
+        const errorValue = response?.error || response?.detail || response?.message || response?.data?.error || response?.data?.detail || response?.data?.message;
+        return errorValue ? String(errorValue) : fallback;
+    }
+
+    function buildInternalTaskPayload(context) {
+        const { taskTitle, taskDescription, assignedTo, taskStatus, dueDateValue, departmentSelect, taskTypeSelect, metadata, creatorName } = context;
+        return sanitizePayload({
+            task_title: taskTitle,
+            task_description: taskDescription || '',
+            assigned_to: assignedTo,
+            priority: 'medium',
+            status: taskStatus,
+            due_date: dueDateValue,
+            progress_percentage: 0,
+            department_id: parseInt(departmentSelect.value, 10),
+            work_type_id: parseInt(taskTypeSelect.value, 10),
+            is_billable: false,
+            metadata: JSON.stringify(metadata),
+            company_id: window.taskManager.userData.companyId,
+            created_by: window.taskManager.userData.userId,
+            creator_name: creatorName
+        }, ['task_description', 'metadata']);
+    }
+
+    function buildParentTaskPayload(context) {
+        const { taskTitle, taskDescription, assignedTo, taskStatus, dueDateValue, departmentSelect, taskTypeSelect, targetCompanyId, targetCompanyName, creatorName } = context;
+        return sanitizePayload({
+            company_id: window.taskManager.userData.companyId,
+            task_title: taskTitle,
+            task_description: taskDescription || '',
+            assigned_to: assignedTo,
+            department_id: parseInt(departmentSelect.value, 10),
+            priority: 'medium',
+            status: taskStatus,
+            due_date: dueDateValue,
+            work_type_id: parseInt(taskTypeSelect.value, 10),
+            progress_percentage: 0,
+            is_billable: false,
+            target_company_id: targetCompanyId,
+            target_company_name: targetCompanyName,
+            viewable_company_id: targetCompanyId,
+            created_by: window.taskManager.userData.userId,
+            creator_name: creatorName,
+            is_for_subsidiary: false
+        }, ['task_description']);
+    }
+
+    function buildPartnerTaskPayload(context) {
+        const { taskTitle, taskDescription, assignedTo, taskStatus, dueDateValue, departmentSelect, taskTypeSelect, partnerRelationId, partnerCompanyName, partnerCompanyId, partnerCompanyCode, creatorName, executorSource, forwardedByValue } = context;
+        const taskCode = `PT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const metadata = {
+            my_company_id: window.taskManager.userData.companyId,
+            my_company_name: window.taskManager.userData.companyName,
+            partner_relation_id: partnerRelationId,
+            partner_company_id: partnerCompanyId,
+            partner_company_name: partnerCompanyName,
+            partner_company_code: partnerCompanyCode,
+            created_by_company: window.taskManager.userData.companyName,
+            created_by_company_id: window.taskManager.userData.companyId,
+            created_by_user_id: window.taskManager.userData.userId,
+            created_by_name: creatorName,
+            created_at: new Date().toISOString(),
+            task_type: 'partner',
+            executor_source: executorSource,
+            deadline_status: taskStatus,
+            deadline_date: dueDateValue
+        };
+
+        return sanitizePayload({
+            task_code: taskCode,
+            task_title: taskTitle,
+            partner_id: partnerRelationId,
+            product_serial: `SN-${Date.now()}`,
+            company_name: window.taskManager.userData.companyName,
+            company_id: window.taskManager.userData.companyId,
+            partner_company_name: partnerCompanyName,
+            task_description: taskDescription || '',
+            assigned_to: assignedTo,
+            department_id: parseInt(departmentSelect.value, 10),
+            priority: 'medium',
+            status: taskStatus,
+            due_date: dueDateValue,
+            work_type_id: parseInt(taskTypeSelect.value, 10),
+            progress_percentage: 0,
+            is_billable: false,
+            metadata: JSON.stringify(metadata),
+            created_by: window.taskManager.userData.userId,
+            creator_name: creatorName,
+            forwarded_by: forwardedByValue,
+            product_model: 'Default Model',
+            product_category: 'General',
+            product_condition: 'new',
+            delivery_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            estimated_completion_days: 5,
+            partner_priority: 'medium',
+            service_type: 'other',
+            warranty_status: 'active',
+            payment_status: 'pending',
+            contract_number: `CT-${Date.now()}`,
+            purchase_order_number: `PO-${Date.now()}`
+        }, ['task_description', 'metadata']);
+    }
+
+    async function addUuidsToTask(taskId, uuids, taskType = 'internal') {
+        if (!taskId || !uuids || uuids.length === 0) {
+            console.log('ℹ️ Əlavə ediləcək UUID yoxdur');
+            return false;
+        }
+
+        const endpoint = getTaskEndpoint(taskType, taskId);
+
+        try {
+            const taskResponse = await window.makeApiRequest(endpoint, 'GET', null, true);
+            if (taskResponse?.success === false || taskResponse?.error || taskResponse?.detail) {
+                throw new Error(taskResponse?.error || taskResponse?.detail || taskResponse?.message || 'Mövcud file_uuids alınmadı');
+            }
+
+            const task = taskResponse?.data || taskResponse?.task || taskResponse || {};
+            const existingUuids = parsePgArrayValues(task.file_uuids);
+            const allUuids = [...existingUuids];
+
+            uuids.forEach((uuid) => {
+                if (uuid && !allUuids.includes(uuid)) {
+                    allUuids.push(uuid);
+                }
+            });
+
+            const fileUuidsString = '{' + allUuids.join(',') + '}';
+            const updateResponse = await window.makeApiRequest(endpoint, 'PATCH', { file_uuids: fileUuidsString }, true);
+            if (updateResponse?.success === false || updateResponse?.error || updateResponse?.detail) {
+                throw new Error(updateResponse?.error || updateResponse?.detail || updateResponse?.message || 'file_uuids yenilənmədi');
+            }
+
+            console.log(`✅ Task ${taskId}-ə ${uuids.length} fayl əlavə edildi. Ümumi: ${allUuids.length}`);
+            return true;
+        } catch (error) {
+            if (taskType !== 'internal') {
+                console.warn(`⚠️ ${taskType} task üçün file_uuids PATCH uğursuz oldu:`, error);
+            } else {
+                console.error('❌ UUID əlavə etmə xətası:', error);
+            }
+            return false;
+        }
+    }
+
+    async function refreshAfterTaskCreation(taskType = 'internal') {
+        console.log(`🔄 Task yaradıldı (${taskType}), məlumatlar yenilənir...`);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (window.dbManager) {
+            await window.dbManager.clearCache('tasks');
+            await window.dbManager.clearCache('externalTasks');
+            await window.dbManager.clearCache('partnerTasks');
+            console.log('✅ IndexedDB cache təmizləndi');
+        }
+
+        if (window.TaskCache?.clear) {
+            window.TaskCache.clear();
+        }
+
+        if (window.taskManager?.loadActiveTasks) {
+            await window.taskManager.loadActiveTasks(1, true);
+        }
+        if (window.taskManager?.loadExternalTasks) {
+            await window.taskManager.loadExternalTasks(1, false);
+        }
+        if (window.taskManager?.loadPartnerTasks) {
+            await window.taskManager.loadPartnerTasks(1);
+        }
+        if (window.ExternalTableManager?.loadTasks && taskType === 'parent') {
+            await window.ExternalTableManager.loadTasks(true);
+        }
+        if (window.PartnerTableManager?.loadTasks && taskType === 'partner') {
+            await window.PartnerTableManager.loadTasks(1, true);
+        }
+    }
+
     async function handleSubmit() {
+        let createdTaskId = null;
         try {
             const companySelect = getSelect('newtaskCompanySelect');
             const parentSelect = getSelect('newtaskParentSelect');
@@ -1509,55 +1730,53 @@
             }
 
             const selectedTarget = resolveSelectedTargetForSubmit();
+            if ((currentTaskType === 'internal' || currentTaskType === 'parent') && !selectedTarget.targetCompanyId) {
+                showNotification('Şirkət seçin', 'error');
+                return;
+            }
+            if (currentTaskType === 'partner' && !selectedTarget.partnerRelationId) {
+                showNotification('Partnyor seçin', 'error');
+                return;
+            }
             const assignedTo = getAssignedToValue();
-            const isVisible = !!isVisibleInput?.checked;
-            const filesToUpload = collectFilesForUpload();
-
-            showNotification('Tapşırıq yaradılır...', 'info');
-            if (filesToUpload.length) {
-                showNotification(`${filesToUpload.length} fayl yüklənir...`, 'info');
+            if (assignedTo === null) {
+                showNotification('İcra edən şəxs seçin', 'error');
+                return;
             }
 
-            const uploadedUuids = await uploadFilesAndCollectUuids(filesToUpload);
             const selectedCompanyName = selectedTarget.selectedCompanyName || '';
+            const taskTitle = 'Yeni Task';
+            const taskDescription = descriptionInput.value || '';
             const currentCompanyId = toIntOrNull(myCompany?.id || window.taskManager?.userData?.companyId || userData?.companyId || null);
             const currentCompanyCode = myCompany?.company_code || window.taskManager?.userData?.companyCode || userData?.companyCode || null;
+            const creatorName = window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || userData?.fullName || 'Sistem';
+            const dueDateValue = dueDateInput.value;
+            const dueDate = new Date(dueDateValue);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            dueDate.setHours(0, 0, 0, 0);
+            const taskStatus = dueDate.getTime() < today.getTime() ? 'overdue' : 'pending';
+            const isVisible = !!isVisibleInput?.checked;
+            const executorSource = selectedTarget.partnerRelationId ? 'partnerSelect' : (companySelect?.value ? 'companySelect' : 'executorSelect');
 
             const metadata = {
                 display_company_name: selectedCompanyName,
                 target_company_name: selectedCompanyName,
                 original_company_name: selectedCompanyName,
-                company_name: selectedCompanyName,
-                company_id: currentTaskType === 'internal' ? selectedTarget.targetCompanyId : currentCompanyId,
-                created_by_company: window.taskManager?.userData?.companyName || currentCompany?.company_name || currentCompanyCode,
+                created_by_company: window.taskManager?.userData?.companyName || currentCompanyCode,
                 created_by_company_id: currentCompanyId,
                 target_company_id: selectedTarget.targetCompanyId,
                 target_company_code: selectedTarget.targetCompanyCode || null,
+                is_visible_to_company: isVisible,
+                viewable_company_id: selectedTarget.targetCompanyId,
+                viewable_company_name: selectedCompanyName,
+                deadline_status: taskStatus,
+                deadline_date: dueDateValue,
                 created_by_user_id: window.taskManager?.userData?.userId || userData?.userId || null,
-                created_by_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || userData?.fullName || 'Sistem',
+                created_by_name: creatorName,
                 created_at: new Date().toISOString(),
-                task_type: currentTaskType,
-                due_date: dueDateInput.value,
-                is_visible_to_selected_company: isVisible,
-                partner_relation_id: selectedTarget.partnerRelationId || null
-            };
-
-            const baseData = {
-                task_title: `  [${selectedCompanyName}]`,
-                task_description: descriptionInput.value,
-                assigned_to: assignedTo,
-                priority: 'medium',
-                status: 'pending_approval',
-                due_date: dueDateInput.value,
-                progress_percentage: 0,
-                is_billable: false,
-                is_company_viewable: isVisible,
-                department_id: parseInt(departmentSelect.value, 10),
-                work_type_id: parseInt(taskTypeSelect.value, 10),
-                created_by: window.taskManager?.userData?.userId || userData?.userId || null,
-                creator_name: window.taskManager?.userData?.fullName || window.taskManager?.userData?.name || userData?.fullName || 'Sistem',
-                metadata: JSON.stringify(metadata),
-                file_uuids: uploadedUuids
+                task_type: currentTaskType === 'partner' ? 'partner' : (currentTaskType === 'parent' ? 'external' : 'personal'),
+                executor_source: executorSource
             };
 
             let endpoint = '';
@@ -1565,76 +1784,120 @@
 
             if (currentTaskType === 'internal') {
                 endpoint = '/tasks/';
-                apiData = {
-                    ...baseData,
-                    company_id: selectedTarget.targetCompanyId,
-                    company_name: selectedCompanyName,
-                    target_company_id: selectedTarget.targetCompanyId,
-                    target_company_name: selectedCompanyName,
-                    display_company_name: selectedCompanyName,
-                    is_company_viewable: true,
-                    viewable_company_id: selectedTarget.targetCompanyId,
-                    company_code: selectedTarget.targetCompanyCode || currentCompanyCode
-                };
+                apiData = buildInternalTaskPayload({
+                    taskTitle,
+                    taskDescription,
+                    assignedTo,
+                    taskStatus,
+                    dueDateValue,
+                    departmentSelect,
+                    taskTypeSelect,
+                    metadata,
+                    creatorName
+                });
             } else if (currentTaskType === 'parent') {
                 endpoint = '/tasks-external/';
-                apiData = {
-                    ...baseData,
-                    company_id: currentCompanyId,
-                    target_company_id: selectedTarget.targetCompanyId,
-                    target_company_name: selectedCompanyName,
-                    target_company_code: selectedTarget.targetCompanyCode || null,
-                    viewable_company_id: selectedTarget.targetCompanyId,
-                    is_for_subsidiary: false,
-                    display_company_name: selectedCompanyName
-                };
+                apiData = buildParentTaskPayload({
+                    taskTitle,
+                    taskDescription,
+                    assignedTo,
+                    taskStatus,
+                    dueDateValue,
+                    departmentSelect,
+                    taskTypeSelect,
+                    targetCompanyId: selectedTarget.targetCompanyId,
+                    targetCompanyName: selectedCompanyName,
+                    creatorName
+                });
             } else if (currentTaskType === 'partner') {
                 endpoint = '/partner-tasks/';
-                apiData = {
-                    ...baseData,
-                    company_id: currentCompanyId,
-                    partner_id: selectedTarget.partnerRelationId || selectedTarget.targetCompanyId,
-                    partner_name: selectedCompanyName,
-                    partner_company_id: selectedTarget.targetCompanyId,
-                    partner_company_code: selectedTarget.targetCompanyCode || null,
-                    display_company_name: selectedCompanyName,
-                    target_company_id: selectedTarget.targetCompanyId,
-                    target_company_name: selectedCompanyName,
-                    product_serial: `SN-${Date.now()}`,
-                    product_model: 'Default Model',
-                    product_category: 'General',
-                    contract_number: `CT-${Date.now()}`,
-                    purchase_order_number: `PO-${Date.now()}`
-                };
+                const partnerRelationId = selectedTarget.partnerRelationId;
+                const forwardedByValue = window.taskManager?.userData?.employee_id || assignedTo;
+                apiData = buildPartnerTaskPayload({
+                    taskTitle,
+                    taskDescription,
+                    assignedTo,
+                    taskStatus,
+                    dueDateValue,
+                    departmentSelect,
+                    taskTypeSelect,
+                    partnerRelationId,
+                    partnerCompanyName: selectedCompanyName,
+                    partnerCompanyId: selectedTarget.targetCompanyId,
+                    partnerCompanyCode: selectedTarget.targetCompanyCode || null,
+                    creatorName,
+                    executorSource,
+                    forwardedByValue
+                });
             }
 
-            Object.keys(apiData).forEach((key) => {
-                if (apiData[key] === null || apiData[key] === undefined || apiData[key] === '') {
-                    delete apiData[key];
-                }
-            });
+            apiData = sanitizePayload(apiData, ['task_description', 'metadata']);
 
-            console.log(`📤 ${currentTaskType.toUpperCase()} TASK:`, JSON.stringify(apiData, null, 2));
+            if (!apiData.assigned_to) {
+                showNotification('İcra edən şəxs seçin', 'error');
+                return;
+            }
+            if (!apiData.task_description && currentTaskType !== 'partner') {
+                showNotification('Tapşırıq açıqlamasını daxil edin', 'error');
+                return;
+            }
+            if (!apiData.department_id || !apiData.work_type_id || !apiData.company_id) {
+                throw new Error('Task payloadunda vacib sahələr əskikdir');
+            }
+            if (currentTaskType === 'internal' && !apiData.created_by) {
+                throw new Error('Task payloadunda created_by yoxdur');
+            }
+
+            console.log('📦 CLEAN TASK PAYLOAD:', JSON.stringify(apiData, null, 2));
+            console.log('🎯 endpoint:', endpoint);
+
+            showNotification('Tapşırıq yaradılır...', 'info');
+            if (window.taskManager?.showLoading) {
+                window.taskManager.showLoading();
+            }
 
             const response = await window.makeApiRequest(endpoint, 'POST', apiData);
             console.log('📥 API cavabı:', response);
 
-            const taskId = response?.task?.id || response?.id || response?.data?.id;
+            if (response?.success === false || response?.error || response?.detail) {
+                throw new Error(getApiErrorMessage(response));
+            }
+
+            const taskId = parseTaskIdFromResponse(response);
             if (!taskId) {
-                throw new Error(response?.detail || response?.message || 'Task ID alınmadı');
+                throw new Error('Task ID alınmadı');
+            }
+            createdTaskId = taskId;
+
+            const filesToUpload = collectFilesForUpload();
+            const uploadedUuids = filesToUpload.length ? await uploadFilesAndCollectUuids(filesToUpload) : [];
+            const uploadFailed = filesToUpload.length > 0 && uploadedUuids.length < filesToUpload.length;
+
+            if (uploadedUuids.length > 0) {
+                const uuidUpdateOk = await addUuidsToTask(taskId, uploadedUuids, currentTaskType === 'parent' ? 'parent' : currentTaskType === 'partner' ? 'partner' : 'internal');
+                if (!uuidUpdateOk) {
+                    console.warn('⚠️ UUID-lər task-a əlavə edilə bilmədi');
+                }
             }
 
-            console.log(`✅ Task yaradıldı (ID: ${taskId}) ${uploadedUuids.length} fayl ilə`);
-            showNotification(`✅ Tapşırıq uğurla yaradıldı! ${uploadedUuids.length} fayl əlavə edildi.`, 'success');
-
-            if (window.taskManager?.loadActiveTasks) {
-                setTimeout(() => window.taskManager.loadActiveTasks(1, true), 1000);
+            if (uploadFailed) {
+                showNotification('Task yaradıldı, amma bəzi fayllar yüklənmədi', 'warning');
+            } else if (uploadedUuids.length > 0) {
+                showNotification(`✅ Tapşırıq uğurla yaradıldı! ${uploadedUuids.length} fayl əlavə edildi.`, 'success');
+            } else {
+                showNotification('✅ Tapşırıq uğurla yaradıldı!', 'success');
             }
 
+            await refreshAfterTaskCreation(currentTaskType);
             closeModal();
         } catch (error) {
             console.error('❌ Xəta:', error);
-            showNotification('❌ ' + (error.message || 'Tapşırıq yaradılarkən xəta baş verdi'), 'error');
+            showNotification(error?.message || 'Tapşırıq yaradılarkən xəta baş verdi', 'error');
+            return null;
+        } finally {
+            if (window.taskManager?.hideLoading) {
+                window.taskManager.hideLoading();
+            }
         }
     }
 
