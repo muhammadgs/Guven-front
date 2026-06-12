@@ -15,6 +15,7 @@
             // Versiya nömrəsi - build zamanı sabitləmək olar
             // const v = '1.0.0'; // Sabit versiya (cache üçün)
             const v = Date.now(); // Əgər cache istəmirsinizsə, bunu açın
+            const newTaskDesignVersion = '1.0.10';
 
             // CSS faylları
             const styles = [
@@ -33,7 +34,8 @@
 
             // CSS-ləri əlavə et
             styles.forEach(style => {
-                document.write(`<link rel="stylesheet" href="../assets/css/task_css/${style}?v=${v}" />`);
+                const version = style === 'new_task_design.css' ? newTaskDesignVersion : v;
+                document.write(`<link rel="stylesheet" href="../assets/css/task_css/${style}?v=${version}" />`);
             });
         })();
     </script>
@@ -1612,7 +1614,7 @@
 
     <script>
         // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
-        const v = '1.0.9';
+        const v = '1.0.10';
 
         // Core services
 
