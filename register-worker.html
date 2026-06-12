@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İşçi Qeydiyyatı | Güvən Finans</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/cal-sans@1.0.1/public/web/cal-sans.css" rel="stylesheet">
+
+
+    <script>
+        (function() {
+            const v = Date.now();
+            const cssFiles = [
+                'assets/css/register-worker.css',
+                'assets/css/style.css'
+            ];
+            cssFiles.forEach(file => {
+                document.write(`<link rel="stylesheet" href="${file}?v=${v}" />`);
+            });
+            console.log('✅ CSS faylları yükləndi. Versiya:', v);
+        })();
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader"></div>
+        <div class="loader-text">Güvən Finans</div>
+    </div>
+
+    <!-- Skip to Content -->
+    <a href="#main-content" class="skip-link">Əsas məzmuna keç</a>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-top">
+            <div class="container">
+                <div class="header-top-content">
+                    <div class="contact-info">
+                        <a href="mailto:info@guvenfinans.az" class="contact-link">
+                            <i class="fas fa-envelope"></i>
+                            info@guvenfinans.az
+                        </a>
+                        <a href="tel:+994557636993" class="contact-link phone-link">
+                            <i class="fas fa-phone"></i>
+                            +994 55 763 69 93
+                        </a>
+                    </div>
+
+                    <div class="social-links">
+                        <a href="#" class="social-icon" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <a href="/" class="logo">
+                        <div class="logo-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="logo-text">
+                            <span class="logo-primary">Güvən</span>
+                            <span class="logo-secondary">Finans</span>
+                        </div>
+                    </a>
+
+                    <div class="header-tagline">
+                        <span>Biznesinizə etibarlı həllər</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+        <div class="registration-container">
+            <!-- Registration Progress -->
+            <div class="registration-progress">
+                <div class="progress-steps">
+                    <div class="step active" data-step-indicator="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Şirkət Kodu</div>
+                    </div>
+                    <div class="step" data-step-indicator="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Şəxsi Məlumatlar</div>
+                    </div>
+                    <div class="step" data-step-indicator="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Təsdiq</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 33%"></div>
+                </div>
+            </div>
+
+            <!-- Registration Card -->
+            <div class="registration-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h1 class="card-title">İşçi Qeydiyyatı</h1>
+                    <p class="card-subtitle">Zəhmət olmasa aşağıdakı məlumatları doldurun</p>
+                </div>
+
+                <!-- Registration Form -->
+                <form class="registration-form" id="workerRegistrationForm">
+
+                    <!-- Addım 1: Şirkət Kodu -->
+                    <div class="form-step active" id="step-1" data-step="1">
+                        <div class="step-header">
+                            <h2 class="step-title">
+                                <i class="fas fa-building"></i>
+                                Şirkət Kodunuzu Daxil Edin
+                            </h2>
+                            <p class="step-description">
+                                Şirkət tərəfindən verilən unikal kodu daxil edin.
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="company_code" class="form-label">
+                                <i class="fas fa-key"></i>
+                                Şirkət Kodu *
+                            </label>
+                            <div class="input-with-button">
+                                <input
+                                    type="text"
+                                    id="company_code"
+                                    name="company_code"
+                                    class="form-input"
+                                    placeholder="Məsələn: GFC2024"
+                                    required
+                                >
+                                <button type="button" class="verify-btn" id="verify-company-code">
+                                    <span class="btn-text">Kodu Yoxla</span>
+                                    <span class="btn-loader hidden">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Company Info -->
+                        <div class="company-info hidden" id="company-info">
+                            <div class="info-header">
+                                <i class="fas fa-check-circle success"></i>
+                                <h3>Şirkət Təsdiqləndi</h3>
+                            </div>
+                            <div class="info-content">
+                                <div class="info-row">
+                                    <span class="info-label">Şirkət Adı:</span>
+                                    <span class="info-value" id="info-company-name">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn btn-next" id="next-button-step1" disabled>
+                                Növbəti Addım
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Addım 2: Şəxsi Məlumatlar -->
+                    <div class="form-step" id="step-2" data-step="2" style="display: none;">
+                        <div class="step-header">
+                            <h2 class="step-title">
+                                <i class="fas fa-user-circle"></i>
+                                Şəxsi Məlumatlar
+                            </h2>
+                            <p class="step-description">
+                                Zəhmət olmasa şəxsi məlumatlarınızı doldurun.
+                            </p>
+                        </div>
+
+                        <div class="personal-info-section">
+                            <!-- Ad Soyad -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="first_name" class="form-label required">
+                                        <i class="fas fa-user"></i>
+                                        Ad *
+                                    </label>
+                                    <div class="input-container">
+                                        <input
+                                            type="text"
+                                            id="first_name"
+                                            name="first_name"
+                                            class="form-input with-icon"
+                                            placeholder="Məsələn: Əli"
+                                            required
+                                        >
+                                        <i class="fas fa-user input-icon"></i>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="last_name" class="form-label required">
+                                        <i class="fas fa-user"></i>
+                                        Soyad *
+                                    </label>
+                                    <div class="input-container">
+                                        <input
+                                            type="text"
+                                            id="last_name"
+                                            name="last_name"
+                                            class="form-input with-icon"
+                                            placeholder="Məsələn: Məmmədov"
+                                            required
+                                        >
+                                        <i class="fas fa-user input-icon"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ata Adı -->
+                            <div class="form-group">
+                                <label for="father_name" class="form-label">
+                                    <i class="fas fa-user-friends"></i>
+                                    Ata Adı
+                                </label>
+                                <div class="input-container">
+                                    <input
+                                        type="text"
+                                        id="father_name"
+                                        name="father_name"
+                                        class="form-input with-icon"
+                                        placeholder="Məsələn: Məmməd"
+                                    >
+                                    <i class="fas fa-user-friends input-icon"></i>
+                                </div>
+                                <div class="field-description">Opsiyonal</div>
+                            </div>
+
+                            <!-- Cins (Gender) -->
+                            <div class="form-group">
+                                <label for="gender" class="form-label required">
+                                    <i class="fas fa-venus-mars"></i>
+                                    Cins *
+                                </label>
+                                <div class="input-container">
+                                    <select
+                                        id="gender"
+                                        name="gender"
+                                        class="form-input with-icon"
+                                        required
+                                    >
+                                        <option value="" disabled selected>Cinsinizi seçin</option>
+                                        <option value="male">Kişi</option>
+                                        <option value="female">Qadın</option>
+                                        <option value="other">Digər</option>
+                                    </select>
+                                    <i class="fas fa-venus-mars input-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- FIN Code -->
+                            <div class="form-group">
+                                <label for="fin_code" class="form-label required">
+                                    <i class="fas fa-id-card"></i>
+                                    FIN Kod *
+                                </label>
+                                <div class="input-container">
+                                    <input
+                                        type="text"
+                                        id="fin_code"
+                                        name="fin_code"
+                                        class="form-input with-icon"
+                                        placeholder="Məsələn: 7ABC123"
+                                        maxlength="7"
+                                        required
+                                    >
+                                    <i class="fas fa-id-card input-icon"></i>
+                                </div>
+                                <div class="field-description">7 simvol (hərf və rəqəm)</div>
+                            </div>
+
+                            <!-- Telefon -->
+                            <div class="form-group">
+                                <label class="form-label required">
+                                    <i class="fas fa-phone"></i>
+                                    Telefon *
+                                </label>
+                                <div class="phone-input-group">
+                                    <select id="employee_phone_prefix" name="phone_prefix" class="phone-prefix" required>
+                                        <option value="" disabled selected>Prefiks seçin</option>
+                                        <option value="50">050</option>
+                                        <option value="51">051</option>
+                                        <option value="55">055</option>
+                                        <option value="70">070</option>
+                                        <option value="77">077</option>
+                                        <option value="99">099</option>
+                                    </select>
+                                    <div class="input-container" style="flex: 1;">
+                                        <input
+                                            type="tel"
+                                            id="employee_phone_number"
+                                            name="phone_number"
+                                            class="form-input with-icon"
+                                            placeholder="XXX-XX-XX"
+                                            maxlength="9"
+                                            required
+                                        >
+                                        <i class="fas fa-mobile-alt input-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="field-description">7 rəqəm (məsələn: 123-45-67)</div>
+                            </div>
+
+                            <!-- E-poçt -->
+                            <div class="form-group">
+                                <label for="email" class="form-label required">
+                                    <i class="fas fa-envelope"></i>
+                                    E-poçt *
+                                </label>
+                                <div class="input-container">
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        class="form-input with-icon"
+                                        placeholder="misal@domain.com"
+                                        required
+                                    >
+                                    <i class="fas fa-envelope input-icon"></i>
+                                </div>
+                            </div>
+
+                            <!-- Şifrə (Password with Toggle) -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="password" class="form-label required">
+                                        <i class="fas fa-lock"></i>
+                                        Şifrə *
+                                    </label>
+                                    <div class="input-container">
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            name="password"
+                                            class="form-input with-icon with-toggle"
+                                            placeholder="Ən az 8 simvol"
+                                            minlength="8"
+                                            required
+                                        >
+                                        <i class="fas fa-lock input-icon"></i>
+                                        <button type="button" class="password-toggle" id="password-toggle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="password-strength">
+                                        <div class="password-strength-fill" id="password-strength"></div>
+                                    </div>
+                                    <div class="field-description">Ən az 8 simvol</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="confirm_password" class="form-label required">
+                                        <i class="fas fa-lock"></i>
+                                        Şifrə Təkrarı *
+                                    </label>
+                                    <div class="input-container">
+                                        <input
+                                            type="password"
+                                            id="confirm_password"
+                                            name="confirm_password"
+                                            class="form-input with-icon with-toggle"
+                                            placeholder="Şifrəni təkrar edin"
+                                            minlength="8"
+                                            required
+                                        >
+                                        <i class="fas fa-lock input-icon"></i>
+                                        <button type="button" class="password-toggle" id="confirm-password-toggle">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="field-description">Şifrəni təsdiqləyin</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn btn-prev" id="prev-button-step2">
+                                <i class="fas fa-arrow-left"></i>
+                                Əvvəlki
+                            </button>
+                            <button type="button" class="btn btn-next" id="next-button-step2">
+                                Növbəti Addım
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Addım 3: Təsdiq -->
+                    <div class="form-step" id="step-3" data-step="3" style="display: none;">
+                        <div class="step-header">
+                            <h2 class="step-title">
+                                <i class="fas fa-check-circle"></i>
+                                Məlumatların Təsdiqi
+                            </h2>
+                            <p class="step-description">
+                                Zəhmət olmasa məlumatlarınızı yoxlayın.
+                            </p>
+                        </div>
+
+                        <div class="confirmation-section">
+                            <div class="summary-card">
+                                <h3><i class="fas fa-file-alt"></i> Qeydiyyat Məlumatları</h3>
+                                <div class="summary-grid" id="summary-content">
+                                    <!-- JavaScript ilə doldurulacaq -->
+                                </div>
+                            </div>
+
+                            <!-- Terms -->
+                            <div class="terms-section">
+                                <div class="terms-checkbox">
+                                    <input type="checkbox" id="terms" name="terms" required>
+                                    <label for="terms" class="terms-label">
+                                        <strong>İstifadəçi razılaşmasını qəbul edirəm</strong><br>
+                                        Güvən Finans platformasının istifadə qaydalarını və məxfilik siyasətini oxudum və qəbul edirəm.
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn btn-prev" id="prev-button-step3">
+                                <i class="fas fa-arrow-left"></i>
+                                Əvvəlki
+                            </button>
+                            <button type="submit" class="btn btn-submit" id="submit-button">
+                                <i class="fas fa-check"></i>
+                                Qeydiyyatı Tamamla
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="assets/js/register-worker.js"></script>
+</body>
+</html>
