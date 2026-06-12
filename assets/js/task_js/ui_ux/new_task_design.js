@@ -72,6 +72,21 @@
         return [];
     }
 
+    function toIntOrNull(value) {
+        if (value === null || value === undefined) return null;
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? Math.trunc(value) : null;
+        }
+
+        const normalized = String(value).trim();
+        if (!normalized || normalized === 'null' || normalized === 'undefined' || normalized === 'NaN') {
+            return null;
+        }
+
+        const parsed = parseInt(normalized, 10);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+
     function getTokenContext() {
         try {
             const token = typeof getAuthToken === 'function' ? getAuthToken() : window.getAuthToken?.();
@@ -1390,7 +1405,7 @@
             const targetCompanyId = toIntOrNull(companySelect?.value);
             const selectedOption = companySelect?.options?.[companySelect.selectedIndex];
             return {
-                targetCompanyId: Number.isNaN(targetCompanyId) ? null : targetCompanyId,
+                targetCompanyId: targetCompanyId,
                 targetCompanyCode: selectedOption?.dataset?.companyCode || '',
                 selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[🏢]\s*/g, '').replace('(Mənim şirkətim)', '').trim() || selectedOption?.textContent?.trim() || ''
             };
@@ -1400,7 +1415,7 @@
             const targetCompanyId = toIntOrNull(parentSelect?.value);
             const selectedOption = parentSelect?.options?.[parentSelect.selectedIndex];
             return {
-                targetCompanyId: Number.isNaN(targetCompanyId) ? null : targetCompanyId,
+                targetCompanyId: targetCompanyId,
                 targetCompanyCode: selectedOption?.dataset?.companyCode || '',
                 selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[⬆️]\s*/g, '').trim() || selectedOption?.textContent?.trim() || ''
             };
@@ -1410,8 +1425,8 @@
         const selectedOption = partnerSelect?.options?.[partnerSelect.selectedIndex];
         const partnerCompanyId = selectedOption?.dataset?.partnerCompanyId || selectedOption?.dataset?.companyId || selectedOption?.dataset?.companyCode || '';
         return {
-            partnerRelationId: Number.isNaN(partnerRelationId) ? null : partnerRelationId,
-            targetCompanyId: partnerCompanyId || (Number.isNaN(partnerRelationId) ? null : partnerRelationId),
+            partnerRelationId: partnerRelationId,
+            targetCompanyId: partnerCompanyId || partnerRelationId,
             targetCompanyCode: selectedOption?.dataset?.companyCode || '',
             selectedCompanyName: selectedOption?.dataset?.companyName || selectedOption?.textContent?.replace(/^[🤝]\s*/g, '').trim() || selectedOption?.textContent?.trim() || ''
         };
@@ -1420,10 +1435,10 @@
     function getAssignedToValue() {
         const executorSelect = getSelect('newtaskExecutorSelect');
         const otherExecutorSelect = getSelect('newtaskOtherExecutorSelect');
-        const executorId = parseInt(executorSelect?.value, 10);
-        const otherExecutorId = parseInt(otherExecutorSelect?.value, 10);
-        if (!Number.isNaN(executorId) && executorId) return executorId;
-        if (!Number.isNaN(otherExecutorId) && otherExecutorId) return otherExecutorId;
+        const executorId = toIntOrNull(executorSelect?.value);
+        const otherExecutorId = toIntOrNull(otherExecutorSelect?.value);
+        if (executorId) return executorId;
+        if (otherExecutorId) return otherExecutorId;
         return null;
     }
 
