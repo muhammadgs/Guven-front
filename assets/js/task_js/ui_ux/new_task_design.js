@@ -288,75 +288,75 @@
     function createModal() {
         const modalHTML = `
             <div class="newtask-modal-overlay" id="newtaskModalOverlay">
-                <div class="newtask-modal">
+                <div class="newtask-modal liquid-task-modal" role="dialog" aria-modal="true" aria-labelledby="newtaskModalTitle">
                     <div class="newtask-modal-header">
                         <div class="newtask-modal-title">
-                            <i class="fas fa-edit" id="newtaskModalIcon"></i>
+                            <span class="newtask-modal-title-icon"><i class="fas fa-edit" id="newtaskModalIcon"></i></span>
                             <h3 id="newtaskModalTitle">Daxili Tapşırıq</h3>
                         </div>
-                        <button class="newtask-modal-close" id="newtaskModalClose">
+                        <button type="button" class="newtask-modal-close" id="newtaskModalClose" aria-label="Modalı bağla">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
                     <div class="newtask-modal-body">
-                        <form id="newtaskForm">
-                            <div class="newtask-form-grid">
-                                <div class="newtask-form-group" id="newtaskCompanyGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-building"></i> Şirkət</label>
+                        <form id="newtaskForm" class="newtask-form glass-task-form">
+                            <div class="newtask-form-grid glass-form-grid">
+                                <div class="newtask-form-group glass-field" id="newtaskCompanyGroup">
+                                    <label class="newtask-form-label" for="newtaskCompanySelect"><i class="fas fa-building"></i> Şirkət</label>
                                     <select id="newtaskCompanySelect" class="newtask-select" required>
                                         <option value="">Şirkət seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group" id="newtaskParentGroup" style="display:none;">
-                                    <label class="newtask-form-label"><i class="fas fa-arrow-up"></i> Şirkət</label>
+                                <div class="newtask-form-group glass-field" id="newtaskParentGroup" style="display:none;">
+                                    <label class="newtask-form-label" for="newtaskParentSelect"><i class="fas fa-building"></i> Şirkət</label>
                                     <select id="newtaskParentSelect" class="newtask-select" required>
                                         <option value="">Şirkət seçin</option>
                                     </select>
                                     <div class="newtask-form-text">Şirkətlərinizə task göndərin</div>
                                 </div>
 
-                                <div class="newtask-form-group" id="newtaskPartnerGroup" style="display:none;">
-                                    <label class="newtask-form-label"><i class="fas fa-handshake"></i> Partnyor</label>
+                                <div class="newtask-form-group glass-field" id="newtaskPartnerGroup" style="display:none;">
+                                    <label class="newtask-form-label" for="newtaskPartnerSelect"><i class="fas fa-building"></i> Partnyor</label>
                                     <select id="newtaskPartnerSelect" class="newtask-select" required>
                                         <option value="">Partnyor seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group" id="newtaskExecutorGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-user-tie"></i> İcra Edən</label>
+                                <div class="newtask-form-group glass-field" id="newtaskExecutorGroup">
+                                    <label class="newtask-form-label" for="newtaskExecutorSelect"><i class="fas fa-user-tie"></i> İcra edən</label>
                                     <select id="newtaskExecutorSelect" class="newtask-select">
                                         <option value="">İşçi seçin (boş qoymaq olar)</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group" id="newtaskOtherExecutorGroup">
-                                    <label class="newtask-form-label"><i class="fas fa-users"></i> Digər Şirkətin İşçisi</label>
+                                <div class="newtask-form-group glass-field" id="newtaskOtherExecutorGroup">
+                                    <label class="newtask-form-label" for="newtaskOtherExecutorSelect"><i class="fas fa-users"></i> Digər şirkətin işçisi</label>
                                     <select id="newtaskOtherExecutorSelect" class="newtask-select">
                                         <option value="">İşçi seçin (boş qoymaq olar)</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-sitemap"></i> Şöbə</label>
+                                <div class="newtask-form-group glass-field">
+                                    <label class="newtask-form-label" for="newtaskDepartmentSelect"><i class="fas fa-sitemap"></i> Şöbə</label>
                                     <select id="newtaskDepartmentSelect" class="newtask-select" required>
                                         <option value="">Şöbə seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-tasks"></i> İşin Növü</label>
+                                <div class="newtask-form-group glass-field">
+                                    <label class="newtask-form-label" for="newtaskTaskTypeSelect"><i class="fas fa-list-check"></i> İşin növü</label>
                                     <select id="newtaskTaskTypeSelect" class="newtask-select" required>
                                         <option value="">İş növü seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group">
-                                    <label class="newtask-form-label"><i class="fas fa-calendar-times"></i> Son Müddət</label>
+                                <div class="newtask-form-group glass-field">
+                                    <label class="newtask-form-label" for="newtaskDueDate"><i class="fas fa-calendar-days"></i> Son müddət</label>
                                     <input type="date" id="newtaskDueDate" class="newtask-input" required />
                                 </div>
 
-                                <div class="newtask-form-group">
+                                <div class="newtask-form-group glass-field newtask-visibility-field">
                                     <div class="newtask-checkbox-group">
                                         <input type="checkbox" id="newtaskIsVisible" class="newtask-checkbox">
                                         <label for="newtaskIsVisible" class="newtask-checkbox-label">
@@ -365,34 +365,34 @@
                                     </div>
                                 </div>
 
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-align-left"></i> Tapşırıq Açıqlaması</label>
-                                    <textarea id="newtaskDescription" rows="3" class="newtask-textarea" placeholder="Tapşırığın detallı təsvirini yazın..." required></textarea>
+                                <div class="newtask-form-group full-width glass-field glass-description-field">
+                                    <label class="newtask-form-label" for="newtaskDescription"><i class="fas fa-align-left"></i> Tapşırıq açıqlaması</label>
+                                    <textarea id="newtaskDescription" rows="4" class="newtask-textarea" placeholder="Tapşırığın detallı təsvirini yazın..." required></textarea>
                                 </div>
 
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-paperclip"></i> Fayl Əlavəsi</label>
-                                    <div class="newtask-file-zone" id="newtaskFileZone">
-                                        <div class="newtask-file-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                                        <div class="newtask-file-text">Faylı buraya sürüşdürün və ya klikləyin</div>
+                                <div class="newtask-form-group glass-field glass-media-field">
+                                    <label class="newtask-form-label" for="newtaskFileInput"><i class="fas fa-paperclip"></i> Fayl yükləmə</label>
+                                    <div class="newtask-file-zone glass-upload-zone" id="newtaskFileZone">
+                                        <div class="newtask-file-icon"><i class="fas fa-file-arrow-up"></i></div>
+                                        <div class="newtask-file-text">Faylı sürüşdürün və ya klikləyin</div>
                                         <input type="file" id="newtaskFileInput" multiple hidden accept=".xlsx,.xls,.pdf,.jpg,.png,.jpeg,.doc,.docx,.webm,.mp3" />
                                     </div>
                                     <div class="newtask-file-list" id="newtaskFileList"></div>
                                 </div>
 
-                                <div class="newtask-form-group full-width">
-                                    <label class="newtask-form-label"><i class="fas fa-microphone"></i> Səs Qeydi Əlavəsi</label>
-                                    <div class="newtask-audio-container">
+                                <div class="newtask-form-group glass-field glass-media-field">
+                                    <label class="newtask-form-label"><i class="fas fa-wave-square"></i> Səs qeydi</label>
+                                    <div class="newtask-audio-container glass-audio-zone">
                                         <div class="newtask-audio-status" id="newtaskAudioStatus">
                                             <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
                                         </div>
                                         <div class="newtask-audio-buttons">
-                                            <button type="button" id="newtaskStartRecord" class="newtask-audio-btn primary"><i class="fas fa-microphone"></i> Başla</button>
-                                            <button type="button" id="newtaskStopRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-stop"></i> Dayandır</button>
-                                            <button type="button" id="newtaskSaveRecord" class="newtask-audio-btn primary" disabled><i class="fas fa-save"></i> Saxla</button>
-                                            <button type="button" id="newtaskCancelRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-times"></i> Ləğv et</button>
+                                            <button type="button" id="newtaskStartRecord" class="newtask-audio-btn primary record-main"><i class="fas fa-microphone"></i><span>Başla</span></button>
+                                            <button type="button" id="newtaskStopRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-stop"></i><span>Dayandır</span></button>
+                                            <button type="button" id="newtaskSaveRecord" class="newtask-audio-btn primary" disabled><i class="fas fa-save"></i><span>Saxla</span></button>
+                                            <button type="button" id="newtaskCancelRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-times"></i><span>Ləğv et</span></button>
                                         </div>
-                                        <div id="newtaskAudioPreview" style="display:none;">
+                                        <div id="newtaskAudioPreview" class="newtask-audio-preview" style="display:none;">
                                             <audio id="newtaskRecordedAudio" controls></audio>
                                         </div>
                                         <canvas id="newtaskAudioVisualizer" width="600" height="40"></canvas>
@@ -405,10 +405,10 @@
                     </div>
                     <div class="newtask-modal-footer">
                         <button type="button" class="newtask-btn secondary" id="newtaskCancelBtn">
-                            <i class="fas fa-times"></i> Ləğv et
+                            <i class="fas fa-circle-xmark"></i> Ləğv edin
                         </button>
                         <button type="button" class="newtask-btn primary" id="newtaskSaveBtn">
-                            <i class="fas fa-save"></i> Tapşırıq Yarat
+                            <i class="fas fa-floppy-disk"></i> Əlavə edin
                         </button>
                     </div>
                 </div>
@@ -1025,25 +1025,15 @@
             const size = formatFileSize(file.size);
 
             html += `
-                <div class="newtask-file-item" data-index="${index}" style="
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    padding: 10px;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    margin-bottom: 8px;
-                    background: white;
-                ">
-                    <div style="font-size: 20px; width: 32px;">
+                <div class="newtask-file-item" data-index="${index}">
+                    <div class="newtask-file-item-icon">
                         <i class="${icon}" style="color: ${iconColor};"></i>
                     </div>
-                    <div style="flex: 1;">
-                        <div style="font-weight: 500; color: #334155; font-size: 13px;">${escapeHtml(file.name)}</div>
-                        <div style="font-size: 11px; color: #64748b;">${size}</div>
+                    <div class="newtask-file-item-meta">
+                        <div class="newtask-file-item-name">${escapeHtml(file.name)}</div>
+                        <div class="newtask-file-item-size">${size}</div>
                     </div>
-                    <button class="newtask-file-remove" onclick="removeModalFile(${index})" 
-                            style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 5px;">
+                    <button class="newtask-file-remove" onclick="removeModalFile(${index})" aria-label="Faylı sil">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
