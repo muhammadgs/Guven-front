@@ -535,3 +535,150 @@
     .nt-select-options { max-height: min(260px, 52vh); }
     .nt-select-option { min-height: 44px; padding: 0 14px; font-size: 15px; }
 }
+
+/* Modern voice recorder for Yeni tapşırıq modal */
+.audio-recorder-container.nt-voice-recorder,
+.nt-voice-recorder {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.nt-voice-shell {
+    min-height: 130px;
+    width: 100%;
+    border-radius: 999px;
+    background: rgba(255,255,255,.93);
+    border: 1px solid rgba(255,255,255,.76);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 22px 46px rgba(31,41,55,.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px clamp(22px, 4vw, 42px);
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(1.15);
+    -webkit-backdrop-filter: blur(20px) saturate(1.15);
+}
+
+.nt-voice-main-btn,
+.nt-voice-action {
+    border: 0;
+    border-radius: 50%;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.38), 0 16px 30px rgba(33,117,255,.22);
+    transition: transform .22s ease, box-shadow .22s ease, opacity .2s ease, filter .2s ease;
+}
+
+.nt-voice-main-btn {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(145deg, #4f8dff, #3d7df3);
+    font-size: 2.85rem;
+}
+
+.nt-voice-main-btn:hover,
+.nt-voice-action:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
+    filter: saturate(1.06);
+}
+
+.nt-voice-recording-ui {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: clamp(18px, 3vw, 34px);
+}
+
+.nt-voice-waveform {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    height: 104px;
+    border-radius: 999px;
+    background: transparent;
+}
+
+.nt-voice-actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: clamp(12px, 1.8vw, 20px);
+}
+
+.nt-voice-action {
+    width: 72px;
+    height: 72px;
+    font-size: 1.72rem;
+}
+
+.nt-voice-action:disabled {
+    cursor: not-allowed;
+    opacity: .42;
+    transform: none;
+}
+
+.nt-voice-stop { background: linear-gradient(145deg, #f17a7d, #e56669); box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 14px 26px rgba(229,102,105,.26); }
+.nt-voice-pause { background: linear-gradient(145deg, #83c1f3, #69ace8); box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 14px 26px rgba(105,172,232,.25); }
+.nt-voice-send { background: linear-gradient(145deg, #66e885, #55dc75); box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 14px 26px rgba(85,220,117,.24); }
+.nt-voice-send i { transform: translateX(3px); }
+
+.nt-voice-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    min-height: 24px;
+}
+
+.recording-status,
+.recording-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(0,0,0,.58);
+    font-size: .92rem;
+    font-weight: 700;
+}
+
+.recording-status i { font-size: .6rem; color: #8b95a7; }
+.recording-status.is-recording i { color: #ef4444; animation: ntVoicePulse 1s ease-in-out infinite; }
+.recording-status.is-paused i { color: #69ace8; }
+.recording-status.is-success i { color: #35c968; }
+.recording-timer i { color: #4388ff; }
+
+.audio-preview {
+    border-radius: 24px;
+    background: rgba(255,255,255,.64);
+    border: 1px solid rgba(255,255,255,.68);
+    padding: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+.audio-preview audio { width: 100%; height: 38px; }
+.audio-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: rgba(0,0,0,.55); font-size: .82rem; }
+
+@keyframes ntVoicePulse { 0%, 100% { transform: scale(1); opacity: .75; } 50% { transform: scale(1.35); opacity: 1; } }
+
+@media (max-width: 900px) {
+    .nt-voice-shell { min-height: 112px; padding: 16px 20px; }
+    .nt-voice-main-btn { width: 82px; height: 82px; font-size: 2.35rem; }
+    .nt-voice-action { width: 58px; height: 58px; font-size: 1.35rem; }
+    .nt-voice-waveform { height: 88px; }
+}
+
+@media (max-width: 560px) {
+    .nt-voice-shell { border-radius: 44px; min-height: 104px; padding: 14px; }
+    .nt-voice-recording-ui { gap: 10px; }
+    .nt-voice-actions { gap: 8px; }
+    .nt-voice-action { width: 46px; height: 46px; font-size: 1rem; }
+    .nt-voice-main-btn { width: 74px; height: 74px; font-size: 2rem; }
+    .nt-voice-waveform { height: 76px; }
+    .audio-meta { flex-direction: column; gap: 4px; }
+}
