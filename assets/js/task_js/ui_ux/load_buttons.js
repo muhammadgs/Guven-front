@@ -65,6 +65,13 @@ function getRealCompanyIdFromToken() {
         }
     };
 
+    const ACCEPTED_LIMIT_VALUES = ['20', '50', '100'];
+    const DEFAULT_LIMIT_VALUE = '20';
+
+    function normalizeLimitValue(value) {
+        return ACCEPTED_LIMIT_VALUES.includes(value) ? value : DEFAULT_LIMIT_VALUE;
+    }
+
     // ==================== DÜYMƏLƏRİ HAZIRLA ====================
     function setupLoadButtons() {
         // ========== SELECT ELEMENTLƏRİ ==========
@@ -78,9 +85,7 @@ function getRealCompanyIdFromToken() {
 
             // LocalStorage-dan əvvəlki seçimi yüklə
             const savedValue = localStorage.getItem(`task_limit_${tableType}`);
-            if (savedValue) {
-                newSelect.value = savedValue;
-            }
+            newSelect.value = normalizeLimitValue(savedValue);
 
             newSelect.addEventListener('change', async (e) => {
                 e.preventDefault();
