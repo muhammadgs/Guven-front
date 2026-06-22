@@ -743,8 +743,9 @@
                 <i class="fas fa-chevron-down nt-select-arrow" aria-hidden="true"></i>
             </button>
             <div class="nt-select-menu" role="listbox" aria-hidden="true">
-                <div class="nt-select-highlight"></div>
-                <div class="nt-select-options"></div>
+                <div class="nt-select-options">
+                    <div class="nt-select-highlight"></div>
+                </div>
             </div>
         `;
 
@@ -765,7 +766,11 @@
     function rebuildCustomOptions(select, wrapper) {
         const optionsBox = wrapper.querySelector('.nt-select-options');
         if (!optionsBox) return;
+        wrapper.querySelectorAll('.nt-select-menu > .nt-select-highlight').forEach((highlight) => highlight.remove());
         optionsBox.innerHTML = '';
+        const highlight = document.createElement('div');
+        highlight.className = 'nt-select-highlight';
+        optionsBox.appendChild(highlight);
         Array.from(select.options).forEach((option, index) => {
             const button = document.createElement('button');
             button.type = 'button';
@@ -820,6 +825,7 @@
         wrapper.classList.add('is-closing');
         wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'false');
         wrapper.querySelector('.nt-select-menu')?.setAttribute('aria-hidden', 'true');
+        wrapper.querySelector('.nt-select-highlight')?.style.setProperty('opacity', '0');
         const timer = setTimeout(() => wrapper.classList.remove('is-closing', 'open-up'), 260);
         customSelectState.closingTimers.set(wrapper, timer);
     }
@@ -913,12 +919,21 @@
     }
 
     function moveHighlightToOption(wrapper, option, visible) {
-        const highlight = wrapper?.querySelector('.nt-select-highlight');
+        const menu = wrapper?.querySelector('.nt-select-menu');
         const optionsBox = wrapper?.querySelector('.nt-select-options');
-        if (!highlight || !option || !optionsBox) return;
+        const highlight = optionsBox?.querySelector('.nt-select-highlight');
+        if (!wrapper || !menu || !optionsBox || !highlight || !option) return;
+        if (!wrapper.classList.contains('is-open')) {
+            highlight.style.opacity = '0';
+            return;
+        }
+        if (!optionsBox.contains(option) || option.classList.contains('nt-select-highlight')) {
+            highlight.style.opacity = '0';
+            return;
+        }
         highlight.style.opacity = visible ? '1' : '0';
         highlight.style.height = `${option.offsetHeight}px`;
-        highlight.style.transform = `translate3d(0, ${option.offsetTop - optionsBox.scrollTop}px, 0)`;
+        highlight.style.transform = `translate3d(0, ${option.offsetTop}px, 0)`;
     }
 
 
