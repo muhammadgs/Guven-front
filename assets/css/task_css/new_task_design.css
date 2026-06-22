@@ -174,7 +174,7 @@
     row-gap: clamp(16px, 2.8vw, 26px);
 }
 
-.newtask-form-group { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.newtask-form-group { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 .newtask-form-group.full-width { grid-column: 1 / -1; }
 .newtask-visibility-field { justify-content: end; }
 
@@ -182,24 +182,43 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 34px;
+    min-height: 44px;
+    margin-bottom: 14px;
     color: #050505;
     font: 400 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Cal Sans", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
 }
 .newtask-form-label i { width: 28px; color: var(--newtask-blue); font-size: clamp(1.3rem, 1.8vw, 1.7rem); text-align: center; }
 
+/* Normalize field vertical rhythm so adjacent select pills start on the same baseline. */
+.newtask-form-group .newtask-select,
+.newtask-form-group .newtask-input,
+.newtask-form-group .nt-custom-select,
+.newtask-form-group .nt-select-wrapper,
+.newtask-form-group .select-wrapper {
+    margin-top: 0;
+}
+
+.newtask-form-group,
+.newtask-form-group .nt-custom-select,
+.newtask-form-group .nt-select-wrapper,
+.newtask-form-group .newtask-select,
+.newtask-form-group .select-wrapper {
+    transform: none !important;
+    top: auto !important;
+}
+
 .nt-audio-title-label {
     flex-wrap: nowrap;
 }
 
 .nt-audio-title-wave {
-    width: clamp(32px, 2.8vw, 42px);
-    height: clamp(32px, 2.8vw, 42px);
+    width: clamp(30px, 2.35vw, 34px);
+    height: clamp(30px, 2.35vw, 34px);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: clamp(3px, .32vw, 4px);
+    gap: 3px;
     color: var(--newtask-blue, #4388ff);
     flex: 0 0 auto;
     line-height: 1;
@@ -207,7 +226,7 @@
 
 .nt-audio-title-wave-bar {
     display: block;
-    width: clamp(5px, .48vw, 7px);
+    width: 5px;
     border-radius: 999px;
     background: currentColor;
     box-shadow: 0 6px 14px rgba(67, 136, 255, 0.18);
@@ -215,16 +234,16 @@
 
 .nt-audio-title-wave-bar:nth-child(1),
 .nt-audio-title-wave-bar:nth-child(5) {
-    height: 48%;
+    height: 16px;
 }
 
 .nt-audio-title-wave-bar:nth-child(2),
 .nt-audio-title-wave-bar:nth-child(4) {
-    height: 74%;
+    height: 25px;
 }
 
 .nt-audio-title-wave-bar:nth-child(3) {
-    height: 100%;
+    height: 34px;
 }
 
 
