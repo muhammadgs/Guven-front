@@ -1,5 +1,5 @@
 // sw.js - Service Worker
-const CACHE_NAME = 'task-manager-2026.06.22.06';
+const CACHE_NAME = 'task-manager-2026.06.22.07';
 
 // Statik fayllar - səhifə yükləndikdə dərhal lazım olanlar
 const STATIC_ASSETS = [

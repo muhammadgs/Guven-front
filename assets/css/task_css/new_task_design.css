@@ -13,6 +13,7 @@
     --newtask-field: rgba(255, 255, 255, 0.91);
     --newtask-green: #82e86a;
     --newtask-red: #ee7379;
+    --nt-media-zone-height: 128px;
 }
 
 .task-type-cards-container {
@@ -228,14 +229,20 @@
 
 .glass-media-field { min-width: 0; }
 .newtask-file-zone,
+.glass-file-zone,
+.file-upload-zone,
 .newtask-audio-container {
-    min-height: 104px;
+    min-height: var(--nt-media-zone-height);
+    height: var(--nt-media-zone-height);
+    box-sizing: border-box;
     border: 1px solid rgba(255,255,255,.86);
     border-radius: 999px;
     background: var(--newtask-field);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.96), 0 10px 28px rgba(0,0,0,.04);
 }
-.newtask-file-zone {
+.newtask-file-zone,
+.glass-file-zone,
+.file-upload-zone {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -317,8 +324,11 @@
     .new-task-modal-content { border-radius: 34px; }
     .newtask-modal-header { padding-bottom: 4px; }
     .newtask-form-label { font-size: 1.35rem; }
+    :root { --nt-media-zone-height: 112px; }
     .newtask-file-zone,
-    .newtask-audio-container { min-height: 112px; border-radius: 38px; }
+    .glass-file-zone,
+    .file-upload-zone,
+    .newtask-audio-container { min-height: var(--nt-media-zone-height); height: var(--nt-media-zone-height); border-radius: 38px; }
 }
 
 @media (max-width: 560px) {
@@ -529,7 +539,7 @@
 }
 
 @media (max-width: 640px) {
-    :root { --nt-field-height: 60px; }
+    :root { --nt-field-height: 60px; --nt-media-zone-height: 112px; }
     .nt-select-trigger { padding: 0 18px; font-size: 15px; }
     .nt-select-menu { padding: 10px; border-radius: 26px; }
     .nt-select-options { max-height: min(260px, 52vh); }
@@ -957,4 +967,48 @@
 .nt-voice-shell:not([data-state="idle"]) .nt-voice-main-btn {
   display: none !important;
   pointer-events: none !important;
+}
+
+
+/* Equalized media pill sizing for file upload and voice recorder. */
+.newtask-file-zone,
+.glass-file-zone,
+.file-upload-zone,
+.nt-voice-shell {
+  min-height: var(--nt-media-zone-height);
+  height: var(--nt-media-zone-height);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nt-voice-main-btn,
+#newtaskStartRecord,
+#startRecordingBtn {
+  color: #fff;
+}
+
+.nt-voice-main-btn i,
+#newtaskStartRecord i,
+#startRecordingBtn i,
+.nt-voice-main-btn .fa,
+.nt-voice-main-btn .fas,
+#newtaskStartRecord .fa,
+#newtaskStartRecord .fas,
+#startRecordingBtn .fa,
+#startRecordingBtn .fas {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+.nt-voice-main-btn svg,
+#newtaskStartRecord svg,
+#startRecordingBtn svg {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+@media (max-width: 768px) {
+  :root { --nt-media-zone-height: 112px; }
 }
