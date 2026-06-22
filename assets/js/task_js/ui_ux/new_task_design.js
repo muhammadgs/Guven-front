@@ -11,19 +11,36 @@
     let audioAnalyser = null;
     let animationId = null;
     let audioBlob = null;
+    let previewAudioUrl = null;
+    let recorderStopPromise = null;
+    let recorderStopResolve = null;
 
     let recordingStartedAt = 0;
     let elapsedBeforePause = 0;
     let timerInterval = null;
-    let waveformLevels = new Array(32).fill(0.18);
+    let waveformLevels = new Array(28).fill(0.22);
+    let lastWaveformLevels = new Array(28).fill(0.22);
+    let recorderEventsBound = false;
 
     let modalOverlay = null;
     let modalTitleIcon = null;
     let modalTitleText = null;
 
     let companyGroup, parentGroup, partnerGroup, executorGroup, otherExecutorGroup;
-    let startBtn, stopBtn, saveBtn, cancelBtn, audioStatus, audioPreview, recordedAudio, audioData, audioFilename, visualizer;
-    let voiceShell, voiceRecordingUi, pauseBtn, recordingTimer, timerDisplay;
+    let voiceShell;
+    let voiceRecordingUi;
+    let startBtn;
+    let stopBtn;
+    let pauseBtn;
+    let saveBtn;
+    let previewBtn;
+    let visualizer;
+    let recordedAudio;
+    let audioData;
+    let audioFilename;
+    let audioStatus;
+    let recordingTimer;
+    let timerDisplay;
     let fileZone, fileInput, fileList;
 
     let myCompany = null;
@@ -394,14 +411,18 @@
 
                                 <div class="newtask-form-group glass-field glass-media-field">
                                     <label class="newtask-form-label"><i class="fas fa-wave-square"></i> Səs qeydi</label>
-                                    <div class="newtask-audio-container glass-audio-zone nt-voice-recorder" id="newtaskVoiceRecorder">
+                                    <div class="newtask-audio-container nt-voice-recorder" id="newtaskVoiceRecorder">
                                         <div class="nt-voice-shell" id="newtaskVoiceShell" data-state="idle">
                                             <button type="button" id="newtaskStartRecord" class="nt-voice-main-btn" aria-label="Səs qeydinə başla">
                                                 <i class="fas fa-microphone"></i>
                                             </button>
 
                                             <div class="nt-voice-recording-ui" id="newtaskVoiceRecordingUi" hidden>
-                                                <canvas id="newtaskAudioVisualizer" class="nt-voice-waveform" width="520" height="110"></canvas>
+                                                <button type="button" id="newtaskPreviewPlay" class="nt-voice-preview-btn" hidden aria-label="Yazını dinlə">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+
+                                                <canvas id="newtaskAudioVisualizer" class="nt-voice-waveform" width="360" height="86"></canvas>
 
                                                 <div class="nt-voice-actions">
                                                     <button type="button" id="newtaskStopRecord" class="nt-voice-action nt-voice-stop" disabled aria-label="Dayandır">
@@ -419,19 +440,16 @@
                                             </div>
                                         </div>
 
-                                        <div class="nt-voice-meta-row">
-                                            <div class="newtask-audio-status recording-status" id="newtaskAudioStatus">
-                                                <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
+                                        <div class="nt-voice-meta-row" aria-live="polite">
+                                            <div class="newtask-audio-status" id="newtaskAudioStatus">
+                                                <span>Səs qeydi hazırdır</span>
                                             </div>
-                                            <div class="recording-timer" id="newtaskRecordingTimer" style="display:none;">
-                                                <i class="fas fa-clock"></i>
+                                            <div class="recording-timer" id="newtaskRecordingTimer" hidden>
                                                 <span id="newtaskTimerDisplay">00:00</span>
                                             </div>
                                         </div>
 
-                                        <div id="newtaskAudioPreview" class="newtask-audio-preview audio-preview" style="display:none;">
-                                            <audio id="newtaskRecordedAudio" controls></audio>
-                                        </div>
+                                        <audio id="newtaskRecordedAudio" preload="metadata" hidden></audio>
 
                                         <input type="hidden" id="newtaskAudioData" />
                                         <input type="hidden" id="newtaskAudioFilename" />
@@ -462,21 +480,7 @@
         partnerGroup = document.getElementById('newtaskPartnerGroup');
         executorGroup = document.getElementById('newtaskExecutorGroup');
         otherExecutorGroup = document.getElementById('newtaskOtherExecutorGroup');
-        startBtn = document.getElementById('newtaskStartRecord');
-        stopBtn = document.getElementById('newtaskStopRecord');
-        saveBtn = document.getElementById('newtaskSaveRecord');
-        cancelBtn = document.getElementById('newtaskCancelRecord');
-        voiceShell = document.getElementById('newtaskVoiceShell');
-        voiceRecordingUi = document.getElementById('newtaskVoiceRecordingUi');
-        pauseBtn = document.getElementById('newtaskPauseRecord');
-        recordingTimer = document.getElementById('newtaskRecordingTimer');
-        timerDisplay = document.getElementById('newtaskTimerDisplay');
-        audioStatus = document.getElementById('newtaskAudioStatus');
-        audioPreview = document.getElementById('newtaskAudioPreview');
-        recordedAudio = document.getElementById('newtaskRecordedAudio');
-        audioData = document.getElementById('newtaskAudioData');
-        audioFilename = document.getElementById('newtaskAudioFilename');
-        visualizer = document.getElementById('newtaskAudioVisualizer');
+        cacheAudioRecorderElements();
         fileZone = document.getElementById('newtaskFileZone');
         fileInput = document.getElementById('newtaskFileInput');
         fileList = document.getElementById('newtaskFileList');
@@ -1085,27 +1089,7 @@
         if (fileList) fileList.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
 
         // 🔥 AUDIO MƏLUMATLARINI TƏMİZLƏ
-        if (mediaRecorder && isRecording) {
-            mediaRecorder.onstop = null;
-            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            stopAudioStream();
-        }
-        audioBlob = null;
-        audioChunks = [];
-        isRecording = false;
-        isPaused = false;
-        elapsedBeforePause = 0;
-        recordingStartedAt = 0;
-        clearInterval(timerInterval);
-        if (animationId) cancelAnimationFrame(animationId);
-        if (audioData) audioData.value = '';
-        if (audioFilename) audioFilename.value = '';
-        if (audioPreview) audioPreview.style.display = 'none';
-        if (recordedAudio) recordedAudio.src = '';
-        if (timerDisplay) timerDisplay.textContent = '00:00';
-        waveformLevels = new Array(32).fill(0.18);
-        setVoiceState('idle');
-        drawWaveform(false);
+        resetAudioRecorder();
 
         // Default due date (sabah)
         const dueDateInput = document.getElementById('newtaskDueDate');
@@ -1191,34 +1175,61 @@
         console.log('✅ PrtScn capture modal üçün hazırdır');
     }
 
+    function cacheAudioRecorderElements() {
+        voiceShell = document.getElementById('newtaskVoiceShell');
+        voiceRecordingUi = document.getElementById('newtaskVoiceRecordingUi');
+        startBtn = document.getElementById('newtaskStartRecord');
+        stopBtn = document.getElementById('newtaskStopRecord');
+        pauseBtn = document.getElementById('newtaskPauseRecord');
+        saveBtn = document.getElementById('newtaskSaveRecord');
+        previewBtn = document.getElementById('newtaskPreviewPlay');
+        visualizer = document.getElementById('newtaskAudioVisualizer');
+        recordedAudio = document.getElementById('newtaskRecordedAudio');
+        audioData = document.getElementById('newtaskAudioData');
+        audioFilename = document.getElementById('newtaskAudioFilename');
+        audioStatus = document.getElementById('newtaskAudioStatus');
+        recordingTimer = document.getElementById('newtaskRecordingTimer');
+        timerDisplay = document.getElementById('newtaskTimerDisplay');
+    }
+
+    function bindAudioRecorderEvents() {
+        if (recorderEventsBound || !startBtn) return;
+        recorderEventsBound = true;
+        startBtn.addEventListener('click', startRecording);
+        stopBtn?.addEventListener('click', stopRecordingFinal);
+        pauseBtn?.addEventListener('click', togglePauseResume);
+        saveBtn?.addEventListener('click', saveRecordedAudioToTask);
+        previewBtn?.addEventListener('click', togglePreviewPlayback);
+        recordedAudio?.addEventListener('ended', () => setPreviewIcon(false));
+        recordedAudio?.addEventListener('pause', () => setPreviewIcon(false));
+        recordedAudio?.addEventListener('play', () => setPreviewIcon(true));
+    }
+
     function setVoiceState(state) {
         if (voiceShell) voiceShell.dataset.state = state;
-        if (startBtn) startBtn.hidden = state !== 'idle';
+        if (startBtn) {
+            startBtn.hidden = state !== 'idle';
+            startBtn.disabled = state !== 'idle';
+        }
         if (voiceRecordingUi) voiceRecordingUi.hidden = state === 'idle';
-
+        if (previewBtn) previewBtn.hidden = !['paused', 'stopped', 'saved'].includes(state);
         if (stopBtn) stopBtn.disabled = !['recording', 'paused'].includes(state);
-        if (pauseBtn) pauseBtn.disabled = !['recording', 'paused'].includes(state);
-        if (saveBtn) saveBtn.disabled = !['recording', 'paused', 'stopped'].includes(state) || state === 'saved';
-
-        const pauseIcon = pauseBtn?.querySelector('i');
-        if (pauseIcon) pauseIcon.className = state === 'paused' ? 'fas fa-play' : 'fas fa-pause';
-
-        const statusText = {
-            idle: 'Səs qeydi hazırdır',
-            recording: 'Qeyd edilir...',
-            paused: 'Pauzada',
-            stopped: 'Qeyd dayandırıldı',
-            saved: 'Səs qeydi əlavə edildi'
-        }[state] || 'Səs qeydi hazırdır';
-        if (audioStatus) audioStatus.innerHTML = `<i class="fas fa-circle"></i><span>${statusText}</span>`;
-        if (recordingTimer) recordingTimer.style.display = ['recording', 'paused', 'stopped', 'saved'].includes(state) ? 'flex' : 'none';
+        if (pauseBtn) {
+            pauseBtn.hidden = ['idle', 'stopped', 'saved'].includes(state);
+            pauseBtn.disabled = !['recording', 'paused'].includes(state);
+            const pauseIcon = pauseBtn.querySelector('i');
+            if (pauseIcon) pauseIcon.className = state === 'paused' ? 'fas fa-microphone' : 'fas fa-pause';
+            pauseBtn.setAttribute('aria-label', state === 'paused' ? 'Davam et' : 'Pauza');
+        }
+        if (saveBtn) saveBtn.disabled = !['recording', 'paused', 'stopped'].includes(state);
+        if (recordingTimer) recordingTimer.hidden = !['recording', 'paused', 'stopped', 'saved'].includes(state);
+        const statusText = { idle: 'Səs qeydi hazırdır', recording: 'Qeyd edilir...', paused: 'Pauzada', stopped: 'Qeyd dayandırıldı', saved: 'Səs qeydi əlavə edildi' }[state] || 'Səs qeydi hazırdır';
+        if (audioStatus) audioStatus.innerHTML = `<span>${statusText}</span>`;
     }
 
     function formatRecordingTime(ms) {
         const totalSeconds = Math.floor(ms / 1000);
-        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-        const seconds = String(totalSeconds % 60).padStart(2, '0');
-        return `${minutes}:${seconds}`;
+        return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
     }
 
     function updateTimerDisplay() {
@@ -1226,78 +1237,211 @@
         if (timerDisplay) timerDisplay.textContent = formatRecordingTime(elapsed);
     }
 
-    function startTimer() {
-        clearInterval(timerInterval);
-        recordingStartedAt = Date.now();
-        timerInterval = setInterval(updateTimerDisplay, 250);
-        updateTimerDisplay();
-    }
+    function startTimer() { clearInterval(timerInterval); recordingStartedAt = Date.now(); timerInterval = setInterval(updateTimerDisplay, 250); updateTimerDisplay(); }
+    function pauseTimer() { if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt; clearInterval(timerInterval); updateTimerDisplay(); }
+    function stopTimer() { if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt; clearInterval(timerInterval); updateTimerDisplay(); }
 
-    function pauseTimer() {
-        if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt;
-        clearInterval(timerInterval);
-        updateTimerDisplay();
-    }
+    function preventRecorderButtonEvent(event) { event?.preventDefault(); event?.stopPropagation(); }
 
-    function stopTimer() {
-        if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt;
-        clearInterval(timerInterval);
-        updateTimerDisplay();
-    }
-
-    function drawRoundedRect(ctx, x, y, w, h, r) {
-        if (ctx.roundRect) {
-            ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); return;
+    async function startRecording(event) {
+        preventRecorderButtonEvent(event);
+        if (isRecording || (mediaRecorder && mediaRecorder.state !== 'inactive')) return;
+        try {
+            resetAudioRecorder({ keepState: true });
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(audioStream);
+            audioAnalyser = audioContext.createAnalyser();
+            audioAnalyser.fftSize = 256;
+            audioAnalyser.smoothingTimeConstant = 0.72;
+            source.connect(audioAnalyser);
+            mediaRecorder = new MediaRecorder(audioStream);
+            audioChunks = [];
+            audioBlob = null;
+            recorderStopPromise = new Promise(resolve => { recorderStopResolve = resolve; });
+            mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) audioChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                audioBlob = buildCurrentAudioBlob();
+                updatePreviewAudioFromChunks();
+                stopAudioStream();
+                stopTimer();
+                stopWaveform();
+                isRecording = false;
+                isPaused = false;
+                setVoiceState('stopped');
+                recorderStopResolve?.(audioBlob);
+                recorderStopResolve = null;
+            };
+            if (audioData) audioData.value = '';
+            if (audioFilename) audioFilename.value = '';
+            if (timerDisplay) timerDisplay.textContent = '00:00';
+            waveformLevels = new Array(28).fill(0.22);
+            lastWaveformLevels = new Array(28).fill(0.22);
+            mediaRecorder.start(250);
+            isRecording = true;
+            isPaused = false;
+            elapsedBeforePause = 0;
+            setVoiceState('recording');
+            startTimer();
+            startWaveform();
+        } catch (err) {
+            console.error('Mikrofon xətası:', err);
+            alert('Mikrofon icazəsi tələb olunur!');
+            resetAudioRecorder();
         }
-        const radius = Math.min(r, w / 2, h / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + w - radius, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
-        ctx.lineTo(x + w, y + h - radius);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
-        ctx.lineTo(x + radius, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
-        ctx.lineTo(x, y + radius);
-        ctx.quadraticCurveTo(x, y, x + radius, y);
-        ctx.fill();
     }
 
-    function drawWaveform(live = false) {
+    function togglePauseResume(event) { preventRecorderButtonEvent(event); if (isPaused) resumeRecording(); else pauseRecording(); }
+
+    function pauseRecording() {
+        if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+        try { mediaRecorder.requestData?.(); mediaRecorder.pause?.(); } catch (err) { console.warn('Pauza xətası:', err); }
+        isPaused = true;
+        pauseTimer();
+        stopWaveform();
+        setVoiceState('paused');
+        setTimeout(() => { updatePreviewAudioFromChunks(); drawWaveform({ live: false }); }, 120);
+    }
+
+    function resumeRecording() {
+        if (!mediaRecorder || mediaRecorder.state !== 'paused') return;
+        try { mediaRecorder.resume?.(); } catch (err) { console.warn('Davam etdirmə xətası:', err); }
+        if (recordedAudio) recordedAudio.pause();
+        isPaused = false;
+        setVoiceState('recording');
+        startTimer();
+        startWaveform();
+    }
+
+    function stopRecordingFinal(event) {
+        preventRecorderButtonEvent(event);
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') return recorderStopPromise || Promise.resolve(audioBlob);
+        try { mediaRecorder.requestData?.(); } catch (err) { console.warn('requestData xətası:', err); }
+        stopTimer();
+        stopWaveform();
+        try { mediaRecorder.stop(); } catch (err) { console.warn('Stop xətası:', err); }
+        return recorderStopPromise || Promise.resolve(audioBlob);
+    }
+
+    function buildCurrentAudioBlob() {
+        if (!audioChunks.length) return audioBlob;
+        return new Blob(audioChunks, { type: mediaRecorder?.mimeType || audioBlob?.type || 'audio/webm' });
+    }
+
+    function updatePreviewAudioFromChunks() {
+        const blob = buildCurrentAudioBlob();
+        if (!blob || !recordedAudio) return null;
+        audioBlob = blob;
+        if (previewAudioUrl) URL.revokeObjectURL(previewAudioUrl);
+        previewAudioUrl = URL.createObjectURL(blob);
+        recordedAudio.src = previewAudioUrl;
+        return blob;
+    }
+
+    function setPreviewIcon(playing) { const icon = previewBtn?.querySelector('i'); if (icon) icon.className = playing ? 'fas fa-pause' : 'fas fa-play'; }
+
+    function togglePreviewPlayback(event) {
+        preventRecorderButtonEvent(event);
+        if (!recordedAudio) return;
+        if (isPaused) updatePreviewAudioFromChunks();
+        if (!recordedAudio.src && !updatePreviewAudioFromChunks()) return;
+        if (recordedAudio.paused) recordedAudio.play().catch(err => console.warn('Preview play xətası:', err));
+        else recordedAudio.pause();
+    }
+
+    async function saveRecordedAudioToTask(event) {
+        preventRecorderButtonEvent(event);
+        if (saveBtn) saveBtn.disabled = true;
+        if (mediaRecorder && ['recording', 'paused'].includes(mediaRecorder.state)) await stopRecordingFinal();
+        if (!audioBlob) audioBlob = buildCurrentAudioBlob();
+        if (!audioBlob) { setVoiceState('idle'); return; }
+        const filename = `recording_${Date.now()}.webm`;
+        const audioFile = new File([audioBlob], filename, { type: audioBlob.type || 'audio/webm' });
+        if (!window.modalSelectedFiles) window.modalSelectedFiles = [];
+        window.modalSelectedFiles.push(audioFile);
+        updateModalFileList();
+        if (audioFilename) audioFilename.value = filename;
+        if (audioData) {
+            await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => { audioData.value = reader.result || ''; resolve(); };
+                reader.onerror = () => resolve();
+                reader.readAsDataURL(audioBlob);
+            });
+        }
+        setVoiceState('saved');
+    }
+
+    function resetAudioRecorder(options = {}) {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.onstop = null;
+            try { mediaRecorder.stop(); } catch (err) { console.warn('Recorder reset stop xətası:', err); }
+        }
+        stopWaveform();
+        stopTimer();
+        stopAudioStream();
+        if (recordedAudio) { recordedAudio.pause(); recordedAudio.removeAttribute('src'); recordedAudio.load?.(); }
+        if (previewAudioUrl) URL.revokeObjectURL(previewAudioUrl);
+        previewAudioUrl = null;
+        mediaRecorder = null;
+        recorderStopPromise = null;
+        recorderStopResolve = null;
+        audioChunks = [];
+        audioBlob = null;
+        isRecording = false;
+        isPaused = false;
+        elapsedBeforePause = 0;
+        recordingStartedAt = 0;
+        waveformLevels = new Array(28).fill(0.22);
+        lastWaveformLevels = new Array(28).fill(0.22);
+        if (audioData) audioData.value = '';
+        if (audioFilename) audioFilename.value = '';
+        if (timerDisplay) timerDisplay.textContent = '00:00';
+        setPreviewIcon(false);
+        if (!options.keepState) setVoiceState('idle');
+        drawWaveform({ live: false });
+    }
+
+    function drawRoundedBar(ctx, x, centerY, width, height, radius) {
+        const y = centerY - height / 2;
+        if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x, y, width, height, radius); ctx.fill(); return; }
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y); ctx.lineTo(x + width - r, y); ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r); ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height); ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.fill();
+    }
+
+    function drawWaveform({ live = false } = {}) {
         if (!visualizer) return;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = visualizer.getBoundingClientRect();
+        const width = rect.width || 360;
+        const height = rect.height || 86;
+        if (rect.width && rect.height) { visualizer.width = Math.round(rect.width * dpr); visualizer.height = Math.round(rect.height * dpr); }
         const ctx = visualizer.getContext('2d');
-        const width = visualizer.width;
-        const height = visualizer.height;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         const centerY = height / 2;
         const bars = waveformLevels.length;
-        const gap = 8;
+        const gap = 5;
         const barWidth = Math.max(5, (width - gap * (bars - 1)) / bars);
         let dataArray = null;
-        if (live && audioAnalyser && !isPaused) {
-            dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
-            audioAnalyser.getByteFrequencyData(dataArray);
-        }
+        if (live && audioAnalyser && !isPaused) { dataArray = new Uint8Array(audioAnalyser.frequencyBinCount); audioAnalyser.getByteFrequencyData(dataArray); }
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = '#08aeea';
         for (let i = 0; i < bars; i++) {
-            const source = dataArray ? dataArray[Math.floor(i * dataArray.length / bars)] / 255 : 0.18;
-            const target = Math.max(0.16, Math.min(1, source));
-            if (live && !isPaused) waveformLevels[i] += (target - waveformLevels[i]) * 0.22;
-            const barHeight = Math.max(16, waveformLevels[i] * (height - 18));
-            const x = i * (barWidth + gap);
-            const y = centerY - barHeight / 2;
-            drawRoundedRect(ctx, x, y, barWidth, barHeight, barWidth / 2);
+            const raw = dataArray ? dataArray[Math.floor((i / bars) * dataArray.length)] / 255 : lastWaveformLevels[i];
+            const target = Math.max(0.16, Math.min(1, raw));
+            waveformLevels[i] += (target - waveformLevels[i]) * 0.22;
+            lastWaveformLevels[i] = waveformLevels[i];
+            const barHeight = Math.max(10, waveformLevels[i] * (height - 14));
+            drawRoundedBar(ctx, i * (barWidth + gap), centerY, barWidth, barHeight, barWidth / 2);
         }
     }
 
-    function startWaveform() {
-        cancelAnimationFrame(animationId);
-        const animate = () => {
-            drawWaveform(true);
-            if (isRecording && !isPaused) animationId = requestAnimationFrame(animate);
-        };
-        animate();
-    }
+    function startWaveform() { stopWaveform(); const animate = () => { drawWaveform({ live: true }); if (isRecording && !isPaused) animationId = requestAnimationFrame(animate); }; animate(); }
+    function stopWaveform() { if (animationId) cancelAnimationFrame(animationId); animationId = null; }
 
     function stopAudioStream() {
         if (audioStream) audioStream.getTracks().forEach(track => track.stop());
@@ -1307,87 +1451,12 @@
         audioAnalyser = null;
     }
 
+    function stopRecording() { stopRecordingFinal(); }
+
     function setupAudioRecorder() {
-        if (!startBtn) return;
-        setVoiceState('idle');
-        drawWaveform(false);
-
-        startBtn.onclick = async () => {
-            try {
-                audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(audioStream);
-                audioChunks = [];
-                audioBlob = null;
-                isRecording = false;
-                isPaused = false;
-                elapsedBeforePause = 0;
-                if (timerDisplay) timerDisplay.textContent = '00:00';
-                if (audioPreview) audioPreview.style.display = 'none';
-                if (recordedAudio) recordedAudio.src = '';
-                if (audioData) audioData.value = '';
-                if (audioFilename) audioFilename.value = '';
-
-                mediaRecorder.ondataavailable = (e) => { if (e.data?.size) audioChunks.push(e.data); };
-                mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                    const filename = `recording_${Date.now()}.webm`;
-                    if (recordedAudio) recordedAudio.src = URL.createObjectURL(audioBlob);
-                    if (audioPreview) audioPreview.style.display = 'block';
-                    if (audioFilename) audioFilename.value = filename;
-                    const reader = new FileReader();
-                    reader.onloadend = () => { if (audioData) audioData.value = reader.result; };
-                    reader.readAsDataURL(audioBlob);
-                    setVoiceState('stopped');
-                };
-
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const source = audioContext.createMediaStreamSource(audioStream);
-                audioAnalyser = audioContext.createAnalyser();
-                audioAnalyser.fftSize = 256;
-                source.connect(audioAnalyser);
-
-                mediaRecorder.start();
-                isRecording = true;
-                setVoiceState('recording');
-                startTimer();
-                startWaveform();
-            } catch (err) {
-                console.error('Mikrofon xətası:', err);
-                alert('Mikrofon icazəsi tələb olunur!');
-                setVoiceState('idle');
-            }
-        };
-
-        pauseBtn.onclick = () => {
-            if (!mediaRecorder || !isRecording) return;
-            if (!isPaused) {
-                if (mediaRecorder.state === 'recording' && mediaRecorder.pause) mediaRecorder.pause();
-                isPaused = true;
-                pauseTimer();
-                cancelAnimationFrame(animationId);
-                setVoiceState('paused');
-                drawWaveform(false);
-            } else {
-                if (mediaRecorder.state === 'paused' && mediaRecorder.resume) mediaRecorder.resume();
-                isPaused = false;
-                setVoiceState('recording');
-                startTimer();
-                startWaveform();
-            }
-        };
-
-        stopBtn.onclick = () => stopRecording();
-
-        saveBtn.onclick = () => {
-            if (!audioBlob || !audioFilename?.value) return;
-            const audioFile = new File([audioBlob], audioFilename.value, { type: audioBlob.type || 'audio/webm' });
-            if (!window.modalSelectedFiles) window.modalSelectedFiles = [];
-            if (!window.modalSelectedFiles.some(f => f.name === audioFile.name)) {
-                window.modalSelectedFiles.push(audioFile);
-                updateModalFileList();
-            }
-            setVoiceState('saved');
-        };
+        cacheAudioRecorderElements();
+        bindAudioRecorderEvents();
+        resetAudioRecorder();
     }
 
     // ========== UPDATE MODAL FILE LIST ==========
@@ -2045,12 +2114,10 @@
             // Audio field-ları təmizlə
             const audioDataField = document.getElementById('newtaskAudioData');
             const audioFilenameField = document.getElementById('newtaskAudioFilename');
-            const audioPreviewDiv = document.getElementById('newtaskAudioPreview');
             const audioPlayer = document.getElementById('newtaskRecordedAudio');
 
             if (audioDataField) audioDataField.value = '';
             if (audioFilenameField) audioFilenameField.value = '';
-            if (audioPreviewDiv) audioPreviewDiv.style.display = 'none';
             if (audioPlayer) audioPlayer.src = '';
 
         } catch (error) {
