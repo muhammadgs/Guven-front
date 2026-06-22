@@ -105,7 +105,7 @@
 
 .newtask-modal,
 .new-task-modal-content {
-    width: min(94vw, 1120px);
+    width: min(92vw, 1040px);
     max-height: min(92vh, 1060px);
     display: flex;
     flex-direction: column;
@@ -136,16 +136,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: clamp(22px, 3.2vw, 38px) clamp(26px, 5vw, 64px) 8px;
+    padding: clamp(16px, 2.5vw, 30px) clamp(24px, 4.4vw, 54px) 6px;
 }
 
-.newtask-modal-title { display: flex; align-items: center; gap: 14px; }
-.newtask-modal-title-icon { color: var(--newtask-blue); font-size: 2rem; line-height: 1; }
-.newtask-modal-title h3 { margin: 0; font: 400 clamp(1.7rem, 3vw, 2.6rem)/1 "Cal Sans", Inter, Arial, sans-serif; }
+.newtask-modal-title { display: flex; align-items: center; gap: 11px; }
+.newtask-modal-title-icon { color: var(--newtask-blue); font-size: clamp(1.45rem, 2.1vw, 1.8rem); line-height: 1; }
+.newtask-modal-title h3 { margin: 0; font: 400 clamp(1.45rem, 2.45vw, 2.1rem)/1 "Cal Sans", Inter, Arial, sans-serif; }
 
 .newtask-modal-close {
-    width: 48px;
-    height: 48px;
+    width: 42px;
+    height: 42px;
     border: 0;
     border-radius: 50%;
     color: #fff;
@@ -153,7 +153,7 @@
     cursor: pointer;
     display: grid;
     place-items: center;
-    font-size: 1.15rem;
+    font-size: 1rem;
     transition: transform .2s ease, background .2s ease;
 }
 .newtask-modal-close:hover { transform: scale(1.06); background: #ef4444; }
@@ -161,31 +161,31 @@
 .newtask-modal-body {
     flex: 1;
     overflow-y: auto;
-    padding: 16px clamp(26px, 5vw, 64px) 18px;
+    padding: 12px clamp(24px, 4.4vw, 54px) 14px;
     scrollbar-width: thin;
 }
 
 .newtask-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: clamp(28px, 5vw, 58px);
-    row-gap: clamp(22px, 3.4vw, 34px);
+    column-gap: clamp(22px, 4vw, 46px);
+    row-gap: clamp(16px, 2.8vw, 26px);
 }
 
-.newtask-form-group { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.newtask-form-group { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
 .newtask-form-group.full-width { grid-column: 1 / -1; }
 .newtask-visibility-field { justify-content: end; }
 
 .newtask-form-label {
     display: flex;
     align-items: center;
-    gap: 16px;
-    min-height: 44px;
+    gap: 10px;
+    min-height: 34px;
     color: #050505;
-    font: 400 clamp(1.35rem, 2.3vw, 2.05rem)/1.05 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Cal Sans", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
 }
-.newtask-form-label i { width: 36px; color: var(--newtask-blue); font-size: clamp(1.65rem, 2.3vw, 2.25rem); text-align: center; }
+.newtask-form-label i { width: 28px; color: var(--newtask-blue); font-size: clamp(1.3rem, 1.8vw, 1.7rem); text-align: center; }
 
 .newtask-select,
 .newtask-input,
@@ -195,13 +195,13 @@
     background: var(--newtask-field);
     color: #111;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.94), 0 10px 28px rgba(0,0,0,.04);
-    font: 400 1rem/1.2 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 .94rem/1.2 "Cal Sans", Inter, Arial, sans-serif;
     outline: none;
     transition: box-shadow .22s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
 .newtask-select,
-.newtask-input { min-height: 68px; padding: 0 24px; border-radius: 999px; }
-.newtask-textarea { min-height: 132px; padding: 22px 26px; border-radius: 46px; resize: vertical; }
+.newtask-input { min-height: 56px; padding: 0 20px; border-radius: 999px; }
+.newtask-textarea { min-height: 108px; padding: 18px 22px; border-radius: 36px; resize: vertical; }
 .newtask-select:focus,
 .newtask-input:focus,
 .newtask-textarea:focus {
@@ -213,11 +213,11 @@
 .newtask-form-text { color: rgba(0,0,0,.48); font-size: .88rem; padding-left: 24px; }
 
 .newtask-checkbox-group {
-    min-height: 68px;
+    min-height: 56px;
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 22px;
+    padding: 0 18px;
     border-radius: 999px;
     background: rgba(255,255,255,.5);
     border: 1px solid rgba(255,255,255,.66);
@@ -229,7 +229,7 @@
 .glass-media-field { min-width: 0; }
 .newtask-file-zone,
 .newtask-audio-container {
-    min-height: 128px;
+    min-height: 104px;
     border: 1px solid rgba(255,255,255,.86);
     border-radius: 999px;
     background: var(--newtask-field);
@@ -245,7 +245,7 @@
     transition: transform .22s ease, box-shadow .22s ease;
 }
 .newtask-file-zone:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(67,136,255,.13); }
-.newtask-file-icon { color: #050505; font-size: 3.6rem; line-height: 1; }
+.newtask-file-icon { color: #050505; font-size: 2.6rem; line-height: 1; }
 .newtask-file-text { color: rgba(0,0,0,.55); font-size: .92rem; }
 .newtask-file-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .newtask-file-list-empty,
@@ -267,7 +267,7 @@
 .newtask-file-item-size { color: rgba(0,0,0,.52); font-size: .75rem; margin-top: 2px; }
 .newtask-file-remove { border: 0; background: rgba(238,115,121,.12); color: #d73d47; border-radius: 999px; cursor: pointer; font-size: .9rem; padding: 6px 8px; }
 
-.newtask-audio-container { padding: 16px 20px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.newtask-audio-container { padding: 12px 18px; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
 .newtask-audio-status { display: flex; align-items: center; justify-content: center; gap: 8px; color: rgba(0,0,0,.56); font-size: .9rem; }
 .newtask-audio-status i { color: #ef4444; font-size: .6rem; }
 .newtask-audio-buttons { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
@@ -275,7 +275,7 @@
 .newtask-audio-btn:hover:not(:disabled) { transform: translateY(-1px); }
 .newtask-audio-btn.primary { background: rgba(0,0,0,.9); }
 .newtask-audio-btn.secondary { background: rgba(0,0,0,.64); }
-.newtask-audio-btn.record-main { width: 76px; height: 76px; padding: 0; border-radius: 50%; font-size: 1.9rem; }
+.newtask-audio-btn.record-main { width: 62px; height: 62px; padding: 0; border-radius: 50%; font-size: 1.55rem; }
 .newtask-audio-btn.record-main span { display: none; }
 .newtask-audio-btn:disabled { opacity: .35; cursor: not-allowed; }
 .newtask-audio-preview audio { width: 100%; height: 36px; }
@@ -285,12 +285,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 18px;
-    padding: 18px clamp(26px, 5vw, 64px) clamp(28px, 4vw, 46px);
+    gap: 14px;
+    padding: 12px clamp(24px, 4.4vw, 54px) clamp(20px, 3.2vw, 34px);
 }
 .newtask-btn {
-    min-height: 58px;
-    padding: 0 26px;
+    min-height: 48px;
+    padding: 0 22px;
     border: 0;
     border-radius: 999px;
     color: #fff;
@@ -298,8 +298,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    font: 400 clamp(1.25rem, 2vw, 1.8rem)/1 "Cal Sans", Inter, Arial, sans-serif;
+    gap: 9px;
+    font: 400 clamp(1rem, 1.5vw, 1.35rem)/1 "Cal Sans", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 14px 28px rgba(0,0,0,.12);
     transition: transform .2s ease, filter .2s ease;
@@ -313,7 +313,8 @@
     .task-type-cards-container,
     .newtask-form-grid { grid-template-columns: 1fr; }
     .newtask-form-group.full-width { grid-column: 1; }
-    .newtask-modal { border-radius: 34px; }
+    .newtask-modal,
+    .new-task-modal-content { border-radius: 34px; }
     .newtask-modal-header { padding-bottom: 4px; }
     .newtask-form-label { font-size: 1.35rem; }
     .newtask-file-zone,
@@ -321,9 +322,11 @@
 }
 
 @media (max-width: 560px) {
-    .newtask-modal-overlay { align-items: flex-start; overflow-y: auto; }
-    .newtask-modal { width: 100%; max-height: none; border-radius: 30px; }
-    .newtask-modal-body { overflow: visible; }
+    .newtask-modal-overlay,
+    .new-task-modal-overlay { align-items: flex-start; overflow-y: auto; }
+    .newtask-modal,
+    .new-task-modal-content { width: 100%; max-height: none; border-radius: 30px; }
+    .newtask-modal-body { overflow: visible; padding-inline: clamp(18px, 5vw, 28px); }
     .newtask-modal-footer { flex-direction: column; gap: 12px; }
     .newtask-btn { width: 100%; font-size: 1.25rem; }
     .newtask-select,
@@ -333,7 +336,7 @@
 
 /* ================= Custom Liquid Selects ================= */
 :root {
-    --nt-field-height: 68px;
+    --nt-field-height: 56px;
     --nt-field-radius: 999px;
 }
 
@@ -371,8 +374,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 14px;
-    padding: 0 24px;
+    gap: 11px;
+    padding: 0 20px;
     border-radius: var(--nt-field-radius);
     background: rgba(255,255,255,0.74);
     backdrop-filter: blur(22px) saturate(1.35);
@@ -382,7 +385,7 @@
     color: #050505;
     cursor: pointer;
     outline: none;
-    font: 700 16px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
     text-align: left;
     transition: border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow .28s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
@@ -421,7 +424,7 @@
     left: 0;
     right: 0;
     z-index: 9999;
-    padding: 14px;
+    padding: 10px;
     border-radius: 0 0 32px 32px;
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(28px) saturate(1.45);
@@ -484,7 +487,7 @@
     right: 2px;
     top: 0;
     z-index: 0;
-    height: 46px;
+    height: 40px;
     opacity: 0;
     background: rgba(191, 218, 255, 0.62);
     border-radius: 999px;
@@ -497,17 +500,17 @@
     position: relative;
     z-index: 1;
     width: 100%;
-    min-height: 46px;
+    min-height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 18px;
+    padding: 0 15px;
     margin: 2px 0;
     border: 0;
     border-radius: 22px;
     background: transparent;
     color: #050505;
     cursor: pointer;
-    font: 700 16px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
     text-align: left;
     transition: color .22s ease, transform .22s ease, background .22s ease;
 }
