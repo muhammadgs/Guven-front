@@ -410,7 +410,16 @@
                                 </div>
 
                                 <div class="newtask-form-group glass-field glass-media-field">
-                                    <label class="newtask-form-label"><i class="fas fa-wave-square"></i> Səs qeydi</label>
+                                    <label class="newtask-form-label nt-audio-title-label">
+                                        <span class="nt-audio-title-wave" aria-hidden="true">
+                                            <span class="nt-audio-title-wave-bar"></span>
+                                            <span class="nt-audio-title-wave-bar"></span>
+                                            <span class="nt-audio-title-wave-bar"></span>
+                                            <span class="nt-audio-title-wave-bar"></span>
+                                            <span class="nt-audio-title-wave-bar"></span>
+                                        </span>
+                                        <span>Səs qeydi</span>
+                                    </label>
                                     <div class="newtask-audio-container nt-voice-recorder" id="newtaskVoiceRecorder">
                                         <div class="nt-voice-shell" id="newtaskVoiceShell" data-state="idle">
                                             <button type="button" id="newtaskStartRecord" class="nt-voice-main-btn" aria-label="Səs qeydinə başla">
