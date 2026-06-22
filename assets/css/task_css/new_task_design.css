@@ -535,3 +535,232 @@
     .nt-select-options { max-height: min(260px, 52vh); }
     .nt-select-option { min-height: 44px; padding: 0 14px; font-size: 15px; }
 }
+
+/* Redesigned WhatsApp-style voice recorder for Yeni tapşırıq modal */
+.audio-recorder-container {
+  width: 100%;
+}
+
+.nt-voice-recorder {
+  width: 100%;
+}
+
+.nt-voice-shell {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 999px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  display: flex;
+  justify-content: center;
+  min-height: 130px;
+  overflow: hidden;
+  padding: 18px 24px;
+  position: relative;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  width: 100%;
+}
+
+.nt-voice-shell::before {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
+  border-radius: inherit;
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.nt-voice-shell[data-state='recording'],
+.nt-voice-shell[data-state='paused'] {
+  box-shadow: 0 22px 52px rgba(9, 174, 234, 0.17), 0 14px 34px rgba(15, 23, 42, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.nt-voice-main-btn,
+.nt-voice-action {
+  align-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  position: relative;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 1;
+}
+
+.nt-voice-main-btn {
+  background: linear-gradient(135deg, #18c5ff, #0788e8);
+  box-shadow: 0 14px 30px rgba(7, 136, 232, 0.34);
+  font-size: 34px;
+  height: 96px;
+  width: 96px;
+}
+
+.nt-voice-main-btn:hover:not(:disabled),
+.nt-voice-action:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.nt-voice-main-btn:disabled,
+.nt-voice-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
+.nt-voice-recording-ui {
+  align-items: center;
+  display: flex;
+  gap: 22px;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.nt-voice-waveform {
+  display: block;
+  flex: 1 1 auto;
+  height: 110px;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.nt-voice-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 14px;
+}
+
+.nt-voice-action {
+  font-size: 24px;
+  height: 72px;
+  width: 72px;
+}
+
+.nt-voice-stop {
+  background: linear-gradient(135deg, #ff6b6b, #ef2f45);
+  box-shadow: 0 12px 26px rgba(239, 47, 69, 0.28);
+}
+
+.nt-voice-pause {
+  background: linear-gradient(135deg, #19c9ff, #087de1);
+  box-shadow: 0 12px 26px rgba(8, 125, 225, 0.26);
+}
+
+.nt-voice-send {
+  background: linear-gradient(135deg, #2ee885, #12b766);
+  box-shadow: 0 12px 26px rgba(18, 183, 102, 0.27);
+}
+
+.nt-voice-send i {
+  margin-left: 4px;
+}
+
+.nt-voice-meta-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.nt-voice-meta-row .recording-status,
+.nt-voice-meta-row .recording-timer {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.70);
+  border: 1px solid rgba(226, 232, 240, 0.78);
+  border-radius: 999px;
+  color: #475569;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  padding: 8px 14px;
+}
+
+.nt-voice-meta-row .recording-status .fa-circle {
+  color: #94a3b8;
+  font-size: 8px;
+}
+
+.nt-voice-meta-row .recording-status .text-danger { color: #ef4444; }
+.nt-voice-meta-row .recording-status .text-primary { color: #0ea5e9; }
+.nt-voice-meta-row .recording-status .text-success { color: #22c55e; }
+.nt-voice-meta-row .recording-status .text-muted { color: #94a3b8; }
+
+.nt-voice-recorder .audio-preview {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.82);
+  border-radius: 22px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  margin-top: 14px;
+  padding: 14px;
+}
+
+.nt-voice-recorder .audio-preview audio {
+  display: block;
+  width: 100%;
+}
+
+.nt-voice-recorder .audio-meta {
+  color: #64748b;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 13px;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.nt-voice-hidden-cancel {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .nt-voice-shell {
+    border-radius: 44px;
+    min-height: 112px;
+    padding: 14px;
+  }
+
+  .nt-voice-main-btn {
+    font-size: 28px;
+    height: 78px;
+    width: 78px;
+  }
+
+  .nt-voice-recording-ui {
+    gap: 12px;
+  }
+
+  .nt-voice-waveform {
+    height: 88px;
+  }
+
+  .nt-voice-actions {
+    gap: 8px;
+  }
+
+  .nt-voice-action {
+    font-size: 18px;
+    height: 52px;
+    width: 52px;
+  }
+}
+
+@media (max-width: 430px) {
+  .nt-voice-recording-ui {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nt-voice-actions {
+    justify-content: center;
+  }
+}

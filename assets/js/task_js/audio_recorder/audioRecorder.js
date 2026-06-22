@@ -1,32 +1,34 @@
-// audioRecorder.js - YENİ VERSİYA (yeni ID-lərə uyğun)
+// audioRecorder.js - redesigned voice recorder UI
 class AudioRecorder {
     constructor() {
-        console.log('🎤 AudioRecorder constructor çağırıldı');
-
         this.mediaRecorder = null;
         this.audioChunks = [];
         this.isRecording = false;
+        this.isPaused = false;
         this.audioBlob = null;
-        this.maxRecordingTime = 300000; // 5 dəqiqə (5 * 60 * 1000)
+        this.maxRecordingTime = 300000;
         this.timerInterval = null;
         this.recordingStartTime = null;
+        this.pausedAt = null;
+        this.totalPausedTime = 0;
         this.hasAudioData = false;
         this.audioContext = null;
         this.analyser = null;
         this.canvasContext = null;
+        this.visualizerFrame = null;
+        this.visualizerBars = [];
+        this.stopPromise = null;
+        this.activeStream = null;
 
-        // ✅ ƏSAS FİKS: setTimeout ilə initialize et
-        setTimeout(() => {
-            this.initialize();
-        }, 500);
+        setTimeout(() => this.initialize(), 500);
     }
 
     initialize() {
-        console.log('🔧 AudioRecorder initialize edilir');
-
-        // ✅ YENİ ID-LƏRİ İSTİFADƏ ET
+        this.voiceShell = document.querySelector('.nt-voice-shell');
+        this.recordingUi = document.querySelector('.nt-voice-recording-ui');
         this.recordBtn = document.getElementById('startRecordingBtn');
         this.stopBtn = document.getElementById('stopRecordingBtn');
+        this.pauseBtn = document.getElementById('pauseRecordingBtn');
         this.saveBtn = document.getElementById('saveRecordingBtn');
         this.cancelBtn = document.getElementById('cancelRecordingBtn');
         this.timerDisplay = document.getElementById('timerDisplay');
@@ -37,375 +39,317 @@ class AudioRecorder {
         this.audioDuration = document.getElementById('audioDuration');
         this.audioSize = document.getElementById('audioSize');
         this.audioVisualizer = document.getElementById('audioVisualizer');
-
-        // Hidden inputlar
         this.audioDataInput = document.getElementById('audioData');
         this.audioFilenameInput = document.getElementById('audioFilename');
 
-        console.log('🔍 AudioRecorder elementləri axtarılır:', {
-            startRecordingBtn: !!this.recordBtn,
-            stopRecordingBtn: !!this.stopBtn,
-            saveRecordingBtn: !!this.saveBtn,
-            cancelRecordingBtn: !!this.cancelBtn,
-            audioData: !!this.audioDataInput,
-            audioFilename: !!this.audioFilenameInput
-        });
-
-        // ✅ ƏSAS FİKS: Elementləri yoxla
         if (!this.recordBtn) {
-            console.error('❌ Audio record button tapılmadı!');
-            console.error('   Axtarılan ID: startRecordingBtn');
-            console.error('   HTML-də bu element olmalıdır:');
-            console.error('   <button type="button" id="startRecordingBtn">Səs Qeydinə Başla</button>');
+            console.error('❌ Audio record button tapılmadı: startRecordingBtn');
             return;
         }
 
-        console.log('✅ AudioRecorder elementləri tapıldı');
-
-        // Canvas context init
         if (this.audioVisualizer) {
             this.canvasContext = this.audioVisualizer.getContext('2d');
+            this.drawIdleWaveform();
         }
 
-        // Notification service fallback
         this.initNotificationService();
-
-        // Event listener-lər əlavə et
         this.setupEventListeners();
-
-        console.log('✅ AudioRecorder hazırdır');
+        this.setVoiceState('idle');
     }
 
     initNotificationService() {
         if (!window.notificationService) {
             window.notificationService = {
-                showSuccess: function(msg) {
-                    console.log('✅ Success:', msg);
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Uğurlu!', msg, 'success');
-                    } else {
-                        alert('✅ ' + msg);
-                    }
-                },
-                showError: function(msg) {
-                    console.log('❌ Error:', msg);
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Xəta!', msg, 'error');
-                    } else {
-                        alert('❌ ' + msg);
-                    }
-                },
-                showInfo: function(msg) {
-                    console.log('ℹ️ Info:', msg);
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Məlumat', msg, 'info');
-                    } else {
-                        alert('ℹ️ ' + msg);
-                    }
-                },
-                showWarning: function(msg) {
-                    console.log('⚠️ Warning:', msg);
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire('Xəbərdarlıq', msg, 'warning');
-                    } else {
-                        alert('⚠️ ' + msg);
-                    }
-                }
+                showSuccess: msg => (typeof Swal !== 'undefined' ? Swal.fire('Uğurlu!', msg, 'success') : alert('✅ ' + msg)),
+                showError: msg => (typeof Swal !== 'undefined' ? Swal.fire('Xəta!', msg, 'error') : alert('❌ ' + msg)),
+                showInfo: msg => (typeof Swal !== 'undefined' ? Swal.fire('Məlumat', msg, 'info') : alert('ℹ️ ' + msg)),
+                showWarning: msg => (typeof Swal !== 'undefined' ? Swal.fire('Xəbərdarlıq', msg, 'warning') : alert('⚠️ ' + msg))
             };
         }
     }
 
     setupEventListeners() {
-        console.log('🎯 AudioRecorder event listener-lər əlavə edilir');
+        this.recordBtn.addEventListener('click', () => this.startRecording());
+        this.stopBtn?.addEventListener('click', () => this.stopRecording());
+        this.pauseBtn?.addEventListener('click', () => this.togglePauseRecording());
+        this.saveBtn?.addEventListener('click', () => this.saveRecording());
+        this.cancelBtn?.addEventListener('click', () => this.cancelRecording());
+    }
 
-        // ✅ YENİ ID-LƏR İLƏ EVENT LISTENER-LƏR
-        this.recordBtn.addEventListener('click', () => {
-            console.log('🎤 Record button click edildi');
-            this.startRecording();
-        });
+    setVoiceState(state) {
+        if (this.voiceShell) this.voiceShell.dataset.state = state;
+        const isIdle = state === 'idle';
+        const isActive = ['recording', 'paused', 'stopped', 'saved'].includes(state);
 
-        if (this.stopBtn) {
-            this.stopBtn.addEventListener('click', () => {
-                console.log('⏹️ Stop button click edildi');
-                this.stopRecording();
-            });
+        if (this.recordBtn) {
+            this.recordBtn.hidden = !isIdle;
+            this.recordBtn.disabled = !isIdle;
+        }
+        if (this.recordingUi) this.recordingUi.hidden = !isActive;
+        if (this.stopBtn) this.stopBtn.disabled = !['recording', 'paused'].includes(state);
+        if (this.pauseBtn) this.pauseBtn.disabled = !['recording', 'paused'].includes(state);
+        if (this.saveBtn) this.saveBtn.disabled = !['recording', 'paused', 'stopped'].includes(state);
+        if (this.cancelBtn) this.cancelBtn.disabled = isIdle;
+
+        if (this.pauseBtn) {
+            this.pauseBtn.innerHTML = state === 'paused' ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+            this.pauseBtn.setAttribute('aria-label', state === 'paused' ? 'Davam etdir' : 'Pauza');
         }
 
-        if (this.saveBtn) {
-            this.saveBtn.addEventListener('click', () => {
-                console.log('💾 Save button click edildi');
-                this.saveRecording();
-            });
+        const statuses = {
+            idle: ['text-muted', 'Səs qeydi hazırdır'],
+            recording: ['text-danger', 'Qeyd edilir...'],
+            paused: ['text-primary', 'Pauzada'],
+            stopped: ['text-success', 'Səs qeydi tamamlandı'],
+            saved: ['text-success', 'Səs qeydi əlavə edildi']
+        };
+        const [iconClass, label] = statuses[state] || statuses.idle;
+        if (this.recordingStatus) {
+            this.recordingStatus.innerHTML = `<i class="fas fa-circle ${iconClass}"></i><span>${label}</span>`;
         }
-
-        if (this.cancelBtn) {
-            this.cancelBtn.addEventListener('click', () => {
-                console.log('🗑️ Cancel button click edildi');
-                this.cancelRecording();
-            });
+        if (this.recordingTimer) {
+            this.recordingTimer.style.display = ['recording', 'paused'].includes(state) ? 'flex' : 'none';
         }
-
-        console.log('✅ AudioRecorder event listener-lər əlavə edildi');
     }
 
     async startRecording() {
         try {
-            console.log('🎤 Recording başladılır...');
-
-            // Microfon icazəsini yoxla
             const stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    sampleRate: 44100
-                }
+                audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 }
             });
-
-            // AudioContext yarat (visualizer üçün)
+            this.activeStream = stream;
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const source = this.audioContext.createMediaStreamSource(stream);
-
-            // Analyser yarat (visualizer üçün)
             if (this.audioVisualizer) {
                 this.analyser = this.audioContext.createAnalyser();
                 this.analyser.fftSize = 256;
+                this.analyser.smoothingTimeConstant = 0.82;
                 source.connect(this.analyser);
-                this.startVisualizer();
             }
 
-            // MediaRecorder yarat
-            this.mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'audio/webm;codecs=opus'
-            });
-
+            this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
             this.audioChunks = [];
-
-            // Data toplama
+            this.audioBlob = null;
+            this.stopPromise = null;
             this.mediaRecorder.addEventListener('dataavailable', event => {
-                this.audioChunks.push(event.data);
+                if (event.data && event.data.size > 0) this.audioChunks.push(event.data);
             });
+            this.mediaRecorder.addEventListener('stop', () => this.handleRecordingStop());
 
-            // Qeyd bitdikdə
-            this.mediaRecorder.addEventListener('stop', () => {
-                this.audioBlob = new Blob(this.audioChunks, {
-                    type: 'audio/webm'
-                });
-
-                // WAV formatına çevir
-                this.convertToWav().then(() => {
-                    this.updateUIAfterRecording();
-                    this.showPreview();
-
-                    // Stream-i dayandır
-                    stream.getTracks().forEach(track => track.stop());
-
-                    // AudioContext dayandır
-                    if (this.audioContext) {
-                        this.audioContext.close();
-                        this.audioContext = null;
-                    }
-
-                    // Visualizer dayandır
-                    this.stopVisualizer();
-
-                    console.log('✅ Recording tamamlandı');
-                    this.showNotification('success', 'Səs qeydi tamamlandı');
-                });
-            });
-
-            // Başlat
             this.mediaRecorder.start();
             this.isRecording = true;
+            this.isPaused = false;
             this.recordingStartTime = Date.now();
+            this.pausedAt = null;
+            this.totalPausedTime = 0;
             this.hasAudioData = true;
-
-            // UI yenilə
-            this.updateUIWhileRecording();
-
-            // Timer başlat
+            this.hidePreview();
+            this.setVoiceState('recording');
             this.startTimer();
+            this.startVisualizer();
 
-            // Maksimum müddət
             setTimeout(() => {
                 if (this.isRecording) {
                     this.stopRecording();
                     this.showNotification('info', 'Maksimum qeyd müddəti (5 dəqiqə) bitdi');
                 }
             }, this.maxRecordingTime);
-
-            console.log('🎤 Recording başladı');
-
         } catch (error) {
             console.error('❌ Recording başladılarkən xəta:', error);
+            this.isRecording = false;
+            this.isPaused = false;
+            this.setVoiceState('idle');
             this.showNotification('error', 'Mikrofon icazəsi alına bilmədi: ' + error.message);
         }
     }
 
     stopRecording() {
-        if (this.mediaRecorder && this.isRecording) {
-            this.mediaRecorder.stop();
-            this.isRecording = false;
-            this.stopTimer();
-            console.log('⏹️ Recording dayandırıldı');
+        if (this.stopPromise) return this.stopPromise;
+        if (!this.mediaRecorder || !this.isRecording) return Promise.resolve();
+        this.stopPromise = new Promise(resolve => { this._resolveStop = resolve; });
+        if (this.isPaused) this.resumeRecording(false);
+        this.isRecording = false;
+        this.isPaused = false;
+        this.stopTimer(false);
+        this.setVoiceState('stopped');
+        this.mediaRecorder.stop();
+        return this.stopPromise;
+    }
+
+    async handleRecordingStop() {
+        this.audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+        await this.convertToWav();
+        this.showPreview();
+        this.cleanupMedia();
+        this.stopVisualizer(true);
+        this.setVoiceState('stopped');
+        this.showNotification('success', 'Səs qeydi tamamlandı');
+        if (this._resolveStop) this._resolveStop();
+        this._resolveStop = null;
+    }
+
+    pauseRecording() {
+        if (!this.mediaRecorder || !this.isRecording || this.isPaused) return;
+        if (this.mediaRecorder.state === 'recording' && this.mediaRecorder.pause) this.mediaRecorder.pause();
+        this.isPaused = true;
+        this.pausedAt = Date.now();
+        this.stopTimer(true);
+        this.setVoiceState('paused');
+        this.drawIdleWaveform();
+    }
+
+    resumeRecording(updateState = true) {
+        if (!this.mediaRecorder || !this.isRecording || !this.isPaused) return;
+        if (this.pausedAt) this.totalPausedTime += Date.now() - this.pausedAt;
+        this.pausedAt = null;
+        if (this.mediaRecorder.state === 'paused' && this.mediaRecorder.resume) this.mediaRecorder.resume();
+        this.isPaused = false;
+        if (updateState) {
+            this.setVoiceState('recording');
+            this.startTimer();
+            this.startVisualizer();
         }
+    }
+
+    togglePauseRecording() {
+        this.isPaused ? this.resumeRecording() : this.pauseRecording();
     }
 
     startTimer() {
         if (!this.timerDisplay) return;
-
-        // Recording status və timer göstər
-        if (this.recordingStatus) {
-            this.recordingStatus.innerHTML = '<i class="fas fa-circle text-danger"></i><span>Qeyd edilir...</span>';
-        }
-        if (this.recordingTimer) {
-            this.recordingTimer.style.display = 'flex';
-        }
-
-        this.timerInterval = setInterval(() => {
-            const elapsed = Date.now() - this.recordingStartTime;
-            const seconds = Math.floor(elapsed / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-
-            if (this.timerDisplay) {
-                this.timerDisplay.textContent =
-                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-            }
-        }, 1000);
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        const tick = () => {
+            if (!this.recordingStartTime) return;
+            const elapsed = Date.now() - this.recordingStartTime - this.totalPausedTime;
+            const seconds = Math.max(0, Math.floor(elapsed / 1000));
+            this.timerDisplay.textContent = `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+        };
+        tick();
+        this.timerInterval = setInterval(tick, 500);
     }
 
-    stopTimer() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-        }
-
-        // Recording status və timer gizlət
-        if (this.recordingStatus) {
-            this.recordingStatus.innerHTML = '<i class="fas fa-circle text-success"></i><span>Qeyd tamamlandı</span>';
-        }
-        if (this.recordingTimer) {
-            this.recordingTimer.style.display = 'none';
-        }
-        if (this.timerDisplay) {
-            this.timerDisplay.textContent = '00:00';
-        }
+    stopTimer(keepDisplay = false) {
+        if (this.timerInterval) clearInterval(this.timerInterval);
+        this.timerInterval = null;
+        if (!keepDisplay && this.timerDisplay) this.timerDisplay.textContent = '00:00';
     }
 
     startVisualizer() {
         if (!this.canvasContext || !this.analyser) return;
-
+        cancelAnimationFrame(this.visualizerFrame);
         const bufferLength = this.analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
-        const canvas = this.audioVisualizer;
-        const ctx = this.canvasContext;
+        const barCount = 32;
+        if (this.visualizerBars.length !== barCount) this.visualizerBars = Array(barCount).fill(10);
 
         const draw = () => {
-            if (!this.isRecording) return;
-
-            requestAnimationFrame(draw);
-
+            if (!this.isRecording || this.isPaused) return;
+            this.visualizerFrame = requestAnimationFrame(draw);
             this.analyser.getByteFrequencyData(dataArray);
-
-            ctx.fillStyle = 'rgb(240, 240, 240)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const barWidth = (canvas.width / bufferLength) * 2.5;
-            let barHeight;
-            let x = 0;
-
-            for (let i = 0; i < bufferLength; i++) {
-                barHeight = dataArray[i] / 2;
-
-                ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-
-                x += barWidth + 1;
-            }
+            this.drawWaveformBars(dataArray, barCount, bufferLength);
         };
-
         draw();
     }
 
-    stopVisualizer() {
-        if (!this.canvasContext) return;
-
+    drawWaveformBars(dataArray, barCount, bufferLength) {
         const canvas = this.audioVisualizer;
         const ctx = this.canvasContext;
+        const width = canvas.width;
+        const height = canvas.height;
+        const centerY = height / 2;
+        const gap = 8;
+        const barWidth = Math.max(6, (width - gap * (barCount - 1)) / barCount);
+        ctx.clearRect(0, 0, width, height);
+        const gradient = ctx.createLinearGradient(0, 0, width, 0);
+        gradient.addColorStop(0, '#14c8ff');
+        gradient.addColorStop(1, '#078ee8');
+        ctx.fillStyle = gradient;
 
-        ctx.fillStyle = 'rgb(240, 240, 240)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < barCount; i++) {
+            const start = Math.floor((i / barCount) * bufferLength);
+            const end = Math.floor(((i + 1) / barCount) * bufferLength);
+            let total = 0;
+            for (let j = start; j < end; j++) total += dataArray[j] || 0;
+            const average = total / Math.max(1, end - start);
+            const target = Math.max(12, (average / 255) * (height * 0.82));
+            this.visualizerBars[i] += (target - this.visualizerBars[i]) * 0.28;
+            const x = i * (barWidth + gap);
+            const h = this.visualizerBars[i];
+            this.roundRect(ctx, x, centerY - h / 2, barWidth, h, barWidth / 2);
+        }
     }
 
-    updateUIWhileRecording() {
-        if (this.recordBtn) this.recordBtn.disabled = true;
-        if (this.stopBtn) this.stopBtn.disabled = false;
-        if (this.saveBtn) this.saveBtn.disabled = true;
-        if (this.cancelBtn) this.cancelBtn.disabled = true;
+    drawIdleWaveform() {
+        if (!this.canvasContext || !this.audioVisualizer) return;
+        const canvas = this.audioVisualizer;
+        const ctx = this.canvasContext;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const bars = 32;
+        const gap = 8;
+        const barWidth = Math.max(6, (canvas.width - gap * (bars - 1)) / bars);
+        ctx.fillStyle = 'rgba(9, 174, 234, 0.28)';
+        for (let i = 0; i < bars; i++) {
+            const h = 10 + (i % 4) * 2;
+            this.roundRect(ctx, i * (barWidth + gap), canvas.height / 2 - h / 2, barWidth, h, barWidth / 2);
+        }
     }
 
-    updateUIAfterRecording() {
-        if (this.recordBtn) this.recordBtn.disabled = false;
-        if (this.stopBtn) this.stopBtn.disabled = true;
-        if (this.saveBtn) this.saveBtn.disabled = false;
-        if (this.cancelBtn) this.cancelBtn.disabled = false;
+    roundRect(ctx, x, y, width, height, radius) {
+        if (ctx.roundRect) {
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, radius);
+            ctx.fill();
+            return;
+        }
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.fill();
+    }
+
+    stopVisualizer(showIdle = false) {
+        cancelAnimationFrame(this.visualizerFrame);
+        this.visualizerFrame = null;
+        if (showIdle) this.drawIdleWaveform();
+    }
+
+    cleanupMedia() {
+        this.activeStream?.getTracks().forEach(track => track.stop());
+        this.activeStream = null;
+        if (this.audioContext) this.audioContext.close();
+        this.audioContext = null;
+        this.analyser = null;
     }
 
     showPreview() {
         if (!this.audioBlob || !this.recordedAudio || !this.audioPreview) return;
-
-        const audioURL = URL.createObjectURL(this.audioBlob);
-        this.recordedAudio.src = audioURL;
-
-        // Audio duration
+        this.recordedAudio.src = URL.createObjectURL(this.audioBlob);
         this.recordedAudio.onloadedmetadata = () => {
-            const duration = this.recordedAudio.duration;
-            const minutes = Math.floor(duration / 60);
-            const seconds = Math.floor(duration % 60);
-
-            if (this.audioDuration) {
-                this.audioDuration.textContent = `Müddət: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-
-            // Audio size
-            const sizeInKB = (this.audioBlob.size / 1024).toFixed(1);
-            if (this.audioSize) {
-                this.audioSize.textContent = `Ölçü: ${sizeInKB} KB`;
-            }
+            const duration = this.recordedAudio.duration || 0;
+            if (this.audioDuration) this.audioDuration.textContent = `Müddət: ${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`;
+            if (this.audioSize) this.audioSize.textContent = `Ölçü: ${(this.audioBlob.size / 1024).toFixed(1)} KB`;
         };
-
         this.audioPreview.style.display = 'block';
     }
 
-    hidePreview() {
-        if (this.audioPreview) {
-            this.audioPreview.style.display = 'none';
-        }
-    }
+    hidePreview() { if (this.audioPreview) this.audioPreview.style.display = 'none'; }
 
     async convertToWav() {
         try {
             if (!this.audioBlob) return;
-
-            // WebM blob-u arrayBuffer-a çevir
             const arrayBuffer = await this.audioBlob.arrayBuffer();
-
-            // AudioContext yarat
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                sampleRate: 44100
-            });
-
-            // ArrayBuffer-dan AudioBuffer yarat
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
             const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-            // WAV-ə çevir
-            const wavBlob = this.encodeWAV(audioBuffer);
-            this.audioBlob = wavBlob;
-
-            console.log('✅ Audio WAV formatına çevrildi');
-
+            this.audioBlob = this.encodeWAV(audioBuffer);
             audioContext.close();
-
         } catch (error) {
             console.error('❌ Audio convert edilərkən xəta:', error);
         }
@@ -418,13 +362,9 @@ class AudioRecorder {
         const bytesPerSample = bitsPerSample / 8;
         const blockAlign = numChannels * bytesPerSample;
         const byteRate = sampleRate * blockAlign;
-
-        // Buffer uzunluğunu hesabla
         const bufferLength = audioBuffer.length * numChannels * bytesPerSample;
         const buffer = new ArrayBuffer(44 + bufferLength);
         const view = new DataView(buffer);
-
-        // WAV header yaz
         this.writeString(view, 0, 'RIFF');
         view.setUint32(4, 36 + bufferLength, true);
         this.writeString(view, 8, 'WAVE');
@@ -438,14 +378,8 @@ class AudioRecorder {
         view.setUint16(34, bitsPerSample, true);
         this.writeString(view, 36, 'data');
         view.setUint32(40, bufferLength, true);
-
-        // Audio data yaz
         let offset = 44;
-        const channels = [];
-        for (let i = 0; i < numChannels; i++) {
-            channels.push(audioBuffer.getChannelData(i));
-        }
-
+        const channels = Array.from({ length: numChannels }, (_, i) => audioBuffer.getChannelData(i));
         for (let i = 0; i < audioBuffer.length; i++) {
             for (let channel = 0; channel < numChannels; channel++) {
                 const sample = Math.max(-1, Math.min(1, channels[channel][i]));
@@ -453,205 +387,78 @@ class AudioRecorder {
                 offset += 2;
             }
         }
-
         return new Blob([view], { type: 'audio/wav' });
     }
 
     writeString(view, offset, string) {
-        for (let i = 0; i < string.length; i++) {
-            view.setUint8(offset + i, string.charCodeAt(i));
-        }
+        for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
     }
 
-    saveRecording() {
+    async saveRecording() {
+        if (this.isRecording) await this.stopRecording();
         if (!this.audioBlob) {
             this.showNotification('info', 'Saxlanılacaq səs qeydi yoxdur');
             return;
         }
-
-        try {
-            // Blob-u Base64-ə çevir
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const base64Data = reader.result.split(',')[1];
-
-                // Hidden input-lara yaz
-                if (this.audioDataInput) {
-                    this.audioDataInput.value = base64Data;
-                }
-
-                if (this.audioFilenameInput) {
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                    this.audioFilenameInput.value = `ses-qeydi-${timestamp}.wav`;
-                }
-
-                console.log('💾 Recording saxlandı');
-                this.showNotification('success', 'Səs qeydi saxlandı! Task yaratdığınız zaman avtomatik əlavə olunacaq.');
-
-                // Save button disable et
-                if (this.saveBtn) {
-                    this.saveBtn.disabled = true;
-                }
-            };
-
-            reader.onerror = (error) => {
-                console.error('❌ Base64 convert xətası:', error);
-                this.showNotification('error', 'Səs qeydi saxlanıla bilmədi');
-            };
-
-            reader.readAsDataURL(this.audioBlob);
-
-        } catch (error) {
-            console.error('❌ Recording save xətası:', error);
-            this.showNotification('error', 'Səs qeydi saxlanıla bilmədi: ' + error.message);
-        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64Data = reader.result.split(',')[1];
+            if (this.audioDataInput) this.audioDataInput.value = base64Data;
+            if (this.audioFilenameInput) this.audioFilenameInput.value = `ses-qeydi-${new Date().toISOString().replace(/[:.]/g, '-')}.wav`;
+            this.hasAudioData = true;
+            this.setVoiceState('saved');
+            this.showNotification('success', 'Səs qeydi saxlandı! Task yaratdığınız zaman avtomatik əlavə olunacaq.');
+        };
+        reader.onerror = error => {
+            console.error('❌ Base64 convert xətası:', error);
+            this.showNotification('error', 'Səs qeydi saxlanıla bilmədi');
+        };
+        reader.readAsDataURL(this.audioBlob);
     }
 
     cancelRecording() {
-        if (!confirm('Səs qeydini ləğv etmək istədiyinizə əminsiniz?')) {
-            return;
-        }
-
+        if (this.isRecording) this.stopRecording();
         this.audioBlob = null;
         this.audioChunks = [];
         this.hasAudioData = false;
-
-        // UI yenilə
-        this.updateUIAfterRecording();
-        this.hidePreview();
-        this.stopTimer();
-        this.stopVisualizer();
-
-        // Hidden input-ları təmizlə
         if (this.audioDataInput) this.audioDataInput.value = '';
         if (this.audioFilenameInput) this.audioFilenameInput.value = '';
-
-        // Recording status reset et
-        if (this.recordingStatus) {
-            this.recordingStatus.innerHTML = '<i class="fas fa-circle text-muted"></i><span>Səs qeydi hazırdır</span>';
-        }
-
-        // Butonları reset et
-        if (this.recordBtn) this.recordBtn.disabled = false;
-        if (this.stopBtn) this.stopBtn.disabled = true;
-        if (this.saveBtn) {
-            this.saveBtn.disabled = true;
-            this.saveBtn.textContent = '<i class="fas fa-save"></i> Saxla';
-        }
-        if (this.cancelBtn) this.cancelBtn.disabled = true;
-
-        console.log('🗑️ Recording ləğv edildi');
-        this.showNotification('success', 'Səs qeydi ləğv edildi');
+        this.hidePreview();
+        this.stopTimer(false);
+        this.stopVisualizer(false);
+        this.drawIdleWaveform();
+        this.setVoiceState('idle');
     }
 
-    resetRecording() {
-        this.cancelRecording();
-    }
+    resetRecording() { this.cancelRecording(); }
 
-    // Audio məlumatlarını base64 formatında almaq
     getAudioData() {
         return new Promise((resolve, reject) => {
-            if (!this.audioBlob || !this.hasAudioData) {
-                resolve(null);
-                return;
-            }
-
+            if (!this.audioBlob || !this.hasAudioData) return resolve(null);
             const reader = new FileReader();
-            reader.onloadend = () => {
-                // Base64 məlumatını almaq
-                const base64Data = reader.result.split(',')[1];
-                resolve({
-                    base64: base64Data,
-                    filename: `ses-qeydi-${Date.now()}.wav`,
-                    blob: this.audioBlob,
-                    hasData: true
-                });
-            };
+            reader.onloadend = () => resolve({
+                base64: reader.result.split(',')[1],
+                filename: `ses-qeydi-${Date.now()}.wav`,
+                blob: this.audioBlob,
+                hasData: true
+            });
             reader.onerror = reject;
             reader.readAsDataURL(this.audioBlob);
         });
     }
 
     showNotification(type, message) {
-        if (window.notificationService) {
-            switch(type) {
-                case 'success':
-                    window.notificationService.showSuccess(message);
-                    break;
-                case 'error':
-                    window.notificationService.showError(message);
-                    break;
-                case 'info':
-                    window.notificationService.showInfo(message);
-                    break;
-                case 'warning':
-                    window.notificationService.showWarning(message);
-                    break;
-            }
-        } else {
-            console.log(`${type.toUpperCase()}: ${message}`);
-            alert(message);
-        }
+        const service = window.notificationService;
+        if (!service) return console.log(`${type.toUpperCase()}: ${message}`);
+        const method = { success: 'showSuccess', error: 'showError', info: 'showInfo', warning: 'showWarning' }[type];
+        service[method]?.(message);
     }
 }
 
-// Global instance yarat
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎤 DOM loaded, AudioRecorder (YENİ VERSİYA) başladılır...');
-
-    try {
-        // Notification service fallback
-        if (!window.notificationService) {
-            window.notificationService = {
-                showSuccess: function(msg) {
-                    console.log('✅ Success:', msg);
-                    alert('✅ ' + msg);
-                },
-                showError: function(msg) {
-                    console.log('❌ Error:', msg);
-                    alert('❌ ' + msg);
-                },
-                showInfo: function(msg) {
-                    console.log('ℹ️ Info:', msg);
-                    alert('ℹ️ ' + msg);
-                },
-                showWarning: function(msg) {
-                    console.log('⚠️ Warning:', msg);
-                    alert('⚠️ ' + msg);
-                }
-            };
-        }
-
-        // Elementləri yoxla
-        const recordBtn = document.getElementById('startRecordingBtn');
-        if (!recordBtn) {
-            console.log('⚠️ Audio record button hələ yoxdur, 1 saniyə gözləyib yenidən yoxlayacaq');
-
-            // 1 saniyə gözlə və yenidən yoxla
-            setTimeout(() => {
-                console.log('🔄 AudioRecorder (YENİ) yenidən yoxlanılır...');
-                if (!window.audioRecorder) {
-                    window.audioRecorder = new AudioRecorder();
-                }
-            }, 1000);
-
-            return;
-        }
-
-        // Global instance yarat
-        if (!window.audioRecorder) {
-            window.audioRecorder = new AudioRecorder();
-            console.log('✅ AudioRecorder (YENİ) global instance yaradıldı');
-        } else {
-            console.log('ℹ️ AudioRecorder artıq mövcuddur');
-        }
-
-    } catch (error) {
-        console.error('❌ AudioRecorder başladılarkən xəta:', error);
-    }
+    if (!window.audioRecorder) window.audioRecorder = new AudioRecorder();
 });
 
-// Node.js üçün export
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { AudioRecorder };
 }

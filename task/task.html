@@ -424,48 +424,52 @@
                                     Səs Qeydi Əlavəsi
                                 </label>
                                 <div class="audio-recorder-container">
-                                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
-                                        <div id="recordingTimer" class="recording-timer" style="display: none;">
-                                            <i class="fas fa-clock"></i>
-                                            <span id="timerDisplay" class="timer-display">00:00</span>
+                                    <div class="nt-voice-recorder" id="voiceRecorder">
+                                        <div class="nt-voice-shell" data-state="idle">
+                                            <button type="button" id="startRecordingBtn" class="nt-voice-main-btn" aria-label="Səs qeydinə başla">
+                                                <i class="fas fa-microphone"></i>
+                                            </button>
+
+                                            <div class="nt-voice-recording-ui" hidden>
+                                                <canvas id="audioVisualizer" class="nt-voice-waveform" width="520" height="110"></canvas>
+
+                                                <div class="nt-voice-actions">
+                                                    <button type="button" id="stopRecordingBtn" class="nt-voice-action nt-voice-stop" disabled aria-label="Dayandır">
+                                                        <i class="fas fa-square"></i>
+                                                    </button>
+                                                    <button type="button" id="pauseRecordingBtn" class="nt-voice-action nt-voice-pause" disabled aria-label="Pauza">
+                                                        <i class="fas fa-pause"></i>
+                                                    </button>
+                                                    <button type="button" id="saveRecordingBtn" class="nt-voice-action nt-voice-send" disabled aria-label="Səs qeydini əlavə et">
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+                                                    <button type="button" id="cancelRecordingBtn" class="nt-voice-hidden-cancel" hidden aria-hidden="true" disabled></button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div id="recordingStatus" class="recording-status">
-                                            <i class="fas fa-circle"></i>
-                                            <span>Səs qeydi hazırdır</span>
+
+                                        <div class="nt-voice-meta-row">
+                                            <div id="recordingStatus" class="recording-status">
+                                                <i class="fas fa-circle"></i>
+                                                <span>Səs qeydi hazırdır</span>
+                                            </div>
+                                            <div id="recordingTimer" class="recording-timer" style="display:none;">
+                                                <i class="fas fa-clock"></i>
+                                                <span id="timerDisplay" class="timer-display">00:00</span>
+                                            </div>
                                         </div>
+
+                                        <div id="audioPreview" class="audio-preview" style="display:none;">
+                                            <audio id="recordedAudio" controls></audio>
+                                            <div class="audio-meta">
+                                                <span id="audioDuration">Müddət: -</span>
+                                                <span id="audioSize">Ölçü: -</span>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" id="audioData" name="audio_data" />
+                                        <input type="hidden" id="audioFilename" name="audio_filename" />
                                     </div>
-                                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                                        <button type="button" id="startRecordingBtn" class="primary-btn">
-                                            <i class="fas fa-microphone"></i>
-                                            Səs Qeydinə Başla
-                                        </button>
-                                        <button type="button" id="stopRecordingBtn" class="secondary-btn" disabled>
-                                            <i class="fas fa-stop"></i>
-                                            Dayandır
-                                        </button>
-                                        <button type="button" id="saveRecordingBtn" class="primary-btn" disabled>
-                                            <i class="fas fa-save"></i>
-                                            Saxla
-                                        </button>
-                                        <button type="button" id="cancelRecordingBtn" class="secondary-btn" disabled>
-                                            <i class="fas fa-times"></i>
-                                            Ləğv et
-                                        </button>
-                                    </div>
-                                    <div id="audioPreview" class="audio-preview" style="display: none;">
-                                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                            <i class="fas fa-music" style="color: #3b82f6;"></i>
-                                            <span style="font-weight: 500;">Səs qeydiniz:</span>
-                                        </div>
-                                        <audio id="recordedAudio" controls></audio>
-                                        <div class="audio-meta">
-                                            <span id="audioDuration">Müddət: -</span>
-                                            <span id="audioSize">Ölçü: -</span>
-                                        </div>
-                                    </div>
-                                    <canvas id="audioVisualizer" width="600" height="60"></canvas>
-                                    <input type="hidden" id="audioData" name="audio_data" />
-                                    <input type="hidden" id="audioFilename" name="audio_filename" />
                                 </div>
                             </div>
                         </div>
@@ -1612,7 +1616,7 @@
 
     <script>
         // Versiya nömrəsi - cache üçün sabit, amma yeniləmək istəsəniz dəyişin
-        const v = '1.0.10';
+        const v = '1.0.11';
 
         // Core services
 
