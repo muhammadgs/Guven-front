@@ -1089,7 +1089,7 @@
         if (fileList) fileList.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
 
         // 🔥 AUDIO MƏLUMATLARINI TƏMİZLƏ
-        resetAudioRecorder();
+        resetVoiceRecorderToIdle({ keepSavedFiles: false, clearCurrentAudio: true });
 
         // Default due date (sabah)
         const dueDateInput = document.getElementById('newtaskDueDate');
@@ -1196,7 +1196,7 @@
         if (recorderEventsBound || !startBtn) return;
         recorderEventsBound = true;
         startBtn.addEventListener('click', startRecording);
-        stopBtn?.addEventListener('click', stopRecordingFinal);
+        stopBtn?.addEventListener('click', cancelCurrentVoiceRecording);
         pauseBtn?.addEventListener('click', togglePauseResume);
         saveBtn?.addEventListener('click', saveRecordedAudioToTask);
         previewBtn?.addEventListener('click', togglePreviewPlayback);
@@ -1247,7 +1247,7 @@
         preventRecorderButtonEvent(event);
         if (isRecording || (mediaRecorder && mediaRecorder.state !== 'inactive')) return;
         try {
-            resetAudioRecorder({ keepState: true });
+            resetVoiceRecorderToIdle({ keepSavedFiles: true, clearCurrentAudio: true, keepState: true });
             audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const source = audioContext.createMediaStreamSource(audioStream);
@@ -1287,7 +1287,7 @@
         } catch (err) {
             console.error('Mikrofon xətası:', err);
             alert('Mikrofon icazəsi tələb olunur!');
-            resetAudioRecorder();
+            resetVoiceRecorderToIdle({ keepSavedFiles: true, clearCurrentAudio: true });
         }
     }
 
@@ -1349,57 +1349,100 @@
         else recordedAudio.pause();
     }
 
+    async function ensureCurrentRecordingFinalized() {
+        if (mediaRecorder && ['recording', 'paused'].includes(mediaRecorder.state)) {
+            await stopRecordingFinal();
+        }
+        if (!audioBlob) audioBlob = buildCurrentAudioBlob();
+        return audioBlob;
+    }
+
     async function saveRecordedAudioToTask(event) {
         preventRecorderButtonEvent(event);
         if (saveBtn) saveBtn.disabled = true;
-        if (mediaRecorder && ['recording', 'paused'].includes(mediaRecorder.state)) await stopRecordingFinal();
-        if (!audioBlob) audioBlob = buildCurrentAudioBlob();
-        if (!audioBlob) { setVoiceState('idle'); return; }
-        const filename = `recording_${Date.now()}.webm`;
-        const audioFile = new File([audioBlob], filename, { type: audioBlob.type || 'audio/webm' });
-        if (!window.modalSelectedFiles) window.modalSelectedFiles = [];
-        window.modalSelectedFiles.push(audioFile);
-        updateModalFileList();
-        if (audioFilename) audioFilename.value = filename;
-        if (audioData) {
-            await new Promise(resolve => {
-                const reader = new FileReader();
-                reader.onloadend = () => { audioData.value = reader.result || ''; resolve(); };
-                reader.onerror = () => resolve();
-                reader.readAsDataURL(audioBlob);
-            });
+
+        const finalBlob = await ensureCurrentRecordingFinalized();
+        if (!finalBlob) {
+            resetVoiceRecorderToIdle({ keepSavedFiles: true, clearCurrentAudio: true });
+            return;
         }
-        setVoiceState('saved');
+
+        const filename = `recording_${Date.now()}.webm`;
+        const audioFile = new File([finalBlob], filename, { type: finalBlob.type || 'audio/webm' });
+        window.modalSelectedFiles = window.modalSelectedFiles || [];
+        window.modalSelectedFiles.push(audioFile);
+
+        if (typeof updateModalFileList === 'function') {
+            updateModalFileList();
+        }
+
+        resetVoiceRecorderToIdle({ keepSavedFiles: true, clearCurrentAudio: true });
     }
 
-    function resetAudioRecorder(options = {}) {
+    function cancelCurrentVoiceRecording(event) {
+        preventRecorderButtonEvent(event);
+        resetVoiceRecorderToIdle({ keepSavedFiles: true, clearCurrentAudio: true });
+    }
+
+    function resetVoiceRecorderToIdle(options = {}) {
+        const {
+            keepSavedFiles = true,
+            clearCurrentAudio = true,
+            keepState = false
+        } = options;
+
+        if (!keepSavedFiles) {
+            window.modalSelectedFiles = [];
+        }
+
         if (mediaRecorder && mediaRecorder.state !== 'inactive') {
             mediaRecorder.onstop = null;
+            try { mediaRecorder.requestData?.(); } catch (err) { console.warn('Recorder reset requestData xətası:', err); }
             try { mediaRecorder.stop(); } catch (err) { console.warn('Recorder reset stop xətası:', err); }
         }
+
         stopWaveform();
         stopTimer();
         stopAudioStream();
-        if (recordedAudio) { recordedAudio.pause(); recordedAudio.removeAttribute('src'); recordedAudio.load?.(); }
+
+        if (recordedAudio) {
+            recordedAudio.pause();
+            recordedAudio.removeAttribute('src');
+            recordedAudio.load?.();
+        }
         if (previewAudioUrl) URL.revokeObjectURL(previewAudioUrl);
         previewAudioUrl = null;
+
         mediaRecorder = null;
         recorderStopPromise = null;
         recorderStopResolve = null;
-        audioChunks = [];
-        audioBlob = null;
+        if (clearCurrentAudio) {
+            audioChunks = [];
+            audioBlob = null;
+            if (audioData) audioData.value = '';
+            if (audioFilename) audioFilename.value = '';
+        }
         isRecording = false;
         isPaused = false;
         elapsedBeforePause = 0;
         recordingStartedAt = 0;
         waveformLevels = new Array(28).fill(0.22);
         lastWaveformLevels = new Array(28).fill(0.22);
-        if (audioData) audioData.value = '';
-        if (audioFilename) audioFilename.value = '';
         if (timerDisplay) timerDisplay.textContent = '00:00';
         setPreviewIcon(false);
-        if (!options.keepState) setVoiceState('idle');
-        drawWaveform({ live: false });
+        if (visualizer) {
+            const ctx = visualizer.getContext('2d');
+            if (ctx) ctx.clearRect(0, 0, visualizer.width || visualizer.clientWidth, visualizer.height || visualizer.clientHeight);
+        }
+        if (!keepState) setVoiceState('idle');
+    }
+
+    function resetAudioRecorder(options = {}) {
+        resetVoiceRecorderToIdle({
+            keepSavedFiles: options.keepSavedFiles ?? true,
+            clearCurrentAudio: options.clearCurrentAudio ?? true,
+            keepState: options.keepState ?? false
+        });
     }
 
     function drawRoundedBar(ctx, x, centerY, width, height, radius) {
@@ -1456,7 +1499,7 @@
     function setupAudioRecorder() {
         cacheAudioRecorderElements();
         bindAudioRecorderEvents();
-        resetAudioRecorder();
+        resetVoiceRecorderToIdle({ keepSavedFiles: false, clearCurrentAudio: true });
     }
 
     // ========== UPDATE MODAL FILE LIST ==========

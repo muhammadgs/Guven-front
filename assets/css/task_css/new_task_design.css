@@ -942,3 +942,19 @@
   .nt-voice-waveform,
   #newtaskAudioVisualizer.nt-voice-waveform { height: 64px; }
 }
+
+/* Voice recorder state enforcement: idle must show only the centered mic. */
+.nt-voice-shell[data-state="idle"] .nt-voice-recording-ui {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.nt-voice-shell[data-state="idle"] .nt-voice-main-btn {
+  display: grid !important;
+  pointer-events: auto !important;
+}
+
+.nt-voice-shell:not([data-state="idle"]) .nt-voice-main-btn {
+  display: none !important;
+  pointer-events: none !important;
+}
