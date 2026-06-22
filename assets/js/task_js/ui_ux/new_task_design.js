@@ -635,7 +635,7 @@
                     code: myCompany.company_code
                 });
 
-                html += `<option value="${myCompany.id}" data-is-my="true" selected>🏢 ${companyName} (Mənim şirkətim)</option>`;
+                html += `<option value="${myCompany.id}" data-is-my="true" selected>${companyName} (Mənim şirkətim)</option>`;
             } else {
                 console.error('❌ myCompany məlumatları tam deyil:', myCompany);
                 // Token-dan company məlumatını almağa çalış
@@ -644,7 +644,7 @@
                     const payload = parseTokenPayload(token);
                     if (payload && payload.company_id) {
                         const companyName = payload.company_name || payload.company_code;
-                        html += `<option value="${payload.company_id}" data-is-my="true" selected>🏢 ${companyName} (Mənim şirkətim)</option>`;
+                        html += `<option value="${payload.company_id}" data-is-my="true" selected>${companyName} (Mənim şirkətim)</option>`;
                         // myCompany-ni yenilə
                         myCompany = {
                             id: payload.company_id,
@@ -653,11 +653,11 @@
                             name: payload.company_name || payload.company_code
                         };
                     } else {
-                        html += `<option value="51" data-is-my="true" selected>🏢 Güvən Finans MMC (Mənim şirkətim)</option>`;
+                        html += `<option value="51" data-is-my="true" selected>Güvən Finans MMC (Mənim şirkətim)</option>`;
                         myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
                     }
                 } else {
-                    html += `<option value="51" data-is-my="true" selected>🏢 Güvən Finans MMC (Mənim şirkətim)</option>`;
+                    html += `<option value="51" data-is-my="true" selected>Güvən Finans MMC (Mənim şirkətim)</option>`;
                     myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
                 }
             }
