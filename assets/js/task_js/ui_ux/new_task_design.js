@@ -27,6 +27,7 @@
     async function init() {
         console.log('🚀 new_task_modal.js init başladı...');
         createModal();
+        initCustomSelects();
         attachCardEvents    ();
 
         await waitForTaskManager();
@@ -47,6 +48,7 @@
         }
 
         populateSelects();
+        refreshCustomSelects();
         setupPrintScreenCapture();
         attachModalEvents();
         setupAudioRecorder();
@@ -624,6 +626,22 @@
         }
 
         // İşçi select
+        const parentSelect = document.getElementById('newtaskParentSelect');
+        if (parentSelect && !parentSelect.dataset.parentEmployeeListener) {
+            parentSelect.dataset.parentEmployeeListener = 'true';
+            parentSelect.addEventListener('change', async (e) => {
+                if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
+            });
+        }
+
+        const partnerSelect = document.getElementById('newtaskPartnerSelect');
+        if (partnerSelect && !partnerSelect.dataset.partnerEmployeeListener) {
+            partnerSelect.dataset.partnerEmployeeListener = 'true';
+            partnerSelect.addEventListener('change', async (e) => {
+                if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
+            });
+        }
+
         const executorSelect = document.getElementById('newtaskExecutorSelect');
         if (executorSelect) {
             let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
@@ -658,7 +676,251 @@
         if (otherExecutorSelect) {
             otherExecutorSelect.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
         }
+
+        refreshCustomSelects();
     }
+
+
+    // ================= CUSTOM LIQUID SELECTS =================
+    const customSelectState = {
+        initialized: false,
+        observer: null,
+        closingTimers: new WeakMap()
+    };
+
+    function getCustomSelects() {
+        return Array.from(document.querySelectorAll('.newtask-field select, .glass-field select, .newtask-form-group select'));
+    }
+
+    function initCustomSelects() {
+        getCustomSelects().forEach(buildCustomSelect);
+
+        if (!customSelectState.initialized) {
+            document.addEventListener('click', handleCustomSelectDocumentClick);
+            document.addEventListener('keydown', handleCustomSelectDocumentKeydown);
+            customSelectState.initialized = true;
+        }
+
+        if (!customSelectState.observer && modalOverlay) {
+            customSelectState.observer = new MutationObserver((mutations) => {
+                const changedSelects = new Set();
+                mutations.forEach((mutation) => {
+                    const targetSelect = mutation.target?.tagName === 'SELECT'
+                        ? mutation.target
+                        : mutation.target?.closest?.('select');
+                    if (targetSelect && targetSelect.classList.contains('newtask-select')) {
+                        changedSelects.add(targetSelect);
+                    }
+                });
+                changedSelects.forEach((select) => refreshCustomSelectById(select.id));
+            });
+            customSelectState.observer.observe(modalOverlay, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'selected'] });
+        }
+    }
+
+    function buildCustomSelect(select) {
+        if (!select || !select.id) return null;
+
+        const existing = select.parentNode?.querySelector(`.nt-custom-select[data-select-id="${select.id}"]`);
+        if (existing) {
+            existing.__nativeSelect = select;
+            rebuildCustomOptions(select, existing);
+            syncCustomSelectValue(select);
+            return existing;
+        }
+
+        select.classList.add('nt-native-select-hidden');
+        select.dataset.customSelectReady = 'true';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'nt-custom-select';
+        wrapper.dataset.selectId = select.id;
+        wrapper.__nativeSelect = select;
+
+        wrapper.innerHTML = `
+            <button type="button" class="nt-select-trigger" aria-haspopup="listbox" aria-expanded="false">
+                <span class="nt-select-value"></span>
+                <i class="fas fa-chevron-down nt-select-arrow" aria-hidden="true"></i>
+            </button>
+            <div class="nt-select-menu" role="listbox" aria-hidden="true">
+                <div class="nt-select-highlight"></div>
+                <div class="nt-select-options"></div>
+            </div>
+        `;
+
+        select.insertAdjacentElement('afterend', wrapper);
+        rebuildCustomOptions(select, wrapper);
+        syncCustomSelectValue(select);
+
+        wrapper.querySelector('.nt-select-trigger')?.addEventListener('click', handleCustomSelectTriggerClick);
+        wrapper.querySelector('.nt-select-trigger')?.addEventListener('keydown', handleCustomSelectTriggerKeydown);
+        wrapper.querySelector('.nt-select-options')?.addEventListener('click', handleCustomSelectOptionsClick);
+        wrapper.querySelector('.nt-select-options')?.addEventListener('mousemove', handleCustomSelectOptionsMousemove);
+        wrapper.querySelector('.nt-select-options')?.addEventListener('mouseleave', () => moveHighlightToActive(wrapper, true));
+        select.addEventListener('change', () => syncCustomSelectValue(select));
+
+        return wrapper;
+    }
+
+    function rebuildCustomOptions(select, wrapper) {
+        const optionsBox = wrapper.querySelector('.nt-select-options');
+        if (!optionsBox) return;
+        optionsBox.innerHTML = '';
+        Array.from(select.options).forEach((option, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'nt-select-option';
+            button.dataset.value = option.value;
+            button.dataset.index = String(index);
+            button.textContent = option.textContent;
+            button.disabled = option.disabled;
+            button.setAttribute('role', 'option');
+            Array.from(option.attributes).forEach((attr) => {
+                if (attr.name.startsWith('data-')) button.setAttribute(attr.name, attr.value);
+            });
+            optionsBox.appendChild(button);
+        });
+        syncCustomSelectValue(select);
+    }
+
+    function refreshCustomSelects() { getCustomSelects().forEach((select) => refreshCustomSelectById(select.id)); }
+
+    function refreshCustomSelectById(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const wrapper = select.parentNode?.querySelector(`.nt-custom-select[data-select-id="${selectId}"]`) || buildCustomSelect(select);
+        if (!wrapper) return;
+        select.classList.add('nt-native-select-hidden');
+        wrapper.__nativeSelect = select;
+        rebuildCustomOptions(select, wrapper);
+        syncCustomSelectValue(select);
+    }
+
+    function openCustomSelect(wrapper) {
+        if (!wrapper) return;
+        closeAllCustomSelects(wrapper);
+        const select = wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId);
+        if (select?.disabled) return;
+        const timer = customSelectState.closingTimers.get(wrapper);
+        if (timer) clearTimeout(timer);
+        wrapper.classList.remove('is-closing', 'open-up');
+        const menu = wrapper.querySelector('.nt-select-menu');
+        const rect = wrapper.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < 330 && rect.top > spaceBelow) wrapper.classList.add('open-up');
+        wrapper.classList.add('is-open');
+        wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'true');
+        menu?.setAttribute('aria-hidden', 'false');
+        requestAnimationFrame(() => moveHighlightToActive(wrapper, false));
+    }
+
+    function closeCustomSelect(wrapper) {
+        if (!wrapper || !wrapper.classList.contains('is-open')) return;
+        wrapper.classList.remove('is-open');
+        wrapper.classList.add('is-closing');
+        wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'false');
+        wrapper.querySelector('.nt-select-menu')?.setAttribute('aria-hidden', 'true');
+        const timer = setTimeout(() => wrapper.classList.remove('is-closing', 'open-up'), 260);
+        customSelectState.closingTimers.set(wrapper, timer);
+    }
+
+    function closeAllCustomSelects(exceptWrapper) {
+        document.querySelectorAll('.nt-custom-select.is-open').forEach((wrapper) => {
+            if (wrapper !== exceptWrapper) closeCustomSelect(wrapper);
+        });
+    }
+
+    function syncCustomSelectValue(select) {
+        const wrapper = select?.parentNode?.querySelector(`.nt-custom-select[data-select-id="${select.id}"]`);
+        if (!wrapper) return;
+        const selectedOption = select.options[select.selectedIndex] || select.options[0];
+        wrapper.querySelector('.nt-select-value').textContent = selectedOption?.textContent || '';
+        wrapper.classList.toggle('is-disabled', select.disabled);
+        wrapper.querySelectorAll('.nt-select-option').forEach((option) => {
+            const isActive = option.dataset.index === String(select.selectedIndex);
+            option.classList.toggle('is-selected', isActive);
+            option.setAttribute('aria-selected', String(isActive));
+        });
+        moveHighlightToActive(wrapper, true);
+    }
+
+    function handleCustomOptionSelect(select, optionValue, optionIndex = null) {
+        if (!select) return;
+        select.value = optionValue;
+        if (select.value !== optionValue && optionIndex !== null) select.selectedIndex = Number(optionIndex);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncCustomSelectValue(select);
+    }
+
+    function handleCustomSelectTriggerClick(e) {
+        const wrapper = e.currentTarget.closest('.nt-custom-select');
+        wrapper.classList.contains('is-open') ? closeCustomSelect(wrapper) : openCustomSelect(wrapper);
+    }
+
+    function handleCustomSelectTriggerKeydown(e) {
+        if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) return;
+        e.preventDefault();
+        const wrapper = e.currentTarget.closest('.nt-custom-select');
+        openCustomSelect(wrapper);
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1);
+    }
+
+    function handleCustomSelectOptionsClick(e) {
+        const option = e.target.closest('.nt-select-option');
+        if (!option || option.disabled) return;
+        const wrapper = option.closest('.nt-custom-select');
+        handleCustomOptionSelect(wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId), option.dataset.value, option.dataset.index);
+        closeCustomSelect(wrapper);
+        wrapper.querySelector('.nt-select-trigger')?.focus();
+    }
+
+    function handleCustomSelectOptionsMousemove(e) {
+        const option = e.target.closest('.nt-select-option');
+        if (option) moveHighlightToOption(option.closest('.nt-custom-select'), option, true);
+    }
+
+    function handleCustomSelectDocumentClick(e) {
+        if (!e.target.closest('.nt-custom-select')) closeAllCustomSelects();
+    }
+
+    function handleCustomSelectDocumentKeydown(e) {
+        const wrapper = document.querySelector('.nt-custom-select.is-open');
+        if (!wrapper) return;
+        if (e.key === 'Escape') { e.preventDefault(); closeCustomSelect(wrapper); wrapper.querySelector('.nt-select-trigger')?.focus(); }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1); }
+        if (e.key === 'Enter' || e.key === ' ') {
+            const focused = wrapper.querySelector('.nt-select-option.is-key-focused') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
+            if (focused && !focused.disabled) { e.preventDefault(); handleCustomOptionSelect(wrapper.__nativeSelect, focused.dataset.value, focused.dataset.index); closeCustomSelect(wrapper); }
+        }
+    }
+
+    function focusAdjacentCustomOption(wrapper, direction) {
+        const options = Array.from(wrapper.querySelectorAll('.nt-select-option:not(:disabled)'));
+        if (!options.length) return;
+        const current = wrapper.querySelector('.nt-select-option.is-key-focused') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
+        let index = options.indexOf(current);
+        index = index < 0 ? 0 : (index + direction + options.length) % options.length;
+        wrapper.querySelectorAll('.nt-select-option.is-key-focused').forEach((el) => el.classList.remove('is-key-focused'));
+        options[index].classList.add('is-key-focused');
+        options[index].scrollIntoView({ block: 'nearest' });
+        moveHighlightToOption(wrapper, options[index], true);
+    }
+
+    function moveHighlightToActive(wrapper, fadeIfMissing) {
+        const active = wrapper?.querySelector('.nt-select-option.is-selected:not(:disabled)');
+        if (active) moveHighlightToOption(wrapper, active, true);
+        else if (fadeIfMissing) wrapper?.querySelector('.nt-select-highlight')?.style.setProperty('opacity', '0');
+    }
+
+    function moveHighlightToOption(wrapper, option, visible) {
+        const highlight = wrapper?.querySelector('.nt-select-highlight');
+        const optionsBox = wrapper?.querySelector('.nt-select-options');
+        if (!highlight || !option || !optionsBox) return;
+        highlight.style.opacity = visible ? '1' : '0';
+        highlight.style.height = `${option.offsetHeight}px`;
+        highlight.style.transform = `translate3d(0, ${option.offsetTop - optionsBox.scrollTop}px, 0)`;
+    }
+
 
     function attachCardEvents() {
         const cards = document.querySelectorAll('.task-type-card');
@@ -690,11 +952,9 @@
             if (modalTitleText) modalTitleText.textContent = 'Şirkət Tapşırığı';
 
             const parentSelect = document.getElementById('newtaskParentSelect');
-            if (parentSelect) {
-                const newSelect = parentSelect.cloneNode(true);
-                parentSelect.parentNode.replaceChild(newSelect, parentSelect);
-                newSelect.id = 'newtaskParentSelect';
-                newSelect.addEventListener('change', async (e) => {
+            if (parentSelect && !parentSelect.dataset.parentEmployeeListener) {
+                parentSelect.dataset.parentEmployeeListener = 'true';
+                parentSelect.addEventListener('change', async (e) => {
                     if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
                 });
             }
@@ -708,6 +968,7 @@
         setRequiredFields(taskType);
         modalOverlay.classList.add('active');
         resetForm();
+        refreshCustomSelects();
     }
 
     async function selectCompanyCEO(companyId) {
@@ -749,6 +1010,7 @@
     }
 
     function closeModal() {
+        closeAllCustomSelects();
         modalOverlay.classList.remove('active');
         resetForm();
         if (mediaRecorder && isRecording) stopRecording();
@@ -804,6 +1066,7 @@
             dueDateInput.value = d.toISOString().split('T')[0];
         }
 
+        refreshCustomSelects();
         console.log('✅ Form təmizləndi');
     }
 
@@ -1194,8 +1457,27 @@
                     await loadCompanyEmployees(companyId);
                 } else {
                     const otherEl = document.getElementById('newtaskOtherExecutorSelect');
-                    if (otherEl) otherEl.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                    if (otherEl) {
+                        otherEl.innerHTML = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
+                        refreshCustomSelectById('newtaskOtherExecutorSelect');
+                    }
                 }
+            });
+        }
+
+        const parentSelect = document.getElementById('newtaskParentSelect');
+        if (parentSelect && !parentSelect.dataset.parentEmployeeListener) {
+            parentSelect.dataset.parentEmployeeListener = 'true';
+            parentSelect.addEventListener('change', async (e) => {
+                if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
+            });
+        }
+
+        const partnerSelect = document.getElementById('newtaskPartnerSelect');
+        if (partnerSelect && !partnerSelect.dataset.partnerEmployeeListener) {
+            partnerSelect.dataset.partnerEmployeeListener = 'true';
+            partnerSelect.addEventListener('change', async (e) => {
+                if (e.target.value) await loadCompanyEmployees(parseInt(e.target.value));
             });
         }
 
@@ -1221,6 +1503,7 @@
 
             otherExecutorSelect.innerHTML = '<option value="">Yüklənir...</option>';
             otherExecutorSelect.disabled = true;
+            refreshCustomSelectById('newtaskOtherExecutorSelect');
 
             // ✅ FIX: Əgər öz şirkəti seçilibsə, artıq yüklənmiş employees-i istifadə et
             if (myCompany?.id && parseInt(companyId) === parseInt(myCompany.id)) {
@@ -1235,6 +1518,7 @@
                     });
                     otherExecutorSelect.innerHTML = html;
                     otherExecutorSelect.disabled = false;
+                    refreshCustomSelectById('newtaskOtherExecutorSelect');
                     return;
                 }
             }
@@ -1252,6 +1536,7 @@
                     });
                     otherExecutorSelect.innerHTML = html;
                     otherExecutorSelect.disabled = false;
+                    refreshCustomSelectById('newtaskOtherExecutorSelect');
                     return;
                 }
             }
@@ -1288,8 +1573,8 @@
             if (!companyCode && partners.length > 0) {
                 const myCompanyCode = window.taskManager?.userData?.companyCode;
                 for (const partner of partners) {
-                    const pid = partner.partner_company_id || partner.company_id || partner.target_company_id;
-                    if (pid == companyId) {
+                    const pid = partner.partner_company_id || partner.company_id || partner.target_company_id || partner.id;
+                    if (pid == companyId || partner.id == companyId) {
                         companyCode = partner.requester_company_code === myCompanyCode
                             ? partner.target_company_code
                             : partner.requester_company_code;
@@ -1302,6 +1587,7 @@
             if (!companyCode) {
                 otherExecutorSelect.innerHTML = `<option value="">İşçi tapılmadı (${companyName || companyId} üçün kod tapılmadı)</option>`;
                 otherExecutorSelect.disabled = false;
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
                 return;
             }
 
@@ -1321,14 +1607,17 @@
                 otherExecutorSelect.innerHTML = html;
                 if (ceoId) {
                     otherExecutorSelect.value = ceoId;
+                    otherExecutorSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     showAutoSelectNotification('rəhbər', ceoName);
                 } else if (employeesList.length > 0) {
                     otherExecutorSelect.value = employeesList[0].id;
+                    otherExecutorSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             } else {
                 otherExecutorSelect.innerHTML = '<option value="">İşçi tapılmadı</option>';
             }
             otherExecutorSelect.disabled = false;
+            refreshCustomSelectById('newtaskOtherExecutorSelect');
         } catch (error) {
             console.error('❌ Şirkət işçiləri xətası:', error);
             const el = document.getElementById('newtaskOtherExecutorSelect');
@@ -1339,6 +1628,7 @@
                     : 'İşçilər yüklənə bilmədi';
                 el.innerHTML = `<option value="">${msg}</option>`;
                 el.disabled = false;
+                refreshCustomSelectById('newtaskOtherExecutorSelect');
             }
         }
     }

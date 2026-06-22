@@ -330,3 +330,204 @@
     .newtask-input { min-height: 58px; }
     .newtask-textarea { border-radius: 30px; }
 }
+
+/* ================= Custom Liquid Selects ================= */
+:root {
+    --nt-field-height: 68px;
+    --nt-field-radius: 999px;
+}
+
+.newtask-modal-body { overflow-x: visible; }
+.newtask-form-group,
+.glass-field { position: relative; }
+.glass-field:has(.nt-custom-select.is-open) { z-index: 10040; }
+
+.nt-native-select-hidden {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+}
+
+.nt-custom-select {
+    position: relative;
+    width: 100%;
+    z-index: 1;
+    font-family: "Cal Sans", Inter, Arial, sans-serif;
+}
+
+.nt-custom-select.is-open { z-index: 10050; }
+.nt-custom-select.is-disabled { opacity: .68; pointer-events: none; }
+
+.nt-select-trigger {
+    width: 100%;
+    height: var(--nt-field-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0 24px;
+    border-radius: var(--nt-field-radius);
+    background: rgba(255,255,255,0.74);
+    backdrop-filter: blur(22px) saturate(1.35);
+    -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    border: 1px solid rgba(255,255,255,0.75);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 12px 32px rgba(15,23,42,0.08);
+    color: #050505;
+    cursor: pointer;
+    outline: none;
+    font: 700 16px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    text-align: left;
+    transition: border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow .28s ease, transform .22s ease, border-color .22s ease, background .22s ease;
+}
+
+.nt-select-trigger:hover,
+.nt-select-trigger:focus-visible {
+    border-color: rgba(67,136,255,.42);
+    background: rgba(255,255,255,.86);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 0 0 5px rgba(67,136,255,.11), 0 18px 42px rgba(67,136,255,.13);
+}
+
+.nt-custom-select.is-open .nt-select-trigger {
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,1), 0 18px 48px rgba(15,23,42,.14), 0 0 0 5px rgba(67,136,255,.10);
+}
+
+.nt-select-value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.nt-select-arrow {
+    flex: 0 0 auto;
+    color: rgba(5,5,5,.58);
+    transition: transform 340ms cubic-bezier(0.22, 1, 0.36, 1), color .22s ease;
+}
+.nt-custom-select.is-open .nt-select-arrow { transform: rotate(180deg); color: var(--newtask-blue); }
+
+.nt-select-menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    padding: 14px;
+    border-radius: 0 0 32px 32px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(28px) saturate(1.45);
+    -webkit-backdrop-filter: blur(28px) saturate(1.45);
+    border: 1px solid rgba(255,255,255,0.78);
+    box-shadow: 0 28px 70px rgba(15,23,42,0.18), inset 0 1px 0 rgba(255,255,255,0.85);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px) scaleY(0.94);
+    transform-origin: top center;
+    filter: blur(8px);
+    transition: opacity 260ms ease, visibility 260ms ease, transform 360ms cubic-bezier(0.22, 1, 0.36, 1), filter 300ms ease;
+}
+
+.nt-custom-select.is-open .nt-select-menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scaleY(1);
+    filter: blur(0);
+}
+
+.nt-custom-select.is-closing .nt-select-menu {
+    visibility: visible;
+    pointer-events: none;
+}
+
+.nt-custom-select.open-up .nt-select-menu {
+    top: auto;
+    bottom: calc(100% + 2px);
+    border-radius: 32px 32px 0 0;
+    transform-origin: bottom center;
+    transform: translateY(8px) scaleY(0.94);
+}
+.nt-custom-select.open-up.is-open .nt-select-menu { transform: translateY(0) scaleY(1); }
+.nt-custom-select.open-up.is-open .nt-select-trigger {
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    border-bottom-left-radius: var(--nt-field-radius);
+    border-bottom-right-radius: var(--nt-field-radius);
+}
+
+.nt-select-options {
+    position: relative;
+    max-height: min(280px, 48vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(67,136,255,.32) rgba(255,255,255,.35);
+}
+.nt-select-options::-webkit-scrollbar { width: 7px; }
+.nt-select-options::-webkit-scrollbar-track { background: rgba(255,255,255,.35); border-radius: 999px; }
+.nt-select-options::-webkit-scrollbar-thumb { background: rgba(67,136,255,.28); border-radius: 999px; }
+
+.nt-select-highlight {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 2px;
+    height: 46px;
+    opacity: 0;
+    background: rgba(191, 218, 255, 0.62);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 10px 24px rgba(67,136,255,.14);
+    transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1), height 360ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+    pointer-events: none;
+}
+
+.nt-select-option {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    margin: 2px 0;
+    border: 0;
+    border-radius: 22px;
+    background: transparent;
+    color: #050505;
+    cursor: pointer;
+    font: 700 16px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    text-align: left;
+    transition: color .22s ease, transform .22s ease, background .22s ease;
+}
+
+.nt-select-option:hover,
+.nt-select-option.is-key-focused { transform: translateX(3px); }
+.nt-select-option.is-selected {
+    font-weight: 800;
+    color: #0f4fb8;
+    background: rgba(191, 218, 255, 0.28);
+}
+.nt-select-option:disabled {
+    cursor: not-allowed;
+    opacity: .52;
+    transform: none;
+}
+
+@media (max-width: 640px) {
+    :root { --nt-field-height: 60px; }
+    .nt-select-trigger { padding: 0 18px; font-size: 15px; }
+    .nt-select-menu { padding: 10px; border-radius: 26px; }
+    .nt-select-options { max-height: min(260px, 52vh); }
+    .nt-select-option { min-height: 44px; padding: 0 14px; font-size: 15px; }
+}
