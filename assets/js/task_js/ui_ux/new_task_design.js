@@ -5,8 +5,17 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let isPaused = false;
     let audioStream = null;
+    let audioContext = null;
+    let audioAnalyser = null;
     let animationId = null;
+    let audioBlob = null;
+
+    let recordingStartedAt = 0;
+    let elapsedBeforePause = 0;
+    let timerInterval = null;
+    let waveformLevels = new Array(32).fill(0.18);
 
     let modalOverlay = null;
     let modalTitleIcon = null;
@@ -14,6 +23,7 @@
 
     let companyGroup, parentGroup, partnerGroup, executorGroup, otherExecutorGroup;
     let startBtn, stopBtn, saveBtn, cancelBtn, audioStatus, audioPreview, recordedAudio, audioData, audioFilename, visualizer;
+    let voiceShell, voiceRecordingUi, pauseBtn, recordingTimer, timerDisplay;
     let fileZone, fileInput, fileList;
 
     let myCompany = null;
@@ -384,20 +394,45 @@
 
                                 <div class="newtask-form-group glass-field glass-media-field">
                                     <label class="newtask-form-label"><i class="fas fa-wave-square"></i> Səs qeydi</label>
-                                    <div class="newtask-audio-container glass-audio-zone">
-                                        <div class="newtask-audio-status" id="newtaskAudioStatus">
-                                            <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
+                                    <div class="newtask-audio-container glass-audio-zone nt-voice-recorder" id="newtaskVoiceRecorder">
+                                        <div class="nt-voice-shell" id="newtaskVoiceShell" data-state="idle">
+                                            <button type="button" id="newtaskStartRecord" class="nt-voice-main-btn" aria-label="Səs qeydinə başla">
+                                                <i class="fas fa-microphone"></i>
+                                            </button>
+
+                                            <div class="nt-voice-recording-ui" id="newtaskVoiceRecordingUi" hidden>
+                                                <canvas id="newtaskAudioVisualizer" class="nt-voice-waveform" width="520" height="110"></canvas>
+
+                                                <div class="nt-voice-actions">
+                                                    <button type="button" id="newtaskStopRecord" class="nt-voice-action nt-voice-stop" disabled aria-label="Dayandır">
+                                                        <i class="fas fa-square"></i>
+                                                    </button>
+
+                                                    <button type="button" id="newtaskPauseRecord" class="nt-voice-action nt-voice-pause" disabled aria-label="Pauza">
+                                                        <i class="fas fa-pause"></i>
+                                                    </button>
+
+                                                    <button type="button" id="newtaskSaveRecord" class="nt-voice-action nt-voice-send" disabled aria-label="Səs qeydini əlavə et">
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="newtask-audio-buttons">
-                                            <button type="button" id="newtaskStartRecord" class="newtask-audio-btn primary record-main"><i class="fas fa-microphone"></i><span>Başla</span></button>
-                                            <button type="button" id="newtaskStopRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-stop"></i><span>Dayandır</span></button>
-                                            <button type="button" id="newtaskSaveRecord" class="newtask-audio-btn primary" disabled><i class="fas fa-save"></i><span>Saxla</span></button>
-                                            <button type="button" id="newtaskCancelRecord" class="newtask-audio-btn secondary" disabled><i class="fas fa-times"></i><span>Ləğv et</span></button>
+
+                                        <div class="nt-voice-meta-row">
+                                            <div class="newtask-audio-status recording-status" id="newtaskAudioStatus">
+                                                <i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>
+                                            </div>
+                                            <div class="recording-timer" id="newtaskRecordingTimer" style="display:none;">
+                                                <i class="fas fa-clock"></i>
+                                                <span id="newtaskTimerDisplay">00:00</span>
+                                            </div>
                                         </div>
-                                        <div id="newtaskAudioPreview" class="newtask-audio-preview" style="display:none;">
+
+                                        <div id="newtaskAudioPreview" class="newtask-audio-preview audio-preview" style="display:none;">
                                             <audio id="newtaskRecordedAudio" controls></audio>
                                         </div>
-                                        <canvas id="newtaskAudioVisualizer" width="600" height="40"></canvas>
+
                                         <input type="hidden" id="newtaskAudioData" />
                                         <input type="hidden" id="newtaskAudioFilename" />
                                     </div>
@@ -431,6 +466,11 @@
         stopBtn = document.getElementById('newtaskStopRecord');
         saveBtn = document.getElementById('newtaskSaveRecord');
         cancelBtn = document.getElementById('newtaskCancelRecord');
+        voiceShell = document.getElementById('newtaskVoiceShell');
+        voiceRecordingUi = document.getElementById('newtaskVoiceRecordingUi');
+        pauseBtn = document.getElementById('newtaskPauseRecord');
+        recordingTimer = document.getElementById('newtaskRecordingTimer');
+        timerDisplay = document.getElementById('newtaskTimerDisplay');
         audioStatus = document.getElementById('newtaskAudioStatus');
         audioPreview = document.getElementById('newtaskAudioPreview');
         recordedAudio = document.getElementById('newtaskRecordedAudio');
@@ -1028,7 +1068,6 @@
         closeAllCustomSelects();
         modalOverlay.classList.remove('active');
         resetForm();
-        if (mediaRecorder && isRecording) stopRecording();
     }
 
     function resetForm() {
@@ -1046,32 +1085,27 @@
         if (fileList) fileList.innerHTML = '<div class="newtask-file-list-empty">Heç bir fayl seçilməyib</div>';
 
         // 🔥 AUDIO MƏLUMATLARINI TƏMİZLƏ
-        const audioDataInput = document.getElementById('newtaskAudioData');
-        const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-        const audioPreview = document.getElementById('newtaskAudioPreview');
-        const recordedAudio = document.getElementById('newtaskRecordedAudio');
-        const audioStatus = document.getElementById('newtaskAudioStatus');
-        const visualizer = document.getElementById('newtaskAudioVisualizer');
-        const startBtn = document.getElementById('newtaskStartRecord');
-        const stopBtn = document.getElementById('newtaskStopRecord');
-        const saveBtn = document.getElementById('newtaskSaveRecord');
-        const cancelBtn = document.getElementById('newtaskCancelRecord');
-
-        if (audioDataInput) audioDataInput.value = '';
-        if (audioFilenameInput) audioFilenameInput.value = '';
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.onstop = null;
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            stopAudioStream();
+        }
+        audioBlob = null;
+        audioChunks = [];
+        isRecording = false;
+        isPaused = false;
+        elapsedBeforePause = 0;
+        recordingStartedAt = 0;
+        clearInterval(timerInterval);
+        if (animationId) cancelAnimationFrame(animationId);
+        if (audioData) audioData.value = '';
+        if (audioFilename) audioFilename.value = '';
         if (audioPreview) audioPreview.style.display = 'none';
         if (recordedAudio) recordedAudio.src = '';
-        if (audioStatus) audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
-        if (startBtn) startBtn.disabled = false;
-        if (stopBtn) stopBtn.disabled = true;
-        if (saveBtn) saveBtn.disabled = true;
-        if (cancelBtn) cancelBtn.disabled = true;
-
-        if (visualizer) {
-            const ctx = visualizer.getContext('2d');
-            ctx.fillStyle = '#e9ecef';
-            ctx.fillRect(0, 0, visualizer.width, visualizer.height);
-        }
+        if (timerDisplay) timerDisplay.textContent = '00:00';
+        waveformLevels = new Array(32).fill(0.18);
+        setVoiceState('idle');
+        drawWaveform(false);
 
         // Default due date (sabah)
         const dueDateInput = document.getElementById('newtaskDueDate');
@@ -1087,10 +1121,12 @@
 
     function stopRecording() {
         if (mediaRecorder && isRecording) {
-            mediaRecorder.stop();
-            if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+            stopTimer();
             if (animationId) cancelAnimationFrame(animationId);
             isRecording = false;
+            isPaused = false;
+            if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            stopAudioStream();
         }
     }
 
@@ -1155,131 +1191,202 @@
         console.log('✅ PrtScn capture modal üçün hazırdır');
     }
 
+    function setVoiceState(state) {
+        if (voiceShell) voiceShell.dataset.state = state;
+        if (startBtn) startBtn.hidden = state !== 'idle';
+        if (voiceRecordingUi) voiceRecordingUi.hidden = state === 'idle';
+
+        if (stopBtn) stopBtn.disabled = !['recording', 'paused'].includes(state);
+        if (pauseBtn) pauseBtn.disabled = !['recording', 'paused'].includes(state);
+        if (saveBtn) saveBtn.disabled = !['recording', 'paused', 'stopped'].includes(state) || state === 'saved';
+
+        const pauseIcon = pauseBtn?.querySelector('i');
+        if (pauseIcon) pauseIcon.className = state === 'paused' ? 'fas fa-play' : 'fas fa-pause';
+
+        const statusText = {
+            idle: 'Səs qeydi hazırdır',
+            recording: 'Qeyd edilir...',
+            paused: 'Pauzada',
+            stopped: 'Qeyd dayandırıldı',
+            saved: 'Səs qeydi əlavə edildi'
+        }[state] || 'Səs qeydi hazırdır';
+        if (audioStatus) audioStatus.innerHTML = `<i class="fas fa-circle"></i><span>${statusText}</span>`;
+        if (recordingTimer) recordingTimer.style.display = ['recording', 'paused', 'stopped', 'saved'].includes(state) ? 'flex' : 'none';
+    }
+
+    function formatRecordingTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${minutes}:${seconds}`;
+    }
+
+    function updateTimerDisplay() {
+        const elapsed = isRecording && !isPaused ? elapsedBeforePause + (Date.now() - recordingStartedAt) : elapsedBeforePause;
+        if (timerDisplay) timerDisplay.textContent = formatRecordingTime(elapsed);
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        recordingStartedAt = Date.now();
+        timerInterval = setInterval(updateTimerDisplay, 250);
+        updateTimerDisplay();
+    }
+
+    function pauseTimer() {
+        if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt;
+        clearInterval(timerInterval);
+        updateTimerDisplay();
+    }
+
+    function stopTimer() {
+        if (isRecording && !isPaused) elapsedBeforePause += Date.now() - recordingStartedAt;
+        clearInterval(timerInterval);
+        updateTimerDisplay();
+    }
+
+    function drawRoundedRect(ctx, x, y, w, h, r) {
+        if (ctx.roundRect) {
+            ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); return;
+        }
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.fill();
+    }
+
+    function drawWaveform(live = false) {
+        if (!visualizer) return;
+        const ctx = visualizer.getContext('2d');
+        const width = visualizer.width;
+        const height = visualizer.height;
+        const centerY = height / 2;
+        const bars = waveformLevels.length;
+        const gap = 8;
+        const barWidth = Math.max(5, (width - gap * (bars - 1)) / bars);
+        let dataArray = null;
+        if (live && audioAnalyser && !isPaused) {
+            dataArray = new Uint8Array(audioAnalyser.frequencyBinCount);
+            audioAnalyser.getByteFrequencyData(dataArray);
+        }
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#08aeea';
+        for (let i = 0; i < bars; i++) {
+            const source = dataArray ? dataArray[Math.floor(i * dataArray.length / bars)] / 255 : 0.18;
+            const target = Math.max(0.16, Math.min(1, source));
+            if (live && !isPaused) waveformLevels[i] += (target - waveformLevels[i]) * 0.22;
+            const barHeight = Math.max(16, waveformLevels[i] * (height - 18));
+            const x = i * (barWidth + gap);
+            const y = centerY - barHeight / 2;
+            drawRoundedRect(ctx, x, y, barWidth, barHeight, barWidth / 2);
+        }
+    }
+
+    function startWaveform() {
+        cancelAnimationFrame(animationId);
+        const animate = () => {
+            drawWaveform(true);
+            if (isRecording && !isPaused) animationId = requestAnimationFrame(animate);
+        };
+        animate();
+    }
+
+    function stopAudioStream() {
+        if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+        audioStream = null;
+        if (audioContext) audioContext.close().catch(() => {});
+        audioContext = null;
+        audioAnalyser = null;
+    }
+
     function setupAudioRecorder() {
         if (!startBtn) return;
+        setVoiceState('idle');
+        drawWaveform(false);
 
         startBtn.onclick = async () => {
             try {
                 audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(audioStream);
                 audioChunks = [];
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                audioBlob = null;
+                isRecording = false;
+                isPaused = false;
+                elapsedBeforePause = 0;
+                if (timerDisplay) timerDisplay.textContent = '00:00';
+                if (audioPreview) audioPreview.style.display = 'none';
+                if (recordedAudio) recordedAudio.src = '';
+                if (audioData) audioData.value = '';
+                if (audioFilename) audioFilename.value = '';
+
+                mediaRecorder.ondataavailable = (e) => { if (e.data?.size) audioChunks.push(e.data); };
                 mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    recordedAudio.src = URL.createObjectURL(blob);
-                    audioPreview.style.display = 'block';
+                    audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+                    const filename = `recording_${Date.now()}.webm`;
+                    if (recordedAudio) recordedAudio.src = URL.createObjectURL(audioBlob);
+                    if (audioPreview) audioPreview.style.display = 'block';
+                    if (audioFilename) audioFilename.value = filename;
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                        audioData.value = reader.result;
-                        audioFilename.value = `recording_${Date.now()}.webm`;
-                    };
-                    reader.readAsDataURL(blob);
-                    saveBtn.disabled = false;
+                    reader.onloadend = () => { if (audioData) audioData.value = reader.result; };
+                    reader.readAsDataURL(audioBlob);
+                    setVoiceState('stopped');
                 };
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(audioStream);
+                audioAnalyser = audioContext.createAnalyser();
+                audioAnalyser.fftSize = 256;
+                source.connect(audioAnalyser);
+
                 mediaRecorder.start();
                 isRecording = true;
-                startBtn.disabled = true; stopBtn.disabled = false; cancelBtn.disabled = false; saveBtn.disabled = true;
-                audioStatus.innerHTML = '<i class="fas fa-circle" style="color:#dc3545;"></i><span>Qeyd edilir...</span>';
-
-                const audioContext = new AudioContext();
-                const source = audioContext.createMediaStreamSource(audioStream);
-                const analyser = audioContext.createAnalyser();
-                source.connect(analyser);
-                analyser.fftSize = 256;
-                const bufferLength = analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                const ctx = visualizer.getContext('2d');
-                function draw() {
-                    animationId = requestAnimationFrame(draw);
-                    analyser.getByteFrequencyData(dataArray);
-                    ctx.fillStyle = '#e9ecef';
-                    ctx.fillRect(0, 0, visualizer.width, visualizer.height);
-                    const barWidth = (visualizer.width / bufferLength) * 2;
-                    let x = 0;
-                    for (let i = 0; i < bufferLength; i++) {
-                        ctx.fillStyle = '#007bff';
-                        ctx.fillRect(x, visualizer.height - dataArray[i]/2, barWidth, dataArray[i]/2);
-                        x += barWidth + 1;
-                    }
-                }
-                draw();
+                setVoiceState('recording');
+                startTimer();
+                startWaveform();
             } catch (err) {
+                console.error('Mikrofon xətası:', err);
                 alert('Mikrofon icazəsi tələb olunur!');
+                setVoiceState('idle');
             }
         };
 
-        stopBtn.onclick = () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                if (animationId) cancelAnimationFrame(animationId);
-                isRecording = false;
-                startBtn.disabled = false; stopBtn.disabled = true; cancelBtn.disabled = false;
-                audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Qeyd dayandırıldı</span>';
-            }
-        };
-
-        cancelBtn.onclick = () => {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-                if (animationId) cancelAnimationFrame(animationId);
-            }
-            audioPreview.style.display = 'none'; recordedAudio.src = '';
-            audioData.value = ''; audioFilename.value = '';
-            startBtn.disabled = false; stopBtn.disabled = true; saveBtn.disabled = true; cancelBtn.disabled = true;
-            isRecording = false;
-            audioStatus.innerHTML = '<i class="fas fa-circle"></i><span>Səs qeydi hazırdır</span>';
-            const ctx = visualizer.getContext('2d');
-            ctx.fillStyle = '#e9ecef';
-            ctx.fillRect(0, 0, visualizer.width, visualizer.height);
-        };
-
-        // 🔥 SAVE BTN EVENT-İ BURADA OLMALIDIR!
-        saveBtn.onclick = () => {
-            console.log('💾 Saxla düyməsi basıldı');
-
-            const audioDataInput = document.getElementById('newtaskAudioData');
-            const audioFilenameInput = document.getElementById('newtaskAudioFilename');
-
-            if (audioDataInput && audioDataInput.value && audioFilenameInput && audioFilenameInput.value) {
-                console.log(`✅ Audio saxlanıldı! Uzunluq: ${audioDataInput.value.length}`);
-                console.log(`   Filename: ${audioFilenameInput.value}`);
-
-                try {
-                    let base64Data = audioDataInput.value;
-                    if (base64Data.includes(',')) {
-                        base64Data = base64Data.split(',')[1];
-                    }
-
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const audioBlob = new Blob([byteArray], { type: 'audio/webm' });
-                    const audioFile = new File([audioBlob], audioFilenameInput.value, { type: 'audio/webm' });
-
-                    if (!window.modalSelectedFiles) {
-                        window.modalSelectedFiles = [];
-                    }
-
-                    const isDuplicate = window.modalSelectedFiles.some(f => f.name === audioFile.name);
-                    if (!isDuplicate) {
-                        window.modalSelectedFiles.push(audioFile);
-                        console.log(`🎤 Audio fayl siyahısına əlavə edildi: ${audioFile.name}`);
-                        updateModalFileList();
-                    }
-                } catch (err) {
-                    console.error('❌ Audio fayl yaradılarkən xəta:', err);
-                }
-
-                saveBtn.disabled = true;
-                cancelBtn.disabled = false;
+        pauseBtn.onclick = () => {
+            if (!mediaRecorder || !isRecording) return;
+            if (!isPaused) {
+                if (mediaRecorder.state === 'recording' && mediaRecorder.pause) mediaRecorder.pause();
+                isPaused = true;
+                pauseTimer();
+                cancelAnimationFrame(animationId);
+                setVoiceState('paused');
+                drawWaveform(false);
             } else {
-                console.error('❌ Audio saxlanılmadı!');
+                if (mediaRecorder.state === 'paused' && mediaRecorder.resume) mediaRecorder.resume();
+                isPaused = false;
+                setVoiceState('recording');
+                startTimer();
+                startWaveform();
             }
+        };
+
+        stopBtn.onclick = () => stopRecording();
+
+        saveBtn.onclick = () => {
+            if (!audioBlob || !audioFilename?.value) return;
+            const audioFile = new File([audioBlob], audioFilename.value, { type: audioBlob.type || 'audio/webm' });
+            if (!window.modalSelectedFiles) window.modalSelectedFiles = [];
+            if (!window.modalSelectedFiles.some(f => f.name === audioFile.name)) {
+                window.modalSelectedFiles.push(audioFile);
+                updateModalFileList();
+            }
+            setVoiceState('saved');
         };
     }
 
