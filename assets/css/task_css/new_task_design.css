@@ -14,6 +14,7 @@
     --newtask-green: #82e86a;
     --newtask-red: #ee7379;
     --nt-media-zone-height: 128px;
+    --nt-media-zone-radius: 999px;
 }
 
 .task-type-cards-container {
@@ -970,23 +971,65 @@
 }
 
 
-/* Equalized media pill sizing for file upload and voice recorder. */
+
+/* Yeni tapşırıq media row alignment: keep upload and voice pills equal and label-safe. */
+.glass-media-field,
+.form-group.full-width:has(.file-upload-zone),
+.form-group.full-width:has(.nt-voice-recorder),
+.audio-recorder-container.nt-voice-recorder,
+.nt-voice-recorder {
+  display: flex;
+  flex-direction: column;
+}
+
+.newtask-form-label,
+.form-label {
+  margin-bottom: 14px;
+}
+
+.newtask-audio-container,
+.audio-recorder-container.nt-voice-recorder,
+.nt-voice-recorder,
+.nt-voice-shell {
+  margin-top: 0 !important;
+  transform: none !important;
+  top: auto !important;
+}
+
+.newtask-form-grid,
+.form-grid {
+  align-items: start;
+}
+
+.newtask-audio-container,
+.newtask-audio-container.nt-voice-recorder {
+  height: auto !important;
+  min-height: 0 !important;
+}
+
 .newtask-file-zone,
 .glass-file-zone,
 .file-upload-zone,
 .nt-voice-shell {
-  min-height: var(--nt-media-zone-height);
-  height: var(--nt-media-zone-height);
+  height: var(--nt-media-zone-height) !important;
+  min-height: var(--nt-media-zone-height) !important;
+  border-radius: var(--nt-media-zone-radius);
+  margin-top: 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.nt-voice-recording-ui {
+  width: 100%;
+  align-items: center;
+}
+
 .nt-voice-main-btn,
 #newtaskStartRecord,
 #startRecordingBtn {
-  color: #fff;
+  color: #fff !important;
 }
 
 .nt-voice-main-btn i,
