@@ -1,0 +1,461 @@
+/* === SIDEBAR KOMPAKT STİLLƏR - TAM HƏLL === */
+
+/* İdarəetmə başlığı */
+h2.sidebar-title.text-sm.font-semibold.text-slate-400 {
+    color: #EF4444 !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+    margin-bottom: 1rem !important;
+    padding-left: 0.5rem !important;
+    border-left: 3px solid #EF4444 !important;
+}
+
+/* ===== BÜTÜN LİNKLƏR ÜÇÜN ÜMUMİ STİLLƏR ===== */
+nav a.sidebar-link {
+    color: #1F2937 !important;
+    background: transparent !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    border-radius: 12px !important;
+    margin: 2px 0 !important;
+    border-left: 3px solid transparent !important;
+}
+
+/* Hover effekti */
+nav a.sidebar-link:hover {
+    background: #EFF6FF !important;
+    color: #3B82F6 !important;
+    transform: translateX(5px) !important;
+}
+
+/* İkonlar */
+nav a.sidebar-link i {
+    color: #6B7280 !important;
+    font-size: 1.2rem !important;
+    width: 1.5rem !important;
+    text-align: center !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Hoverda ikon */
+nav a.sidebar-link:hover i {
+    color: #3B82F6 !important;
+    transform: scale(1.1) !important;
+}
+
+/* ===== GÜCLƏNDİRİLMİŞ AKTİV LİNK STİLLƏRİ ===== */
+nav a.sidebar-link.active,
+nav a.sidebar-link.bg-brand-soft.text-brand-blue {
+    background: #DBEAFE !important;  /* Daha tünd mavi fon */
+    color: #1E40AF !important;       /* Daha tünd mavi yazı */
+    font-weight: 700 !important;
+    border-left: 4px solid #2563EB !important; /* Qalın border */
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
+}
+
+nav a.sidebar-link.active i,
+nav a.sidebar-link.bg-brand-soft.text-brand-blue i {
+    color: #1E40AF !important;
+}
+
+/* Aktiv olmayan linklərin heç vaxt aktiv görünməməsi üçün */
+nav a.sidebar-link:not(.active):not(.bg-brand-soft.text-brand-blue) {
+    background: transparent !important;
+    color: #1F2937 !important;
+    border-left: 3px solid transparent !important;
+    box-shadow: none !important;
+}
+
+nav a.sidebar-link:not(.active):not(.bg-brand-soft.text-brand-blue) i {
+    color: #6B7280 !important;
+}
+
+/* Hover effekti aktiv linkdə də işləsin */
+nav a.sidebar-link.active:hover {
+    background: #DBEAFE !important;
+    transform: translateX(5px) !important;
+}
+
+/* ===== PROFİL LİNKİ XÜSUSİ ===== */
+a#profileBtn.sidebar-link {
+    color: #3B82F6 !important;
+    background: #EFF6FF !important;
+    border-left: 3px solid transparent !important;
+}
+
+a#profileBtn.sidebar-link i {
+    color: #3B82F6 !important;
+}
+
+a#profileBtn.sidebar-link.active,
+a#profileBtn.sidebar-link.bg-brand-soft.text-brand-blue {
+    background: #DBEAFE !important;
+    color: #1E40AF !important;
+    border-left: 4px solid #2563EB !important;
+}
+
+a#profileBtn.sidebar-link.active i,
+a#profileBtn.sidebar-link.bg-brand-soft.text-brand-blue i {
+    color: #1E40AF !important;
+}
+
+/* ===== KOMPAKT SIDEBAR ===== */
+.compact-sidebar:not(:hover) nav a.sidebar-link {
+    padding: 12px !important;
+    justify-content: center !important;
+}
+
+.compact-sidebar:not(:hover) nav a.sidebar-link span {
+    display: none !important;
+}
+
+.compact-sidebar:not(:hover) nav a.sidebar-link i {
+    margin: 0 !important;
+    font-size: 1.3rem !important;
+}
+
+.compact-sidebar:hover nav a.sidebar-link {
+    padding: 12px 16px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+}
+
+.compact-sidebar:hover nav a.sidebar-link span {
+    display: inline-block !important;
+}
+
+/* Tooltip */
+.compact-sidebar:not(:hover) nav a.sidebar-link {
+    position: relative !important;
+}
+
+.compact-sidebar:not(:hover) nav a.sidebar-link:hover::after {
+    content: attr(data-tooltip);
+    position: absolute !important;
+    left: 100% !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: #1F2937 !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    z-index: 9999 !important;
+    margin-left: 10px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    h2.sidebar-title.text-sm.font-semibold.text-slate-400 {
+        padding-left: 1rem !important;
+    }
+
+    nav a.sidebar-link {
+        padding: 12px 16px !important;
+    }
+}
+/* Loader animasiyaları */
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+/* Loader rəngləri */
+.border-t-brand-blue {
+    border-top-color: #7DB6FF !important;
+}
+
+/* Səhifə yüklənərkən scroll-u kilidlə */
+body.loading {
+    overflow: hidden !important;
+}
+/* ===== GECƏ REJİMİ ===== */
+body.dark-theme {
+    background-color: #1a1f2e !important;
+    color: #e5e7eb !important;
+}
+
+/* Sidebar - gecə rejimi */
+body.dark-theme #mainSidebar {
+    background-color: #242b3d !important;
+    border-color: #2d3748 !important;
+}
+
+body.dark-theme #sidebarContent {
+    background-color: #242b3d !important;
+}
+
+/* Başlıqlar */
+body.dark-theme h2.sidebar-title.text-sm.font-semibold.text-slate-400 {
+    color: #f87171 !important; /* Qırmızı qalsın, amma parlaq */
+}
+
+/* Linklər - normal */
+body.dark-theme nav a.sidebar-link {
+    color: #cbd5e1 !important; /* Açıq boz */
+}
+
+body.dark-theme nav a.sidebar-link i {
+    color: #94a3b8 !important; /* Boz ikonlar */
+}
+
+/* Hover effekti - gecə rejimi */
+body.dark-theme nav a.sidebar-link:hover {
+    background: #2d3748 !important;
+    color: #7DB6FF !important;
+}
+
+body.dark-theme nav a.sidebar-link:hover i {
+    color: #7DB6FF !important;
+}
+
+/* Aktiv link - gecə rejimi */
+body.dark-theme nav a.sidebar-link.active,
+body.dark-theme nav a.sidebar-link.bg-brand-soft.text-brand-blue {
+    background: #2d3748 !important;
+    color: #7DB6FF !important;
+    border-left: 4px solid #7DB6FF !important;
+}
+
+body.dark-theme nav a.sidebar-link.active i,
+body.dark-theme nav a.sidebar-link.bg-brand-soft.text-brand-blue i {
+    color: #7DB6FF !important;
+}
+
+/* Profil linki - gecə rejimi */
+body.dark-theme a#profileBtn.sidebar-link {
+    color: #7DB6FF !important;
+    background: #2d3748 !important;
+}
+
+/* Header hissəsi */
+body.dark-theme #settingsMainBtn {
+    background-color: #242b3d !important;
+    color: #e5e7eb !important;
+}
+
+body.dark-theme #settingsMainBtn p.text-slate-500 {
+    color: #9ca3af !important;
+}
+
+/* Settings panel */
+body.dark-theme #settingsPanel {
+    background-color: #242b3d !important;
+    border-color: #2d3748 !important;
+}
+
+body.dark-theme #settingsPanel a,
+body.dark-theme #settingsPanel button {
+    color: #cbd5e1 !important;
+}
+
+body.dark-theme #settingsPanel a:hover,
+body.dark-theme #settingsPanel button:hover {
+    background-color: #2d3748 !important;
+    color: #7DB6FF !important;
+}
+
+/* Ana content - gecə rejimi */
+body.dark-theme main {
+    background-color: #242b3d !important;
+    color: #e5e7eb !important;
+}
+
+body.dark-theme main .bg-white {
+    background-color: #242b3d !important;
+    color: #e5e7eb !important;
+}
+
+body.dark-theme main .bg-brand-soft {
+    background-color: #2d3748 !important;
+}
+
+body.dark-theme main .text-slate-500 {
+    color: #9ca3af !important;
+}
+
+body.dark-theme main .text-slate-600 {
+    color: #cbd5e1 !important;
+}
+
+/* Kartlar - gecə rejimi */
+body.dark-theme .bg-gradient-to-br {
+    background: linear-gradient(135deg, #2d3748, #242b3d) !important;
+}
+
+body.dark-theme .border-blue-100,
+body.dark-theme .border-green-100,
+body.dark-theme .border-purple-100 {
+    border-color: #2d3748 !important;
+}
+
+/* Inputlar - gecə rejimi */
+body.dark-theme input,
+body.dark-theme select,
+body.dark-theme textarea {
+    background-color: #1f2a3a !important;
+    border-color: #2d3748 !important;
+    color: #e5e7eb !important;
+}
+
+body.dark-theme input:focus,
+body.dark-theme select:focus,
+body.dark-theme textarea:focus {
+    border-color: #7DB6FF !important;
+    outline: none !important;
+}
+
+body.dark-theme input::placeholder {
+    color: #6b7280 !important;
+}
+
+/* Statistik kartlar */
+body.dark-theme .stat-card {
+    background: linear-gradient(135deg, #2d3748, #242b3d) !important;
+}
+
+body.dark-theme .text-gray-600 {
+    color: #9ca3af !important;
+}
+
+body.dark-theme .text-gray-900 {
+    color: #e5e7eb !important;
+}
+
+/* Cədvəl - gecə rejimi */
+body.dark-theme table {
+    background-color: #242b3d !important;
+}
+
+body.dark-theme th {
+    background-color: #1f2a3a !important;
+    color: #cbd5e1 !important;
+}
+
+body.dark-theme td {
+    border-bottom-color: #2d3748 !important;
+}
+
+body.dark-theme tr:hover {
+    background-color: #2d3748 !important;
+}
+
+/* Modal - gecə rejimi */
+body.dark-theme .bg-white.shadow-soft {
+    background-color: #242b3d !important;
+}
+
+body.dark-theme .border-gray-200 {
+    border-color: #2d3748 !important;
+}
+
+body.dark-theme .bg-gray-50 {
+    background-color: #1f2a3a !important;
+}
+
+/* Loader - gecə rejimi */
+body.dark-theme #pageLoader {
+    background-color: #1a1f2e !important;
+}
+
+body.dark-theme #pageLoader p.text-slate-400 {
+    color: #9ca3af !important;
+}
+/* ===== SOL PANEL (SİDEBAR) YAZILARI - GECƏ REJİMİ ===== */
+body.dark-theme #sidebarContent,
+body.dark-theme .sidebar-link,
+body.dark-theme nav a,
+body.dark-theme nav a span,
+body.dark-theme .sidebar-text,
+body.dark-theme .whitespace-nowrap,
+body.dark-theme .flex-1 .text-left,
+body.dark-theme .text-slate-400,
+body.dark-theme .text-slate-500,
+body.dark-theme .text-slate-600,
+body.dark-theme p,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme h4 {
+    color: #ffffff !important; /* BÜTÜN YAZILAR AĞ RƏNG */
+}
+
+/* İdarəetmə başlığı - xüsusi rəng */
+body.dark-theme h2.sidebar-title.text-sm.font-semibold.text-slate-400 {
+    color: #f87171 !important; /* Qırmızı qalsın */
+}
+
+/* İkonlar - ağ rəng */
+body.dark-theme .sidebar-link i,
+body.dark-theme nav a i,
+body.dark-theme .fa-solid,
+body.dark-theme .fa-regular,
+body.dark-theme .fa-brands {
+    color: #ffffff !important;
+}
+
+/* Hover effekti - mavi rəng */
+body.dark-theme .sidebar-link:hover,
+body.dark-theme nav a:hover {
+    color: #7DB6FF !important;
+    background: #2d3748 !important;
+}
+
+body.dark-theme .sidebar-link:hover i,
+body.dark-theme nav a:hover i {
+    color: #7DB6FF !important;
+}
+
+/* Aktiv link - mavi rəng */
+body.dark-theme .sidebar-link.active,
+body.dark-theme .sidebar-link.bg-brand-soft.text-brand-blue,
+body.dark-theme nav a.active,
+body.dark-theme nav a.bg-brand-soft.text-brand-blue {
+    color: #7DB6FF !important;
+    background: #2d3748 !important;
+    border-left: 4px solid #7DB6FF !important;
+}
+
+body.dark-theme .sidebar-link.active i,
+body.dark-theme .sidebar-link.bg-brand-soft.text-brand-blue i,
+body.dark-theme nav a.active i,
+body.dark-theme nav a.bg-brand-soft.text-brand-blue i {
+    color: #7DB6FF !important;
+}
+
+/* Profil linki xüsusi */
+body.dark-theme a#profileBtn.sidebar-link {
+    color: #7DB6FF !important;
+    background: #2d3748 !important;
+}
+
+body.dark-theme a#profileBtn.sidebar-link i {
+    color: #7DB6FF !important;
+}
+
+/* Settings panelindəki yazılar */
+body.dark-theme #settingsPanel a,
+body.dark-theme #settingsPanel button,
+body.dark-theme #settingsPanel span {
+    color: #ffffff !important;
+}
+
+body.dark-theme #settingsPanel a:hover,
+body.dark-theme #settingsPanel button:hover {
+    color: #7DB6FF !important;
+    background-color: #2d3748 !important;
+}
+
+/* Şirkət və istifadəçi adı */
+body.dark-theme #companyNameDisplay,
+body.dark-theme #userNameDisplay {
+    color: #ffffff !important;
+}
