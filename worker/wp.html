@@ -19,6 +19,7 @@
             const cssFiles = [
                 '../assets/css/worker_profile_css/worker_profile.css',
                 '../assets/css/worker_profile_css/sidebar-compact-op.css',
+                '../assets/css/shared-liquid-sidebar.css',
                 '../assets/css/owner_profile_css/dashboard.css',
                 '../assets/css/worker_profile_css/fullscreen-sidebar.css',
                 '../assets/css/worker_profile_css/file_service/file_service.css'
@@ -87,18 +88,18 @@
     <div class="flex-1 min-h-0 px-2 pb-2">
         <div class="h-full flex gap-2" id="mainContainer">
             <!-- Sol sidebar - ID dəyişmir -->
-            <aside class="h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
-                <div class="h-full flex flex-col p-6 overflow-y-auto" id="sidebarContent">
-                    <div class="mt-auto pt-6 border-t border-slate-100">
+            <aside class="gf-liquid-sidebar h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
+                <div class="h-full flex flex-col overflow-y-auto" id="sidebarContent">
+                    <div class="gf-sidebar-profile-block">
                         <!-- Əsas Tənzimləmə Buttonu -->
-                        <button id="settingsMainBtn" class="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
+                        <button id="settingsMainBtn" class="gf-profile-trigger w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
                             <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue font-semibold">
+                                <div class="gf-sidebar-avatar h-10 w-10 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue font-semibold">
                                     GF44
                                 </div>
                                 <div class="text-left">
-                                    <p class="text-sm font-semibold" id="companyNameDisplay">Şirkət</p>
-                                    <p class="text-xs text-slate-500" id="userNameDisplay">İstifadəçi</p>
+                                    <p class="gf-sidebar-role text-sm font-semibold" id="userNameDisplay">Worker</p>
+                                    <p class="gf-sidebar-company text-xs text-slate-500" id="companyNameDisplay">Şirkət</p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
@@ -115,7 +116,7 @@
                             </a>
 
                             <!-- Profil -->
-                            <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold bg-brand-soft text-brand-blue" data-sidebar-item id="profileBtn">
+                            <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold bg-brand-soft text-brand-blue" data-sidebar-item id="profileBtn" data-tooltip="Profil">
                                 <i class="fa-solid fa-user w-5 text-center"></i>
                                 <span class="sidebar-text whitespace-nowrap">Profil</span>
                             </a>
@@ -141,40 +142,40 @@
                         </div>
                     </div>
 
-                    <nav class="mt-6 space-y-2 flex-1">
+                    <nav class="gf-sidebar-menu mt-6 space-y-2 flex-1" id="sidebarMenu">
                         <!-- Giriş -->
                         <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
                             <i class="fa-solid fa-gauge-high w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Əsas səhifə</span>
                         </a>
                         <!-- Şirkətlərin Listi -->
-                        <a href="#" id="openCompaniesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                        <a href="#" id="openCompaniesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item data-tooltip="Şirkətlər">
                             <i class="fa-solid fa-building w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Şirkətlər</span>
                         </a>
                         <!-- Partniyorlar -->
-                        <a href="#" id="openPartniorModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                        <a href="#" id="openPartniorModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item data-tooltip="Partniyorlar">
                             <i class="fa-solid fa-handshake w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Partniyorlar</span>
                         </a>
 
                         <!-- Task Manager -->
-                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn">
+                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn" data-tooltip="Tapşırıqlar">
                             <i class="fa-solid fa-list-check w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Tapşırıqlar</span>
                         </a>
                         <!-- Fayllarım -->
-                        <a href="#" id="fayllarimBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                        <a href="#" id="fayllarimBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item data-tooltip="Sənədlər">
                             <i class="fa-solid fa-folder-open w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Sənədlər</span>
                         </a>
                         <!-- Departament və İş Növləri -->
-                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item data-tooltip="Departament və İş Növləri">
                             <i class="fa-solid fa-diagram-project w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Departament və İş Növləri</span>
                         </a>
                         <!-- Diaqram -->
-                        <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                        <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item data-tooltip="Diaqram">
                             <i class="fa-solid fa-chart-pie w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Diaqram</span>
                         </a>
@@ -745,6 +746,7 @@
                 '../assets/js/worker_profile_js/ui.service.js',
                 '../assets/js/worker_profile_js/permissions.service.js',
                 '../assets/js/worker_profile_js/sidebar-fullscreen.js',
+                '../assets/js/shared-liquid-sidebar.js',
                 '../assets/js/worker_profile_js/obligations.service.js',
                 '../assets/js/worker_profile_js/positions.service.js',
                 '../assets/js/worker_profile_js/salary.service.js',
