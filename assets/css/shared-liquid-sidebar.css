@@ -27,8 +27,7 @@
     padding: 14px 0 14px 12px !important;
     transition: width 520ms cubic-bezier(.22,1,.36,1), min-width 520ms cubic-bezier(.22,1,.36,1), max-width 520ms cubic-bezier(.22,1,.36,1) !important;
 }
-#mainSidebar.gf-liquid-sidebar:hover,
-#mainSidebar.gf-liquid-sidebar:focus-within {
+#mainSidebar.gf-liquid-sidebar:hover {
     width: var(--sidebar-expanded-width) !important;
     min-width: var(--sidebar-expanded-width) !important;
     max-width: var(--sidebar-expanded-width) !important;
@@ -54,9 +53,7 @@
     transition: width 520ms cubic-bezier(.22,1,.36,1), border-radius 520ms cubic-bezier(.22,1,.36,1) !important;
 }
 #mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-profile-block,
-#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu,
-#mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-profile-block,
-#mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-menu { width: 280px !important; }
+#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu { width: 280px !important; }
 
 .gf-sidebar-profile-block { flex: 0 0 auto !important; padding: 14px !important; position: relative; }
 .gf-profile-trigger {
@@ -69,7 +66,7 @@
 .gf-sidebar-role { font-size: 18px !important; line-height: 1.08 !important; }
 .gf-sidebar-company { font-size: 14px !important; line-height: 1.15 !important; opacity: .84; max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gf-profile-trigger .text-left, .gf-profile-trigger #settingsArrow, .gf-profile-trigger > .flex:last-child { opacity: 0; transform: translateX(-10px); transition: opacity 260ms ease, transform 360ms cubic-bezier(.22,1,.36,1); }
-#mainSidebar.gf-liquid-sidebar:hover .gf-profile-trigger .text-left, #mainSidebar.gf-liquid-sidebar:focus-within .gf-profile-trigger .text-left { opacity: 1; transform: translateX(0); }
+#mainSidebar.gf-liquid-sidebar:hover .gf-profile-trigger .text-left { opacity: 1; transform: translateX(0); }
 
 .gf-sidebar-menu { position: relative !important; flex: 1 1 auto !important; padding: 18px 12px !important; margin-top: 0 !important; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 .gf-sidebar-menu::before {
@@ -82,17 +79,64 @@
 .gf-sidebar-menu a.sidebar-link {
     position: relative !important; z-index: 1; height: 60px !important; margin: 0 !important; padding: 0 18px !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 16px !important; border: 0 !important; border-radius: 999px !important; background: transparent !important; box-shadow: none !important; color: #050505 !important; font-size: 17px !important; font-weight: 400 !important; transform: none !important; transition: color 180ms ease !important;
 }
-#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu a.sidebar-link, #mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-menu a.sidebar-link { justify-content: flex-start !important; padding: 0 22px !important; }
+#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu a.sidebar-link { justify-content: flex-start !important; padding: 0 22px !important; }
 .gf-sidebar-menu a.sidebar-link i { width: 24px !important; min-width: 24px !important; font-size: 20px !important; color: #050505 !important; text-align: center !important; transform: none !important; }
 .gf-sidebar-menu a.sidebar-link:hover, .gf-sidebar-menu a.sidebar-link.active, .gf-sidebar-menu a.sidebar-link.bg-brand-soft.text-brand-blue { background: transparent !important; color: #050505 !important; border-left: 0 !important; font-weight: 400 !important; transform: none !important; }
 .gf-sidebar-menu a.sidebar-link:hover i, .gf-sidebar-menu a.sidebar-link.active i, .gf-sidebar-menu a.sidebar-link.bg-brand-soft.text-brand-blue i { color: #050505 !important; transform: none !important; }
 .gf-sidebar-menu .sidebar-text { display: inline-block !important; opacity: 0; max-width: 0; transform: translateX(-8px); overflow: hidden; white-space: nowrap; transition: opacity 260ms ease 60ms, transform 360ms cubic-bezier(.22,1,.36,1), max-width 360ms cubic-bezier(.22,1,.36,1); }
-#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu .sidebar-text, #mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-menu .sidebar-text { opacity: 1; max-width: 190px; transform: translateX(0); }
+#mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu .sidebar-text { opacity: 1; max-width: 190px; transform: translateX(0); }
 
 #settingsPanel { position: absolute; left: 0; top: calc(100% + 10px); width: 280px; z-index: 20; border-radius: 28px !important; background: rgba(235,248,255,.92) !important; backdrop-filter: blur(18px); }
 body.dark-theme #mainSidebar.gf-liquid-sidebar, body.dark-theme #sidebarContent { background: transparent !important; }
 body.dark-theme .gf-sidebar-profile-block, body.dark-theme .gf-sidebar-menu { background: var(--sidebar-glass-bg) !important; }
 body.dark-theme .gf-sidebar-menu a.sidebar-link, body.dark-theme .gf-sidebar-menu a.sidebar-link i, body.dark-theme .sidebar-text, body.dark-theme .gf-sidebar-role, body.dark-theme .gf-sidebar-company { color: #050505 !important; }
 
-@media (max-width: 900px) { :root { --sidebar-collapsed-width: 92px; --sidebar-expanded-width: 260px; } #mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-profile-block, #mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu, #mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-profile-block, #mainSidebar.gf-liquid-sidebar:focus-within .gf-sidebar-menu { width: 240px !important; } }
+@media (max-width: 900px) { :root { --sidebar-collapsed-width: 92px; --sidebar-expanded-width: 260px; } #mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-profile-block, #mainSidebar.gf-liquid-sidebar:hover .gf-sidebar-menu { width: 240px !important; } }
 @media (prefers-reduced-motion: reduce) { #mainSidebar.gf-liquid-sidebar, .gf-sidebar-profile-block, .gf-sidebar-menu, .gf-sidebar-menu::before, .gf-sidebar-menu .sidebar-text { transition-duration: 1ms !important; } }
+
+/* Focus must never hold the liquid sidebar open; keep accessibility local to the focused control. */
+#mainSidebar.gf-liquid-sidebar .gf-sidebar-menu a.sidebar-link:focus-visible,
+#mainSidebar.gf-liquid-sidebar .gf-profile-trigger:focus-visible {
+    outline: 2px solid rgba(39, 141, 255, .34) !important;
+    outline-offset: 3px !important;
+}
+
+/* Harden the collapsed liquid geometry so focused children cannot leak a wide layout. */
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-sidebar-profile-block,
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-sidebar-menu {
+    width: 88px !important;
+}
+
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-profile-trigger {
+    justify-content: center !important;
+}
+
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-profile-trigger > .flex:first-child {
+    min-width: 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 0 !important;
+}
+
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-profile-trigger .text-left,
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-profile-trigger #settingsArrow,
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-profile-trigger > .flex:last-child,
+#mainSidebar.gf-liquid-sidebar:not(:hover) .gf-sidebar-menu .sidebar-text {
+    opacity: 0 !important;
+    max-width: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+#mainSidebar.gf-liquid-sidebar:hover .gf-profile-trigger > .flex:first-child {
+    min-width: 252px !important;
+    justify-content: flex-start !important;
+    gap: 14px !important;
+}
+
+#mainSidebar.gf-liquid-sidebar:hover .gf-profile-trigger .text-left {
+    max-width: 170px !important;
+    width: auto !important;
+    overflow: hidden !important;
+}
