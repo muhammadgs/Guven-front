@@ -15,7 +15,7 @@
             if (!item) return;
             const menuRect = menu.getBoundingClientRect();
             const itemRect = item.getBoundingClientRect();
-            const expanded = sidebar.matches(':hover');
+            const expanded = sidebar.matches(':hover, :focus-within');
             const size = Math.min(60, itemRect.height || 60);
 
             if (expanded) {
@@ -43,7 +43,7 @@
 
         menu.addEventListener('pointerover', event => {
             const item = event.target.closest('a.sidebar-link');
-            if (item && menu.contains(item) && sidebar.matches(':hover')) moveIndicator(item);
+            if (item && menu.contains(item) && sidebar.matches(':hover, :focus-within')) moveIndicator(item);
         });
 
         menu.addEventListener('pointerleave', () => moveIndicator(activeItem()));
