@@ -87,27 +87,27 @@
     <div class="flex-1 min-h-0 px-2 pb-2">
         <div class="h-full flex gap-2" id="mainContainer">
             <!-- Sol sidebar - ID dəyişmir -->
-            <aside class="h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
+            <aside class="profile-sidebar h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
                 <div class="h-full flex flex-col p-6 overflow-y-auto" id="sidebarContent">
-                    <div class="mt-auto pt-6 border-t border-slate-100">
+                    <section class="sidebar-profile-block pt-0">
                         <!-- Əsas Tənzimləmə Buttonu -->
-                        <button id="settingsMainBtn" class="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
+                        <button id="settingsMainBtn" class="sidebar-profile-header w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
                             <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue font-semibold">
+                                <div class="sidebar-avatar h-10 w-10 rounded-full bg-brand-blue/20 flex items-center justify-center text-brand-blue font-semibold">
                                     GF44
                                 </div>
-                                <div class="text-left">
-                                    <p class="text-sm font-semibold" id="companyNameDisplay">Şirkət</p>
-                                    <p class="text-xs text-slate-500" id="userNameDisplay">İstifadəçi</p>
+                                <div class="sidebar-profile-info sidebar-text text-left">
+                                    <p class="sidebar-profile-company text-sm font-semibold" id="companyNameDisplay">Şirkət</p>
+                                    <p class="sidebar-profile-name text-xs text-slate-500" id="userNameDisplay">İstifadəçi</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="sidebar-profile-toggle flex items-center gap-2">
                                 <i class="fa-solid fa-chevron-up text-slate-400 text-sm transition-transform group-hover:text-brand-blue" id="settingsArrow"></i>
                             </div>
                         </button>
 
                         <!-- Açılan Tənzimləmə Paneli -->
-                        <div id="settingsPanel" class="hidden mt-2 rounded-2xl bg-white p-2 shadow-soft space-y-1">
+                        <div id="settingsPanel" class="sidebar-profile-menu hidden mt-2 rounded-2xl bg-white p-2 shadow-soft space-y-1">
                             <!-- Tənzimləmələr Linki -->
                             <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="settingsLink">
                                 <i class="fa-solid fa-sliders w-5"></i>
@@ -139,45 +139,61 @@
                                 <i class="fa-solid fa-toggle-off text-brand-blue text-xl"></i>
                             </button>
                         </div>
-                    </div>
+                    </section>
 
-                    <nav class="mt-6 space-y-2 flex-1">
+                    <nav class="sidebar-menu-block mt-6 flex-1">
+                        <ul class="sidebar-menu-list space-y-2">
                         <!-- Giriş -->
-                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
-                            <i class="fa-solid fa-gauge-high w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Əsas səhifə</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
+                            <i class="sidebar-menu-icon fa-solid fa-gauge-high w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Əsas səhifə</span>
                         </a>
+                        </li>
                         <!-- Şirkətlərin Listi -->
-                        <a href="#" id="openCompaniesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-building w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Şirkətlər</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" id="openCompaniesModalBtn" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="sidebar-menu-icon fa-solid fa-building w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Şirkətlər</span>
                         </a>
+                        </li>
                         <!-- Partniyorlar -->
-                        <a href="#" id="openPartniorModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-handshake w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Partniyorlar</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" id="openPartniorModalBtn" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="sidebar-menu-icon fa-solid fa-handshake w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Partniyorlar</span>
                         </a>
+                        </li>
 
                         <!-- Task Manager -->
-                        <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn">
-                            <i class="fa-solid fa-list-check w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Tapşırıqlar</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn">
+                            <i class="sidebar-menu-icon fa-solid fa-list-check w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Tapşırıqlar</span>
                         </a>
+                        </li>
                         <!-- Fayllarım -->
-                        <a href="#" id="fayllarimBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-folder-open w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Sənədlər</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" id="fayllarimBtn" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="sidebar-menu-icon fa-solid fa-folder-open w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Sənədlər</span>
                         </a>
+                        </li>
                         <!-- Departament və İş Növləri -->
-                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-diagram-project w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Departament və İş Növləri</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="sidebar-menu-icon fa-solid fa-diagram-project w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Departament və İş Növləri</span>
                         </a>
+                        </li>
                         <!-- Diaqram -->
-                        <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-chart-pie w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Diaqram</span>
+                        <li class="sidebar-menu-item-wrapper">
+                        <a href="../diogram/draw.html" class="sidebar-link sidebar-menu-item flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
+                            <i class="sidebar-menu-icon fa-solid fa-chart-pie w-5 text-center"></i>
+                            <span class="sidebar-menu-label sidebar-text whitespace-nowrap">Diaqram</span>
                         </a>
+                        </li>
+                        </ul>
                     </nav>
 
                 </div>
