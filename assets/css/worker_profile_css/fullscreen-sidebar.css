@@ -470,3 +470,80 @@ body.task-manager-open #taskManagerSection {
     overflow-y: auto !important;
     scrollbar-width: thin !important;
 }
+/* ===== PART 1 REPAIR: real two-block Worker sidebar shell ===== */
+.profile-sidebar#mainSidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1.5rem !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    scrollbar-width: thin;
+    scrollbar-color: #7DB6FF #EAF3FF;
+}
+
+.profile-sidebar#mainSidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.profile-sidebar#mainSidebar::-webkit-scrollbar-track {
+    background: #EAF3FF;
+    border-radius: 10px;
+}
+
+.profile-sidebar#mainSidebar::-webkit-scrollbar-thumb {
+    background: #7DB6FF;
+    border-radius: 10px;
+}
+
+.profile-sidebar#mainSidebar > .sidebar-profile-block,
+.profile-sidebar#mainSidebar > .sidebar-menu-block {
+    display: block;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 1.5rem;
+    box-shadow: 0 18px 40px rgba(64, 129, 255, 0.18);
+    flex-shrink: 0;
+}
+
+.profile-sidebar#mainSidebar > .sidebar-profile-block {
+    padding: 0.75rem;
+}
+
+.profile-sidebar#mainSidebar > .sidebar-menu-block {
+    padding: 0.75rem;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.profile-sidebar#mainSidebar > .sidebar-menu-block .sidebar-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+@media (min-width: 769px) {
+    #mainSidebar:not(:hover),
+    #mainSidebar.sidebar-collapsed:not(:hover) {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+    #mainSidebar:hover {
+        padding-left: 24px !important;
+        padding-right: 24px !important;
+    }
+}
+
+body.dark-theme .profile-sidebar#mainSidebar {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.dark-theme .profile-sidebar#mainSidebar > .sidebar-profile-block,
+body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
+    background: #1e293b !important;
+}
