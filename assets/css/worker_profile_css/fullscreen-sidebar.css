@@ -233,8 +233,8 @@ section#taskManagerSection {
 /* ===== OWNER SIDEBAR PROFILE CARD FIX ===== */
 
 :root {
-    --gf-sidebar-collapsed-width: 88px;
-    --gf-sidebar-expanded-width: 300px;
+    --gf-sidebar-collapsed-width: 76px;
+    --gf-sidebar-expanded-width: 284px;
     --gf-profile-card-height: 60px;
 }
 
@@ -260,8 +260,8 @@ section#taskManagerSection {
     /* Qısa vəziyyətdə daxili boşluq azalsın, amma avatar sıxılmasın */
     #mainSidebar:not(:hover) #sidebarContent,
     #mainSidebar.sidebar-collapsed:not(:hover) #sidebarContent {
-        padding-left: 14px !important;
-        padding-right: 14px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
         overflow-x: hidden !important;
     }
 
@@ -358,8 +358,8 @@ section#taskManagerSection {
 
     /* Geniş vəziyyətdə profil kartı səliqəli qalsın */
     #mainSidebar:hover #sidebarContent {
-        padding-left: 24px !important;
-        padding-right: 24px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
         overflow-x: hidden !important;
     }
 
@@ -474,8 +474,8 @@ body.task-manager-open #taskManagerSection {
 .profile-sidebar#mainSidebar {
     display: flex !important;
     flex-direction: column !important;
-    gap: 1.5rem !important;
-    padding: 1.5rem !important;
+    gap: 0.875rem !important;
+    padding: 1rem 0.875rem !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     background: transparent !important;
@@ -510,13 +510,15 @@ body.task-manager-open #taskManagerSection {
 }
 
 .profile-sidebar#mainSidebar > .sidebar-profile-block {
-    padding: 0.75rem;
+    padding: 0.5rem;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-menu-block {
-    padding: 0.75rem;
-    flex: 1 1 auto;
+    padding: 0.5rem;
+    flex: 0 1 auto;
     min-height: 0;
+    max-height: calc(100vh - 8.5rem);
+    overflow-y: auto;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-menu-block .sidebar-menu-list {
@@ -528,13 +530,13 @@ body.task-manager-open #taskManagerSection {
 @media (min-width: 769px) {
     #mainSidebar:not(:hover),
     #mainSidebar.sidebar-collapsed:not(:hover) {
-        padding-left: 14px !important;
-        padding-right: 14px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
 
     #mainSidebar:hover {
-        padding-left: 24px !important;
-        padding-right: 24px !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
     }
 }
 
