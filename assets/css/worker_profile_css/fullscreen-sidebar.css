@@ -720,22 +720,79 @@ nav .sidebar-menu-item.sidebar-link {
     transform: none !important;
 }
 
+
+
+/* Part 4 liquid active/hover indicators */
+.profile-sidebar#mainSidebar > .sidebar-menu-block,
+.profile-sidebar#mainSidebar .sidebar-profile-menu {
+    position: relative !important;
+}
+
+.profile-sidebar#mainSidebar .sidebar-menu-list,
+.profile-sidebar#mainSidebar .sidebar-profile-menu > a,
+.profile-sidebar#mainSidebar .sidebar-profile-menu > button,
+.profile-sidebar#mainSidebar nav .sidebar-menu-item.sidebar-link {
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.sidebar-liquid-indicator,
+.profile-liquid-indicator {
+    --indicator-x: 0px;
+    --indicator-y: 0px;
+    --indicator-w: 0px;
+    --indicator-h: 0px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 1;
+    width: var(--indicator-w);
+    height: var(--indicator-h);
+    opacity: var(--indicator-opacity, 0);
+    transform: translate3d(var(--indicator-x), var(--indicator-y), 0);
+    border-radius: var(--indicator-radius, 999px);
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 18% 10%, rgba(255,255,255,.98), rgba(255,255,255,0) 30%),
+        linear-gradient(135deg, rgba(255,255,255,.84), rgba(235,246,255,.58));
+    border: 1px solid rgba(255,255,255,.88);
+    box-shadow:
+        inset 0 1px 2px rgba(255,255,255,1),
+        inset 0 -14px 24px rgba(255,255,255,.34),
+        0 10px 24px rgba(92, 138, 190, .20),
+        0 0 22px rgba(255,255,255,.72);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    transition:
+        transform 520ms cubic-bezier(.22, 1, .36, 1),
+        width 520ms cubic-bezier(.22, 1, .36, 1),
+        height 520ms cubic-bezier(.22, 1, .36, 1),
+        border-radius 520ms cubic-bezier(.22, 1, .36, 1),
+        opacity 260ms ease;
+}
+
+.sidebar-liquid-indicator::after,
+.profile-liquid-indicator::after {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,0) 46%);
+    pointer-events: none;
+}
+
 nav .sidebar-menu-item.sidebar-link:hover {
-    background: rgba(255,255,255,.28) !important;
+    background: transparent !important;
     color: #000 !important;
     transform: translateY(-1px) !important;
 }
 
 nav .sidebar-menu-item.sidebar-link.active,
 nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue {
-    background:
-        linear-gradient(135deg, rgba(255,255,255,.82), rgba(238,246,255,.56)) !important;
+    background: transparent !important;
     color: #000 !important;
     border-left: 0 !important;
-    box-shadow:
-        inset 0 1px 2px rgba(255,255,255,.98),
-        inset 0 -10px 22px rgba(255,255,255,.38),
-        0 10px 24px rgba(112, 154, 205, .18) !important;
+    box-shadow: none !important;
 }
 
 nav .sidebar-menu-item.sidebar-link i,
@@ -838,8 +895,8 @@ nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue i {
     #mainSidebar:not(:hover) nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue,
     #mainSidebar.sidebar-collapsed:not(:hover) nav .sidebar-menu-item.sidebar-link.active,
     #mainSidebar.sidebar-collapsed:not(:hover) nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue {
-        background: linear-gradient(135deg, rgba(255,255,255,.84), rgba(239,247,255,.62)) !important;
-        box-shadow: inset 0 1px 2px rgba(255,255,255,.98), 0 8px 22px rgba(94,141,195,.2) !important;
+        background: transparent !important;
+        box-shadow: none !important;
     }
 
     #mainSidebar:not(:hover) .sidebar-menu-label,
@@ -882,6 +939,11 @@ nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue i {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .sidebar-liquid-indicator,
+    .profile-liquid-indicator {
+        transition-duration: 0.01ms !important;
+    }
+
     .profile-sidebar#mainSidebar,
     .profile-sidebar#mainSidebar * {
         transition-duration: 0.01ms !important;
@@ -980,7 +1042,7 @@ body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
 .profile-sidebar#mainSidebar.profile-menu-open .sidebar-profile-menu > button:hover,
 .profile-sidebar#mainSidebar > .sidebar-profile-block.is-profile-menu-open .sidebar-profile-menu > a:hover,
 .profile-sidebar#mainSidebar > .sidebar-profile-block.is-profile-menu-open .sidebar-profile-menu > button:hover {
-    background: rgba(255,255,255,.34) !important;
+    background: transparent !important;
     color: #000 !important;
 }
 
@@ -988,12 +1050,9 @@ body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
 .profile-sidebar#mainSidebar.profile-menu-open .sidebar-profile-menu > .active,
 .profile-sidebar#mainSidebar > .sidebar-profile-block.is-profile-menu-open .sidebar-profile-menu > .bg-brand-soft,
 .profile-sidebar#mainSidebar > .sidebar-profile-block.is-profile-menu-open .sidebar-profile-menu > .active {
-    background: linear-gradient(135deg, rgba(255,255,255,.82), rgba(238,246,255,.56)) !important;
+    background: transparent !important;
     color: #000 !important;
-    box-shadow:
-        inset 0 1px 2px rgba(255,255,255,.98),
-        inset 0 -10px 22px rgba(255,255,255,.38),
-        0 10px 24px rgba(112, 154, 205, .18) !important;
+    box-shadow: none !important;
 }
 
 .profile-sidebar#mainSidebar.profile-menu-open .sidebar-profile-menu i,
