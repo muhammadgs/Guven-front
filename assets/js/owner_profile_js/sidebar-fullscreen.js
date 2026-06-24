@@ -165,4 +165,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
+
+
+    function setupLiquidIndicator(containerSelector, itemSelector, indicatorClass) {
+        const container = document.querySelector(containerSelector);
+        if (!container) return;
+
+        let indicator = container.querySelector(`:scope > .${indicatorClass}`);
+        if (!indicator) {
+            indicator = document.createElement('span');
+            indicator.className = indicatorClass;
+            indicator.setAttribute('aria-hidden', 'true');
+            container.prepend(indicator);
+        }
+
+        const activeSelector = '.active, .selected, .current, .is-active, .bg-brand-soft.text-brand-blue, [aria-current="page"]';
+        let anchoredItem = null;
+
+        const getAllItems = () => Array.from(container.querySelectorAll(itemSelector));
+        const getItems = () => getAllItems()
+            .filter(item => item.offsetParent !== null || !container.classList.contains('hidden'));
+
+        const getActiveItem = () => {
+            const items = getItems();
+            return items.find(item => item.matches(activeSelector)) || anchoredItem || items[0] || null;
+        };
+
+        const moveTo = (item) => {
+            if (!item) {
+                indicator.style.setProperty('--indicator-opacity', '0');
+                return;
+            }
+
+            const containerRect = container.getBoundingClientRect();
+            const itemRect = item.getBoundingClientRect();
+            const x = itemRect.left - containerRect.left + container.scrollLeft;
+            const y = itemRect.top - containerRect.top + container.scrollTop;
+            const radius = getComputedStyle(item).borderRadius || '999px';
+
+            indicator.style.setProperty('--indicator-x', `${x}px`);
+            indicator.style.setProperty('--indicator-y', `${y}px`);
+            indicator.style.setProperty('--indicator-w', `${itemRect.width}px`);
+            indicator.style.setProperty('--indicator-h', `${itemRect.height}px`);
+            indicator.style.setProperty('--indicator-radius', radius);
+            indicator.style.setProperty('--indicator-opacity', '1');
+        };
+
+        const moveToActive = () => requestAnimationFrame(() => moveTo(getActiveItem()));
+
+        getAllItems().forEach(item => {
+            item.addEventListener('pointerenter', () => {
+                const sidebar = item.closest('#mainSidebar');
+                if (container.matches('.sidebar-menu-block') && sidebar && !sidebar.matches(':hover')) return;
+                moveTo(item);
+            });
+            item.addEventListener('click', () => {
+                anchoredItem = item;
+                setTimeout(moveToActive, 60);
+            });
+        });
+
+        container.addEventListener('pointerleave', moveToActive);
+        window.addEventListener('resize', moveToActive, { passive: true });
+        document.getElementById('mainSidebar')?.addEventListener('transitionend', moveToActive);
+
+        new MutationObserver(moveToActive).observe(container, {
+            attributes: true,
+            subtree: true,
+            attributeFilter: ['class', 'aria-current', 'style']
+        });
+
+        moveToActive();
+    }
+
+    setupLiquidIndicator('.sidebar-menu-block', '.sidebar-menu-item', 'sidebar-liquid-indicator');
+    setupLiquidIndicator('.sidebar-profile-menu', ':scope > a, :scope > button', 'profile-liquid-indicator');
 });
