@@ -460,9 +460,11 @@ body.task-manager-open #taskManagerSection {
 .profile-sidebar#mainSidebar {
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
     gap: 0.875rem !important;
-    padding: 1rem 0.875rem !important;
-    overflow-y: auto !important;
+    padding: 0.5rem !important;
+    overflow-y: hidden !important;
     overflow-x: hidden !important;
     background: transparent !important;
     box-shadow: none !important;
@@ -492,18 +494,17 @@ body.task-manager-open #taskManagerSection {
     background: #ffffff;
     border-radius: 1.5rem;
     box-shadow: 0 18px 40px rgba(64, 129, 255, 0.18);
-    flex-shrink: 0;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-profile-block {
+    flex: 0 0 auto !important;
     padding: 0.5rem;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-menu-block {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
     padding: 0.5rem;
-    flex: 0 1 auto;
-    min-height: 0;
-    max-height: calc(100vh - 8.5rem);
     overflow-y: auto;
 }
 
