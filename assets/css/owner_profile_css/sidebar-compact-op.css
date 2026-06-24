@@ -459,3 +459,39 @@ body.dark-theme #companyNameDisplay,
 body.dark-theme #userNameDisplay {
     color: #ffffff !important;
 }
+/* ===== PART 1: Sidebar structural blocks ===== */
+.profile-sidebar .sidebar-profile-block,
+.profile-sidebar .sidebar-menu-block {
+    flex-shrink: 0;
+}
+
+.profile-sidebar .sidebar-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.profile-sidebar .sidebar-menu-item-wrapper {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-collapsed .sidebar-profile-header {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.sidebar-collapsed .sidebar-profile-toggle {
+    display: none !important;
+}
+
+#mainSidebar:hover .sidebar-profile-header {
+    justify-content: space-between !important;
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+}
+
+#mainSidebar:hover .sidebar-profile-toggle {
+    display: flex !important;
+}
