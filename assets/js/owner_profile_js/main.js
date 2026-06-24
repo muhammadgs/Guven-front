@@ -1895,18 +1895,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsArrow = document.getElementById('settingsArrow');
 
     if (settingsMainBtn && settingsPanel && settingsArrow) {
+        const mainSidebar = document.getElementById('mainSidebar');
+        const profileBlock = settingsMainBtn.closest('.sidebar-profile-block');
+        const syncProfileMenuState = () => {
+            const isOpen = !settingsPanel.classList.contains('hidden');
+            mainSidebar?.classList.toggle('profile-menu-open', isOpen);
+            profileBlock?.classList.toggle('is-profile-menu-open', isOpen);
+            settingsArrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+        };
+
         settingsMainBtn.addEventListener('click', function(e) {
             e.preventDefault();
             settingsPanel.classList.toggle('hidden');
-            settingsArrow.style.transform = settingsPanel.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+            syncProfileMenuState();
         });
 
         document.addEventListener('click', function(event) {
             if (!settingsMainBtn.contains(event.target) && !settingsPanel.contains(event.target)) {
                 settingsPanel.classList.add('hidden');
-                settingsArrow.style.transform = 'rotate(0deg)';
+                syncProfileMenuState();
             }
         });
+        syncProfileMenuState();
         initVoenModalEvents();
     }
 
