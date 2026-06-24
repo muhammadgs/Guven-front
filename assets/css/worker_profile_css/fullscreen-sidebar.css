@@ -306,6 +306,14 @@ section#taskManagerSection {
         place-items: center !important;
     }
 
+    #mainSidebar:not(:hover) #settingsMainBtn > .flex,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn > .flex {
+        width: 100% !important;
+        height: 100% !important;
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+
     #mainSidebar:not(:hover) #settingsMainBtn > div:first-child,
     #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn > div:first-child {
         position: absolute !important;
@@ -564,6 +572,13 @@ body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
     border: 0 !important;
     box-shadow: none !important;
     font-family: var(--gf-sidebar-font) !important;
+    transition:
+        width 560ms cubic-bezier(.22, 1, .36, 1),
+        min-width 560ms cubic-bezier(.22, 1, .36, 1),
+        max-width 560ms cubic-bezier(.22, 1, .36, 1),
+        gap 560ms cubic-bezier(.22, 1, .36, 1),
+        padding 560ms cubic-bezier(.22, 1, .36, 1) !important;
+    will-change: width;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-profile-block,
@@ -585,6 +600,16 @@ body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
         inset 0 -1px 2px rgba(84,132,183,.12) !important;
     backdrop-filter: blur(30px) saturate(170%) !important;
     -webkit-backdrop-filter: blur(30px) saturate(170%) !important;
+    transition:
+        width 560ms cubic-bezier(.22, 1, .36, 1),
+        height 560ms cubic-bezier(.22, 1, .36, 1),
+        min-height 560ms cubic-bezier(.22, 1, .36, 1),
+        flex-basis 560ms cubic-bezier(.22, 1, .36, 1),
+        padding 560ms cubic-bezier(.22, 1, .36, 1),
+        border-radius 560ms cubic-bezier(.22, 1, .36, 1),
+        box-shadow 560ms cubic-bezier(.22, 1, .36, 1),
+        background 560ms cubic-bezier(.22, 1, .36, 1) !important;
+    will-change: width, height, padding, border-radius;
 }
 
 .profile-sidebar#mainSidebar > .sidebar-profile-block::before,
@@ -644,6 +669,37 @@ body.dark-theme .profile-sidebar#mainSidebar > .sidebar-menu-block {
 #companyNameDisplay { font-size: 25px !important; line-height: 1.05 !important; font-weight: 650 !important; }
 #userNameDisplay { font-size: 18px !important; line-height: 1.15 !important; font-weight: 600 !important; opacity: .9 !important; }
 #settingsArrow { opacity: .56 !important; }
+
+#settingsMainBtn,
+#settingsMainBtn > .flex,
+.sidebar-avatar,
+.sidebar-profile-info,
+.sidebar-profile-toggle,
+.sidebar-menu-label,
+.profile-sidebar#mainSidebar .sidebar-menu-list,
+nav .sidebar-menu-item.sidebar-link,
+nav .sidebar-menu-item.sidebar-link i {
+    transition:
+        width 560ms cubic-bezier(.22, 1, .36, 1),
+        height 560ms cubic-bezier(.22, 1, .36, 1),
+        min-width 560ms cubic-bezier(.22, 1, .36, 1),
+        max-width 560ms cubic-bezier(.22, 1, .36, 1),
+        min-height 560ms cubic-bezier(.22, 1, .36, 1),
+        padding 560ms cubic-bezier(.22, 1, .36, 1),
+        gap 560ms cubic-bezier(.22, 1, .36, 1),
+        border-radius 560ms cubic-bezier(.22, 1, .36, 1),
+        opacity 280ms ease,
+        transform 320ms cubic-bezier(.22, 1, .36, 1),
+        max-width 320ms cubic-bezier(.22, 1, .36, 1) !important;
+}
+
+.sidebar-profile-info,
+.sidebar-profile-toggle,
+.sidebar-menu-label {
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    max-width: 220px !important;
+}
 
 .profile-sidebar#mainSidebar .sidebar-menu-list { display: flex; flex-direction: column; gap: 18px; }
 .profile-sidebar#mainSidebar .sidebar-menu-item-wrapper { display: block; }
@@ -792,15 +848,45 @@ nav .sidebar-menu-item.sidebar-link.bg-brand-soft.text-brand-blue i {
     #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-profile-info,
     #mainSidebar:not(:hover) .sidebar-profile-toggle,
     #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-profile-toggle {
-        display: none !important;
         opacity: 0 !important;
+        max-width: 0 !important;
+        transform: translateX(-6px) scale(.98) !important;
+        pointer-events: none !important;
+    }
+
+    #mainSidebar:not(:hover) .sidebar-profile-toggle,
+    #mainSidebar.sidebar-collapsed:not(:hover) .sidebar-profile-toggle {
+        width: 0 !important;
+        min-width: 0 !important;
+    }
+
+    #mainSidebar:not(:hover) #settingsMainBtn .text-left,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsMainBtn .text-left {
+        display: block !important;
+    }
+
+    #mainSidebar:not(:hover) #settingsArrow,
+    #mainSidebar.sidebar-collapsed:not(:hover) #settingsArrow {
+        display: inline-block !important;
     }
 
     #mainSidebar:hover .sidebar-menu-label,
     #mainSidebar:hover .sidebar-profile-info,
     #mainSidebar:hover .sidebar-profile-toggle {
-        display: block !important;
         opacity: 1 !important;
+        max-width: 240px !important;
+        transform: translateX(0) scale(1) !important;
+        pointer-events: auto !important;
+        transition-delay: 120ms !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-sidebar#mainSidebar,
+    .profile-sidebar#mainSidebar * {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
     }
 }
 
