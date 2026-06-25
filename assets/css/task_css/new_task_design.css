@@ -1129,3 +1129,224 @@
 @media (max-width: 768px) {
   :root { --nt-media-zone-height: 112px; }
 }
+
+/* Compact desktop layout for the New Task modal so the full form fits without scrolling. */
+@media (min-width: 901px) {
+  .newtask-modal-overlay:has(.newtask-modal.liquid-task-modal) {
+    padding: 20px 24px;
+    overflow: hidden;
+  }
+
+  .newtask-modal.liquid-task-modal {
+    --nt-field-height: 54px;
+    --nt-media-zone-height: 102px;
+    width: min(1120px, calc(100vw - 48px));
+    max-height: calc(100vh - 40px);
+    overflow: visible;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-header {
+    padding: 16px clamp(30px, 4vw, 48px) 4px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-title h3 {
+    font-size: clamp(1.35rem, 2vw, 1.72rem);
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-title-icon {
+    font-size: clamp(1.25rem, 1.65vw, 1.55rem);
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-close {
+    width: 38px;
+    height: 38px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-body {
+    flex: 0 1 auto;
+    overflow: visible;
+    padding: 8px clamp(30px, 4vw, 48px) 8px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: clamp(28px, 4vw, 58px);
+    row-gap: 10px;
+    align-items: start;
+  }
+
+  .newtask-modal.liquid-task-modal #newtaskCompanyGroup,
+  .newtask-modal.liquid-task-modal #newtaskParentGroup,
+  .newtask-modal.liquid-task-modal #newtaskPartnerGroup { order: 1; }
+  .newtask-modal.liquid-task-modal #newtaskExecutorGroup { order: 2; }
+  .newtask-modal.liquid-task-modal #newtaskOtherExecutorGroup { order: 3; }
+  .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskTaskTypeSelect) { order: 4; }
+  .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskDepartmentSelect) { order: 5; }
+  .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskDueDate) { order: 6; }
+  .newtask-modal.liquid-task-modal .newtask-visibility-field { order: 7; grid-column: 1 / -1; }
+  .newtask-modal.liquid-task-modal .glass-description-field { order: 8; }
+  .newtask-modal.liquid-task-modal .glass-media-field { order: 9; }
+
+  .newtask-modal.liquid-task-modal .newtask-form-label {
+    min-height: 27px;
+    margin-bottom: 6px;
+    gap: 8px;
+    font-size: clamp(1rem, 1.35vw, 1.22rem);
+    line-height: 1;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-form-label i {
+    width: 23px;
+    font-size: clamp(1.1rem, 1.45vw, 1.32rem);
+  }
+
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave {
+    width: 25px;
+    height: 25px;
+    gap: 2px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar { width: 4px; }
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar:nth-child(1),
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar:nth-child(5) { height: 12px; }
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar:nth-child(2),
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar:nth-child(4) { height: 19px; }
+  .newtask-modal.liquid-task-modal .nt-audio-title-wave-bar:nth-child(3) { height: 25px; }
+
+  .newtask-modal.liquid-task-modal .newtask-select,
+  .newtask-modal.liquid-task-modal .newtask-input {
+    min-height: var(--nt-field-height);
+    padding-inline: 18px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-select-trigger {
+    height: var(--nt-field-height);
+    padding-inline: 18px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-textarea {
+    min-height: 92px;
+    height: 92px;
+    padding: 14px 20px;
+    border-radius: 30px;
+    resize: none;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-checkbox-group {
+    min-height: 34px;
+    width: fit-content;
+    margin-inline: auto;
+    padding: 0 14px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-checkbox {
+    width: 16px;
+    height: 16px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-checkbox-label {
+    gap: 8px;
+    font-size: .86rem;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-zone,
+  .newtask-modal.liquid-task-modal .glass-file-zone,
+  .newtask-modal.liquid-task-modal .file-upload-zone,
+  .newtask-modal.liquid-task-modal .nt-voice-shell {
+    height: var(--nt-media-zone-height) !important;
+    min-height: var(--nt-media-zone-height) !important;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-zone {
+    gap: 5px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-icon {
+    font-size: 2.05rem;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-text,
+  .newtask-modal.liquid-task-modal .newtask-audio-status,
+  .newtask-modal.liquid-task-modal .nt-voice-meta-row {
+    font-size: .8rem;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-list {
+    min-height: 16px;
+    max-height: 44px;
+    overflow: hidden;
+    margin-top: 5px;
+    gap: 5px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-list-empty,
+  .newtask-modal.liquid-task-modal .newtask-file-list-header {
+    font-size: .74rem;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-file-item {
+    padding: 5px 8px;
+    border-radius: 16px;
+    font-size: .74rem;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-shell {
+    padding: 12px 22px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-main-btn {
+    width: 72px;
+    height: 72px;
+    font-size: 1.9rem;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-recording-ui {
+    gap: 10px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-action,
+  .newtask-modal.liquid-task-modal .nt-voice-preview-btn {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-actions {
+    gap: 8px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-waveform,
+  .newtask-modal.liquid-task-modal #newtaskAudioVisualizer.nt-voice-waveform {
+    height: 62px;
+  }
+
+  .newtask-modal.liquid-task-modal .nt-voice-meta-row {
+    min-height: 18px;
+    margin-top: 4px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-modal-footer {
+    padding: 6px clamp(30px, 4vw, 48px) 16px;
+    gap: 12px;
+  }
+
+  .newtask-modal.liquid-task-modal .newtask-btn {
+    min-height: 46px;
+    padding: 0 22px;
+    font-size: clamp(.98rem, 1.18vw, 1.15rem);
+  }
+}
+
+@media (min-width: 901px) and (max-height: 800px) {
+  .newtask-modal-overlay:has(.newtask-modal.liquid-task-modal) { padding-block: 14px; }
+  .newtask-modal.liquid-task-modal { max-height: calc(100vh - 28px); }
+  .newtask-modal.liquid-task-modal .newtask-modal-header { padding-top: 12px; }
+  .newtask-modal.liquid-task-modal .newtask-modal-body { padding-top: 5px; padding-bottom: 5px; }
+  .newtask-modal.liquid-task-modal .newtask-form-grid { row-gap: 8px; }
+  .newtask-modal.liquid-task-modal .newtask-form-label { min-height: 24px; margin-bottom: 5px; }
+  .newtask-modal.liquid-task-modal .newtask-textarea { min-height: 84px; height: 84px; }
+  .newtask-modal.liquid-task-modal { --nt-media-zone-height: 92px; --nt-field-height: 52px; }
+  .newtask-modal.liquid-task-modal .nt-voice-main-btn { width: 66px; height: 66px; }
+  .newtask-modal.liquid-task-modal .newtask-modal-footer { padding-bottom: 12px; }
+  .newtask-modal.liquid-task-modal .newtask-btn { min-height: 44px; }
+}
