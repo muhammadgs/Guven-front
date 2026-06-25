@@ -107,8 +107,8 @@
 
 .newtask-modal,
 .new-task-modal-content {
-    width: min(92vw, 1000px);
-    max-height: calc(100vh - clamp(24px, 4vh, 44px));
+    width: min(92vw, 1040px);
+    max-height: min(92vh, 1060px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -128,20 +128,6 @@
     animation: liquidModalIn .36s cubic-bezier(.16,1,.3,1);
 }
 
-.newtask-modal.liquid-task-modal {
-    --nt-field-height: clamp(48px, 5.2vh, 54px);
-    --nt-field-radius: 999px;
-    --nt-field-padding-x: clamp(16px, 1.8vw, 20px);
-    --nt-label-size: clamp(1rem, 1.45vw, 1.32rem);
-    --nt-label-icon-size: clamp(1.12rem, 1.45vw, 1.42rem);
-    --nt-value-size: clamp(.86rem, 1vw, .94rem);
-    --nt-row-gap: clamp(12px, 1.6vh, 18px);
-    --nt-column-gap: clamp(22px, 3.3vw, 42px);
-    --nt-modal-padding-x: clamp(22px, 3.7vw, 46px);
-    --nt-media-zone-height: clamp(96px, 11.5vh, 112px);
-    --nt-textarea-height: clamp(88px, 10.5vh, 98px);
-}
-
 @keyframes liquidModalIn {
     from { opacity: 0; transform: translateY(18px) scale(.985); }
     to { opacity: 1; transform: translateY(0) scale(1); }
@@ -152,12 +138,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: clamp(14px, 2vh, 22px) var(--nt-modal-padding-x, clamp(24px, 4.4vw, 54px)) 4px;
+    padding: clamp(16px, 2.5vw, 30px) clamp(24px, 4.4vw, 54px) 6px;
 }
 
 .newtask-modal-title { display: flex; align-items: center; gap: 11px; }
-.newtask-modal-title-icon { color: var(--newtask-blue); font-size: clamp(1.34rem, 1.8vw, 1.65rem); line-height: 1; }
-.newtask-modal-title h3 { margin: 0; font: 400 clamp(1.34rem, 2vw, 1.86rem)/1 "Cal Sans", Inter, Arial, sans-serif; }
+.newtask-modal-title-icon { color: var(--newtask-blue); font-size: clamp(1.45rem, 2.1vw, 1.8rem); line-height: 1; }
+.newtask-modal-title h3 { margin: 0; font: 400 clamp(1.45rem, 2.45vw, 2.1rem)/1 "Cal Sans", Inter, Arial, sans-serif; }
 
 .newtask-modal-close {
     width: 42px;
@@ -177,15 +163,15 @@
 .newtask-modal-body {
     flex: 1;
     overflow-y: auto;
-    padding: clamp(8px, 1.2vh, 12px) var(--nt-modal-padding-x, clamp(24px, 4.4vw, 54px)) clamp(8px, 1.4vh, 12px);
+    padding: 12px clamp(24px, 4.4vw, 54px) 14px;
     scrollbar-width: thin;
 }
 
 .newtask-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: var(--nt-column-gap, clamp(22px, 4vw, 46px));
-    row-gap: var(--nt-row-gap, clamp(16px, 2.8vw, 26px));
+    column-gap: clamp(22px, 4vw, 46px);
+    row-gap: clamp(16px, 2.8vw, 26px);
 }
 
 .newtask-form-group { display: flex; flex-direction: column; gap: 0; min-width: 0; }
@@ -196,13 +182,13 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: clamp(30px, 3.6vh, 38px);
-    margin-bottom: clamp(8px, 1.2vh, 11px);
+    min-height: 44px;
+    margin-bottom: 14px;
     color: #050505;
-    font: 400 var(--nt-label-size, clamp(1.12rem, 1.8vw, 1.55rem))/1.05 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Cal Sans", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
 }
-.newtask-form-label i { width: 24px; color: var(--newtask-blue); font-size: var(--nt-label-icon-size, clamp(1.3rem, 1.8vw, 1.7rem)); text-align: center; }
+.newtask-form-label i { width: 28px; color: var(--newtask-blue); font-size: clamp(1.3rem, 1.8vw, 1.7rem); text-align: center; }
 
 /* Normalize field vertical rhythm so adjacent select pills start on the same baseline. */
 .newtask-form-group .newtask-select,
@@ -269,13 +255,13 @@
     background: var(--newtask-field);
     color: #111;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.94), 0 10px 28px rgba(0,0,0,.04);
-    font: 400 var(--nt-value-size, .94rem)/1.2 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 .94rem/1.2 "Cal Sans", Inter, Arial, sans-serif;
     outline: none;
     transition: box-shadow .22s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
 .newtask-select,
-.newtask-input { min-height: var(--nt-field-height, 56px); padding: 0 var(--nt-field-padding-x, 20px); border-radius: 999px; }
-.newtask-textarea { min-height: var(--nt-textarea-height, 108px); padding: clamp(14px, 1.8vh, 16px) var(--nt-field-padding-x, 22px); border-radius: 32px; resize: vertical; }
+.newtask-input { min-height: 56px; padding: 0 20px; border-radius: 999px; }
+.newtask-textarea { min-height: 108px; padding: 18px 22px; border-radius: 36px; resize: vertical; }
 .newtask-select:focus,
 .newtask-input:focus,
 .newtask-textarea:focus {
@@ -287,7 +273,7 @@
 .newtask-form-text { color: rgba(0,0,0,.48); font-size: .88rem; padding-left: 24px; }
 
 .newtask-checkbox-group {
-    min-height: var(--nt-field-height, 56px);
+    min-height: 56px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -320,12 +306,12 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
     transition: transform .22s ease, box-shadow .22s ease;
 }
 .newtask-file-zone:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(67,136,255,.13); }
-.newtask-file-icon { color: #050505; font-size: clamp(2.15rem, 3vw, 2.45rem); line-height: 1; }
+.newtask-file-icon { color: #050505; font-size: 2.6rem; line-height: 1; }
 .newtask-file-text { color: rgba(0,0,0,.55); font-size: .92rem; }
 .newtask-file-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .newtask-file-list-empty,
@@ -366,11 +352,11 @@
     align-items: center;
     justify-content: center;
     gap: 14px;
-    padding: clamp(8px, 1.2vh, 12px) var(--nt-modal-padding-x, clamp(24px, 4.4vw, 54px)) clamp(14px, 2vh, 24px);
+    padding: 12px clamp(24px, 4.4vw, 54px) clamp(20px, 3.2vw, 34px);
 }
 .newtask-btn {
-    min-height: clamp(42px, 4.8vh, 46px);
-    padding: 0 clamp(18px, 2vw, 22px);
+    min-height: 48px;
+    padding: 0 22px;
     border: 0;
     border-radius: 999px;
     color: #fff;
@@ -379,7 +365,7 @@
     align-items: center;
     justify-content: center;
     gap: 9px;
-    font: 400 clamp(.96rem, 1.25vw, 1.16rem)/1 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 clamp(1rem, 1.5vw, 1.35rem)/1 "Cal Sans", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.34), 0 14px 28px rgba(0,0,0,.12);
     transition: transform .2s ease, filter .2s ease;
@@ -458,7 +444,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 11px;
-    padding: 0 var(--nt-field-padding-x, 20px);
+    padding: 0 20px;
     border-radius: var(--nt-field-radius);
     background: rgba(255,255,255,0.74);
     backdrop-filter: blur(22px) saturate(1.35);
@@ -468,7 +454,7 @@
     color: #050505;
     cursor: pointer;
     outline: none;
-    font: 700 var(--nt-value-size, 14.5px)/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
     text-align: left;
     transition: border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow .28s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
@@ -507,7 +493,7 @@
     left: 0;
     right: 0;
     z-index: 9999;
-    padding: 8px;
+    padding: 10px;
     border-radius: 0 0 32px 32px;
     background: rgba(255,255,255,0.88);
     backdrop-filter: blur(28px) saturate(1.45);
@@ -556,7 +542,7 @@
 
 .nt-select-options {
     position: relative;
-    max-height: min(240px, 42vh);
+    max-height: min(280px, 48vh);
     max-width: 100%;
     overflow-x: hidden !important;
     overflow-y: auto;
@@ -576,7 +562,7 @@
     right: 0;
     top: 0;
     z-index: 0;
-    height: 36px;
+    height: 40px;
     opacity: 0;
     background: rgba(191, 218, 255, 0.62);
     border-radius: 999px;
@@ -595,10 +581,10 @@
     z-index: 1;
     width: 100%;
     max-width: 100%;
-    min-height: 36px;
+    min-height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 13px;
+    padding: 0 15px;
     margin: 2px 0;
     border: 0;
     border-radius: 22px;
@@ -606,7 +592,7 @@
     background: transparent;
     color: #050505;
     cursor: pointer;
-    font: 700 var(--nt-value-size, 14.5px)/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1072,7 +1058,7 @@
 
 .newtask-form-label,
 .form-label {
-  margin-bottom: clamp(8px, 1.2vh, 11px);
+  margin-bottom: 14px;
 }
 
 .newtask-audio-container,
@@ -1118,24 +1104,6 @@
 #newtaskStartRecord,
 #startRecordingBtn {
   color: #fff !important;
-}
-
-.newtask-modal.liquid-task-modal .nt-voice-main-btn {
-  width: clamp(74px, 8.5vh, 84px);
-  height: clamp(74px, 8.5vh, 84px);
-  font-size: clamp(2rem, 4vh, 2.24rem);
-}
-
-.newtask-modal.liquid-task-modal .nt-voice-action,
-.newtask-modal.liquid-task-modal .nt-voice-preview-btn {
-  width: clamp(52px, 6.4vh, 58px);
-  height: clamp(52px, 6.4vh, 58px);
-  font-size: clamp(1.25rem, 2.4vh, 1.42rem);
-}
-
-.newtask-modal.liquid-task-modal .nt-voice-waveform,
-.newtask-modal.liquid-task-modal #newtaskAudioVisualizer.nt-voice-waveform {
-  height: clamp(64px, 8vh, 74px);
 }
 
 .nt-voice-main-btn i,
