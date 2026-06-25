@@ -738,9 +738,7 @@
     const customSelectState = {
         initialized: false,
         observer: null,
-        closingTimers: new WeakMap(),
-        searchBuffers: new WeakMap(),
-        searchTimers: new WeakMap()
+        closingTimers: new WeakMap()
     };
 
     function getCustomSelects() {
@@ -819,7 +817,6 @@
     }
 
     function rebuildCustomOptions(select, wrapper) {
-        clearCustomSelectFilter(wrapper);
         const optionsBox = wrapper.querySelector('.nt-select-options');
         if (!optionsBox) return;
         wrapper.querySelectorAll('.nt-select-menu > .nt-select-highlight').forEach((highlight) => highlight.remove());
@@ -876,9 +873,7 @@
     }
 
     function closeCustomSelect(wrapper) {
-        if (!wrapper) return;
-        clearCustomSelectFilter(wrapper);
-        if (!wrapper.classList.contains('is-open')) return;
+        if (!wrapper || !wrapper.classList.contains('is-open')) return;
         wrapper.classList.remove('is-open');
         wrapper.classList.add('is-closing');
         wrapper.querySelector('.nt-select-trigger')?.setAttribute('aria-expanded', 'false');
@@ -922,28 +917,9 @@
     }
 
     function handleCustomSelectTriggerKeydown(e) {
-        const wrapper = e.currentTarget.closest('.nt-custom-select');
-        if (!wrapper) return;
-
-        if (isPrintableCustomSelectKey(e)) {
-            e.preventDefault();
-            e.stopPropagation();
-            openCustomSelect(wrapper);
-            handleCustomSelectTypeahead(wrapper, e.key);
-            return;
-        }
-
-        if (e.key === 'Backspace') {
-            e.preventDefault();
-            e.stopPropagation();
-            openCustomSelect(wrapper);
-            handleCustomSelectTypeahead(wrapper, e.key);
-            return;
-        }
-
         if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) return;
         e.preventDefault();
-        e.stopPropagation();
+        const wrapper = e.currentTarget.closest('.nt-custom-select');
         openCustomSelect(wrapper);
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1);
     }
@@ -970,92 +946,15 @@
         const wrapper = document.querySelector('.nt-custom-select.is-open');
         if (!wrapper) return;
         if (e.key === 'Escape') { e.preventDefault(); closeCustomSelect(wrapper); wrapper.querySelector('.nt-select-trigger')?.focus(); }
-        if (isPrintableCustomSelectKey(e) || e.key === 'Backspace') { e.preventDefault(); handleCustomSelectTypeahead(wrapper, e.key); }
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1); }
         if (e.key === 'Enter' || e.key === ' ') {
-            const focused = wrapper.querySelector('.nt-select-option.is-key-focused:not([hidden])') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled):not([hidden])');
-            if (focused && !focused.disabled && !focused.hidden) { e.preventDefault(); handleCustomOptionSelect(wrapper.__nativeSelect, focused.dataset.value, focused.dataset.index); closeCustomSelect(wrapper); wrapper.querySelector('.nt-select-trigger')?.focus(); }
+            const focused = wrapper.querySelector('.nt-select-option.is-key-focused') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
+            if (focused && !focused.disabled) { e.preventDefault(); handleCustomOptionSelect(wrapper.__nativeSelect, focused.dataset.value, focused.dataset.index); closeCustomSelect(wrapper); }
         }
-    }
-
-    function isPrintableCustomSelectKey(e) {
-        return e.key?.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey;
-    }
-
-    function normalizeSearchText(text) {
-        const replacements = {
-            'ə': 'e', 'Ə': 'e',
-            'ı': 'i', 'I': 'i', 'İ': 'i',
-            'ş': 's', 'Ş': 's',
-            'ö': 'o', 'Ö': 'o',
-            'ü': 'u', 'Ü': 'u',
-            'ç': 'c', 'Ç': 'c',
-            'ğ': 'g', 'Ğ': 'g'
-        };
-        return String(text || '')
-            .replace(/[əƏıIİşŞöÖüÜçÇğĞ]/g, (char) => replacements[char] || char)
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase()
-            .trim();
-    }
-
-    function getSearchableOptions(wrapper) {
-        return Array.from(wrapper?.querySelectorAll('.nt-select-option') || [])
-            .filter((option) => !option.disabled);
-    }
-
-    function applyCustomSelectFilter(wrapper, query) {
-        const normalizedQuery = normalizeSearchText(query);
-        const options = getSearchableOptions(wrapper);
-        let firstVisible = null;
-
-        wrapper?.querySelectorAll('.nt-select-option.is-key-focused').forEach((option) => option.classList.remove('is-key-focused'));
-
-        options.forEach((option) => {
-            const isMatch = !normalizedQuery || normalizeSearchText(option.textContent).includes(normalizedQuery);
-            option.hidden = !isMatch;
-            if (isMatch && !firstVisible) firstVisible = option;
-        });
-
-        if (firstVisible) {
-            firstVisible.classList.add('is-key-focused');
-            firstVisible.scrollIntoView({ block: 'nearest' });
-            moveHighlightToOption(wrapper, firstVisible, true);
-        } else {
-            wrapper?.querySelector('.nt-select-highlight')?.style.setProperty('opacity', '0');
-        }
-    }
-
-    function clearCustomSelectFilter(wrapper) {
-        if (!wrapper) return;
-        customSelectState.searchBuffers.delete(wrapper);
-        const timer = customSelectState.searchTimers.get(wrapper);
-        if (timer) clearTimeout(timer);
-        customSelectState.searchTimers.delete(wrapper);
-        wrapper.querySelectorAll('.nt-select-option').forEach((option) => {
-            option.hidden = false;
-            option.classList.remove('is-key-focused');
-        });
-        moveHighlightToActive(wrapper, true);
-    }
-
-    function handleCustomSelectTypeahead(wrapper, key) {
-        if (!wrapper) return;
-        const currentBuffer = customSelectState.searchBuffers.get(wrapper) || '';
-        const nextBuffer = key === 'Backspace' ? currentBuffer.slice(0, -1) : `${currentBuffer}${key}`;
-        customSelectState.searchBuffers.set(wrapper, nextBuffer);
-        applyCustomSelectFilter(wrapper, nextBuffer);
-
-        const timer = customSelectState.searchTimers.get(wrapper);
-        if (timer) clearTimeout(timer);
-        customSelectState.searchTimers.set(wrapper, setTimeout(() => {
-            customSelectState.searchBuffers.delete(wrapper);
-        }, 900));
     }
 
     function focusAdjacentCustomOption(wrapper, direction) {
-        const options = Array.from(wrapper.querySelectorAll('.nt-select-option:not(:disabled):not([hidden])'));
+        const options = Array.from(wrapper.querySelectorAll('.nt-select-option:not(:disabled)'));
         if (!options.length) return;
         const current = wrapper.querySelector('.nt-select-option.is-key-focused') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
         let index = options.indexOf(current);
