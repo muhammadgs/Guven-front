@@ -738,7 +738,11 @@
     const customSelectState = {
         initialized: false,
         observer: null,
-        closingTimers: new WeakMap()
+        closingTimers: new WeakMap(),
+        typeaheadBuffer: new WeakMap(),
+        typeaheadTimer: new WeakMap(),
+        lastTypeaheadChar: new WeakMap(),
+        typeaheadCycleIndex: new WeakMap()
     };
 
     function getCustomSelects() {
@@ -917,9 +921,14 @@
     }
 
     function handleCustomSelectTriggerKeydown(e) {
+        const wrapper = e.currentTarget.closest('.nt-custom-select');
+        if (isCustomSelectPrintableKey(e)) {
+            e.preventDefault();
+            handleCustomSelectTypeahead(wrapper, e.key);
+            return;
+        }
         if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) return;
         e.preventDefault();
-        const wrapper = e.currentTarget.closest('.nt-custom-select');
         openCustomSelect(wrapper);
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1);
     }
@@ -945,12 +954,112 @@
     function handleCustomSelectDocumentKeydown(e) {
         const wrapper = document.querySelector('.nt-custom-select.is-open');
         if (!wrapper) return;
+        if (isCustomSelectPrintableKey(e)) {
+            e.preventDefault();
+            handleCustomSelectTypeahead(wrapper, e.key);
+            return;
+        }
         if (e.key === 'Escape') { e.preventDefault(); closeCustomSelect(wrapper); wrapper.querySelector('.nt-select-trigger')?.focus(); }
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); focusAdjacentCustomOption(wrapper, e.key === 'ArrowDown' ? 1 : -1); }
         if (e.key === 'Enter' || e.key === ' ') {
             const focused = wrapper.querySelector('.nt-select-option.is-key-focused') || wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
             if (focused && !focused.disabled) { e.preventDefault(); handleCustomOptionSelect(wrapper.__nativeSelect, focused.dataset.value, focused.dataset.index); closeCustomSelect(wrapper); }
         }
+    }
+
+
+    function isCustomSelectPrintableKey(e) {
+        return e.key?.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && e.key !== ' ';
+    }
+
+    function normalizeTypeaheadText(text) {
+        return String(text || '')
+            .trim()
+            .toLocaleLowerCase('az')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[ə]/g, 'e')
+            .replace(/[ı]/g, 'i')
+            .replace(/[ö]/g, 'o')
+            .replace(/[ü]/g, 'u')
+            .replace(/[ş]/g, 's')
+            .replace(/[ç]/g, 'c')
+            .replace(/[ğ]/g, 'g');
+    }
+
+    function getEnabledCustomOptions(wrapper) {
+        return Array.from(wrapper?.querySelectorAll('.nt-select-option:not(:disabled)') || [])
+            .filter((option) => !option.hidden);
+    }
+
+    function findTypeaheadMatch(wrapper, query, repeatedCharMode) {
+        const options = getEnabledCustomOptions(wrapper);
+        if (!options.length) return null;
+        const normalizedQuery = normalizeTypeaheadText(query);
+        if (!normalizedQuery) return null;
+        const selectedOption = wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
+        const selectedIndex = options.indexOf(selectedOption);
+        const cycleIndex = customSelectState.typeaheadCycleIndex.get(wrapper);
+        const startIndex = repeatedCharMode
+            ? ((Number.isInteger(cycleIndex) ? cycleIndex : selectedIndex) + 1 + options.length) % options.length
+            : 0;
+        const preferredQuery = repeatedCharMode ? normalizeTypeaheadText(query[0]) : normalizedQuery;
+        const prefixMatch = findCustomOptionByText(options, preferredQuery, startIndex, (text, needle) => text.startsWith(needle));
+        if (prefixMatch) return prefixMatch;
+        return findCustomOptionByText(options, preferredQuery, startIndex, (text, needle) => text.includes(needle));
+    }
+
+    function findCustomOptionByText(options, query, startIndex, predicate) {
+        for (let offset = 0; offset < options.length; offset += 1) {
+            const index = (startIndex + offset) % options.length;
+            const optionText = normalizeTypeaheadText(options[index].textContent);
+            if (predicate(optionText, query)) return options[index];
+        }
+        return null;
+    }
+
+    function applyTypeaheadSelection(wrapper, matchedOption) {
+        if (!wrapper || !matchedOption || matchedOption.disabled) return;
+        const select = wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId);
+        if (!select || select.disabled) return;
+        select.value = matchedOption.dataset.value;
+        if (select.value !== matchedOption.dataset.value && matchedOption.dataset.index !== undefined) {
+            select.selectedIndex = Number(matchedOption.dataset.index);
+        }
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncCustomSelectValue(select);
+        wrapper.querySelectorAll('.nt-select-option.is-key-focused').forEach((el) => el.classList.remove('is-key-focused'));
+        matchedOption.classList.add('is-key-focused');
+        if (wrapper.classList.contains('is-open')) {
+            matchedOption.scrollIntoView({ block: 'nearest' });
+            moveHighlightToOption(wrapper, matchedOption, true);
+        }
+    }
+
+    function handleCustomSelectTypeahead(wrapper, key) {
+        if (!wrapper) return;
+        const select = wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId);
+        if (select?.disabled) return;
+        const normalizedKey = normalizeTypeaheadText(key);
+        if (!normalizedKey) return;
+        const previousBuffer = customSelectState.typeaheadBuffer.get(wrapper) || '';
+        const nextBuffer = `${previousBuffer}${key}`;
+        const normalizedBuffer = normalizeTypeaheadText(nextBuffer);
+        const repeatedCharMode = normalizedBuffer.length > 1 && normalizedBuffer.split('').every((char) => char === normalizedBuffer[0]);
+        const query = repeatedCharMode ? normalizedKey : nextBuffer;
+        const matchedOption = findTypeaheadMatch(wrapper, query, repeatedCharMode);
+        const timer = customSelectState.typeaheadTimer.get(wrapper);
+        if (timer) clearTimeout(timer);
+        customSelectState.typeaheadBuffer.set(wrapper, nextBuffer);
+        customSelectState.lastTypeaheadChar.set(wrapper, normalizedKey);
+        customSelectState.typeaheadTimer.set(wrapper, setTimeout(() => {
+            customSelectState.typeaheadBuffer.delete(wrapper);
+            customSelectState.lastTypeaheadChar.delete(wrapper);
+            customSelectState.typeaheadCycleIndex.delete(wrapper);
+        }, 800));
+        if (!matchedOption) return;
+        customSelectState.typeaheadCycleIndex.set(wrapper, getEnabledCustomOptions(wrapper).indexOf(matchedOption));
+        applyTypeaheadSelection(wrapper, matchedOption);
     }
 
     function focusAdjacentCustomOption(wrapper, direction) {
