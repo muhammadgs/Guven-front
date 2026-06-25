@@ -51,6 +51,58 @@
     let parentCompanies = [];
     let partners = [];
 
+    function normalizeAzText(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/ə/g, 'e')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ç/g, 'c')
+            .replace(/ğ/g, 'g')
+            .trim();
+    }
+
+    function getAzCollator() {
+        try {
+            return typeof Intl !== 'undefined'
+                ? new Intl.Collator('az', { sensitivity: 'base', numeric: true })
+                : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function sortByVisibleName(list, getName) {
+        const collator = getAzCollator();
+        return [...(list || [])].sort((a, b) => {
+            const an = String(getName(a) || '');
+            const bn = String(getName(b) || '');
+            return collator
+                ? collator.compare(an, bn)
+                : normalizeAzText(an).localeCompare(normalizeAzText(bn));
+        });
+    }
+
+    function getEmployeeVisibleName(emp) {
+        return emp?.full_name || emp?.name || emp?.ceo_name || emp?.email || '';
+    }
+
+    function getDepartmentVisibleName(dept) {
+        return dept?.department_name || dept?.name || '';
+    }
+
+    function getWorkTypeVisibleName(wt) {
+        return wt?.work_type_name || wt?.name || (wt?.id ? `İş növü ${wt.id}` : '');
+    }
+
+    function getPartnerVisibleName(partner, companyCode) {
+        return partner?.requester_company_code === companyCode
+            ? (partner.partner_company_name || partner.target_company_name || `Şirkət ${partner.target_company_code}`)
+            : (partner.partner_company_name || partner.requester_company_name || `Şirkət ${partner.requester_company_code}`);
+    }
+
     async function init() {
         console.log('🚀 new_task_modal.js init başladı...');
         createModal();
@@ -534,10 +586,8 @@
                 let list = Array.isArray(response) ? response : (response.data || response.items || []);
                 if (list.length > 0) {
                     let html = '<option value="">İş növü seçin</option>';
-                    list.forEach(wt => {
-                        if (wt.is_active !== false) {
-                            html += `<option value="${wt.id}">${wt.work_type_name || wt.name || `İş növü ${wt.id}`}</option>`;
-                        }
+                    sortByVisibleName(list.filter(wt => wt.is_active !== false), getWorkTypeVisibleName).forEach(wt => {
+                        html += `<option value="${wt.id}">${getWorkTypeVisibleName(wt)}</option>`;
                     });
                     taskTypeSelect.innerHTML = html;
                     workTypes = list;
@@ -561,7 +611,7 @@
                 let list = response?.data?.parent_companies || response?.data || (Array.isArray(response) ? response : []);
                 if (list.length > 0) {
                     let html = '<option value="">Şirkət seçin</option>';
-                    list.forEach(company => {
+                    sortByVisibleName(list, company => company.company_name || company.name).forEach(company => {
                         const id = company.company_id || company.id;
                         const name = company.company_name || company.name;
                         const code = company.company_code || company.code || company.parent_company_code || '';
@@ -587,10 +637,8 @@
                 let list = response?.items || (Array.isArray(response) ? response : response?.data || []);
                 if (list.length > 0) {
                     let html = '<option value="">Partnyor seçin</option>';
-                    list.forEach(partner => {
-                        let name = partner.requester_company_code === companyCode
-                            ? (partner.partner_company_name || partner.target_company_name || `Şirkət ${partner.target_company_code}`)
-                            : (partner.partner_company_name || partner.requester_company_name || `Şirkət ${partner.requester_company_code}`);
+                    sortByVisibleName(list, partner => getPartnerVisibleName(partner, companyCode)).forEach(partner => {
+                        let name = getPartnerVisibleName(partner, companyCode);
                         html += `<option value="${partner.id}">${name}🤝</option>`;
                     });
                     partnerSelect.innerHTML = html;
@@ -610,6 +658,8 @@
         if (companySelect) {
             let html = '<option value="">Şirkət seçin</option>';
 
+            const companyOptions = [];
+
             // myCompany məlumatını yoxla
             if (myCompany && myCompany.id) {
                 // Şirkət adını tap
@@ -625,17 +675,13 @@
                     myCompany.name = companyName;
                 }
 
-                // Əgər hələ də yoxdursa, default
-                if (!companyName || companyName === 'undefined') {
-                }
-
                 console.log('🏢 Göstəriləcək şirkət:', {
                     id: myCompany.id,
                     name: companyName,
                     code: myCompany.company_code
                 });
 
-                html += `<option value="${myCompany.id}" data-is-my="true" selected>${companyName} (Mənim şirkətim)</option>`;
+                companyOptions.push({ id: myCompany.id, name: companyName, isMy: true });
             } else {
                 console.error('❌ myCompany məlumatları tam deyil:', myCompany);
                 // Token-dan company məlumatını almağa çalış
@@ -644,7 +690,7 @@
                     const payload = parseTokenPayload(token);
                     if (payload && payload.company_id) {
                         const companyName = payload.company_name || payload.company_code;
-                        html += `<option value="${payload.company_id}" data-is-my="true" selected>${companyName} (Mənim şirkətim)</option>`;
+                        companyOptions.push({ id: payload.company_id, name: companyName, isMy: true });
                         // myCompany-ni yenilə
                         myCompany = {
                             id: payload.company_id,
@@ -653,11 +699,11 @@
                             name: payload.company_name || payload.company_code
                         };
                     } else {
-                        html += `<option value="51" data-is-my="true" selected>Güvən Finans MMC (Mənim şirkətim)</option>`;
+                        companyOptions.push({ id: 51, name: 'Güvən Finans MMC', isMy: true });
                         myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
                     }
                 } else {
-                    html += `<option value="51" data-is-my="true" selected>Güvən Finans MMC (Mənim şirkətim)</option>`;
+                    companyOptions.push({ id: 51, name: 'Güvən Finans MMC', isMy: true });
                     myCompany = { id: 51, company_name: 'Güvən Finans MMC', company_code: 'GUV26001' };
                 }
             }
@@ -667,11 +713,13 @@
                 subsidiaryCompanies.forEach(s => {
                     const name = s.company_name || s.name;
                     const id = s.id;
-                    if (id && name) {
-                        html += `<option value="${id}" data-is-my="false">${name}</option>`;
-                    }
+                    if (id && name) companyOptions.push({ id, name, isMy: false });
                 });
             }
+
+            sortByVisibleName(companyOptions, company => company.name).forEach(company => {
+                html += `<option value="${company.id}" data-is-my="${company.isMy ? 'true' : 'false'}" ${company.isMy ? 'selected' : ''}>${company.name}${company.isMy ? ' (Mənim şirkətim)' : ''}</option>`;
+            });
 
             companySelect.innerHTML = html;
             console.log('📋 Company select dolduruldu, seçim sayı:', companySelect.options.length);
@@ -699,8 +747,8 @@
         if (executorSelect) {
             let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
             if (employees && employees.length > 0) {
-                employees.forEach(emp => {
-                    const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
+                sortByVisibleName(employees, getEmployeeVisibleName).forEach(emp => {
+                    const name = getEmployeeVisibleName(emp);
                     if (name) {
                         html += `<option value="${emp.id}">${name} 👤</option>`;
                     }
@@ -714,8 +762,8 @@
         if (departmentSelect) {
             let html = '<option value="">Şöbə seçin</option>';
             if (departments && departments.length > 0) {
-                departments.forEach(dept => {
-                    const name = dept.department_name || dept.name;
+                sortByVisibleName(departments, getDepartmentVisibleName).forEach(dept => {
+                    const name = getDepartmentVisibleName(dept);
                     if (name) {
                         html += `<option value="${dept.id}">${name}</option>`;
                     }
@@ -987,13 +1035,17 @@
             .replace(/[ğ]/g, 'g');
     }
 
-    function getEnabledCustomOptions(wrapper) {
+    function getEnabledOptionsForTypeahead(wrapper) {
         return Array.from(wrapper?.querySelectorAll('.nt-select-option:not(:disabled)') || [])
             .filter((option) => !option.hidden);
     }
 
+    function getEnabledCustomOptions(wrapper) {
+        return getEnabledOptionsForTypeahead(wrapper);
+    }
+
     function findTypeaheadMatch(wrapper, query, repeatedCharMode) {
-        const options = getEnabledCustomOptions(wrapper);
+        const options = getEnabledOptionsForTypeahead(wrapper);
         if (!options.length) return null;
         const normalizedQuery = normalizeTypeaheadText(query);
         if (!normalizedQuery) return null;
@@ -1058,7 +1110,7 @@
             customSelectState.typeaheadCycleIndex.delete(wrapper);
         }, 800));
         if (!matchedOption) return;
-        customSelectState.typeaheadCycleIndex.set(wrapper, getEnabledCustomOptions(wrapper).indexOf(matchedOption));
+        customSelectState.typeaheadCycleIndex.set(wrapper, getEnabledOptionsForTypeahead(wrapper).indexOf(matchedOption));
         applyTypeaheadSelection(wrapper, matchedOption);
     }
 
@@ -1862,8 +1914,8 @@
                 console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
                 if (employees && employees.length > 0) {
                     let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-                    employees.forEach(emp => {
-                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
+                    sortByVisibleName(employees, getEmployeeVisibleName).forEach(emp => {
+                        const name = getEmployeeVisibleName(emp);
                         if (name) {
                             html += `<option value="${emp.id}">👤 ${name}</option>`;
                         }
@@ -1880,8 +1932,8 @@
                 console.log('🏢 Öz şirkəti seçildi, mövcud employees istifadə edilir');
                 if (employees && employees.length > 0) {
                     let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
-                    employees.forEach(emp => {
-                        const name = emp.full_name || emp.name || emp.ceo_name || emp.email;
+                    sortByVisibleName(employees, getEmployeeVisibleName).forEach(emp => {
+                        const name = getEmployeeVisibleName(emp);
                         if (name) {
                             html += `<option value="${emp.id}">👤 ${name}</option>`;
                         }
@@ -1949,8 +2001,9 @@
             if (employeesList.length > 0) {
                 let html = '<option value="">İşçi seçin (boş qoymaq olar)</option>';
                 let ceoId = null, ceoName = '';
-                employeesList.forEach(emp => {
-                    const name = emp.full_name || emp.name || emp.ceo_name || emp.email || 'Ad yoxdur';
+                const sortedEmployeesList = sortByVisibleName(employeesList, getEmployeeVisibleName);
+                sortedEmployeesList.forEach(emp => {
+                    const name = getEmployeeVisibleName(emp) || 'Ad yoxdur';
                     const role = (emp.role || emp.user_role || emp.position || emp.employment_type || '').toLowerCase();
                     const isCeo = role.includes('ceo') || role.includes('rəhbər') || role.includes('director') || role.includes('baş') || emp.is_admin === true || emp.user_type === 'ceo';
                     html += `<option value="${emp.id}" ${isCeo ? 'data-is-ceo="true"' : ''}>👤 ${name}${isCeo ? ' (Rəhbər)' : ''}</option>`;
@@ -1961,8 +2014,8 @@
                     otherExecutorSelect.value = ceoId;
                     otherExecutorSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     showAutoSelectNotification('rəhbər', ceoName);
-                } else if (employeesList.length > 0) {
-                    otherExecutorSelect.value = employeesList[0].id;
+                } else if (sortedEmployeesList.length > 0) {
+                    otherExecutorSelect.value = sortedEmployeesList[0].id;
                     otherExecutorSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             } else {
