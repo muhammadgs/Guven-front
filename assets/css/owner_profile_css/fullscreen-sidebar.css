@@ -572,3 +572,30 @@ body.task-manager-open #taskManagerSection {
     #mainSidebar:not(:hover) nav a.sidebar-link.active::before,
     #mainSidebar:not(:hover) nav a.sidebar-link.bg-brand-soft.text-brand-blue::before { opacity: 1; }
 }
+
+/* ===== SIDEBAR ANIMATION RADIUS STABILITY FIX ===== */
+@media (min-width: 769px) {
+    #sidebarContent > .gf-profile-block,
+    #sidebarContent > nav {
+        border-radius: 56px !important;
+        transition: min-height var(--gf-sidebar-motion), padding var(--gf-sidebar-motion) !important;
+    }
+
+    #settingsPanel a::before,
+    #settingsPanel button::before,
+    nav a.sidebar-link::before {
+        inset: 4px 0 !important;
+        border-radius: 32px !important;
+        transition: opacity 180ms ease, transform var(--gf-sidebar-motion) !important;
+    }
+
+    #mainSidebar:not(:hover) #sidebarContent > .gf-profile-block,
+    #mainSidebar:not(:hover) #sidebarContent > nav {
+        border-radius: 56px !important;
+    }
+
+    #mainSidebar:not(:hover) nav a.sidebar-link::before {
+        inset: 4px 0 !important;
+        border-radius: 32px !important;
+    }
+}
