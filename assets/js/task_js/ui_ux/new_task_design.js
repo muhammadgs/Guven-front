@@ -586,8 +586,11 @@
             if (taskTypeSelect && response) {
                 let list = Array.isArray(response) ? response : (response.data || response.items || []);
                 if (list.length > 0) {
+                    const realWorkTypes = list.filter(wt => wt.is_active !== false);
+                    realWorkTypes.sort((a, b) => compareAzNames(getWorkTypeVisibleName(a), getWorkTypeVisibleName(b)));
+
                     let html = '<option value="">İş növü seçin</option>';
-                    sortByVisibleName(list.filter(wt => wt.is_active !== false), getWorkTypeVisibleName).forEach(wt => {
+                    realWorkTypes.forEach(wt => {
                         html += `<option value="${wt.id}">${getWorkTypeVisibleName(wt)}</option>`;
                     });
                     taskTypeSelect.innerHTML = html;
