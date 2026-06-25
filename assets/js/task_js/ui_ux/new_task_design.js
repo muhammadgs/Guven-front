@@ -787,10 +787,7 @@
         initialized: false,
         observer: null,
         closingTimers: new WeakMap(),
-        typeaheadBuffer: new WeakMap(),
-        typeaheadTimer: new WeakMap(),
-        lastTypeaheadChar: new WeakMap(),
-        typeaheadCycleIndex: new WeakMap()
+        nativeTypeaheadState: new WeakMap()
     };
 
     function getCustomSelects() {
@@ -970,9 +967,9 @@
 
     function handleCustomSelectTriggerKeydown(e) {
         const wrapper = e.currentTarget.closest('.nt-custom-select');
-        if (isCustomSelectPrintableKey(e)) {
+        if (isCustomSelectPrintableKey(e) && handleNativeLetterCycle(wrapper, e.key)) {
             e.preventDefault();
-            handleCustomSelectTypeahead(wrapper, e.key);
+            e.stopPropagation();
             return;
         }
         if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key)) return;
@@ -1002,9 +999,8 @@
     function handleCustomSelectDocumentKeydown(e) {
         const wrapper = document.querySelector('.nt-custom-select.is-open');
         if (!wrapper) return;
-        if (isCustomSelectPrintableKey(e)) {
+        if (isCustomSelectPrintableKey(e) && handleNativeLetterCycle(wrapper, e.key)) {
             e.preventDefault();
-            handleCustomSelectTypeahead(wrapper, e.key);
             return;
         }
         if (e.key === 'Escape') { e.preventDefault(); closeCustomSelect(wrapper); wrapper.querySelector('.nt-select-trigger')?.focus(); }
@@ -1020,98 +1016,89 @@
         return e.key?.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && e.key !== ' ';
     }
 
-    function normalizeTypeaheadText(text) {
+    function normalizeLetterText(text) {
         return String(text || '')
-            .trim()
-            .toLocaleLowerCase('az')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[ə]/g, 'e')
-            .replace(/[ı]/g, 'i')
-            .replace(/[ö]/g, 'o')
-            .replace(/[ü]/g, 'u')
-            .replace(/[ş]/g, 's')
-            .replace(/[ç]/g, 'c')
-            .replace(/[ğ]/g, 'g');
+            .toLowerCase()
+            .replace(/ə/g, 'e')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ç/g, 'c')
+            .replace(/ğ/g, 'g')
+            .trim();
     }
 
-    function getEnabledOptionsForTypeahead(wrapper) {
-        return Array.from(wrapper?.querySelectorAll('.nt-select-option:not(:disabled)') || [])
-            .filter((option) => !option.hidden);
+    function isNativeTypeaheadOption(option) {
+        const text = normalizeLetterText(option?.textContent);
+        return Boolean(
+            option
+            && option.value
+            && !option.disabled
+            && text
+            && !text.includes('tapilmadi')
+            && !text.includes('not found')
+        );
     }
 
-    function getEnabledCustomOptions(wrapper) {
-        return getEnabledOptionsForTypeahead(wrapper);
-    }
+    function handleNativeLetterCycle(wrapper, rawKey) {
+        const key = normalizeLetterText(rawKey).charAt(0);
+        if (!wrapper || !key) return false;
 
-    function findTypeaheadMatch(wrapper, query, repeatedCharMode) {
-        const options = getEnabledOptionsForTypeahead(wrapper);
-        if (!options.length) return null;
-        const normalizedQuery = normalizeTypeaheadText(query);
-        if (!normalizedQuery) return null;
-        const selectedOption = wrapper.querySelector('.nt-select-option.is-selected:not(:disabled)');
-        const selectedIndex = options.indexOf(selectedOption);
-        const cycleIndex = customSelectState.typeaheadCycleIndex.get(wrapper);
-        const startIndex = repeatedCharMode
-            ? ((Number.isInteger(cycleIndex) ? cycleIndex : selectedIndex) + 1 + options.length) % options.length
-            : 0;
-        const preferredQuery = repeatedCharMode ? normalizeTypeaheadText(query[0]) : normalizedQuery;
-        const prefixMatch = findCustomOptionByText(options, preferredQuery, startIndex, (text, needle) => text.startsWith(needle));
-        if (prefixMatch) return prefixMatch;
-        return findCustomOptionByText(options, preferredQuery, startIndex, (text, needle) => text.includes(needle));
-    }
-
-    function findCustomOptionByText(options, query, startIndex, predicate) {
-        for (let offset = 0; offset < options.length; offset += 1) {
-            const index = (startIndex + offset) % options.length;
-            const optionText = normalizeTypeaheadText(options[index].textContent);
-            if (predicate(optionText, query)) return options[index];
-        }
-        return null;
-    }
-
-    function applyTypeaheadSelection(wrapper, matchedOption) {
-        if (!wrapper || !matchedOption || matchedOption.disabled) return;
         const select = wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId);
-        if (!select || select.disabled) return;
-        select.value = matchedOption.dataset.value;
-        if (select.value !== matchedOption.dataset.value && matchedOption.dataset.index !== undefined) {
-            select.selectedIndex = Number(matchedOption.dataset.index);
+        if (!select || select.disabled) return false;
+
+        const options = Array.from(select.options)
+            .map((option, index) => ({ option, index }))
+            .filter(({ option }) => isNativeTypeaheadOption(option));
+
+        const matches = options.filter(({ option }) =>
+            normalizeLetterText(option.textContent).startsWith(key)
+        );
+
+        if (!matches.length) return false;
+
+        const state = customSelectState.nativeTypeaheadState.get(wrapper) || {
+            lastLetter: '',
+            lastIndexByLetter: {},
+            timer: null
+        };
+
+        if (state.timer) clearTimeout(state.timer);
+
+        let match;
+        if (state.lastLetter === key) {
+            const currentIndex = select.selectedIndex;
+            match = matches.find(({ index }) => index > currentIndex) || matches[0];
+        } else {
+            match = matches[0];
         }
+
+        state.lastLetter = key;
+        state.lastIndexByLetter[key] = match.index;
+        state.timer = setTimeout(() => {
+            state.lastLetter = '';
+        }, 1000);
+        customSelectState.nativeTypeaheadState.set(wrapper, state);
+
+        select.selectedIndex = match.index;
+        select.value = match.option.value;
         select.dispatchEvent(new Event('change', { bubbles: true }));
         syncCustomSelectValue(select);
-        wrapper.querySelectorAll('.nt-select-option.is-key-focused').forEach((el) => el.classList.remove('is-key-focused'));
-        matchedOption.classList.add('is-key-focused');
-        if (wrapper.classList.contains('is-open')) {
-            matchedOption.scrollIntoView({ block: 'nearest' });
-            moveHighlightToOption(wrapper, matchedOption, true);
-        }
-    }
 
-    function handleCustomSelectTypeahead(wrapper, key) {
-        if (!wrapper) return;
-        const select = wrapper.__nativeSelect || document.getElementById(wrapper.dataset.selectId);
-        if (select?.disabled) return;
-        const normalizedKey = normalizeTypeaheadText(key);
-        if (!normalizedKey) return;
-        const previousBuffer = customSelectState.typeaheadBuffer.get(wrapper) || '';
-        const nextBuffer = `${previousBuffer}${key}`;
-        const normalizedBuffer = normalizeTypeaheadText(nextBuffer);
-        const repeatedCharMode = normalizedBuffer.length > 1 && normalizedBuffer.split('').every((char) => char === normalizedBuffer[0]);
-        const query = repeatedCharMode ? normalizedKey : nextBuffer;
-        const matchedOption = findTypeaheadMatch(wrapper, query, repeatedCharMode);
-        const timer = customSelectState.typeaheadTimer.get(wrapper);
-        if (timer) clearTimeout(timer);
-        customSelectState.typeaheadBuffer.set(wrapper, nextBuffer);
-        customSelectState.lastTypeaheadChar.set(wrapper, normalizedKey);
-        customSelectState.typeaheadTimer.set(wrapper, setTimeout(() => {
-            customSelectState.typeaheadBuffer.delete(wrapper);
-            customSelectState.lastTypeaheadChar.delete(wrapper);
-            customSelectState.typeaheadCycleIndex.delete(wrapper);
-        }, 800));
-        if (!matchedOption) return;
-        customSelectState.typeaheadCycleIndex.set(wrapper, getEnabledOptionsForTypeahead(wrapper).indexOf(matchedOption));
-        applyTypeaheadSelection(wrapper, matchedOption);
+        wrapper.querySelectorAll('.nt-select-option.is-key-focused')
+            .forEach((el) => el.classList.remove('is-key-focused'));
+
+        const customOption = wrapper.querySelector(`.nt-select-option[data-index="${match.index}"]`);
+        if (customOption) {
+            customOption.classList.add('is-key-focused');
+            if (wrapper.classList.contains('is-open')) {
+                customOption.scrollIntoView({ block: 'nearest' });
+                moveHighlightToOption(wrapper, customOption, true);
+            }
+        }
+
+        return true;
     }
 
     function focusAdjacentCustomOption(wrapper, direction) {
