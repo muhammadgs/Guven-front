@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" shape-rendering="geometricPrecision" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0B1635"></stop>
+      <stop offset="55%" stop-color="#0E3EA5"></stop>
+      <stop offset="100%" stop-color="#0A2472"></stop>
+    </linearGradient>
+
+    <!-- Ambient glows -->
+    <radialGradient id="glowBlue" cx="72%" cy="14%" r="55%">
+      <stop offset="0%" stop-color="#3BA8FF" stop-opacity="0.6"></stop>
+      <stop offset="100%" stop-color="#3BA8FF" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="glowTeal" cx="64%" cy="92%" r="48%">
+      <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.45"></stop>
+      <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="56%" cy="40%" r="35%">
+      <stop offset="0%" stop-color="#6AD3FF" stop-opacity="0.32"></stop>
+      <stop offset="100%" stop-color="#6AD3FF" stop-opacity="0"></stop>
+    </radialGradient>
+
+    <!-- Subtle grid for depth -->
+    <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="1"></path>
+      <path d="M0 0V64" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="1"></path>
+    </pattern>
+
+    <!-- Card strokes & accents -->
+    <linearGradient id="cardStroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A3E3FF" stop-opacity="0.6"></stop>
+      <stop offset="100%" stop-color="#1E86FF" stop-opacity="0.6"></stop>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#22D3EE"></stop>
+      <stop offset="60%" stop-color="#1E86FF"></stop>
+      <stop offset="100%" stop-color="#A3E3FF"></stop>
+    </linearGradient>
+
+    <!-- Soft shadow -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#002B6B" flood-opacity="0.35"></feDropShadow>
+    </filter>
+
+    <!-- Left readability fade (keeps left minimal) -->
+    <linearGradient id="leftFade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0B1635" stop-opacity="0.28"></stop>
+      <stop offset="35%" stop-color="#0B1635" stop-opacity="0.14"></stop>
+      <stop offset="60%" stop-color="#0B1635" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#0B1635" stop-opacity="0"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Background + grid -->
+  <rect width="1920" height="1080" fill="url(#bg)"></rect>
+  <rect width="1920" height="1080" fill="url(#grid)" opacity="0.35"></rect>
+
+  <!-- Ambient glows (center/right emphasis) -->
+  <circle cx="1580" cy="190" r="650" fill="url(#glowBlue)"></circle>
+  <circle cx="1360" cy="980" r="520" fill="url(#glowTeal)"></circle>
+  <circle cx="1100" cy="420" r="340" fill="url(#glowCyan)"></circle>
+
+  <!-- Soft abstract blobs for depth (mostly right side) -->
+  <path d="M 1500 60 C 1660 150, 1810 320, 1780 470 C 1750 650, 1520 760, 1380 690 C 1240 630, 1260 480, 1350 400 C 1410 350, 1460 300, 1500 60 Z" fill="#22D3EE" opacity="0.06"></path>
+  <path d="M 970 820 C 1070 740, 1220 730, 1310 800 C 1380 860, 1360 960, 1240 1000 C 1120 1040, 1000 980, 970 820 Z" fill="#FFFFFF" opacity="0.035"></path>
+
+  <!-- Left fade to preserve negative space -->
+  <rect width="780" height="1080" fill="url(#leftFade)"></rect>
+
+  <!-- ===== Fintech motifs (center/right) ===== -->
+
+  <!-- Glass Line Chart Card -->
+  <g transform="translate(1210,150)" filter="url(#softShadow)">
+    <rect width="460" height="280" rx="22" fill="#FFFFFF" fill-opacity="0.06" stroke="url(#cardStroke)" stroke-opacity="0.7"></rect>
+    <!-- header chip -->
+    <rect x="26" y="24" width="72" height="16" rx="8" fill="#FFFFFF" fill-opacity="0.12"></rect>
+    <g transform="translate(26,74)">
+      <!-- area under line -->
+      <path d="M0 140 C 70 70, 140 160, 210 110 S 350 60, 410 92 L 410 196 L 0 196 Z" fill="url(#accentGrad)" opacity="0.18"></path>
+      <!-- line -->
+      <path d="M0 140 C 70 70, 140 160, 210 110 S 350 60, 410 92" fill="none" stroke="url(#accentGrad)" stroke-width="6" stroke-linecap="round"></path>
+      <!-- subtle grid in card -->
+      <path d="M0 50 H410 M0 95 H410 M0 140 H410" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1"></path>
+      <path d="M58 0 V196 M116 0 V196 M174 0 V196 M232 0 V196 M290 0 V196 M348 0 V196" stroke="#FFFFFF" stroke-opacity="0.04" stroke-width="1"></path>
+    </g>
+  </g>
+
+  <!-- Bars + Donut Card -->
+  <g transform="translate(1516,500)" filter="url(#softShadow)">
+    <rect width="360" height="240" rx="20" fill="#FFFFFF" fill-opacity="0.06" stroke="url(#cardStroke)" stroke-opacity="0.7"></rect>
+    <g transform="translate(22,28)">
+      <!-- bars -->
+      <rect x="0" y="94" width="34" height="98" rx="10" fill="url(#accentGrad)" opacity="0.9"></rect>
+      <rect x="52" y="72" width="34" height="120" rx="10" fill="url(#accentGrad)" opacity="0.82"></rect>
+      <rect x="104" y="50" width="34" height="142" rx="10" fill="url(#accentGrad)" opacity="0.75"></rect>
+      <rect x="156" y="28" width="34" height="164" rx="10" fill="url(#accentGrad)" opacity="0.7"></rect>
+      <!-- y ticks -->
+      <path d="M-8 28 H -2 M-8 68 H -2 M-8 108 H -2 M-8 148 H -2" stroke="#FFFFFF" stroke-opacity="0.12"></path>
+      <!-- donut chart -->
+      <g transform="translate(290,88)">
+        <circle r="52" fill="#FFFFFF" fill-opacity="0.045"></circle>
+        <path d="M0 0 L 0 -52 A 52 52 0 0 1 48 12 Z" fill="#22D3EE" fill-opacity="0.9"></path>
+        <path d="M0 0 L 48 12 A 52 52 0 0 1 -21 47 Z" fill="#1E86FF" fill-opacity="0.82"></path>
+        <path d="M0 0 L -21 47 A 52 52 0 0 1 0 -52 Z" fill="#A3E3FF" fill-opacity="0.55"></path>
+        <circle r="24" fill="#0C2E7F"></circle>
+      </g>
+    </g>
+  </g>
+
+  <!-- Mobile Fintech Card -->
+  <g transform="translate(960,364)" filter="url(#softShadow)">
+    <rect width="220" height="402" rx="28" fill="#FFFFFF" fill-opacity="0.06" stroke="url(#cardStroke)" stroke-opacity="0.7"></rect>
+    <rect x="18" y="20" width="184" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.12"></rect>
+    <rect x="18" y="50" width="184" height="84" rx="18" fill="#0B1635" fill-opacity="0.35" stroke="#A3E3FF" stroke-opacity="0.25"></rect>
+    <!-- chips -->
+    <rect x="28" y="62" width="52" height="14" rx="7" fill="#1E86FF" fill-opacity="0.7"></rect>
+    <rect x="84" y="62" width="38" height="14" rx="7" fill="#22D3EE" fill-opacity="0.7"></rect>
+    <!-- mini line -->
+    <path d="M34 110 C 70 90, 100 140, 130 122 S 168 100, 190 108" fill="none" stroke="#4FC3F7" stroke-opacity="0.85" stroke-width="3" stroke-linecap="round"></path>
+    <!-- rows -->
+    <rect x="18" y="146" width="184" height="58" rx="14" fill="#FFFFFF" fill-opacity="0.06"></rect>
+    <circle cx="44" cy="175" r="10" fill="#22D3EE" opacity="0.85"></circle>
+    <rect x="62" y="162" width="100" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.18"></rect>
+    <rect x="62" y="180" width="68" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.10"></rect>
+
+    <rect x="18" y="212" width="184" height="58" rx="14" fill="#FFFFFF" fill-opacity="0.06"></rect>
+    <circle cx="44" cy="241" r="10" fill="#1E86FF" opacity="0.85"></circle>
+    <rect x="62" y="228" width="100" height="12" rx="6" fill="#FFFFFF" fill-opacity="0.18"></rect>
+    <rect x="62" y="246" width="68" height="10" rx="5" fill="#FFFFFF" fill-opacity="0.10"></rect>
+
+    <rect x="18" y="354" width="90" height="28" rx="14" fill="#1E86FF" fill-opacity="0.85"></rect>
+    <rect x="112" y="354" width="90" height="28" rx="14" fill="#22D3EE" fill-opacity="0.85"></rect>
+  </g>
+
+  <!-- Upward growth arrow (innovation cue) -->
+  <g transform="translate(852,236)" opacity="0.92">
+    <path d="M0 180 L 160 20 L 260 90" fill="none" stroke="#22D3EE" stroke-width="10" stroke-linecap="round"></path>
+    <path d="M250 80 L 302 84 L 276 126 Z" fill="#22D3EE"></path>
+  </g>
+
+  <!-- Minimal abstract characters + coin stack (right side) -->
+  <g transform="translate(1408,772)" opacity="0.95">
+    <!-- character 1 -->
+    <g transform="translate(0,0)">
+      <circle cx="0" cy="-60" r="22" fill="#A3E3FF" fill-opacity="0.9"></circle>
+      <rect x="-22" y="-40" width="44" height="62" rx="20" fill="#1E86FF" fill-opacity="0.9"></rect>
+      <circle cx="-28" cy="-12" r="8" fill="#22D3EE" fill-opacity="0.95"></circle>
+      <circle cx="28" cy="-10" r="8" fill="#22D3EE" fill-opacity="0.95"></circle>
+    </g>
+    <!-- character 2 -->
+    <g transform="translate(92,8)">
+      <circle cx="0" cy="-66" r="20" fill="#A3E3FF" fill-opacity="0.9"></circle>
+      <rect x="-20" y="-44" width="40" height="64" rx="18" fill="#4FC3F7" fill-opacity="0.95"></rect>
+      <circle cx="-24" cy="-12" r="7" fill="#22D3EE" fill-opacity="0.95"></circle>
+      <circle cx="24" cy="-10" r="7" fill="#22D3EE" fill-opacity="0.95"></circle>
+    </g>
+    <!-- coin stack -->
+    <g transform="translate(46,16)">
+      <rect x="-26" y="2" width="52" height="10" rx="5" fill="#FFD166" fill-opacity="0.95"></rect>
+      <rect x="-26" y="-10" width="52" height="10" rx="5" fill="#FFD166" fill-opacity="0.85"></rect>
+      <rect x="-26" y="-22" width="52" height="10" rx="5" fill="#FFD166" fill-opacity="0.75"></rect>
+    </g>
+  </g>
+
+  <!-- Floating fintech accents (center/right) -->
+  <g opacity="0.55" stroke-linecap="round">
+    <!-- sparkle dots -->
+    <circle cx="1240" cy="300" r="3" fill="#A3E3FF"></circle>
+    <circle cx="1418" cy="382" r="3" fill="#A3E3FF"></circle>
+    <circle cx="1544" cy="264" r="3" fill="#A3E3FF"></circle>
+    <!-- connector lines -->
+    <path d="M1116 540 C1180 520, 1250 560, 1300 520" fill="none" stroke="#6AD3FF" stroke-opacity="0.5" stroke-width="2"></path>
+    <path d="M1360 560 C1420 530, 1500 590, 1560 560" fill="none" stroke="#22D3EE" stroke-opacity="0.5" stroke-width="2"></path>
+    <!-- small upward arrows -->
+    <g fill="#22D3EE">
+      <path d="M1450 470 l18 -26 l18 14 l-12 2 l6 10 l-34 0 z" opacity="0.9"></path>
+      <path d="M1320 620 l16 -22 l16 12 l-10 2 l6 8 l-28 0 z" opacity="0.8"></path>
+    </g>
+  </g>
+</svg>

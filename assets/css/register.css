@@ -1,0 +1,237 @@
+/* Bu səhifədə main-in üst paddingini ləğv edirik (Django-da etdiyin kimi) */
+.page-register .main {
+    padding-top: 0;
+}
+
+/* Register section: gradient fon + spacing */
+.register-section {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
+    background: linear-gradient(to bottom, #EFF6FF 0%, #FFFFFF 55%, #FFFFFF 100%);
+
+    /* Tailwind: pt-16 pb-24 / sm:pt-20 sm:pb-32 */
+    padding: 64px 0 96px;
+}
+
+@media (min-width: 640px) {
+    .register-section {
+        padding: 80px 0 128px;
+    }
+}
+
+/* content container (max-w-5xl) */
+.register-container {
+    max-width: 1024px; /* Tailwind max-w-5xl */
+    margin: 0 auto;
+    padding: 0 16px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+@media (min-width: 640px) {
+    .register-container { padding: 0 24px; }
+}
+@media (min-width: 1024px) {
+    .register-container { padding: 0 32px; }
+}
+
+/* Title block */
+.register-intro {
+    max-width: 768px; /* max-w-3xl */
+    margin-top: 8px;
+}
+
+.register-title {
+    margin: 0;
+    font-family: "Cal Sans", "Poppins", sans-serif;
+    font-size: 40px;  /* text-4xl */
+    letter-spacing: -0.02em;
+    color: #111827;
+}
+
+@media (min-width: 640px) {
+    .register-title { font-size: 48px; } /* sm:text-5xl */
+}
+
+.register-subtitle {
+    margin: 16px 0 0 0;
+    font-size: 18px;
+    color: #4B5563;
+}
+
+/* Cards grid */
+.register-grid {
+    width: 100%;
+    margin-top: 48px; /* mt-12 */
+    display: grid;
+    gap: 32px;
+}
+
+@media (min-width: 640px) {
+    .register-grid {
+        grid-template-columns: repeat(2, 1fr); /* sm:grid-cols-2 */
+    }
+}
+
+/* Card */
+.register-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px; /* p-10 */
+    border-radius: 24px; /* rounded-3xl */
+
+    border: 1px solid #DBEAFE; /* blue-100 */
+    background: #fff;
+
+    /* shadow-xl */
+    box-shadow:
+            0 18px 34px rgba(2, 6, 23, 0.10),
+            0 6px 16px rgba(2, 6, 23, 0.06);
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    will-change: transform;
+}
+
+.register-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: #BFDBFE; /* blue-200 */
+
+    /* shadow-2xl */
+    box-shadow:
+            0 30px 60px rgba(2, 6, 23, 0.14),
+            0 10px 26px rgba(2, 6, 23, 0.10);
+}
+
+/* Icon circle */
+.register-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    background: #DBEAFE; /* blue-100 */
+    color: #2563EB;      /* blue-600 */
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register-icon i {
+    font-size: 24px; /* text-2xl yaxın */
+}
+
+/* Card text */
+.register-card-title {
+    margin: 24px 0 0 0;
+    font-family: "Cal Sans", "Poppins", sans-serif;
+    font-size: 24px;
+    color: #111827;
+}
+
+.register-card-text {
+    margin: 12px 0 0 0;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #4B5563;
+}
+
+/* Blur gradient blob (Tailwind blur-3xl + bg-gradient-to-tr) */
+.register-blob-wrap {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.register-blob {
+    position: absolute;
+    left: 50%;
+    top: 22%;
+    transform: translateX(-50%) rotate(30deg);
+
+    width: 576px; /* w-[36rem] */
+    aspect-ratio: 1155 / 678;
+
+    background: linear-gradient(to top right, #DBEAFE, #BFDBFE);
+    opacity: 0.50;
+
+    filter: blur(64px);
+}
+
+@media (min-width: 640px) {
+    .register-blob {
+        width: 1152px; /* sm:w-[72rem] */
+    }
+}
+
+
+/* =========================
+   Register page – Cal Sans FIX
+========================= */
+
+/* Register səhifəsində Cal Sans olan başlıqlar */
+.register-page h1,
+.register-page h2,
+.register-page h3,
+.register-page .card-title,
+.register-page .register-title {
+    font-family: "Cal Sans","Poppins",sans-serif;
+    font-weight: 400;
+}
+
+/* Qeydiyyat kartları (Sahibkar / Əməkdaş) */
+.register-page .register-card h2,
+.register-page .register-card .icon,
+.register-page .register-card .card-title {
+    font-weight: 400;
+}
+
+/* Button və CTA-lar (Cal Sans istifadə edirsə) */
+.register-page .btn,
+.register-page .register-btn {
+    font-family: "Cal Sans","Poppins",sans-serif;
+    font-weight: 400;
+}
+
+/* Əgər içəridə strong varsa, onu da normallaşdır */
+.register-page strong {
+    font-weight: 400;
+}
+
+.auth-footer {
+    margin: 2px 0 0 0;
+    text-align: center;
+    font-size: 14px;
+    color: #6B7280;
+}
+
+.auth-link {
+    color: #2563EB;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.auth-link:hover {
+    color: #1D4ED8;
+}
+
+.auth-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #2563EB;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-back:hover {
+    color: #1D4ED8;
+}
