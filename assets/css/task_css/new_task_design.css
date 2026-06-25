@@ -1140,6 +1140,7 @@
   .newtask-modal.liquid-task-modal {
     --nt-field-height: 54px;
     --nt-media-zone-height: 102px;
+    --nt-control-max-width: 448px;
     width: min(1120px, calc(100vw - 48px));
     max-height: calc(100vh - 40px);
     overflow: visible;
@@ -1169,7 +1170,8 @@
   }
 
   .newtask-modal.liquid-task-modal .newtask-form-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, var(--nt-control-max-width)));
+    justify-content: center;
     column-gap: clamp(28px, 4vw, 58px);
     row-gap: 10px;
     align-items: start;
@@ -1183,7 +1185,12 @@
   .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskTaskTypeSelect) { order: 4; }
   .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskDepartmentSelect) { order: 5; }
   .newtask-modal.liquid-task-modal .newtask-form-group:has(#newtaskDueDate) { order: 6; }
-  .newtask-modal.liquid-task-modal .newtask-visibility-field { order: 7; grid-column: 1 / -1; }
+  .newtask-modal.liquid-task-modal .newtask-visibility-field {
+    order: 7;
+    grid-column: 1 / 2;
+    justify-self: start;
+    align-self: start;
+  }
   .newtask-modal.liquid-task-modal .glass-description-field { order: 8; }
   .newtask-modal.liquid-task-modal .glass-media-field { order: 9; }
 
@@ -1235,7 +1242,8 @@
   .newtask-modal.liquid-task-modal .newtask-checkbox-group {
     min-height: 34px;
     width: fit-content;
-    margin-inline: auto;
+    max-width: 100%;
+    margin-inline: 0;
     padding: 0 14px;
   }
 
