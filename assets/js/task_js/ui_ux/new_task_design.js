@@ -51,7 +51,7 @@
     let parentCompanies = [];
     let partners = [];
 
-    function normalizeAzText(text) {
+    function normalizeAzSortText(text) {
         return String(text || '')
             .toLowerCase()
             .replace(/ə/g, 'e')
@@ -64,7 +64,7 @@
             .trim();
     }
 
-    function getAzCollator() {
+    const azCollator = (() => {
         try {
             return typeof Intl !== 'undefined'
                 ? new Intl.Collator('az', { sensitivity: 'base', numeric: true })
@@ -72,17 +72,18 @@
         } catch (error) {
             return null;
         }
+    })();
+
+    function compareAzNames(a, b) {
+        const an = String(a || '');
+        const bn = String(b || '');
+        return azCollator
+            ? azCollator.compare(an, bn)
+            : normalizeAzSortText(an).localeCompare(normalizeAzSortText(bn));
     }
 
     function sortByVisibleName(list, getName) {
-        const collator = getAzCollator();
-        return [...(list || [])].sort((a, b) => {
-            const an = String(getName(a) || '');
-            const bn = String(getName(b) || '');
-            return collator
-                ? collator.compare(an, bn)
-                : normalizeAzText(an).localeCompare(normalizeAzText(bn));
-        });
+        return [...(list || [])].sort((a, b) => compareAzNames(getName(a), getName(b)));
     }
 
     function getEmployeeVisibleName(emp) {
@@ -585,8 +586,11 @@
             if (taskTypeSelect && response) {
                 let list = Array.isArray(response) ? response : (response.data || response.items || []);
                 if (list.length > 0) {
+                    const realWorkTypes = list.filter(wt => wt.is_active !== false);
+                    realWorkTypes.sort((a, b) => compareAzNames(getWorkTypeVisibleName(a), getWorkTypeVisibleName(b)));
+
                     let html = '<option value="">İş növü seçin</option>';
-                    sortByVisibleName(list.filter(wt => wt.is_active !== false), getWorkTypeVisibleName).forEach(wt => {
+                    realWorkTypes.forEach(wt => {
                         html += `<option value="${wt.id}">${getWorkTypeVisibleName(wt)}</option>`;
                     });
                     taskTypeSelect.innerHTML = html;

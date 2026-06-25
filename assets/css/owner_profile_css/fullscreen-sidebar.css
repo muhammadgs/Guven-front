@@ -477,11 +477,12 @@ body.task-manager-open #taskManagerSection {
         background: linear-gradient(180deg, #eff7ff 0%, #eaf4ff 100%) !important;
         box-shadow: 0 18px 60px rgba(125, 182, 255, 0.22) !important;
         border-radius: 0 !important;
-        padding: 20px 12px !important;
+        padding: 0 !important;
         transition: width var(--gf-sidebar-motion), min-width var(--gf-sidebar-motion), max-width var(--gf-sidebar-motion), box-shadow var(--gf-sidebar-motion) !important;
     }
 
     #sidebarContent {
+        width: 100% !important;
         gap: 16px !important;
         padding: 0 !important;
         overflow: visible !important;
@@ -498,6 +499,7 @@ body.task-manager-open #taskManagerSection {
         position: relative !important;
         overflow: hidden !important;
         transition: border-radius var(--gf-sidebar-motion), min-height var(--gf-sidebar-motion), padding var(--gf-sidebar-motion) !important;
+        width: 100% !important;
     }
 
     #sidebarContent > .gf-profile-block { padding: 14px !important; flex: 0 0 auto !important; }
@@ -559,12 +561,12 @@ body.task-manager-open #taskManagerSection {
     nav a.sidebar-link.active::before,
     nav a.sidebar-link.bg-brand-soft.text-brand-blue::before { opacity: 1; }
 
-    #mainSidebar:not(:hover) #sidebarContent > .gf-profile-block { width: 88px !important; height: 88px !important; padding: 0 !important; border-radius: 999px !important; display: grid !important; place-items: center !important; }
+    #mainSidebar:not(:hover) #sidebarContent > .gf-profile-block { width: 100% !important; height: 88px !important; padding: 0 !important; border-radius: 999px !important; display: grid !important; place-items: center !important; }
     #mainSidebar:not(:hover) #settingsMainBtn { width: 82px !important; height: 82px !important; padding: 0 !important; }
     #mainSidebar:not(:hover) #settingsMainBtn .text-left,
     #mainSidebar:not(:hover) #settingsPanel { display: none !important; }
     #mainSidebar:not(:hover) #settingsMainBtn .h-10.w-10 { width: 74px !important; height: 74px !important; font-size: 24px !important; }
-    #mainSidebar:not(:hover) #sidebarContent > nav { border-radius: 999px !important; padding: 26px 12px !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
+    #mainSidebar:not(:hover) #sidebarContent > nav { border-radius: 999px !important; padding: 26px 24px !important; display: flex !important; flex-direction: column !important; align-items: center !important; }
     #mainSidebar:not(:hover) nav a.sidebar-link { width: 64px !important; height: 64px !important; padding: 0 !important; justify-content: center !important; gap: 0 !important; }
     #mainSidebar:not(:hover) nav a.sidebar-link .sidebar-text { display: none !important; }
     #mainSidebar:not(:hover) nav a.sidebar-link::before { inset: 5px; border-radius: 999px; }
