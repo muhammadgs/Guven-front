@@ -92,7 +92,7 @@
             <!-- Sol sidebar - ID dəyişmir -->
             <aside class="h-full rounded-3xl bg-white shadow-soft transition-all duration-300 overflow-hidden flex-shrink-0" id="mainSidebar">
                 <div class="h-full flex flex-col p-6 overflow-y-auto" id="sidebarContent">
-                    <div class="mt-auto pt-6 border-t border-slate-100">
+                    <div class="gf-profile-block">
                         <!-- Əsas Tənzimləmə Buttonu -->
                         <button id="settingsMainBtn" class="w-full flex items-center justify-between gap-3 rounded-2xl bg-white px-1 py-3 shadow-soft transition hover:bg-brand-soft group" type="button">
                             <div class="flex items-center gap-3">
@@ -113,7 +113,7 @@
                         <div id="settingsPanel" class="hidden mt-2 rounded-2xl bg-white p-2 shadow-soft space-y-1">
                             <!-- Tənzimləmələr Linki -->
                             <a href="#" class="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="settingsLink">
-                                <i class="fa-solid fa-sliders w-5"></i>
+                                <i class="fa-solid fa-gear w-5"></i>
                                 <span class="flex-1 text-left">Tənzimləmələr</span>
                             </a>
 
@@ -131,7 +131,7 @@
 
                             <!-- Çıxış -->
                             <button class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-600 transition hover:bg-brand-soft hover:text-brand-blue" onclick="logoutUser()" id="logoutBtn" type="button">
-                                <i class="fa-solid fa-right-from-bracket w-5"></i>
+                                <i class="fa-solid fa-arrow-right-from-bracket w-5"></i>
                                 <span class="flex-1 text-left">Çıxış</span>
                             </button>
 
@@ -147,12 +147,12 @@
                     <nav class="mt-6 space-y-2 flex-1">
                         <!-- Giriş -->
                         <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="dashboardBtn" data-tooltip="Əsas səhifə">
-                            <i class="fa-solid fa-gauge-high w-5 text-center"></i>
+                            <i class="fa-solid fa-table-cells-large w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Əsas səhifə</span>
                         </a>
                         <!-- İşçilərimin Listi -->
                         <a href="#" id="openEmployeesModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-users w-5 text-center"></i>
+                            <i class="fa-solid fa-user-group w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Əməkdaşlar</span>
                         </a>
                         <!-- Şirkətlərin Listi -->
@@ -168,22 +168,22 @@
 
                         <!-- Task Manager -->
                         <a href="#" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item id="taskManagerBtn">
-                            <i class="fa-solid fa-list-check w-5 text-center"></i>
+                            <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Tapşırıqlar</span>
                         </a>
                         <!-- Fayllarım -->
                         <a href="#" id="fayllarimBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-folder-open w-5 text-center"></i>
+                            <i class="fa-solid fa-folder w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Sənədlər</span>
                         </a>
-                        <!-- Departament və İş Növləri -->
+                        <!-- İş növləri -->
                         <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
                             <i class="fa-solid fa-diagram-project w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Departamentlər</span>
+                            <span class="sidebar-text whitespace-nowrap">İş növləri</span>
                         </a>
                         <!-- Diaqram -->
                         <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                            <i class="fa-solid fa-pen-ruler w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Diaqram</span>
                         </a>
                         <!-- Dəvət Linkləri -->
@@ -230,7 +230,7 @@
                             <div class="bg-gradient-to-br from-green-50 to-white rounded-2xl p-6 shadow-soft border border-green-100 stat-card">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="h-16 w-16 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                        <i class="fa-solid fa-users text-3xl text-green-600"></i>
+                                        <i class="fa-solid fa-user-group text-3xl text-green-600"></i>
                                     </div>
                                     <span class="text-4xl font-bold text-brand-ink" id="dashboardEmployeesCount">24</span>
                                 </div>
@@ -242,7 +242,7 @@
                             <div class="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-6 shadow-soft border border-purple-100 stat-card">
                                 <div class="flex items-center justify-between mb-4">
                                     <div class="h-16 w-16 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                        <i class="fa-solid fa-list-check text-3xl text-purple-600"></i>
+                                        <i class="fa-solid fa-clipboard-list text-3xl text-purple-600"></i>
                                     </div>
                                     <span class="text-4xl font-bold text-brand-ink" id="dashboardTasksCount">12</span>
                                 </div>
@@ -537,7 +537,7 @@
                             <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-4 border border-amber-200">
                                 <div class="flex items-center justify-between">
                                     <div><p class="text-sm text-gray-600">Ümumi İşçi</p><p class="text-2xl font-bold text-gray-900" id="totalEmployeesCount">0</p></div>
-                                    <div class="h-12 w-12 rounded-lg bg-amber-500/20 flex items-center justify-center"><i class="fa-solid fa-users text-amber-600"></i></div>
+                                    <div class="h-12 w-12 rounded-lg bg-amber-500/20 flex items-center justify-center"><i class="fa-solid fa-user-group text-amber-600"></i></div>
                                 </div>
                             </div>
                             <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
