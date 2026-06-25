@@ -61,6 +61,8 @@
             .replace(/ş/g, 's')
             .replace(/ç/g, 'c')
             .replace(/ğ/g, 'g')
+            .replace(/[–—]/g, '-')
+            .replace(/\s+/g, ' ')
             .trim();
     }
 
@@ -94,8 +96,39 @@
         return dept?.department_name || dept?.name || '';
     }
 
-    function getWorkTypeVisibleName(wt) {
-        return wt?.work_type_name || wt?.name || (wt?.id ? `İş növü ${wt.id}` : '');
+    function getWorkTypeDisplayName(wt) {
+        return String(
+            wt?.work_type_name ||
+            wt?.name ||
+            wt?.title ||
+            wt?.label ||
+            `İş növü ${wt?.id || ''}`
+        ).trim();
+    }
+
+    function sortWorkTypesAlphabetically(workTypesList) {
+        const collator = (() => {
+            try {
+                return typeof Intl !== 'undefined'
+                    ? new Intl.Collator('az', {
+                        sensitivity: 'base',
+                        numeric: true,
+                        ignorePunctuation: true
+                    })
+                    : null;
+            } catch (error) {
+                return null;
+            }
+        })();
+
+        return [...(workTypesList || [])].sort((a, b) => {
+            const an = getWorkTypeDisplayName(a);
+            const bn = getWorkTypeDisplayName(b);
+
+            if (collator) return collator.compare(an, bn);
+
+            return normalizeAzSortText(an).localeCompare(normalizeAzSortText(bn));
+        });
     }
 
     function getPartnerVisibleName(partner, companyCode) {
@@ -586,15 +619,17 @@
             if (taskTypeSelect && response) {
                 let list = Array.isArray(response) ? response : (response.data || response.items || []);
                 if (list.length > 0) {
-                    const realWorkTypes = list.filter(wt => wt.is_active !== false);
-                    realWorkTypes.sort((a, b) => compareAzNames(getWorkTypeVisibleName(a), getWorkTypeVisibleName(b)));
+                    const activeWorkTypes = list.filter(wt => wt.is_active !== false);
+                    const sortedWorkTypes = sortWorkTypesAlphabetically(activeWorkTypes);
 
                     let html = '<option value="">İş növü seçin</option>';
-                    realWorkTypes.forEach(wt => {
-                        html += `<option value="${wt.id}">${getWorkTypeVisibleName(wt)}</option>`;
+                    sortedWorkTypes.forEach(wt => {
+                        const name = getWorkTypeDisplayName(wt);
+                        html += `<option value="${wt.id}">${name}</option>`;
                     });
                     taskTypeSelect.innerHTML = html;
-                    workTypes = list;
+                    workTypes = sortedWorkTypes;
+                    refreshCustomSelectById?.('newtaskTaskTypeSelect');
                 } else {
                     taskTypeSelect.innerHTML = '<option value="">İş növü tapılmadı</option>';
                 }
