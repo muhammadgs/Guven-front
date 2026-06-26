@@ -305,3 +305,270 @@
         border-radius: 24px !important;
     }
 }
+
+/* Liquid/glass Companies redesign scoped only to the profile Şirkətlər section. */
+#companiesSection {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: clamp(30px, 4vw, 44px);
+    padding: clamp(20px, 2.2vw, 34px);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    background:
+        radial-gradient(circle at 12% 2%, rgba(255, 255, 255, 0.94), transparent 30%),
+        radial-gradient(circle at 92% 0%, rgba(67, 136, 255, 0.14), transparent 26%),
+        linear-gradient(145deg, rgba(247, 247, 247, 0.76), rgba(221, 228, 238, 0.62));
+    box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.82),
+        inset 0 -20px 50px rgba(255, 255, 255, 0.3),
+        0 0 0 9px rgba(255, 255, 255, 0.14),
+        0 28px 78px rgba(15, 23, 42, 0.15);
+    backdrop-filter: blur(26px) saturate(165%);
+}
+
+#companiesSection::before,
+#companiesSection::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+#companiesSection::before {
+    width: 260px;
+    height: 260px;
+    right: -86px;
+    top: -118px;
+    background: radial-gradient(circle, rgba(67, 136, 255, 0.18), transparent 68%);
+}
+
+#companiesSection::after {
+    width: 320px;
+    height: 320px;
+    left: -150px;
+    bottom: -150px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6), transparent 70%);
+}
+
+#companiesSection > .mb-8 {
+    margin-bottom: clamp(18px, 2vw, 26px) !important;
+}
+
+#companiesSection > .mb-8 .text-brand-blue {
+    color: #4388ff !important;
+    letter-spacing: 0.2em;
+    text-shadow: 0 12px 28px rgba(67, 136, 255, 0.16);
+}
+
+#companiesSection > .mb-8 .text-slate-500 {
+    color: rgba(3, 3, 3, 0.54) !important;
+    font-weight: 600;
+}
+
+#companiesSection #addCompanyByCodeBtn {
+    border: 1px solid rgba(255, 255, 255, 0.76) !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #4388ff 0%, #6aa9ff 100%) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 16px 34px rgba(67, 136, 255, 0.24) !important;
+}
+
+#companiesSection #addCompanyByCodeBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62), 0 20px 42px rgba(67, 136, 255, 0.3) !important;
+}
+
+#companiesSection > .grid > .bg-gradient-to-r {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px !important;
+    border: 1px solid rgba(255, 255, 255, 0.78) !important;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(67, 136, 255, 0.13), transparent 38%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(239, 244, 255, 0.66)) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.94), 0 18px 40px rgba(30, 47, 85, 0.11);
+    backdrop-filter: blur(18px) saturate(155%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+#companiesSection > .grid > .bg-gradient-to-r:hover {
+    transform: translateY(-3px);
+    border-color: rgba(67, 136, 255, 0.28) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.96), 0 22px 48px rgba(37, 72, 139, 0.14);
+}
+
+#companiesSection > .grid > .bg-gradient-to-r .h-12.w-12 {
+    border-radius: 18px !important;
+    background: rgba(67, 136, 255, 0.13) !important;
+    color: #4388ff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 12px 28px rgba(67, 136, 255, 0.14);
+}
+
+#companiesSection > .grid > .bg-gradient-to-r .h-12.w-12 i {
+    color: #4388ff !important;
+}
+
+#companiesSection > .grid > .bg-gradient-to-r .text-gray-600,
+#companiesSection #showingText {
+    color: rgba(0, 0, 0, 0.56) !important;
+}
+
+#companiesSection > .grid > .bg-gradient-to-r .text-gray-900 {
+    color: #030303 !important;
+    letter-spacing: -0.035em;
+}
+
+#companiesSection > .flex.flex-col.md\:flex-row {
+    align-items: stretch;
+    border-radius: 30px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(225, 232, 244, 0.48));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 16px 38px rgba(31, 42, 68, 0.08);
+    backdrop-filter: blur(20px) saturate(155%);
+}
+
+#companiesSection > .flex.flex-col.md\:flex-row > .flex.gap-2.bg-white,
+#companiesSection #companySearch,
+#companiesSection #companyFilter,
+#companiesSection #exportCompaniesBtn,
+#companiesSection #prevPageBtn,
+#companiesSection #nextPageBtn {
+    border-color: rgba(255, 255, 255, 0.74) !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 24px rgba(31, 42, 68, 0.07) !important;
+    backdrop-filter: blur(14px) saturate(145%);
+}
+
+#companiesSection > .flex.flex-col.md\:flex-row > .flex.gap-2.bg-white {
+    border-radius: 22px !important;
+    padding: 6px !important;
+}
+
+#companiesSection #showAllCompaniesBtn,
+#companiesSection #showParentCompaniesBtn,
+#companiesSection #showChildCompaniesBtn,
+#companiesSection #showPartnerCompaniesBtn,
+#companiesSection #companySearch,
+#companiesSection #companyFilter,
+#companiesSection #exportCompaniesBtn,
+#companiesSection #prevPageBtn,
+#companiesSection #nextPageBtn {
+    border-radius: 18px !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease;
+}
+
+#companiesSection #showAllCompaniesBtn.bg-brand-blue,
+#companiesSection #showAllCompaniesBtn.text-white,
+#companiesSection #showParentCompaniesBtn.bg-brand-blue,
+#companiesSection #showChildCompaniesBtn.bg-brand-blue,
+#companiesSection #showPartnerCompaniesBtn.bg-brand-blue {
+    background: linear-gradient(135deg, #4388ff 0%, #6aa9ff 100%) !important;
+    color: #ffffff !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.48), 0 12px 28px rgba(67, 136, 255, 0.23) !important;
+}
+
+#companiesSection #showAllCompaniesBtn:not(.bg-brand-blue):hover,
+#companiesSection #showParentCompaniesBtn:not(.bg-brand-blue):hover,
+#companiesSection #showChildCompaniesBtn:not(.bg-brand-blue):hover,
+#companiesSection #showPartnerCompaniesBtn:not(.bg-brand-blue):hover,
+#companiesSection #exportCompaniesBtn:hover,
+#companiesSection #prevPageBtn:not(:disabled):hover,
+#companiesSection #nextPageBtn:not(:disabled):hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.88) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 14px 30px rgba(67, 136, 255, 0.12) !important;
+}
+
+#companiesSection #companySearch:focus,
+#companiesSection #companyFilter:focus {
+    border-color: rgba(67, 136, 255, 0.34) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 0 0 4px rgba(67, 136, 255, 0.12), 0 14px 30px rgba(67, 136, 255, 0.1) !important;
+}
+
+#companiesSection #companiesTableContainer {
+    overflow: hidden;
+    border-radius: 30px !important;
+    border: 1px solid rgba(255, 255, 255, 0.74) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(225, 232, 244, 0.5)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 24px 64px rgba(42, 61, 99, 0.1);
+    backdrop-filter: blur(22px) saturate(155%);
+}
+
+#companiesSection #companiesTableContainer table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#companiesSection #companiesTableContainer thead tr {
+    background: rgba(255, 255, 255, 0.66) !important;
+    border-bottom: 1px solid rgba(67, 136, 255, 0.12) !important;
+}
+
+#companiesSection #companiesTableContainer th {
+    color: rgba(3, 3, 3, 0.64) !important;
+    letter-spacing: 0.02em;
+}
+
+#companiesSection #companiesTableContainer tbody tr.company-row {
+    border-bottom: 1px solid rgba(67, 136, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.38);
+}
+
+#companiesSection #companiesTableContainer tbody tr.company-row:hover {
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: inset 3px 0 0 rgba(67, 136, 255, 0.42);
+}
+
+#companiesSection #companiesTableContainer .company-row .h-10.w-10 {
+    border-radius: 16px !important;
+    background: rgba(67, 136, 255, 0.13) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 10px 22px rgba(67, 136, 255, 0.12);
+}
+
+#companiesSection .view-company-btn,
+#companiesSection .edit-company-btn,
+#companiesSection .delete-company-btn {
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.74);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 22px rgba(31, 42, 68, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#companiesSection .view-company-btn {
+    background: rgba(67, 136, 255, 0.12) !important;
+    color: #2563eb !important;
+}
+
+#companiesSection .edit-company-btn {
+    background: rgba(245, 158, 11, 0.13) !important;
+    color: #b45309 !important;
+}
+
+#companiesSection .delete-company-btn {
+    background: rgba(239, 68, 68, 0.11) !important;
+    color: #dc2626 !important;
+}
+
+#companiesSection .view-company-btn:hover,
+#companiesSection .edit-company-btn:hover,
+#companiesSection .delete-company-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 14px 28px rgba(31, 42, 68, 0.1);
+}
+
+@media (max-width: 768px) {
+    #companiesSection {
+        border-radius: 30px;
+        padding: 18px;
+    }
+
+    #companiesSection > .flex.flex-col.md\:flex-row,
+    #companiesSection #companiesTableContainer {
+        border-radius: 24px !important;
+    }
+
+    #companiesSection > .grid > .bg-gradient-to-r {
+        border-radius: 22px !important;
+    }
+}
