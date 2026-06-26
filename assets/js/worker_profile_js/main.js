@@ -1185,6 +1185,14 @@ class ProfileApp {
                     // BÜTÜN BÖLMƏLƏRİ SİL VƏ YA GİZLƏT
                     this.clearAllSections();
 
+                    // Şirkətlər bölməsində ümumi profile scrollunu söndür,
+                    // yalnız aşağıdakı cədvəl pəncərəsi scroll etsin.
+                    if (typeof this.setCompaniesScrollMode === 'function') {
+                        this.setCompaniesScrollMode(true);
+                    } else {
+                        document.getElementById('profileContent')?.classList.add('companies-scroll-mode');
+                    }
+
                     // Şirkətlər bölməsini göstər
                     if (!this.companiesService) {
                         this.companiesService = new CompaniesService(this.api);

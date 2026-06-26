@@ -559,14 +559,15 @@
 
 /* Companies scroll mode: keep Şirkətlər controls visible and scroll only the table rows. */
 #profileContent.companies-scroll-mode {
-    overflow: hidden;
+    overflow: hidden !important;
+    min-height: 0;
 }
 
 #profileContent.companies-scroll-mode #companiesSection {
     height: 100%;
     max-height: 100%;
     min-height: 0;
-    overflow: hidden;
+    overflow: hidden !important;
     display: flex !important;
     flex-direction: column;
 }
@@ -590,7 +591,7 @@
 #profileContent.companies-scroll-mode #companiesSection #companiesTableContainer > .overflow-x-auto {
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: auto;
 }
 
