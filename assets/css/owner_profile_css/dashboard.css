@@ -73,11 +73,13 @@
 }
 
 #profileContent.dashboard-scroll-mode #dashboardSection > .text-center,
-#profileContent.dashboard-scroll-mode #dashboardSection > .grid {
+#profileContent.dashboard-scroll-mode #dashboardSection > .grid,
+#profileContent.dashboard-scroll-mode #dashboardSection > .dashboard-stats,
+#profileContent.dashboard-scroll-mode #dashboardSection > .stats-grid {
     flex: 0 0 auto;
 }
 
-#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 {
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-card {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
@@ -85,13 +87,30 @@
     flex-direction: column;
 }
 
-#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 > h3 {
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-card > h3 {
     flex: 0 0 auto;
 }
 
-#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 > .space-y-3 {
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-scroll {
     flex: 1 1 auto;
     min-height: 0;
+    max-height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(31, 42, 68, 0.28) transparent;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection .recent-activities-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(31, 42, 68, 0.24);
+    border-radius: 999px;
 }
