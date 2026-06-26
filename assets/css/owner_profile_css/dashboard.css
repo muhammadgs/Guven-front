@@ -58,3 +58,40 @@
         transform: translateX(100%);
     }
 }
+/* Dashboard scroll mode: only active while the Əsas səhifə dashboard is selected. */
+#profileContent.dashboard-scroll-mode {
+    overflow: hidden;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection {
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection > .text-center,
+#profileContent.dashboard-scroll-mode #dashboardSection > .grid {
+    flex: 0 0 auto;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 > h3 {
+    flex: 0 0 auto;
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection > .bg-brand-soft\/30 > .space-y-3 {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
