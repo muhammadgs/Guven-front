@@ -552,6 +552,9 @@ class ProfileApp {
             if (sidebarItem && sidebarItem.id !== 'dashboardBtn') {
                 this.setDashboardScrollMode(false);
             }
+            if (sidebarItem && sidebarItem.id !== 'openCompaniesModalBtn') {
+                document.getElementById('profileContent')?.classList.remove('companies-scroll-mode');
+            }
         }, true);
 
         // ==================== GİRİŞ (DASHBOARD) DÜYMƏSİ ====================
@@ -1672,6 +1675,7 @@ class ProfileApp {
      */
     applyDashboardScrollMode() {
         document.body.classList.add('profile-dashboard-active');
+        document.getElementById('profileContent')?.classList.remove('companies-scroll-mode');
 
         const profileContent = document.getElementById('profileContent');
         const dashboardSection = document.getElementById('dashboardSection');
