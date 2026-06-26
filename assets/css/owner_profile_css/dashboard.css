@@ -661,3 +661,245 @@
         border-radius: 22px !important;
     }
 }
+
+/* Liquid/glass Partners redesign scoped only to the profile Partnyorlar section. */
+#partnersSection {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: clamp(30px, 4vw, 44px);
+    padding: clamp(20px, 2.2vw, 34px);
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    background:
+        radial-gradient(circle at 12% 2%, rgba(255, 255, 255, 0.94), transparent 30%),
+        radial-gradient(circle at 92% 0%, rgba(67, 136, 255, 0.14), transparent 26%),
+        linear-gradient(145deg, rgba(247, 247, 247, 0.76), rgba(221, 228, 238, 0.62));
+    box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.82),
+        inset 0 -20px 50px rgba(255, 255, 255, 0.3),
+        0 0 0 9px rgba(255, 255, 255, 0.14),
+        0 28px 78px rgba(15, 23, 42, 0.15);
+    backdrop-filter: blur(26px) saturate(165%);
+}
+
+#partnersSection::before,
+#partnersSection::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+#partnersSection::before {
+    width: 260px;
+    height: 260px;
+    right: -86px;
+    top: -118px;
+    background: radial-gradient(circle, rgba(67, 136, 255, 0.18), transparent 68%);
+}
+
+#partnersSection::after {
+    width: 320px;
+    height: 320px;
+    left: -150px;
+    bottom: -150px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.6), transparent 70%);
+}
+
+#partnersSection > .mb-8 {
+    margin-bottom: clamp(18px, 2vw, 26px) !important;
+}
+
+#partnersSection > .mb-8 .text-brand-blue {
+    color: #4388ff !important;
+    letter-spacing: 0.2em;
+    text-shadow: 0 12px 28px rgba(67, 136, 255, 0.16);
+}
+
+#partnersSection > .mb-8 .text-slate-500 {
+    color: rgba(3, 3, 3, 0.54) !important;
+    font-weight: 600;
+}
+
+#partnersSection #addPartnerBtn,
+#partnersSection .add-partner-from-empty {
+    border: 1px solid rgba(255, 255, 255, 0.76) !important;
+    border-radius: 20px !important;
+    background: linear-gradient(135deg, #4388ff 0%, #6aa9ff 100%) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 16px 34px rgba(67, 136, 255, 0.24) !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+#partnersSection #refreshPartnersBtn,
+#partnersSection #partnerPrevPage,
+#partnersSection #partnerNextPage {
+    border: 1px solid rgba(255, 255, 255, 0.74) !important;
+    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 24px rgba(31, 42, 68, 0.07) !important;
+    backdrop-filter: blur(14px) saturate(145%);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+}
+
+#partnersSection #addPartnerBtn:hover,
+#partnersSection .add-partner-from-empty:hover,
+#partnersSection #refreshPartnersBtn:hover,
+#partnersSection #partnerPrevPage:not(:disabled):hover,
+#partnersSection #partnerNextPage:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 16px 34px rgba(67, 136, 255, 0.16) !important;
+}
+
+#partnersSection > .grid > .bg-gradient-to-r {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px !important;
+    border: 1px solid rgba(255, 255, 255, 0.78) !important;
+    background:
+        radial-gradient(circle at 20% 0%, rgba(67, 136, 255, 0.13), transparent 38%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(239, 244, 255, 0.66)) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.94), 0 18px 40px rgba(30, 47, 85, 0.11);
+    backdrop-filter: blur(18px) saturate(155%);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+#partnersSection > .grid > .bg-gradient-to-r:hover {
+    transform: translateY(-3px);
+    border-color: rgba(67, 136, 255, 0.28) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.96), 0 22px 48px rgba(37, 72, 139, 0.14);
+}
+
+#partnersSection > .grid > .bg-gradient-to-r .h-12.w-12,
+#partnersSection #partnersTableContainer tbody tr .h-10.w-10 {
+    border-radius: 18px !important;
+    background: rgba(67, 136, 255, 0.13) !important;
+    color: #4388ff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.84), 0 12px 28px rgba(67, 136, 255, 0.14);
+}
+
+#partnersSection > .grid > .bg-gradient-to-r .h-12.w-12 i,
+#partnersSection #partnersTableContainer tbody tr .h-10.w-10 i {
+    color: #4388ff !important;
+}
+
+#partnersSection > .grid > .bg-gradient-to-r .text-gray-600,
+#partnersSection #partnerShowingText {
+    color: rgba(0, 0, 0, 0.56) !important;
+}
+
+#partnersSection > .grid > .bg-gradient-to-r .text-gray-900 {
+    color: #030303 !important;
+    letter-spacing: -0.035em;
+}
+
+#partnersSection > .flex.flex-col.md\:flex-row {
+    align-items: stretch;
+    border-radius: 30px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(225, 232, 244, 0.48));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 16px 38px rgba(31, 42, 68, 0.08);
+    backdrop-filter: blur(20px) saturate(155%);
+}
+
+#partnersSection #partnerSearch,
+#partnersSection #partnerStatusFilter {
+    border-color: rgba(255, 255, 255, 0.74) !important;
+    border-radius: 18px !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 24px rgba(31, 42, 68, 0.07) !important;
+    backdrop-filter: blur(14px) saturate(145%);
+    transition: box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+#partnersSection #partnerSearch:focus,
+#partnersSection #partnerStatusFilter:focus {
+    border-color: rgba(67, 136, 255, 0.34) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 0 0 4px rgba(67, 136, 255, 0.12), 0 14px 30px rgba(67, 136, 255, 0.1) !important;
+}
+
+#partnersSection #partnersTableContainer {
+    overflow: hidden;
+    border-radius: 30px !important;
+    border: 1px solid rgba(255, 255, 255, 0.74) !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(225, 232, 244, 0.5)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 24px 64px rgba(42, 61, 99, 0.1);
+    backdrop-filter: blur(22px) saturate(155%);
+}
+
+#partnersSection #partnersTableContainer table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#partnersSection #partnersTableContainer thead tr {
+    background: rgba(255, 255, 255, 0.66) !important;
+    border-bottom: 1px solid rgba(67, 136, 255, 0.12) !important;
+}
+
+#partnersSection #partnersTableContainer th {
+    color: rgba(3, 3, 3, 0.64) !important;
+    letter-spacing: 0.02em;
+}
+
+#partnersSection #partnersTableContainer tbody tr {
+    border-bottom: 1px solid rgba(67, 136, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.38);
+    transition: background 0.22s ease, box-shadow 0.22s ease;
+}
+
+#partnersSection #partnersTableContainer tbody tr:hover {
+    background: rgba(255, 255, 255, 0.72) !important;
+    box-shadow: inset 3px 0 0 rgba(67, 136, 255, 0.42);
+}
+
+#partnersSection .view-partner-btn,
+#partnersSection .approve-from-list-btn,
+#partnersSection .reject-from-list-btn,
+#partnersSection .remove-partner-btn {
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.74);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 10px 22px rgba(31, 42, 68, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#partnersSection .view-partner-btn {
+    background: rgba(67, 136, 255, 0.12) !important;
+    color: #2563eb !important;
+}
+
+#partnersSection .approve-from-list-btn {
+    background: rgba(34, 197, 94, 0.13) !important;
+    color: #16a34a !important;
+}
+
+#partnersSection .reject-from-list-btn,
+#partnersSection .remove-partner-btn {
+    background: rgba(239, 68, 68, 0.11) !important;
+    color: #dc2626 !important;
+}
+
+#partnersSection .view-partner-btn:hover,
+#partnersSection .approve-from-list-btn:hover,
+#partnersSection .reject-from-list-btn:hover,
+#partnersSection .remove-partner-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 14px 28px rgba(31, 42, 68, 0.1);
+}
+
+@media (max-width: 768px) {
+    #partnersSection {
+        border-radius: 32px;
+        padding: 18px;
+    }
+
+    #partnersSection > .flex.flex-col.md\:flex-row,
+    #partnersSection #partnersTableContainer {
+        border-radius: 24px !important;
+    }
+
+    #partnersSection > .grid > .bg-gradient-to-r {
+        border-radius: 24px !important;
+    }
+}
