@@ -579,6 +579,7 @@ class ProfileApp {
                     dashboardSection.style.display = 'block';
                 }
                 this.setDashboardScrollMode(true);
+                requestAnimationFrame(() => this.applyDashboardScrollMode());
 
                 // PROFİL BÖLMƏSİNİ GİZLƏT
                 const profileSection = document.getElementById('profileSection');
@@ -1658,12 +1659,44 @@ class ProfileApp {
      * Dashboard üçün scroll rejimini yalnız Əsas səhifə aktiv olanda saxla.
      */
     setDashboardScrollMode(isDashboard) {
-        document.body.classList.toggle('profile-dashboard-active', isDashboard);
+        if (isDashboard) {
+            this.applyDashboardScrollMode();
+        } else {
+            this.removeDashboardScrollMode();
+        }
+    }
+
+    /**
+     * Əsas səhifə üçün ümumi səhifə scrollunu söndür, Son Aktivliklər panelinin
+     * öz daxili scroll rejimini aktiv saxla.
+     */
+    applyDashboardScrollMode() {
+        document.body.classList.add('profile-dashboard-active');
 
         const profileContent = document.getElementById('profileContent');
-        if (profileContent) {
-            profileContent.classList.toggle('dashboard-scroll-mode', isDashboard);
-        }
+        const dashboardSection = document.getElementById('dashboardSection');
+
+        if (!profileContent || !dashboardSection) return;
+
+        profileContent.classList.add('dashboard-scroll-mode');
+        dashboardSection.classList.add('dashboard-scroll-ready');
+
+        // clearAllSections() klik zamanı inline display:none yazır; dashboard klikində
+        // display:block saxlanarsa CSS-dəki flex layoutu üstələyir və daxili scroll itir.
+        dashboardSection.style.removeProperty('display');
+    }
+
+    /**
+     * Dashboarddan başqa bölmələrdə normal profileContent scroll davranışını bərpa et.
+     */
+    removeDashboardScrollMode() {
+        document.body.classList.remove('profile-dashboard-active');
+
+        const profileContent = document.getElementById('profileContent');
+        const dashboardSection = document.getElementById('dashboardSection');
+
+        profileContent?.classList.remove('dashboard-scroll-mode');
+        dashboardSection?.classList.remove('dashboard-scroll-ready');
     }
 
     /**
