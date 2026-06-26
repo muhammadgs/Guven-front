@@ -155,6 +155,14 @@
 
 #dashboardSection .stat-card {
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    min-height: unset;
+    height: clamp(116px, 13vh, 145px);
+    padding: clamp(18px, 1.7vw, 26px) !important;
+    gap: 0;
     overflow: hidden;
     border-radius: 30px !important;
     border: 1px solid rgba(255, 255, 255, 0.78) !important;
@@ -165,6 +173,17 @@
         inset 0 1px 1px rgba(255, 255, 255, 0.95),
         0 18px 42px rgba(30, 47, 85, 0.12) !important;
     backdrop-filter: blur(18px) saturate(155%);
+}
+
+#dashboardSection .stat-card > .flex.items-center.justify-between {
+    display: contents;
+}
+
+#dashboardSection .stat-card .h-16.w-16 {
+    position: absolute;
+    top: clamp(18px, 1.6vw, 24px);
+    right: clamp(18px, 1.6vw, 26px);
+    left: auto;
 }
 
 #dashboardSection .stat-card .h-16.w-16,
@@ -183,15 +202,28 @@
 #dashboardSection .stat-card span[id^="dashboard"] {
     color: #030303;
     letter-spacing: -0.05em;
+    order: 2;
+    align-self: flex-start;
+    margin: 0;
+    padding-right: clamp(72px, 6vw, 96px);
+    line-height: 1;
 }
 
 #dashboardSection .stat-card h3 {
     color: #030303;
     letter-spacing: -0.015em;
+    order: 1;
+    margin: 0 0 8px 0;
+    padding-right: clamp(72px, 6vw, 96px);
+    line-height: 1.25;
 }
 
 #dashboardSection .stat-card p {
     color: rgba(0, 0, 0, 0.56);
+    order: 3;
+    margin: 6px 0 0 0;
+    padding-right: clamp(72px, 6vw, 96px);
+    line-height: 1.35;
 }
 
 #dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 {
