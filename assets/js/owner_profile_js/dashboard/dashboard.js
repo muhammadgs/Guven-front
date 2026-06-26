@@ -1,38 +1,5 @@
 // dashboard.js - REAL DATA ilə düzəliş edilmiş versiya (DETAYLI)
 
-// Keep the profile shell from scrolling only while the dashboard section is visible.
-(function setupDashboardActiveState() {
-    const syncDashboardActiveState = () => {
-        const dashboardSection = document.getElementById('dashboardSection');
-        if (!dashboardSection) return;
-
-        const isVisible = window.getComputedStyle(dashboardSection).display !== 'none';
-        document.body.classList.toggle('dashboard-active', isVisible);
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', syncDashboardActiveState);
-    } else {
-        syncDashboardActiveState();
-    }
-
-    const startObserver = () => {
-        const dashboardSection = document.getElementById('dashboardSection');
-        if (!dashboardSection) return;
-
-        new MutationObserver(syncDashboardActiveState).observe(dashboardSection, {
-            attributes: true,
-            attributeFilter: ['class', 'style']
-        });
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', startObserver);
-    } else {
-        startObserver();
-    }
-})();
-
 class DashboardManager {
     constructor(apiService) {
         this.apiService = apiService;
