@@ -175,12 +175,22 @@ class CompaniesService {
     }
 
     /**
+     * Şirkətlər bölməsi aktiv olanda profileContent-in ümumi scrollunu söndürür.
+     */
+    setCompaniesScrollMode(isActive) {
+        const profileContent = document.getElementById('profileContent');
+        profileContent?.classList.toggle('companies-scroll-mode', isActive);
+    }
+
+    /**
      * ŞİRKƏTLƏR BÖLMƏSİNİ GÖSTƏR
      */
     showCompaniesSection() {
         console.log('🏢 Şirkətlər bölməsi göstərilir...', new Date().toISOString());
 
         try {
+            this.setCompaniesScrollMode(true);
+
             // Bütün bölmələri gizlət
             const sections = [
                 'dashboardSection',
@@ -207,7 +217,7 @@ class CompaniesService {
 
             // Şirkətlər bölməsini göstər
             if (companiesSection) {
-                companiesSection.style.display = 'block';
+                companiesSection.style.removeProperty('display');
                 console.log('✅ companiesSection göstərildi');
 
                 // MƏLUMATLARI YÜKLƏ
@@ -1059,7 +1069,7 @@ class CompaniesService {
         const totalPages = Math.ceil(this.filteredCompanies.length / this.itemsPerPage);
 
         container.innerHTML = `
-            <div class="overflow-x-auto">
+            <div class="companies-table-scroll overflow-x-auto">
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gray-50 border-b">
@@ -1284,6 +1294,8 @@ class CompaniesService {
 
         // ✅ Cari baxılan şirkətin kodunu saxla (employees tab üçün)
         this.activeCode = companyCode;
+
+        this.setCompaniesScrollMode(false);
 
         // Bütün bölmələri gizlət
         ['dashboardSection','profileSection','companiesSection','companyDetailsSection','filesSection'].forEach(id => {
