@@ -213,6 +213,9 @@ class ProfileApp {
             // 8. Modul event listener-larını qur
             this.bindModuleButtons();
 
+            // Dashboard açılışda görünür olduğu üçün scroll rejimini yalnız ona tətbiq et
+            this.setDashboardScrollMode(true);
+
             // 9. App hazırdır
             this.isInitialized = true;
             this.isAppReady = true; // ✅ ƏLAVƏ EDİLDİ
@@ -532,6 +535,14 @@ class ProfileApp {
     setupEventListeners() {
         console.log('🔧 Event listeners qurulur...');
 
+        // Dashboard scroll rejimi yalnız Əsas səhifə linkində aktiv qalmalıdır.
+        document.addEventListener('click', (event) => {
+            const sidebarItem = event.target.closest('[data-sidebar-item]');
+            if (sidebarItem && sidebarItem.id !== 'dashboardBtn') {
+                this.setDashboardScrollMode(false);
+            }
+        }, true);
+
         // ==================== GİRİŞ (DASHBOARD) DÜYMƏSİ ====================
         const dashboardBtn = document.getElementById('dashboardBtn');
         if (dashboardBtn) {
@@ -556,6 +567,7 @@ class ProfileApp {
                 if (dashboardSection) {
                     dashboardSection.style.display = 'block';
                 }
+                this.setDashboardScrollMode(true);
 
                 // PROFİL BÖLMƏSİNİ GİZLƏT
                 const profileSection = document.getElementById('profileSection');
@@ -1624,6 +1636,18 @@ class ProfileApp {
     }
 
     /**
+     * Dashboard üçün scroll rejimini yalnız Əsas səhifə aktiv olanda saxla.
+     */
+    setDashboardScrollMode(isDashboard) {
+        document.body.classList.toggle('profile-dashboard-active', isDashboard);
+
+        const profileContent = document.getElementById('profileContent');
+        if (profileContent) {
+            profileContent.classList.toggle('dashboard-scroll-mode', isDashboard);
+        }
+    }
+
+    /**
      * BÜTÜN BÖLMƏLƏRİ TƏMİZLƏ
      */
     clearAllSections() {
@@ -1636,6 +1660,7 @@ class ProfileApp {
             container.classList.remove('profile-content-task-active');
         }
         document.body.classList.remove('task-manager-open');
+        this.setDashboardScrollMode(false);
 
         // 1. HTML-də olan əsas bölmələri gizlət
         const dashboardSection = document.getElementById('dashboardSection');
