@@ -8,12 +8,14 @@
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-6px);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.96),
+        0 28px 58px rgba(37, 72, 139, 0.18);
 }
 
 .welcome-text {
-    background: linear-gradient(135deg, #1F2A44 0%, #7DB6FF 100%);
+    background: linear-gradient(135deg, #030303 0%, #4388ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -25,7 +27,7 @@
 
 .activity-item:hover {
     transform: translateX(5px);
-    background-color: #f8fafc;
+    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-number {
@@ -58,6 +60,7 @@
         transform: translateX(100%);
     }
 }
+
 /* Dashboard scroll mode: only active while the Əsas səhifə dashboard is selected. */
 #profileContent.dashboard-scroll-mode {
     overflow: hidden;
@@ -70,6 +73,199 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* Liquid/glass dashboard redesign scoped only to the Əsas səhifə section. */
+#dashboardSection {
+    min-height: 0;
+}
+
+#dashboardSection .dashboard-glass-shell {
+    position: relative;
+    isolation: isolate;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(18px, 2vw, 28px);
+    overflow: hidden;
+    border-radius: clamp(34px, 4.8vw, 58px);
+    padding: clamp(22px, 2.4vw, 38px);
+    border: 1px solid rgba(255, 255, 255, 0.64);
+    background:
+        radial-gradient(circle at 14% 6%, rgba(255, 255, 255, 0.88), transparent 26%),
+        radial-gradient(circle at 92% 4%, rgba(67, 136, 255, 0.16), transparent 24%),
+        linear-gradient(145deg, rgba(247, 247, 247, 0.74), rgba(219, 226, 236, 0.62));
+    box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.78),
+        inset 0 -22px 54px rgba(255, 255, 255, 0.32),
+        0 0 0 10px rgba(255, 255, 255, 0.16),
+        0 30px 88px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(28px) saturate(175%);
+}
+
+#dashboardSection .dashboard-glass-shell::before,
+#dashboardSection .dashboard-glass-shell::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border-radius: 999px;
+    pointer-events: none;
+}
+
+#dashboardSection .dashboard-glass-shell::before {
+    width: 280px;
+    height: 280px;
+    right: -92px;
+    top: -118px;
+    background: radial-gradient(circle, rgba(67, 136, 255, 0.2), transparent 68%);
+}
+
+#dashboardSection .dashboard-glass-shell::after {
+    width: 340px;
+    height: 340px;
+    left: -150px;
+    bottom: -160px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.62), transparent 70%);
+}
+
+#dashboardSection .dashboard-glass-shell > .text-center {
+    flex: 0 0 auto;
+    margin-bottom: 0 !important;
+    padding: 4px 0 2px;
+}
+
+#dashboardSection .dashboard-glass-shell > .text-center p {
+    color: rgba(3, 3, 3, 0.52);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+#dashboardSection .welcome-text {
+    letter-spacing: -0.04em;
+    text-shadow: 0 14px 30px rgba(67, 136, 255, 0.12);
+}
+
+#dashboardSection .dashboard-glass-shell > .grid {
+    flex: 0 0 auto;
+    margin-bottom: 0 !important;
+}
+
+#dashboardSection .stat-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 30px !important;
+    border: 1px solid rgba(255, 255, 255, 0.78) !important;
+    background:
+        radial-gradient(circle at 22% 0%, rgba(67, 136, 255, 0.16), transparent 36%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 244, 255, 0.68)) !important;
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.95),
+        0 18px 42px rgba(30, 47, 85, 0.12) !important;
+    backdrop-filter: blur(18px) saturate(155%);
+}
+
+#dashboardSection .stat-card .h-16.w-16,
+#dashboardSection .activity-item .h-10.w-10,
+#dashboardSection .space-y-3 > div .h-10.w-10 {
+    color: #4388ff;
+    background: rgba(67, 136, 255, 0.13) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 12px 28px rgba(67, 136, 255, 0.14);
+}
+
+#dashboardSection .stat-card .h-16.w-16 i,
+#dashboardSection .space-y-3 > div .h-10.w-10 i {
+    color: #4388ff !important;
+}
+
+#dashboardSection .stat-card span[id^="dashboard"] {
+    color: #030303;
+    letter-spacing: -0.05em;
+}
+
+#dashboardSection .stat-card h3 {
+    color: #030303;
+    letter-spacing: -0.015em;
+}
+
+#dashboardSection .stat-card p {
+    color: rgba(0, 0, 0, 0.56);
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: 34px !important;
+    padding: clamp(18px, 2vw, 28px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(225, 232, 244, 0.5)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 24px 70px rgba(42, 61, 99, 0.11);
+    backdrop-filter: blur(22px) saturate(155%);
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > h3 {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px !important;
+    color: #030303;
+    letter-spacing: -0.025em;
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > h3::before {
+    content: "\f1da";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    color: #4388ff;
+    font-size: 1rem;
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > .space-y-3 {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 6px 2px 2px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(67, 136, 255, 0.42) rgba(255, 255, 255, 0.34);
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > .space-y-3::-webkit-scrollbar {
+    width: 8px;
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > .space-y-3::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.34);
+    border-radius: 999px;
+}
+
+#dashboardSection .dashboard-glass-shell > .bg-brand-soft\/30 > .space-y-3::-webkit-scrollbar-thumb {
+    background: rgba(67, 136, 255, 0.42);
+    border-radius: 999px;
+}
+
+#dashboardSection .space-y-3 > div,
+#dashboardSection .activity-item {
+    border-radius: 22px !important;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.76) !important;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 14px 30px rgba(31, 42, 68, 0.08);
+    backdrop-filter: blur(16px) saturate(150%);
+}
+
+#dashboardSection .space-y-3 > div:hover,
+#dashboardSection .activity-item:hover {
+    transform: translateX(4px);
+    border-color: rgba(67, 136, 255, 0.26);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95), 0 18px 36px rgba(37, 72, 139, 0.12);
+}
+
+#profileContent.dashboard-scroll-mode #dashboardSection .dashboard-glass-shell {
+    height: 100%;
+    min-height: 0;
 }
 
 #profileContent.dashboard-scroll-mode #dashboardSection > .text-center,
@@ -94,4 +290,15 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+    #dashboardSection .dashboard-glass-shell {
+        border-radius: 32px;
+        padding: 18px;
+    }
+
+    #dashboardSection .stat-card {
+        border-radius: 24px !important;
+    }
 }
