@@ -470,3 +470,158 @@ body.task-manager-open #taskManagerSection {
     overflow-y: auto !important;
     scrollbar-width: thin !important;
 }
+
+/* ===== PROFILE SIDEBAR GLASS / LIQUID VISUAL REFRESH ===== */
+#mainSidebar {
+    background:
+        radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.72) 34%, rgba(226, 232, 240, 0.48) 100%),
+        linear-gradient(155deg, rgba(255, 255, 255, 0.78), rgba(219, 234, 254, 0.42)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.74) !important;
+    box-shadow:
+        0 24px 70px rgba(15, 23, 42, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(18px) saturate(145%);
+    -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+#mainSidebar #sidebarContent {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.08)) !important;
+}
+
+#mainSidebar #sidebarContent > .mt-auto {
+    border-top-color: rgba(255, 255, 255, 0.58) !important;
+}
+
+#mainSidebar #settingsMainBtn {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(239, 246, 255, 0.58)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.82) !important;
+    border-radius: 24px !important;
+    box-shadow:
+        0 16px 42px rgba(31, 42, 68, 0.11),
+        inset 0 1px 0 rgba(255, 255, 255, 0.90) !important;
+    color: #1f2a44 !important;
+    overflow: hidden;
+}
+
+#mainSidebar #settingsMainBtn:hover {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(219, 234, 254, 0.66)) !important;
+    box-shadow:
+        0 20px 48px rgba(37, 99, 235, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+#mainSidebar #settingsMainBtn .h-10.w-10 {
+    background:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.95), rgba(125, 182, 255, 0.40) 42%, rgba(37, 99, 235, 0.18) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.86) !important;
+    box-shadow:
+        0 10px 24px rgba(37, 99, 235, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+    color: #1d4ed8 !important;
+}
+
+#mainSidebar #companyNameDisplay {
+    color: #182235 !important;
+}
+
+#mainSidebar #userNameDisplay,
+#mainSidebar #settingsArrow {
+    color: #64748b !important;
+}
+
+#mainSidebar #settingsMainBtn:hover #settingsArrow {
+    color: #2563eb !important;
+}
+
+#mainSidebar #settingsPanel {
+    background: rgba(255, 255, 255, 0.72) !important;
+    border: 1px solid rgba(255, 255, 255, 0.76) !important;
+    box-shadow:
+        0 16px 38px rgba(31, 42, 68, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.86) !important;
+    backdrop-filter: blur(14px) saturate(135%);
+    -webkit-backdrop-filter: blur(14px) saturate(135%);
+}
+
+#mainSidebar nav a.sidebar-link,
+#mainSidebar #settingsPanel a,
+#mainSidebar #settingsPanel button {
+    border-radius: 18px !important;
+    border: 1px solid transparent !important;
+    transition:
+        background-color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease !important;
+}
+
+#mainSidebar nav a.sidebar-link:not(.active):not(.bg-brand-soft.text-brand-blue),
+#mainSidebar #settingsPanel a:not(.active):not(.bg-brand-soft.text-brand-blue),
+#mainSidebar #settingsPanel button {
+    color: #334155 !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    box-shadow: none !important;
+}
+
+#mainSidebar nav a.sidebar-link i,
+#mainSidebar #settingsPanel a i,
+#mainSidebar #settingsPanel button i {
+    color: #64748b !important;
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55));
+}
+
+#mainSidebar nav a.sidebar-link:hover,
+#mainSidebar #settingsPanel a:hover,
+#mainSidebar #settingsPanel button:hover {
+    background: rgba(255, 255, 255, 0.62) !important;
+    border-color: rgba(255, 255, 255, 0.74) !important;
+    box-shadow: 0 10px 26px rgba(31, 42, 68, 0.07) !important;
+    color: #2563eb !important;
+    transform: translateX(4px) !important;
+}
+
+#mainSidebar nav a.sidebar-link:hover i,
+#mainSidebar #settingsPanel a:hover i,
+#mainSidebar #settingsPanel button:hover i {
+    color: #2563eb !important;
+    transform: scale(1.06) !important;
+}
+
+#mainSidebar nav a.sidebar-link.active,
+#mainSidebar nav a.sidebar-link.bg-brand-soft.text-brand-blue,
+#mainSidebar #settingsPanel a.sidebar-link.active,
+#mainSidebar #settingsPanel a.sidebar-link.bg-brand-soft.text-brand-blue {
+    background:
+        linear-gradient(135deg, rgba(125, 182, 255, 0.34), rgba(37, 99, 235, 0.14)) !important;
+    border-color: rgba(96, 165, 250, 0.34) !important;
+    box-shadow:
+        0 14px 34px rgba(37, 99, 235, 0.17),
+        inset 3px 0 0 rgba(37, 99, 235, 0.95),
+        inset 0 1px 0 rgba(255, 255, 255, 0.70) !important;
+    color: #1d4ed8 !important;
+    font-weight: 700 !important;
+}
+
+#mainSidebar nav a.sidebar-link.active i,
+#mainSidebar nav a.sidebar-link.bg-brand-soft.text-brand-blue i,
+#mainSidebar #settingsPanel a.sidebar-link.active i,
+#mainSidebar #settingsPanel a.sidebar-link.bg-brand-soft.text-brand-blue i {
+    color: #1d4ed8 !important;
+}
+
+#mainSidebar nav a.sidebar-link.active:hover,
+#mainSidebar nav a.sidebar-link.bg-brand-soft.text-brand-blue:hover,
+#mainSidebar #settingsPanel a.sidebar-link.active:hover,
+#mainSidebar #settingsPanel a.sidebar-link.bg-brand-soft.text-brand-blue:hover {
+    background:
+        linear-gradient(135deg, rgba(125, 182, 255, 0.40), rgba(37, 99, 235, 0.18)) !important;
+    box-shadow:
+        0 16px 38px rgba(37, 99, 235, 0.20),
+        inset 3px 0 0 rgba(37, 99, 235, 0.98),
+        inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+}
