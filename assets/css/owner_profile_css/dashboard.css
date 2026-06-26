@@ -160,8 +160,8 @@
     align-items: flex-start;
     justify-content: flex-start;
     min-height: unset;
-    height: clamp(116px, 13vh, 145px);
-    padding: clamp(18px, 1.7vw, 26px) !important;
+    height: clamp(100px, 11.5vh, 124px);
+    padding: clamp(14px, 1.35vw, 20px) !important;
     gap: 0;
     overflow: hidden;
     border-radius: 30px !important;
@@ -181,9 +181,11 @@
 
 #dashboardSection .stat-card .h-16.w-16 {
     position: absolute;
-    top: clamp(18px, 1.6vw, 24px);
-    right: clamp(18px, 1.6vw, 26px);
+    top: clamp(14px, 1.2vw, 18px);
+    right: clamp(14px, 1.2vw, 20px);
     left: auto;
+    width: clamp(44px, 3.8vw, 56px) !important;
+    height: clamp(44px, 3.8vw, 56px) !important;
 }
 
 #dashboardSection .stat-card .h-16.w-16,
@@ -199,13 +201,17 @@
     color: #4388ff !important;
 }
 
+#dashboardSection .stat-card .h-16.w-16 i {
+    font-size: clamp(20px, 1.8vw, 26px) !important;
+}
+
 #dashboardSection .stat-card span[id^="dashboard"] {
     color: #030303;
     letter-spacing: -0.05em;
-    order: 2;
+    order: 3;
     align-self: flex-start;
-    margin: 0;
-    padding-right: clamp(72px, 6vw, 96px);
+    margin: 2px 0 0 0;
+    padding-right: clamp(58px, 5vw, 76px);
     line-height: 1;
 }
 
@@ -213,16 +219,16 @@
     color: #030303;
     letter-spacing: -0.015em;
     order: 1;
-    margin: 0 0 8px 0;
-    padding-right: clamp(72px, 6vw, 96px);
+    margin: 0;
+    padding-right: clamp(58px, 5vw, 76px);
     line-height: 1.25;
 }
 
 #dashboardSection .stat-card p {
     color: rgba(0, 0, 0, 0.56);
-    order: 3;
-    margin: 6px 0 0 0;
-    padding-right: clamp(72px, 6vw, 96px);
+    order: 2;
+    margin: 2px 0 0 0;
+    padding-right: clamp(58px, 5vw, 76px);
     line-height: 1.35;
 }
 
