@@ -142,6 +142,9 @@
 
 #dashboardSection .welcome-text {
     letter-spacing: -0.04em;
+    line-height: 1.18;
+    padding-bottom: 0.08em;
+    overflow: visible;
     text-shadow: 0 14px 30px rgba(67, 136, 255, 0.12);
 }
 
