@@ -25,6 +25,17 @@ class DashboardManager {
             tasksCount: document.getElementById('dashboardTasksCount'),
             recentActivitiesContainer: document.querySelector('#dashboardSection .space-y-3')
         };
+
+        if (!window.__dashboardActivitiesFullRowFitBound) {
+            window.__dashboardActivitiesFullRowFitBound = true;
+            window.addEventListener('resize', () => {
+                this.scheduleRecentActivitiesFullRowFit();
+            });
+
+            if (document.fonts?.ready) {
+                document.fonts.ready.then(() => this.scheduleRecentActivitiesFullRowFit());
+            }
+        }
     }
 
     /**
@@ -379,6 +390,7 @@ class DashboardManager {
 
         this.updateStats();
         this.generateRecentActivities();
+        this.scheduleRecentActivitiesFullRowFit();
 
         console.log('✅ Bütün məlumatlar yeniləndi');
     }
@@ -402,6 +414,7 @@ class DashboardManager {
             ]);
             this.updateStats();
             this.generateRecentActivities();
+            this.scheduleRecentActivitiesFullRowFit();
             console.log('✅ Dashboard uğurla yükləndi');
         } catch (error) {
             console.error('❌ Dashboard yüklənmə xətası:', error);
@@ -603,6 +616,7 @@ class DashboardManager {
                     <p>Hələ heç bir aktivlik yoxdur</p>
                 </div>
             `;
+            this.scheduleRecentActivitiesFullRowFit();
             return;
         }
 
@@ -612,6 +626,53 @@ class DashboardManager {
         });
 
         console.log(`✅ ${recentActivities.length} aktivlik göstərildi`);
+        this.scheduleRecentActivitiesFullRowFit();
+    }
+
+    scheduleRecentActivitiesFullRowFit() {
+        requestAnimationFrame(() => {
+            this.fitRecentActivitiesToFullRows();
+            requestAnimationFrame(() => this.fitRecentActivitiesToFullRows());
+        });
+    }
+
+    fitRecentActivitiesToFullRows() {
+        const dashboard = document.getElementById('dashboardSection');
+        const list = this.elements.recentActivitiesContainer || dashboard?.querySelector('.space-y-3');
+        const panel = list?.parentElement;
+
+        if (!dashboard || !panel || !list || !dashboard.offsetParent) return;
+
+        const rows = Array.from(list.querySelectorAll('.activity-item')).filter(row => row.offsetParent !== null);
+        if (!rows.length) return;
+
+        list.style.removeProperty('height');
+        list.style.removeProperty('max-height');
+
+        const panelRect = panel.getBoundingClientRect();
+        const listRect = list.getBoundingClientRect();
+        const listStyle = window.getComputedStyle(list);
+        const rowRect = rows[0].getBoundingClientRect();
+        const rowHeight = rowRect.height;
+        const paddingTop = parseFloat(listStyle.paddingTop) || 0;
+        const paddingBottom = parseFloat(listStyle.paddingBottom) || 0;
+        const listPadding = paddingTop + paddingBottom;
+        const rowStep = rows[1]
+            ? Math.max(rowHeight, rows[1].offsetTop - rows[0].offsetTop)
+            : rowHeight;
+        const bottomReserve = 6;
+        const available = panelRect.bottom - listRect.top - bottomReserve;
+
+        if (available <= listPadding || rowHeight <= 0 || rowStep <= 0) return;
+
+        const availableForRows = available - listPadding;
+        const fullRows = Math.max(1, Math.min(rows.length, 1 + Math.floor((availableForRows - rowHeight) / rowStep)));
+        const finalHeight = Math.floor(listPadding + rowHeight + Math.max(0, fullRows - 1) * rowStep);
+
+        list.style.height = `${finalHeight}px`;
+        list.style.maxHeight = `${finalHeight}px`;
+        list.style.overflowY = 'auto';
+        list.style.overflowX = 'hidden';
     }
 
     createActivityElement(activity) {

@@ -571,7 +571,10 @@ class ProfileApp {
                     dashboardSection.style.display = 'block';
                 }
                 this.setDashboardScrollMode(true);
-                requestAnimationFrame(() => this.applyDashboardScrollMode());
+                requestAnimationFrame(() => {
+                    this.applyDashboardScrollMode();
+                    window.dashboardManager?.scheduleRecentActivitiesFullRowFit?.();
+                });
 
                 // PROFİL BÖLMƏSİNİ GİZLƏT
                 const profileSection = document.getElementById('profileSection');
@@ -1677,6 +1680,7 @@ class ProfileApp {
         // clearAllSections() klik zamanı inline display:none yazır; dashboard klikində
         // display:block saxlanarsa CSS-dəki flex layoutu üstələyir və daxili scroll itir.
         dashboardSection.style.removeProperty('display');
+        window.dashboardManager?.scheduleRecentActivitiesFullRowFit?.();
     }
 
     /**
