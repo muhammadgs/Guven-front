@@ -268,7 +268,7 @@
     min-height: 44px;
     margin-bottom: 14px;
     color: #050505;
-    font: 700 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Poppins", Inter, Arial, sans-serif;
+    font: 600 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Poppins", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
 }
 .newtask-form-label i { width: 28px; color: var(--newtask-blue); font-size: clamp(1.3rem, 1.8vw, 1.7rem); text-align: center; }
