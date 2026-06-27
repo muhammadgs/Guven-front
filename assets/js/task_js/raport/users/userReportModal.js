@@ -418,11 +418,9 @@ class UserReportModal {
         content.style.display = 'flex';
         content.innerHTML = `
       ${this._renderKPIs(d)}
-      ${this._renderStatusBreakdown(d)}
       ${this._renderTabs(d)}
     `;
         this._bindKPIClicks(d);
-        this._bindStatusClicks(d);
         this._bindTabEvents();
         this._animateBars();
     }
@@ -532,44 +530,6 @@ class UserReportModal {
             created: 'Yaradılan tasklar'
         };
         return map[key] || key;
-    }
-
-    /* ── Status Breakdown ─────────────────────────────────── */
-    _renderStatusBreakdown(d) {
-        const statuses = [
-            {key: 'completed', label: 'Tamamlanan', count: d.completed},
-            {key: 'pending', label: 'Gözləyən', count: d.pending},
-            {key: 'in_progress', label: 'Davam edir', count: d.inProgress},
-            {key: 'overdue', label: 'Gecikmiş', count: d.overdue},
-            {key: 'rejected', label: 'İmtina edilmiş', count: d.rejected},
-            {key: 'waiting', label: 'Təsdiq gözləyir', count: d.waitingApproval}
-        ];
-        return `
-    <div>
-      <div class="urm-section-title"><i class="fas fa-chart-pie"></i> Status paylanması</div>
-      <div class="urm-status-breakdown">
-        ${statuses.map(s => `
-        <div class="urm-status-item" data-status-key="${s.key}" style="cursor:pointer;">
-          <div class="urm-status-color ${s.key}"></div>
-          <div class="urm-status-info">
-            <div class="urm-status-label">${s.label}</div>
-            <div class="urm-status-count">${s.count}</div>
-          </div>
-          <div class="urm-status-pct">${d.total ? Math.round(s.count / d.total * 100) : 0}%</div>
-        </div>`).join('')}
-      </div>
-    </div>`;
-    }
-
-    _bindStatusClicks(d) {
-        document.querySelectorAll('[data-status-key]').forEach(el => {
-            el.addEventListener('click', () => {
-                const key = el.dataset.statusKey;
-                const tasks = d.tasksByStatus[key] || [];
-                const label = el.querySelector('.urm-status-label')?.textContent || key;
-                this._openTaskList(tasks, label, key);
-            });
-        });
     }
 
     /* ── Tabs ─────────────────────────────────────────────── */
