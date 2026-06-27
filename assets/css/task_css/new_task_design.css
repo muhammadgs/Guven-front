@@ -150,11 +150,16 @@
 }
 
 /* Premium slate typography scoped to the New Task modal. */
-.newtask-modal .newtask-modal-title h3,
-.newtask-modal .newtask-form-label {
+.newtask-modal .newtask-modal-title h3 {
     color: var(--nt-text-strong);
     font-family: "Poppins", Inter, Arial, sans-serif;
     font-weight: 700;
+}
+
+.newtask-modal .newtask-form-label {
+    color: var(--nt-text-strong);
+    font-family: "Poppins", Inter, Arial, sans-serif;
+    font-weight: 600;
 }
 
 .newtask-modal .newtask-select,
@@ -1444,11 +1449,15 @@
 }
 
 .newtask-modal .newtask-modal-title h3,
-.newtask-modal.liquid-task-modal .newtask-modal-title h3,
+.newtask-modal.liquid-task-modal .newtask-modal-title h3 {
+  font-family: "Poppins", Inter, Arial, sans-serif;
+  font-weight: 700;
+}
+
 .newtask-modal .newtask-form-label,
 .newtask-modal.liquid-task-modal .newtask-form-label {
   font-family: "Poppins", Inter, Arial, sans-serif;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .newtask-modal .newtask-select,
