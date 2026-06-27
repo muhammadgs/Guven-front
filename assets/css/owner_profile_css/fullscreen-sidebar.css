@@ -73,7 +73,7 @@ header {
 #profileContent, #filesContent {
     height: 100%;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 12px;
 }
 
 #profileContent::-webkit-scrollbar,
