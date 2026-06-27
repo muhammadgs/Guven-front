@@ -418,45 +418,6 @@
   transition: color 0.2s;
 }
 
-/* ── Status Breakdown ─────────────────────────────────────── */
-.urm-status-breakdown {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
-}
-.urm-status-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--urm-surface2);
-  border: 1px solid var(--urm-border);
-  border-radius: var(--urm-radius-sm);
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.urm-status-item:hover {
-  border-color: rgba(99,102,241,0.4);
-  transform: translateX(4px);
-}
-.urm-status-color {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.urm-status-color.completed      { background: var(--urm-green); box-shadow: 0 0 8px rgba(16,185,129,0.5); }
-.urm-status-color.pending        { background: var(--urm-amber); box-shadow: 0 0 8px rgba(245,158,11,0.5); }
-.urm-status-color.in_progress    { background: var(--urm-blue);  box-shadow: 0 0 8px rgba(59,130,246,0.5); }
-.urm-status-color.overdue        { background: var(--urm-red);   box-shadow: 0 0 8px rgba(239,68,68,0.5); }
-.urm-status-color.rejected       { background: var(--urm-gray);  box-shadow: 0 0 8px rgba(100,116,139,0.5); }
-.urm-status-color.waiting_approval,.urm-status-color.pending_approval { background: var(--urm-purple); box-shadow: 0 0 8px rgba(167,139,250,0.5); }
-.urm-status-color.waiting        { background: var(--urm-teal);  box-shadow: 0 0 8px rgba(20,184,166,0.5); }
-
-.urm-status-info { flex: 1; }
-.urm-status-label { font-size: 12px; color: var(--urm-text-2); font-weight: 500; }
-.urm-status-count { font-size: 18px; font-weight: 800; color: var(--urm-text); font-family: var(--urm-mono); }
-.urm-status-pct { font-size: 12px; font-weight: 600; color: var(--urm-accent); font-family: var(--urm-mono); }
-
 /* ── Tabs ─────────────────────────────────────────────────── */
 .urm-tabs {
   display: flex;

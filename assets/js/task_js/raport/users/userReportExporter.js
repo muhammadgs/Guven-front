@@ -361,24 +361,6 @@ const UserReportExporter = (() => {
     .badge-in_progress      { background: #dbeafe; color: #1d4ed8; }
     .badge-waiting_approval { background: #ede9fe; color: #5b21b6; }
 
-    /* STATUS GRID */
-    .status-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
-    .status-card {
-        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
-        padding: 10px; display: flex; align-items: center; gap: 10px;
-    }
-    .status-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .dot-completed        { background: #10b981; }
-    .dot-pending          { background: #f59e0b; }
-    .dot-overdue          { background: #ef4444; }
-    .dot-rejected         { background: #94a3b8; }
-    .dot-in_progress      { background: #3b82f6; }
-    .dot-waiting_approval { background: #8b5cf6; }
-    .status-txt { flex: 1; }
-    .status-txt .lbl { font-size: 11px; color: #64748b; }
-    .status-txt .val { font-size: 16px; font-weight: 700; }
-    .status-pct { font-size: 11px; color: #94a3b8; }
-
     /* FOOTER */
     .pdf-footer {
         margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0;
@@ -452,19 +434,6 @@ const UserReportExporter = (() => {
         <div class="kpi-card"><div class="kpi-val">${d.ontimeRate}%</div><div class="kpi-lbl">Vaxtında bitirmə</div></div>
         <div class="kpi-card"><div class="kpi-val">${d.currentRank || '-'}</div><div class="kpi-lbl">Reytinq</div><div class="kpi-sub">${d.totalPeers} işçi arasında</div></div>
         <div class="kpi-card"><div class="kpi-val">${d.createdByUser.length}</div><div class="kpi-lbl">Yaratdığı tasklar</div></div>
-    </div>
-</div>
-
-<!-- STATUS PAYLANMASI -->
-<div class="section">
-    <div class="section-title">📋 Status paylanması</div>
-    <div class="status-grid">
-        <div class="status-card"><div class="status-dot dot-completed"></div><div class="status-txt"><div class="lbl">Tamamlanan</div><div class="val">${d.completed}</div></div><div class="status-pct">${d.total ? Math.round(d.completed/d.total*100) : 0}%</div></div>
-        <div class="status-card"><div class="status-dot dot-pending"></div><div class="status-txt"><div class="lbl">Gözləyən</div><div class="val">${d.pending}</div></div><div class="status-pct">${d.total ? Math.round(d.pending/d.total*100) : 0}%</div></div>
-        <div class="status-card"><div class="status-dot dot-in_progress"></div><div class="status-txt"><div class="lbl">Davam edir</div><div class="val">${d.inProgress}</div></div><div class="status-pct">${d.total ? Math.round(d.inProgress/d.total*100) : 0}%</div></div>
-        <div class="status-card"><div class="status-dot dot-overdue"></div><div class="status-txt"><div class="lbl">Gecikmiş</div><div class="val">${d.overdue}</div></div><div class="status-pct">${d.total ? Math.round(d.overdue/d.total*100) : 0}%</div></div>
-        <div class="status-card"><div class="status-dot dot-rejected"></div><div class="status-txt"><div class="lbl">İmtina</div><div class="val">${d.rejected}</div></div><div class="status-pct">${d.total ? Math.round(d.rejected/d.total*100) : 0}%</div></div>
-        <div class="status-card"><div class="status-dot dot-waiting_approval"></div><div class="status-txt"><div class="lbl">Təsdiq gözləyir</div><div class="val">${d.waitingApproval}</div></div><div class="status-pct">${d.total ? Math.round(d.waitingApproval/d.total*100) : 0}%</div></div>
     </div>
 </div>
 
