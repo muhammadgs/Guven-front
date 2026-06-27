@@ -6,6 +6,22 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: "Poppins";
+    src: url("../../fonts/Poppins-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Poppins";
+    src: url("../../fonts/Poppins-Bold.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     --newtask-blue: #4388ff;
     --newtask-ink: #030303;
@@ -123,7 +139,7 @@
         0 0 0 10px rgba(255,255,255,.18),
         0 36px 95px rgba(0,0,0,.32);
     backdrop-filter: blur(30px) saturate(180%);
-    font-family: "Cal Sans", Inter, Arial, sans-serif;
+    font-family: "Poppins", Inter, Arial, sans-serif;
     color: var(--nt-text-main);
     --nt-text-strong: #1f2937;
     --nt-text-main: #334155;
@@ -137,6 +153,8 @@
 .newtask-modal .newtask-modal-title h3,
 .newtask-modal .newtask-form-label {
     color: var(--nt-text-strong);
+    font-family: "Poppins", Inter, Arial, sans-serif;
+    font-weight: 700;
 }
 
 .newtask-modal .newtask-select,
@@ -146,6 +164,8 @@
 .newtask-modal .nt-select-option,
 .newtask-modal .nt-select-value {
     color: var(--nt-text-main);
+    font-family: "Poppins", Inter, Arial, sans-serif;
+    font-weight: 400;
 }
 
 .newtask-modal .newtask-select::placeholder,
@@ -154,6 +174,8 @@
 .newtask-modal input::placeholder,
 .newtask-modal textarea::placeholder {
     color: var(--nt-placeholder);
+    font-family: "Poppins", Inter, Arial, sans-serif;
+    font-weight: 400;
     opacity: 1;
 }
 
@@ -168,6 +190,8 @@
 .newtask-modal .recording-timer,
 .newtask-modal .audio-meta {
     color: var(--nt-text-muted);
+    font-family: "Poppins", Inter, Arial, sans-serif;
+    font-weight: 400;
 }
 
 .newtask-modal .nt-select-arrow {
@@ -197,7 +221,7 @@
 
 .newtask-modal-title { display: flex; align-items: center; gap: 11px; }
 .newtask-modal-title-icon { color: var(--newtask-blue); font-size: clamp(1.45rem, 2.1vw, 1.8rem); line-height: 1; }
-.newtask-modal-title h3 { margin: 0; font: 400 clamp(1.45rem, 2.45vw, 2.1rem)/1 "Cal Sans", Inter, Arial, sans-serif; }
+.newtask-modal-title h3 { margin: 0; font: 700 clamp(1.45rem, 2.45vw, 2.1rem)/1 "Poppins", Inter, Arial, sans-serif; }
 
 .newtask-modal-close {
     width: 42px;
@@ -239,7 +263,7 @@
     min-height: 44px;
     margin-bottom: 14px;
     color: #050505;
-    font: 400 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Cal Sans", Inter, Arial, sans-serif;
+    font: 700 clamp(1.12rem, 1.8vw, 1.55rem)/1.05 "Poppins", Inter, Arial, sans-serif;
     letter-spacing: -.03em;
 }
 .newtask-form-label i { width: 28px; color: var(--newtask-blue); font-size: clamp(1.3rem, 1.8vw, 1.7rem); text-align: center; }
@@ -309,7 +333,7 @@
     background: var(--newtask-field);
     color: #111;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.94), 0 10px 28px rgba(0,0,0,.04);
-    font: 400 .94rem/1.2 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 .94rem/1.2 "Poppins", Inter, Arial, sans-serif;
     outline: none;
     transition: box-shadow .22s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
@@ -485,7 +509,7 @@
     position: relative;
     width: 100%;
     z-index: 1;
-    font-family: "Cal Sans", Inter, Arial, sans-serif;
+    font-family: "Poppins", Inter, Arial, sans-serif;
 }
 
 .nt-custom-select.is-open { z-index: 10050; }
@@ -508,7 +532,7 @@
     color: #050505;
     cursor: pointer;
     outline: none;
-    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 14.5px/1.15 "Poppins", Inter, Arial, sans-serif;
     text-align: left;
     transition: border-radius 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow .28s ease, transform .22s ease, border-color .22s ease, background .22s ease;
 }
@@ -646,7 +670,7 @@
     background: transparent;
     color: #050505;
     cursor: pointer;
-    font: 700 14.5px/1.15 "Cal Sans", Inter, Arial, sans-serif;
+    font: 400 14.5px/1.15 "Poppins", Inter, Arial, sans-serif;
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -657,7 +681,7 @@
 .nt-select-option:hover,
 .nt-select-option.is-key-focused { transform: translateX(3px); }
 .nt-select-option.is-selected {
-    font-weight: 800;
+    font-weight: 400;
     color: #0f4fb8;
     background: rgba(191, 218, 255, 0.28);
 }
@@ -1411,4 +1435,49 @@
   .newtask-modal.liquid-task-modal .nt-voice-main-btn { width: 66px; height: 66px; }
   .newtask-modal.liquid-task-modal .newtask-modal-footer { padding-bottom: 12px; }
   .newtask-modal.liquid-task-modal .newtask-btn { min-height: 44px; }
+}
+
+/* New Task modal typography weights: keep all layout, color, and glass styles intact. */
+.newtask-modal,
+.newtask-modal.liquid-task-modal {
+  font-family: "Poppins", Inter, Arial, sans-serif;
+}
+
+.newtask-modal .newtask-modal-title h3,
+.newtask-modal.liquid-task-modal .newtask-modal-title h3,
+.newtask-modal .newtask-form-label,
+.newtask-modal.liquid-task-modal .newtask-form-label {
+  font-family: "Poppins", Inter, Arial, sans-serif;
+  font-weight: 700;
+}
+
+.newtask-modal .newtask-select,
+.newtask-modal .newtask-input,
+.newtask-modal .newtask-textarea,
+.newtask-modal .nt-custom-select,
+.newtask-modal .nt-select-trigger,
+.newtask-modal .nt-select-value,
+.newtask-modal .nt-select-option,
+.newtask-modal .newtask-form-text,
+.newtask-modal .newtask-checkbox-label,
+.newtask-modal .newtask-file-text,
+.newtask-modal .newtask-file-list-empty,
+.newtask-modal .newtask-file-list-header,
+.newtask-modal .newtask-file-item-size,
+.newtask-modal .newtask-audio-status,
+.newtask-modal .nt-voice-meta-row,
+.newtask-modal .recording-status,
+.newtask-modal .recording-timer,
+.newtask-modal .audio-meta {
+  font-family: "Poppins", Inter, Arial, sans-serif;
+  font-weight: 400;
+}
+
+.newtask-modal input::placeholder,
+.newtask-modal textarea::placeholder,
+.newtask-modal .newtask-select::placeholder,
+.newtask-modal .newtask-input::placeholder,
+.newtask-modal .newtask-textarea::placeholder {
+  font-family: "Poppins", Inter, Arial, sans-serif;
+  font-weight: 400;
 }
