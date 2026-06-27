@@ -271,6 +271,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1px 4px 1px 1px;
+    box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: rgba(67, 136, 255, 0.42) rgba(255, 255, 255, 0.34);
 }
