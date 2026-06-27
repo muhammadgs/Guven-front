@@ -74,6 +74,9 @@ body.owner-profile #profileContent.dashboard-scroll-mode {
 }
 
 #profileContent.dashboard-scroll-mode #dashboardSection {
+    --dashboard-outer-radius: clamp(34px, 4.2vw, 52px);
+    --dashboard-panel-gap: clamp(8px, 0.8vw, 12px);
+    --dashboard-inner-radius: clamp(26px, 3.3vw, 40px);
     width: 100%;
     height: 100%;
     max-height: 100%;
@@ -97,10 +100,11 @@ body.owner-profile #profileContent.dashboard-scroll-mode {
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    gap: clamp(10px, 1.1vw, 16px);
+    gap: var(--dashboard-panel-gap, clamp(10px, 1.1vw, 16px));
     overflow: hidden;
-    border-radius: clamp(34px, 4.8vw, 58px);
-    padding: clamp(14px, 1.45vw, 22px);
+    background-clip: padding-box;
+    border-radius: var(--dashboard-outer-radius, clamp(34px, 4.2vw, 52px));
+    padding: var(--dashboard-panel-gap, clamp(10px, 1.1vw, 16px));
     border: 1px solid rgba(255, 255, 255, 0.64);
     background:
         radial-gradient(circle at 14% 6%, rgba(255, 255, 255, 0.88), transparent 26%),
@@ -250,7 +254,8 @@ body.owner-profile #profileContent.dashboard-scroll-mode {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border-radius: 34px !important;
+    border-radius: var(--dashboard-inner-radius, clamp(26px, 3.3vw, 40px)) !important;
+    background-clip: padding-box;
     padding: clamp(14px, 1.35vw, 20px) clamp(14px, 1.45vw, 22px) clamp(14px, 1.35vw, 20px) !important;
     border: 1px solid rgba(255, 255, 255, 0.72);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(225, 232, 244, 0.5)) !important;
@@ -351,9 +356,9 @@ body.owner-profile #profileContent.dashboard-scroll-mode {
 
 @media (max-width: 768px) {
     #dashboardSection .dashboard-glass-shell {
-        border-radius: 32px;
-        padding: 14px;
-        gap: 10px;
+        border-radius: var(--dashboard-outer-radius, 32px);
+        padding: var(--dashboard-panel-gap, 10px);
+        gap: var(--dashboard-panel-gap, 10px);
     }
 
     #dashboardSection .stat-card {
