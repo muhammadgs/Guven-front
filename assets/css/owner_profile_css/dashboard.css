@@ -1403,17 +1403,18 @@
 
 /* Liquid/glass Employees redesign scoped only to the owner profile Əməkdaşlar / İşçilər section. */
 #employeesSection {
-    --employees-outer-padding: clamp(14px, 1.5vw, 24px);
+    --employees-outer-padding-y: clamp(14px, 1.5vw, 24px);
+    --employees-outer-padding-x: clamp(10px, 1vw, 18px);
     --employees-section-gap: clamp(10px, 1vw, 16px);
-    --employees-card-gap: clamp(10px, 1vw, 14px);
-    --employees-toolbar-gap: clamp(8px, 0.9vw, 12px);
+    --employees-card-gap: clamp(8px, 0.85vw, 12px);
+    --employees-toolbar-gap: clamp(7px, 0.75vw, 11px);
     --employees-card-padding-y: clamp(10px, 1vw, 14px);
-    --employees-panel-padding-x: clamp(12px, 1.2vw, 18px);
+    --employees-panel-padding-x: clamp(10px, 0.95vw, 16px);
     position: relative;
     isolation: isolate;
     overflow: hidden;
     border-radius: clamp(30px, 4vw, 44px);
-    padding: var(--employees-outer-padding);
+    padding: var(--employees-outer-padding-y) var(--employees-outer-padding-x);
     border: 1px solid rgba(255, 255, 255, 0.68);
     background:
         radial-gradient(circle at 12% 2%, rgba(255, 255, 255, 0.94), transparent 30%),
@@ -1697,7 +1698,7 @@
 @media (max-width: 768px) {
     #employeesSection {
         border-radius: 32px;
-        padding: 18px;
+        padding: 18px 12px;
     }
 
     #employeesSection > .flex.flex-col.md\:flex-row,
