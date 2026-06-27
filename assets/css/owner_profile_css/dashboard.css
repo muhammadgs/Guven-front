@@ -599,8 +599,11 @@
     --companies-section-gap: clamp(8px, 0.75vw, 12px);
     --companies-card-gap: clamp(8px, 0.75vw, 12px);
     --companies-toolbar-gap: clamp(6px, 0.65vw, 10px);
-    --companies-panel-padding-x: clamp(14px, 1.25vw, 20px);
+    --companies-outer-inline: clamp(10px, 1vw, 16px);
+    --companies-panel-padding-x: clamp(11px, 0.95vw, 16px);
+    --companies-table-edge-padding-x: clamp(12px, 1vw, 18px);
     --companies-table-padding-y: clamp(9px, 0.75vw, 13px);
+    padding-inline: var(--companies-outer-inline);
 }
 
 #companiesSection > .mb-8 {
@@ -623,7 +626,7 @@
 #companiesSection > .flex.flex-col.md\:flex-row {
     gap: var(--companies-toolbar-gap) !important;
     margin-bottom: var(--companies-section-gap) !important;
-    padding: 6px;
+    padding: 5px 6px;
 }
 
 #companiesSection > .flex.flex-col.md\:flex-row > .flex.gap-2.bg-white {
@@ -669,6 +672,16 @@
     padding-bottom: var(--companies-table-padding-y) !important;
     padding-left: var(--companies-panel-padding-x) !important;
     padding-right: var(--companies-panel-padding-x) !important;
+}
+
+#companiesSection #companiesTableContainer th:first-child,
+#companiesSection #companiesTableContainer td:first-child {
+    padding-left: var(--companies-table-edge-padding-x) !important;
+}
+
+#companiesSection #companiesTableContainer th:last-child,
+#companiesSection #companiesTableContainer td:last-child {
+    padding-right: var(--companies-table-edge-padding-x) !important;
 }
 
 #companiesSection #companiesTableContainer .company-row .h-10.w-10 {
@@ -729,7 +742,8 @@
 @media (max-width: 768px) {
     #companiesSection {
         border-radius: 30px;
-        padding: 18px;
+        padding-block: 18px;
+        padding-inline: 12px;
     }
 
     #companiesSection > .flex.flex-col.md\:flex-row,
