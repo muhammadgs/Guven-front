@@ -345,6 +345,24 @@ const UserReportExporter = (() => {
     th { background: #1e40af; color: #fff; padding: 7px 8px; text-align: left;
          font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
     td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .task-details-table { table-layout: fixed; }
+    .task-details-table th,
+    .task-details-table td { text-align: left; vertical-align: middle; }
+    .task-details-table th:nth-child(1),
+    .task-details-table td:nth-child(1) { text-align: center; }
+    .task-details-table th:nth-child(3),
+    .task-details-table td:nth-child(3),
+    .task-details-table th:nth-child(4),
+    .task-details-table td:nth-child(4),
+    .task-details-table th:nth-child(5),
+    .task-details-table td:nth-child(5),
+    .task-details-table th:nth-child(6),
+    .task-details-table td:nth-child(6),
+    .task-details-table th:nth-child(7),
+    .task-details-table td:nth-child(7),
+    .task-details-table th:nth-child(8),
+    .task-details-table td:nth-child(8) { text-align: center; }
+    .task-details-table td:nth-child(2) { overflow-wrap: anywhere; }
     tr:hover td { background: #f8fafc; }
     tr.row-late td { background: #fff5f5; }
     tr.highlight td { background: #eff6ff; font-weight: 700; color: #1d4ed8; }
@@ -449,7 +467,17 @@ ${monthlyRows ? `
 <!-- BÜTÜN TASKLAR (DETALLI SİYAHI) -->
 <div class="section">
     <div class="section-title">📝 Task siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
-    <table>
+    <table class="task-details-table">
+        <colgroup>
+            <col style="width: 4%">
+            <col style="width: 24%">
+            <col style="width: 12%">
+            <col style="width: 13%">
+            <col style="width: 13%">
+            <col style="width: 13%">
+            <col style="width: 11%">
+            <col style="width: 10%">
+        </colgroup>
         <thead>
             <tr>
                 <th class="num">#</th>
