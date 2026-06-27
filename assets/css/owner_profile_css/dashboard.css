@@ -1711,3 +1711,91 @@
         border-radius: 24px !important;
     }
 }
+
+/* Owner profile sizing parity: match the worker profile spacing system without altering visuals. */
+body.owner-profile #profileContent {
+    padding: 12px !important;
+}
+
+body.owner-profile #dashboardSection .dashboard-glass-shell,
+body.owner-profile #companiesSection,
+body.owner-profile #partnersSection,
+body.owner-profile #permissionsSection,
+body.owner-profile #employeesSection {
+    border-radius: clamp(34px, 4.8vw, 58px);
+    padding: clamp(14px, 1.45vw, 22px) !important;
+}
+
+body.owner-profile #companiesSection,
+body.owner-profile #partnersSection,
+body.owner-profile #permissionsSection,
+body.owner-profile #employeesSection {
+    --owner-section-gap: clamp(10px, 1.1vw, 16px);
+    --owner-card-gap: clamp(10px, 1vw, 16px);
+    min-height: 0;
+}
+
+body.owner-profile #companiesSection > .mb-8,
+body.owner-profile #partnersSection > .mb-8,
+body.owner-profile #permissionsSection > .mb-8,
+body.owner-profile #employeesSection > .mb-8 {
+    margin-bottom: var(--owner-section-gap) !important;
+}
+
+body.owner-profile #companiesSection > .grid,
+body.owner-profile #partnersSection > .grid,
+body.owner-profile #permissionsSection > .grid,
+body.owner-profile #employeesSection > .grid {
+    gap: var(--owner-card-gap) !important;
+}
+
+body.owner-profile #companiesSection > .grid.grid-cols-1.md\:grid-cols-4,
+body.owner-profile #partnersSection > .grid.grid-cols-1.md\:grid-cols-4,
+body.owner-profile #permissionsSection > .grid.grid-cols-1.md\:grid-cols-4,
+body.owner-profile #employeesSection > .grid.grid-cols-1.md\:grid-cols-4 {
+    margin-bottom: var(--owner-section-gap) !important;
+}
+
+body.owner-profile #companiesSection > .flex.flex-col.md\:flex-row,
+body.owner-profile #partnersSection > .flex.flex-col.md\:flex-row,
+body.owner-profile #permissionsSection > .flex.flex-col.md\:flex-row,
+body.owner-profile #employeesSection > .flex.flex-col.md\:flex-row {
+    gap: clamp(10px, 1vw, 16px) !important;
+    margin-bottom: var(--owner-section-gap) !important;
+    padding: 8px !important;
+}
+
+body.owner-profile #companiesSection > .grid > .bg-gradient-to-r,
+body.owner-profile #partnersSection > .grid > .bg-gradient-to-r,
+body.owner-profile #permissionsSection > .grid > .bg-gradient-to-r,
+body.owner-profile #employeesSection > .grid > .bg-gradient-to-r {
+    padding: clamp(12px, 1.05vw, 16px) !important;
+}
+
+body.owner-profile #companiesSection #companiesTableContainer,
+body.owner-profile #partnersSection #partnersTableContainer,
+body.owner-profile #employeesSection #employeesTableContainer,
+body.owner-profile #permissionsSection > .grid.grid-cols-1.lg\:grid-cols-3 > .bg-white {
+    border-radius: 30px !important;
+    min-height: 0;
+}
+
+body.owner-profile #permissionsSection #workTypesContainer {
+    min-height: clamp(360px, 42vh, 560px) !important;
+}
+
+body.owner-profile #filesSection {
+    --files-outer-inline: clamp(0.375rem, 0.7vw, 0.75rem);
+    --files-shell-padding: clamp(0.5rem, 0.75vw, 0.75rem);
+    --files-section-gap: clamp(0.375rem, 0.65vw, 0.625rem);
+    --files-card-gap: clamp(0.625rem, 0.85vw, 0.875rem);
+    --files-card-padding: clamp(0.875rem, 1.15vw, 1.25rem);
+}
+
+body.owner-profile #filesSection .files-manager {
+    height: min(720px, calc(100vh - 0.75rem)) !important;
+}
+
+body.owner-profile #filesSection #mainPanels {
+    height: clamp(500px, calc(100vh - 8.25rem), 620px) !important;
+}
