@@ -124,8 +124,62 @@
         0 36px 95px rgba(0,0,0,.32);
     backdrop-filter: blur(30px) saturate(180%);
     font-family: "Cal Sans", Inter, Arial, sans-serif;
-    color: var(--newtask-ink);
+    color: var(--nt-text-main);
+    --nt-text-strong: #1f2937;
+    --nt-text-main: #334155;
+    --nt-text-muted: #64748b;
+    --nt-text-soft: #94a3b8;
+    --nt-placeholder: #7b8798;
     animation: liquidModalIn .36s cubic-bezier(.16,1,.3,1);
+}
+
+/* Premium slate typography scoped to the New Task modal. */
+.newtask-modal .newtask-modal-title h3,
+.newtask-modal .newtask-form-label {
+    color: var(--nt-text-strong);
+}
+
+.newtask-modal .newtask-select,
+.newtask-modal .newtask-input,
+.newtask-modal .newtask-textarea,
+.newtask-modal .nt-select-trigger,
+.newtask-modal .nt-select-option,
+.newtask-modal .nt-select-value {
+    color: var(--nt-text-main);
+}
+
+.newtask-modal .newtask-select::placeholder,
+.newtask-modal .newtask-input::placeholder,
+.newtask-modal .newtask-textarea::placeholder,
+.newtask-modal input::placeholder,
+.newtask-modal textarea::placeholder {
+    color: var(--nt-placeholder);
+    opacity: 1;
+}
+
+.newtask-modal .newtask-form-text,
+.newtask-modal .newtask-checkbox-label,
+.newtask-modal .newtask-file-text,
+.newtask-modal .newtask-file-list-empty,
+.newtask-modal .newtask-file-list-header,
+.newtask-modal .newtask-file-item-size,
+.newtask-modal .newtask-audio-status,
+.newtask-modal .nt-voice-meta-row,
+.newtask-modal .recording-timer,
+.newtask-modal .audio-meta {
+    color: var(--nt-text-muted);
+}
+
+.newtask-modal .nt-select-arrow {
+    color: var(--nt-text-soft);
+}
+
+.newtask-modal .newtask-file-icon {
+    color: var(--nt-text-main);
+}
+
+.newtask-modal .newtask-file-item-name {
+    color: var(--nt-text-strong);
 }
 
 @keyframes liquidModalIn {
