@@ -982,10 +982,90 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.96), 0 14px 28px rgba(31, 42, 68, 0.1);
 }
 
+/* Compact spacing pass for Partnyorlar only, aligned with the polished Şirkətlər density. */
+#partnersSection {
+    --partners-section-gap: clamp(8px, 0.75vw, 12px);
+    --partners-card-gap: clamp(8px, 0.75vw, 12px);
+    --partners-toolbar-gap: clamp(6px, 0.65vw, 10px);
+    --partners-outer-inline: clamp(10px, 1vw, 16px);
+    --partners-panel-padding-x: clamp(11px, 0.95vw, 16px);
+    --partners-table-edge-padding-x: clamp(12px, 1vw, 18px);
+    --partners-table-padding-y: clamp(9px, 0.75vw, 13px);
+    padding-inline: var(--partners-outer-inline);
+}
+
+#partnersSection > .mb-8 {
+    margin-bottom: var(--partners-section-gap) !important;
+}
+
+#partnersSection > .mb-8 .text-slate-500 {
+    margin-top: 0.35rem !important;
+}
+
+#partnersSection > .mb-8 .flex.gap-3 {
+    gap: var(--partners-toolbar-gap) !important;
+}
+
+#partnersSection > .grid {
+    gap: var(--partners-card-gap) !important;
+    margin-bottom: var(--partners-section-gap) !important;
+}
+
+#partnersSection > .grid > .bg-gradient-to-r {
+    padding: clamp(11px, 1vw, 15px) !important;
+}
+
+#partnersSection > .flex.flex-col.md\:flex-row {
+    gap: var(--partners-toolbar-gap) !important;
+    margin-bottom: var(--partners-section-gap) !important;
+    padding: 5px 6px;
+}
+
+#partnersSection #partnerSearch,
+#partnersSection #partnerStatusFilter {
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.6rem !important;
+}
+
+#partnersSection #partnerSearch {
+    padding-left: 2.75rem !important;
+}
+
+#partnersSection #partnersTableContainer {
+    margin-top: 0 !important;
+}
+
+#partnersSection > .mt-6 {
+    margin-top: var(--partners-section-gap) !important;
+}
+
+#partnersSection #partnersTableContainer th,
+#partnersSection #partnersTableContainer td {
+    padding-top: var(--partners-table-padding-y) !important;
+    padding-bottom: var(--partners-table-padding-y) !important;
+    padding-left: var(--partners-panel-padding-x) !important;
+    padding-right: var(--partners-panel-padding-x) !important;
+}
+
+#partnersSection #partnersTableContainer th:first-child,
+#partnersSection #partnersTableContainer td:first-child {
+    padding-left: var(--partners-table-edge-padding-x) !important;
+}
+
+#partnersSection #partnersTableContainer th:last-child,
+#partnersSection #partnersTableContainer td:last-child {
+    padding-right: var(--partners-table-edge-padding-x) !important;
+}
+
+#partnersSection #partnersTableContainer tbody tr .h-10.w-10 {
+    margin-right: 0.65rem !important;
+}
+
 @media (max-width: 768px) {
     #partnersSection {
         border-radius: 32px;
-        padding: 18px;
+        padding-block: 18px;
+        padding-inline: 12px;
     }
 
     #partnersSection > .flex.flex-col.md\:flex-row,
