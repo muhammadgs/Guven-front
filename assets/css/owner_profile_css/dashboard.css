@@ -270,7 +270,9 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1px 4px 1px 1px;
+    box-sizing: border-box;
+    padding: 1px 4px clamp(18px, 1.4vw, 28px) 1px;
+    scroll-padding-bottom: clamp(18px, 1.4vw, 28px);
     scrollbar-width: thin;
     scrollbar-color: rgba(67, 136, 255, 0.42) rgba(255, 255, 255, 0.34);
 }
