@@ -350,7 +350,7 @@
     isolation: isolate;
     overflow: hidden;
     border-radius: clamp(30px, 4vw, 44px);
-    padding: clamp(20px, 2.2vw, 34px);
+    padding: clamp(16px, 1.8vw, 28px);
     border: 1px solid rgba(255, 255, 255, 0.68);
     background:
         radial-gradient(circle at 12% 2%, rgba(255, 255, 255, 0.94), transparent 30%),
@@ -596,11 +596,19 @@
 }
 
 #companiesSection {
-    --companies-section-gap: clamp(14px, 1.35vw, 20px);
-    --companies-card-gap: clamp(10px, 1vw, 14px);
-    --companies-toolbar-gap: clamp(10px, 1vw, 14px);
-    --companies-panel-padding-x: clamp(16px, 1.45vw, 22px);
-    --companies-table-padding-y: clamp(12px, 1vw, 16px);
+    --companies-section-gap: clamp(8px, 0.75vw, 12px);
+    --companies-card-gap: clamp(8px, 0.75vw, 12px);
+    --companies-toolbar-gap: clamp(6px, 0.65vw, 10px);
+    --companies-panel-padding-x: clamp(14px, 1.25vw, 20px);
+    --companies-table-padding-y: clamp(9px, 0.75vw, 13px);
+}
+
+#companiesSection > .mb-8 {
+    margin-bottom: var(--companies-section-gap) !important;
+}
+
+#companiesSection > .mb-8 .text-slate-500 {
+    margin-top: 0.35rem !important;
 }
 
 #companiesSection > .grid {
@@ -609,21 +617,21 @@
 }
 
 #companiesSection > .grid > .bg-gradient-to-r {
-    padding: clamp(14px, 1.2vw, 18px) !important;
+    padding: clamp(11px, 1vw, 15px) !important;
 }
 
 #companiesSection > .flex.flex-col.md\:flex-row {
     gap: var(--companies-toolbar-gap) !important;
     margin-bottom: var(--companies-section-gap) !important;
-    padding: 8px;
+    padding: 6px;
 }
 
 #companiesSection > .flex.flex-col.md\:flex-row > .flex.gap-2.bg-white {
-    gap: 6px !important;
+    gap: 4px !important;
 }
 
 #companiesSection > .flex.flex-col.md\:flex-row > .flex.gap-2:last-child {
-    gap: 8px !important;
+    gap: 6px !important;
     align-items: stretch;
 }
 
@@ -631,14 +639,14 @@
 #companiesSection #showParentCompaniesBtn,
 #companiesSection #showChildCompaniesBtn,
 #companiesSection #showPartnerCompaniesBtn {
-    padding: 0.6rem 0.875rem !important;
+    padding: 0.5rem 0.75rem !important;
 }
 
 #companiesSection #companySearch,
 #companiesSection #companyFilter,
 #companiesSection #exportCompaniesBtn {
-    padding-top: 0.7rem !important;
-    padding-bottom: 0.7rem !important;
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.6rem !important;
 }
 
 #companiesSection #companySearch {
@@ -647,6 +655,12 @@
 
 #companiesSection #companiesTableContainer {
     margin-top: 0 !important;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#companiesSection > .mt-6 {
+    margin-top: var(--companies-section-gap) !important;
 }
 
 #companiesSection #companiesTableContainer th,
