@@ -1566,7 +1566,6 @@ class ReportManager {
 
     updateCharts() {
         this.updateMonthlyChart();
-        this.updatePieChart();
     }
 
     updateMonthlyChart() {
@@ -1614,37 +1613,7 @@ class ReportManager {
     }
 
     updatePieChart() {
-        const ctx = document.getElementById('statusPieChart')?.getContext('2d');
-        if (!ctx) return;
-
-        if (this.charts.pie) {
-            this.charts.pie.destroy();
-        }
-
-        this.charts.pie = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Tamamlanan', 'Gözləmədə', 'İcra edilir', 'Müddəti keçən'],
-                datasets: [{
-                    data: [
-                        this.stats.completed || 0,
-                        this.stats.pending || 0,
-                        this.stats.in_progress || 0,
-                        this.stats.overdue || 0
-                    ],
-                    backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
+        // Status distribution chart intentionally removed from the report UI.
     }
 
     applyDateRange() {
