@@ -1080,11 +1080,15 @@
 
 /* Liquid/glass Departments & Work Types redesign scoped only to the profile Departament və İş Növləri section. */
 #permissionsSection {
+    --dept-section-gap: clamp(10px, 1vw, 16px);
+    --dept-card-gap: clamp(10px, 1vw, 14px);
+    --dept-panel-padding-x: clamp(14px, 1.15vw, 20px);
+    --dept-panel-padding-y: clamp(12px, 1vw, 16px);
     position: relative;
     isolation: isolate;
     overflow: hidden;
     border-radius: clamp(30px, 4vw, 44px);
-    padding: clamp(20px, 2.2vw, 34px);
+    padding: clamp(14px, 1.55vw, 24px);
     border: 1px solid rgba(255, 255, 255, 0.68);
     background:
         radial-gradient(circle at 12% 2%, rgba(255, 255, 255, 0.94), transparent 30%),
@@ -1124,7 +1128,15 @@
 }
 
 #permissionsSection > .mb-8 {
-    margin-bottom: clamp(18px, 2vw, 26px) !important;
+    margin-bottom: var(--dept-section-gap) !important;
+}
+
+#permissionsSection > .mb-8 .flex.items-center.justify-between {
+    gap: clamp(12px, 1.2vw, 18px);
+}
+
+#permissionsSection > .mb-8 .flex.gap-3 {
+    gap: clamp(8px, 0.8vw, 12px) !important;
 }
 
 #permissionsSection > .mb-8 .text-brand-blue {
@@ -1136,6 +1148,7 @@
 #permissionsSection > .mb-8 .text-slate-500 {
     color: rgba(3, 3, 3, 0.54) !important;
     font-weight: 600;
+    margin-top: 6px !important;
 }
 
 #permissionsSection #addDepartmentBtn,
@@ -1171,6 +1184,15 @@
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+#permissionsSection > .grid.grid-cols-1.md\:grid-cols-4 {
+    gap: var(--dept-card-gap) !important;
+    margin-bottom: var(--dept-section-gap) !important;
+}
+
+#permissionsSection > .grid.grid-cols-1.md\:grid-cols-4 > .bg-gradient-to-r {
+    padding: clamp(12px, 1vw, 16px) !important;
+}
+
 #permissionsSection > .grid > .bg-gradient-to-r:hover {
     transform: translateY(-3px);
     border-color: rgba(67, 136, 255, 0.28) !important;
@@ -1202,11 +1224,17 @@
 #permissionsSection > .flex.flex-col.md\:flex-row {
     align-items: stretch;
     border-radius: 30px;
-    padding: 10px;
+    gap: clamp(8px, 0.8vw, 12px) !important;
+    margin-bottom: var(--dept-section-gap) !important;
+    padding: 8px;
     border: 1px solid rgba(255, 255, 255, 0.72);
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.62), rgba(225, 232, 244, 0.48));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 16px 38px rgba(31, 42, 68, 0.08);
     backdrop-filter: blur(20px) saturate(155%);
+}
+
+#permissionsSection > .flex.flex-col.md\:flex-row .flex.gap-2 {
+    gap: clamp(8px, 0.7vw, 10px) !important;
 }
 
 #permissionsSection #departmentFilter,
@@ -1241,7 +1269,13 @@
     backdrop-filter: blur(22px) saturate(155%);
 }
 
+#permissionsSection > .grid.grid-cols-1.lg\:grid-cols-3 {
+    gap: var(--dept-card-gap) !important;
+    margin-top: 0 !important;
+}
+
 #permissionsSection > .grid.grid-cols-1.lg\:grid-cols-3 > .bg-white > .p-4.border-b {
+    padding: var(--dept-panel-padding-y) var(--dept-panel-padding-x) !important;
     border-bottom-color: rgba(67, 136, 255, 0.12) !important;
     background: rgba(255, 255, 255, 0.56) !important;
     backdrop-filter: blur(14px) saturate(145%);
@@ -1254,6 +1288,20 @@
 #permissionsSection #departmentsList,
 #permissionsSection #workTypesContainer {
     background: transparent !important;
+}
+
+#permissionsSection #departmentsList {
+    padding: 8px 10px 10px !important;
+}
+
+#permissionsSection #workTypesContainer {
+    min-height: clamp(430px, 45vh, 620px) !important;
+    padding: var(--dept-panel-padding-y) var(--dept-panel-padding-x) !important;
+}
+
+#permissionsSection #workTypesContainer > .text-center {
+    padding-top: clamp(28px, 4vw, 48px) !important;
+    padding-bottom: clamp(28px, 4vw, 48px) !important;
 }
 
 #permissionsSection .department-item {
