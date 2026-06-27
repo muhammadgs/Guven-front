@@ -950,3 +950,271 @@
   .urm-tabs { gap: 3px; }
   .urm-tab-btn { min-width: 80px; padding: 7px 8px; }
 }
+/* ============================================================
+   Employee Statistics Report — light glass/liquid redesign
+   Scoped to the employee report modal only. Mirrors the New Task
+   → Daxili Tapşırıq soft frosted visual language without changing
+   structure or report behavior.
+   ============================================================ */
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../fonts/Poppins-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Poppins";
+  src: url("../../../fonts/Poppins-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --urm-bg: rgba(244, 247, 252, 0.72);
+  --urm-surface: rgba(255, 255, 255, 0.66);
+  --urm-surface2: rgba(255, 255, 255, 0.52);
+  --urm-border: rgba(255, 255, 255, 0.72);
+  --urm-border-glow: rgba(67, 136, 255, 0.34);
+  --urm-text: #1f2937;
+  --urm-text-2: #475569;
+  --urm-text-3: #64748b;
+  --urm-accent: #4388ff;
+  --urm-accent-glow: rgba(67, 136, 255, 0.18);
+  --urm-green: #10b981;
+  --urm-amber: #f59e0b;
+  --urm-red: #ef4444;
+  --urm-purple: #8b5cf6;
+  --urm-teal: #14b8a6;
+  --urm-pink: #ec4899;
+  --urm-blue: #3b82f6;
+  --urm-gray: #64748b;
+  --urm-radius: 34px;
+  --urm-radius-sm: 22px;
+  --urm-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 24px 70px rgba(15,23,42,0.14);
+  --urm-font: 'Poppins', 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.user-report-backdrop {
+  background:
+    radial-gradient(circle at 50% 8%, rgba(255,255,255,0.46), rgba(219,228,240,0.26) 34%, rgba(21,27,39,0.24)),
+    rgba(241,245,249,0.34);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.user-report-modal {
+  background: linear-gradient(135deg, rgba(255,255,255,0.76), rgba(226,232,244,0.58));
+  border: 1px solid rgba(255,255,255,0.78);
+  border-radius: 34px;
+  box-shadow: var(--urm-shadow);
+  color: var(--urm-text);
+  font-family: var(--urm-font);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+
+.urm-header,
+.urm-date-bar,
+.urm-taskdetail-header {
+  background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(239,244,255,0.58));
+  border-bottom: 1px solid rgba(255,255,255,0.72);
+}
+
+.urm-header::before,
+.urm-taskdetail-header::before {
+  background: radial-gradient(circle, rgba(67,136,255,0.20) 0%, transparent 68%);
+}
+
+.urm-header-avatar {
+  background: linear-gradient(135deg, rgba(67,136,255,0.95), rgba(96,165,250,0.78));
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.65), 0 14px 34px rgba(67,136,255,0.22);
+}
+
+.urm-avatar-status {
+  border-color: rgba(255,255,255,0.92);
+  box-shadow: 0 0 0 4px rgba(16,185,129,0.12);
+}
+
+.urm-header-name,
+.urm-kpi-value,
+.urm-comparison-table tbody td,
+.urm-company-name,
+.urm-tasklist-title,
+.urm-task-row-title,
+.urm-taskdetail-title,
+.urm-detail-field-value,
+.urm-timeline-event {
+  color: var(--urm-text);
+}
+
+.urm-header-meta span,
+.urm-header-score,
+.urm-date-bar,
+.urm-tabs,
+.urm-kpi-card,
+.urm-company-item,
+.urm-time-card,
+.urm-tasklist-modal,
+.urm-task-row,
+.urm-taskdetail-modal,
+.urm-detail-field,
+.urm-detail-desc {
+  background: linear-gradient(145deg, rgba(255,255,255,0.78), rgba(239,244,255,0.58));
+  border: 1px solid rgba(255,255,255,0.74);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.88), 0 16px 36px rgba(30,47,85,0.09);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.urm-header-meta span {
+  border-radius: 999px;
+  color: #526174;
+  padding: 6px 12px;
+}
+
+.urm-header-meta span i,
+.urm-date-bar label i,
+.urm-section-title i,
+.urm-detail-field-label i {
+  color: var(--urm-accent);
+}
+
+.urm-header-score {
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(255,255,255,0.86), rgba(226,239,255,0.62));
+}
+
+.urm-header-score-val,
+.urm-time-value,
+.urm-company-count,
+.urm-detail-progress-val {
+  color: var(--urm-accent);
+}
+
+.urm-export-btn,
+.urm-close-btn,
+.urm-taskdetail-close {
+  border-color: rgba(255,255,255,0.76);
+  background: rgba(255,255,255,0.62);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.92), 0 10px 24px rgba(30,47,85,0.08);
+  border-radius: 14px;
+}
+
+.urm-export-btn.excel { background: rgba(236,253,245,0.76); }
+.urm-export-btn.pdf { background: rgba(254,242,242,0.76); }
+.urm-export-btn:hover,
+.urm-close-btn:hover,
+.urm-taskdetail-close:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.94), 0 16px 32px rgba(30,47,85,0.13);
+}
+
+.urm-date-bar input[type="date"] {
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(255,255,255,0.82);
+  border-radius: 16px;
+  color: var(--urm-text);
+  box-shadow: inset 0 1px 2px rgba(15,23,42,0.04), 0 8px 18px rgba(30,47,85,0.06);
+}
+
+.urm-date-bar input[type="date"]:focus {
+  border-color: rgba(67,136,255,0.62);
+  box-shadow: 0 0 0 4px rgba(67,136,255,0.12), inset 0 1px 2px rgba(15,23,42,0.04);
+}
+
+.urm-apply-date-btn,
+.urm-tab-btn.active {
+  background: linear-gradient(135deg, #4388ff, #60a5fa);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.34), 0 14px 28px rgba(67,136,255,0.24);
+  border-radius: 999px;
+}
+
+.urm-body::-webkit-scrollbar-thumb,
+.urm-tasklist-body::-webkit-scrollbar-thumb,
+.urm-taskdetail-body::-webkit-scrollbar-thumb {
+  background: rgba(67,136,255,0.22);
+  border-radius: 999px;
+}
+
+.urm-section-title {
+  color: #334155;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+}
+
+.urm-kpi-card {
+  border-radius: 26px;
+}
+
+.urm-kpi-card::before {
+  background: radial-gradient(circle at 18% 0%, rgba(67,136,255,0.18), transparent 38%);
+}
+
+.urm-kpi-card:hover,
+.urm-company-item:hover,
+.urm-task-row:hover {
+  border-color: rgba(67,136,255,0.42);
+  background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(232,241,255,0.68));
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.94), 0 24px 48px rgba(37,72,139,0.16);
+}
+
+.urm-tabs {
+  gap: 8px;
+  border-radius: 999px;
+  padding: 7px;
+}
+
+.urm-tab-btn {
+  border-radius: 999px;
+  color: #64748b;
+}
+
+.urm-tab-btn:hover {
+  background: rgba(255,255,255,0.72);
+  color: #2563eb;
+}
+
+.urm-table-scroll {
+  border: 1px solid rgba(255,255,255,0.74);
+  border-radius: 24px;
+  background: rgba(255,255,255,0.48);
+  box-shadow: inset 0 1px 1px rgba(255,255,255,0.88), 0 16px 36px rgba(30,47,85,0.08);
+}
+
+.urm-comparison-table thead th {
+  background: rgba(248,250,252,0.82);
+  color: #526174;
+  border-bottom: 1px solid rgba(203,213,225,0.46);
+}
+
+.urm-comparison-table tbody tr:hover,
+.urm-comparison-table tbody tr.highlight-row,
+.urm-comparison-table tbody tr.highlight-row:hover {
+  background: rgba(67,136,255,0.08);
+}
+
+.urm-comparison-table tbody td {
+  border-bottom: 1px solid rgba(203,213,225,0.34);
+}
+
+.urm-rank-badge.rank-other,
+.urm-tasklist-count {
+  background: rgba(255,255,255,0.70);
+  border: 1px solid rgba(255,255,255,0.78);
+  color: #64748b;
+}
+
+.urm-perf-bar,
+.urm-detail-progress-bar {
+  background: rgba(203,213,225,0.48);
+}
+
+.urm-tasklist-backdrop,
+.urm-taskdetail-backdrop {
+  background: rgba(241,245,249,0.42);
+  backdrop-filter: blur(14px) saturate(145%);
+  -webkit-backdrop-filter: blur(14px) saturate(145%);
+}
