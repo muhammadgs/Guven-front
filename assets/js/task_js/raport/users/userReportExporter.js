@@ -258,7 +258,6 @@ const UserReportExporter = (() => {
             <tr class="${isLate ? 'row-late' : ''}">
                 <td class="num">${i+1}</td>
                 <td><strong>${t.task_title || '-'}</strong><br><span style="font-size:10px; color:#666;">Kod: ${t.task_code || '-'}</span></td>
-                <td>${t.company_name || '-'}</td>
                 <td><span class="badge badge-${t.status || 'pending'}">${statusLabel(t.status)}</span></td>
                 <td class="num">${fmtDate(t.created_at)}</td>
                 <td class="num">${fmtDate(t.due_date)}</td>
@@ -455,7 +454,6 @@ ${monthlyRows ? `
             <tr>
                 <th class="num">#</th>
                 <th>Task adı / Kodu</th>
-                <th>Şirkət</th>
                 <th>Status</th>
                 <th>Yaradılma</th>
                 <th>Son müddət</th>
@@ -464,7 +462,7 @@ ${monthlyRows ? `
                 <th>Prioritet</th>
             </tr>
         </thead>
-        <tbody>${taskRows || '<tr><td colspan="9" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
+        <tbody>${taskRows || '<tr><td colspan="8" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
     </table>
 </div>
 
