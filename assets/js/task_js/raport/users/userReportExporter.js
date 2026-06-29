@@ -21,14 +21,21 @@ const UserReportExporter = (() => {
     }
 
     function statusLabel(status) {
+        return statusLabelAz(status);
+    }
+
+    function statusLabelAz(status) {
         const map = {
-            completed:        'Tamamlandı',
-            pending:          'Gözləyir',
-            in_progress:      'Davam edir',
-            overdue:          'Gecikmiş',
-            rejected:         'İmtina',
+            completed: 'Tamamlandı',
+            pending: 'Gözləyir',
+            in_progress: 'Davam edir',
+            overdue: 'Gecikmiş',
+            rejected: 'İmtina',
+            cancelled: 'Ləğv edildi',
+            canceled: 'Ləğv edildi',
             waiting_approval: 'Təsdiq gözləyir'
         };
+
         return map[status] || status || '-';
     }
 
@@ -42,10 +49,135 @@ const UserReportExporter = (() => {
         return text;
     }
 
-    function shortText(value, max = 90) {
+    function shortText(value, max = 70) {
         const text = cleanText(value);
         if (text === '-') return '-';
         return text.length > max ? text.slice(0, max).trim() + '...' : text;
+    }
+
+    function getTaskTypeName(t, taskTypes = []) {
+        const direct = firstValue(
+            t.task_type_name,
+            t.work_type_name,
+            t.job_type_name,
+            t.type_name,
+            t.task_type,
+            t.work_type
+        );
+
+        if (direct) return direct;
+
+        const typeId = firstValue(t.task_type_id, t.work_type_id, t.job_type_id);
+        if (!typeId) return '-';
+
+        const found = taskTypes.find(x =>
+            String(x.id) === String(typeId) ||
+            String(x.task_type_id) === String(typeId) ||
+            String(x.work_type_id) === String(typeId)
+        );
+
+        return found?.name || found?.type_name || found?.work_type_name || '-';
+    }
+
+    function getDurationMinutes(t) {
+        const directMinutes = firstValue(
+            t.execution_duration_minutes,
+            t.duration_minutes,
+            t.actual_duration_minutes,
+            t.work_duration_minutes
+        );
+
+        if (directMinutes && !Number.isNaN(Number(directMinutes))) {
+            return Number(directMinutes);
+        }
+
+        const startRaw = firstValue(
+            t.assigned_at,
+            t.assign_date,
+            t.assigned_date,
+            t.created_at,
+            t.created_date
+        );
+
+        const endRaw = firstValue(
+            t.completed_date,
+            t.completed_at,
+            t.finished_at,
+            t.done_at,
+            t.execution_completed_at
+        );
+
+        if (!startRaw || !endRaw) return null;
+
+        const start = new Date(startRaw);
+        const end = new Date(endRaw);
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+
+        return Math.max(0, Math.round((end - start) / 60000));
+    }
+
+    function getTaskDurationLabel(t) {
+        const minutes = getDurationMinutes(t);
+
+        if (minutes === null) {
+            const direct = firstValue(
+                t.execution_duration,
+                t.duration,
+                t.actual_duration,
+                t.work_duration
+            );
+
+            return direct ? String(direct) : '-';
+        }
+
+        if (minutes < 60) return `${minutes} dəq`;
+
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+
+        return mins ? `${hours} saat ${mins} dəq` : `${hours} saat`;
+    }
+
+    function getHourlyRate(t, taskTypes = []) {
+        const direct = firstValue(
+            t.hourly_rate,
+            t.work_type_hourly_rate,
+            t.task_type_hourly_rate,
+            t.salary_per_hour,
+            t.price_per_hour,
+            t.rate
+        );
+
+        if (direct && !Number.isNaN(Number(direct))) return Number(direct);
+
+        const typeId = firstValue(t.task_type_id, t.work_type_id, t.job_type_id);
+        if (!typeId) return null;
+
+        const found = taskTypes.find(x =>
+            String(x.id) === String(typeId) ||
+            String(x.task_type_id) === String(typeId) ||
+            String(x.work_type_id) === String(typeId)
+        );
+
+        const rate = firstValue(
+            found?.hourly_rate,
+            found?.price_per_hour,
+            found?.salary_per_hour,
+            found?.rate
+        );
+
+        return rate && !Number.isNaN(Number(rate)) ? Number(rate) : null;
+    }
+
+    function getTaskSalary(t, taskTypes = []) {
+        const minutes = getDurationMinutes(t);
+        const hourlyRate = getHourlyRate(t, taskTypes);
+
+        if (minutes === null || hourlyRate === null) return '-';
+
+        const amount = (minutes / 60) * hourlyRate;
+        return `${amount.toFixed(2)} ₼`;
     }
 
     function getTaskNotes(t = {}) {
@@ -361,6 +493,7 @@ const UserReportExporter = (() => {
             }).join('');
 
         // Task siyahısı - BÜTÜN DETALLAR alt-alta
+        const reportTaskTypes = d.taskTypes || d.workTypes || [];
         const taskRows = d.tasks.slice(0, 50).map((t, i) => {
             const isLate = t.status === 'overdue' ||
                 (t.due_date && !getTaskCompletedDateRaw(t) && new Date(t.due_date) < new Date());
@@ -371,14 +504,50 @@ const UserReportExporter = (() => {
                     <strong>${t.task_title || t.title || '-'}</strong>
                     <small>Kod: ${t.task_code || t.code || '-'}</small>
                 </td>
-                <td class="text-cell">${shortText(t.task_description || t.description || t.details || t.content, 90)}</td>
-                <td class="text-cell">${shortText(getTaskNotes(t), 90)}</td>
-                <td><span class="badge badge-${t.status || 'pending'}">${statusLabel(t.status)}</span></td>
-                <td>${fmtDate(t.created_at || t.created_date)}</td>
-                <td>${fmtDate(t.due_date || t.deadline || t.end_date)}</td>
-                <td>${getTaskCompletedDate(t)}</td>
-                <td>${getTaskDuration(t)}</td>
-                <td>${getPriorityLabel(t.priority)}</td>
+                <td class="text-cell">${shortText(getTaskTypeName(t, reportTaskTypes), 55)}</td>
+                <td class="text-cell">${shortText(firstValue(
+                    t.task_description,
+                    t.description,
+                    t.details,
+                    t.content
+                ), 70)}</td>
+                <td class="text-cell">${shortText(firstValue(
+                    t.notes,
+                    t.note,
+                    t.comment,
+                    t.comments,
+                    t.task_note,
+                    t.task_notes,
+                    t.admin_note,
+                    t.worker_note,
+                    t.executor_note,
+                    t.completion_note,
+                    t.rejection_reason,
+                    t.cancel_reason
+                ), 70)}</td>
+                <td>${statusLabelAz(t.status)}</td>
+                <td>${fmtDate(firstValue(
+                    t.assigned_at,
+                    t.assign_date,
+                    t.assigned_date,
+                    t.created_at,
+                    t.created_date
+                ))}</td>
+                <td>${fmtDate(firstValue(
+                    t.due_date,
+                    t.deadline,
+                    t.end_date
+                ))}</td>
+                <td>${getTaskDurationLabel(t)}</td>
+                <td>${getTaskSalary(t, reportTaskTypes)}</td>
+                <td>${shortText(firstValue(
+                    t.result,
+                    t.result_text,
+                    t.outcome,
+                    t.final_result,
+                    t.completion_result,
+                    getPriorityLabel(t.priority)
+                ), 50)}</td>
             </tr>`;
         }).join('');
 
@@ -400,17 +569,19 @@ const UserReportExporter = (() => {
 <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; font-size: 13px; }
-    @page { size: A4; margin: 18mm 15mm; }
-    @media print { .no-print { display: none; } }
+    .pdf-report { width: 100%; max-width: 100%; overflow: visible; }
+    @page { size: A4 landscape; margin: 8mm; }
+    @media print { .no-print { display: none !important; } }
 
     /* HEADER: Profil Sol, Logo Sağ */
     .pdf-header {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 18px 24px; background: linear-gradient(135deg,#1e40af,#3b82f6);
-        color: #fff; border-radius: 8px; margin-bottom: 20px;
+        gap: 16px; width: 100%; max-width: 100%; box-sizing: border-box;
+        padding: 18px 20px; background: linear-gradient(135deg,#1e40af,#3b82f6);
+        color: #fff; border-radius: 8px; margin-bottom: 20px; overflow: visible;
     }
     .profile-area {
-        display: flex; align-items: center; gap: 20px;
+        display: flex; align-items: center; gap: 20px; min-width: 0;
     }
     .pdf-avatar {
         width: 56px; height: 56px; border-radius: 50%;
@@ -422,7 +593,7 @@ const UserReportExporter = (() => {
     .user-info h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
     .user-info p  { font-size: 12px; color: rgba(255,255,255,0.85); }
     .logo-area {
-        text-align: right;
+        text-align: right; flex: 0 0 auto; max-width: 150px; box-sizing: border-box;
     }
     .gf44-icon {
         font-size: 28px; font-weight: 900;
@@ -464,15 +635,16 @@ const UserReportExporter = (() => {
         width: 100%;
         table-layout: fixed;
         border-collapse: collapse;
-        font-size: 11px;
+        font-size: 9.5px;
     }
     .task-table th,
     .task-table td {
         border-right: 1px solid rgba(0, 0, 0, 0.45);
         border-bottom: 1px solid rgba(0, 0, 0, 0.14);
-        padding: 7px 6px;
+        padding: 6px 5px;
         vertical-align: top;
         text-align: left;
+        word-break: break-word;
     }
     .task-table th:first-child,
     .task-table td:first-child {
@@ -488,19 +660,19 @@ const UserReportExporter = (() => {
     .task-table tbody tr:last-child td {
         border-bottom: 1px solid rgba(0, 0, 0, 0.45);
     }
-    .task-table .col-num { width: 3.5%; text-align: center; }
-    .task-table .col-task { width: 18%; }
-    .task-table .col-desc { width: 17%; }
-    .task-table .col-notes { width: 15%; }
-    .task-table .col-status { width: 9%; }
-    .task-table .col-created { width: 9%; }
-    .task-table .col-due { width: 9%; }
-    .task-table .col-completed { width: 9%; }
-    .task-table .col-duration { width: 5.5%; }
-    .task-table .col-priority { width: 5%; }
+    .task-table .col-num { width: 3%; text-align: center; }
+    .task-table .col-task { width: 15%; }
+    .task-table .col-type { width: 9%; }
+    .task-table .col-desc { width: 13%; }
+    .task-table .col-notes { width: 11%; }
+    .task-table .col-status { width: 8%; }
+    .task-table .col-assigned { width: 8%; }
+    .task-table .col-due { width: 8%; }
+    .task-table .col-duration { width: 8%; }
+    .task-table .col-salary { width: 8%; }
+    .task-table .col-result { width: 9%; }
     .task-table .num { text-align: center; }
     .task-table .text-cell {
-        font-size: 11px;
         line-height: 1.35;
         color: #334155;
         word-break: break-word;
@@ -510,7 +682,7 @@ const UserReportExporter = (() => {
         display: block;
         margin-top: 2px;
         color: #64748b;
-        font-size: 10px;
+        font-size: 8.8px;
     }
     tr:hover td { background: #f8fafc; }
     tr.row-late td { background: #fff5f5; }
@@ -552,12 +724,53 @@ const UserReportExporter = (() => {
         font-size: 13px; font-weight: 600;
     }
     .print-bar button:hover { background: rgba(255,255,255,0.3); }
-    @media print { .print-bar { display: none !important; } body { margin-top: 0; } }
+    @media print {
+        html,
+        body {
+            width: auto !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+        }
+
+        .print-report,
+        .pdf-report,
+        .report-print-wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            overflow: visible !important;
+        }
+
+        .report-header,
+        .pdf-header,
+        .print-header {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            overflow: visible !important;
+        }
+
+        .report-logo,
+        .pdf-logo,
+        .gf44-logo,
+        .gf44-report-logo {
+            flex: 0 0 auto !important;
+            max-width: 150px !important;
+            margin-right: 0 !important;
+            transform: none !important;
+            box-sizing: border-box !important;
+        }
+
+        .print-bar { display: none !important; }
+        body { margin-top: 0; }
+    }
     body { margin-top: 56px; }
-    @media print { body { margin-top: 0; } }
 </style>
 </head>
-<body>
+<body class="print-report pdf-report report-print-wrapper">
 
 <!-- PRINT BAR -->
 <div class="print-bar no-print">
@@ -578,7 +791,7 @@ const UserReportExporter = (() => {
             <p style="margin-top:4px;">Hesabat dövrü: <strong>${fmtDate(userData._startDate)} — ${fmtDate(userData._endDate)}</strong></p>
         </div>
     </div>
-    <div class="logo-area">
+    <div class="logo-area report-logo pdf-logo gf44-logo gf44-report-logo">
         <div class="gf44-icon">
             GF44
             <small>Professional Report</small>
@@ -621,17 +834,18 @@ ${monthlyRows ? `
             <tr>
                 <th class="col-num">#</th>
                 <th class="col-task">Task adı / Kodu</th>
+                <th class="col-type">İşin növü</th>
                 <th class="col-desc">Açıqlama</th>
                 <th class="col-notes">Qeydlər</th>
                 <th class="col-status">Status</th>
-                <th class="col-created">Yaradılma</th>
+                <th class="col-assigned">Təyin etmə</th>
                 <th class="col-due">Son müddət</th>
-                <th class="col-completed">Tamamlanma</th>
                 <th class="col-duration">Müddət</th>
-                <th class="col-priority">Prioritet</th>
+                <th class="col-salary">Əməkhaqqı</th>
+                <th class="col-result">Nəticə</th>
             </tr>
         </thead>
-        <tbody>${taskRows || '<tr><td colspan="10" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
+        <tbody>${taskRows || '<tr><td colspan="11" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
     </table>
 </div>
 
