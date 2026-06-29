@@ -647,7 +647,14 @@ const UserReportExporter = (() => {
         box-sizing: border-box !important;
         overflow: visible !important;
     }
-    @media print { .no-print { display: none !important; } }
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 0;
+        }
+
+        .no-print { display: none !important; }
+    }
 
     /* HEADER: Profil Sol, Logo Sağ */
     .pdf-header,
@@ -1057,28 +1064,40 @@ ${comparisonRows ? `
 <script>
     document.title = ' ';
     function printTaskReport() {
-        const previousTitle = window.opener && window.opener.document ? window.opener.document.title : '';
+        const openerDocument = window.opener && window.opener.document ? window.opener.document : null;
+        const previousTitle = openerDocument ? openerDocument.title : '';
+
         document.title = ' ';
-        if (window.opener && window.opener.document) {
-            window.opener.document.title = ' ';
+        if (openerDocument) {
+            openerDocument.title = ' ';
         }
+
         window.focus();
         window.print();
+
         setTimeout(() => {
             document.title = ' ';
-            if (window.opener && window.opener.document) {
-                window.opener.document.title = previousTitle;
+            if (openerDocument) {
+                openerDocument.title = previousTitle;
             }
-        }, 500);
+        }, 800);
     }
 </script>
 </body>
 </html>`;
 
+        const previousTitle = document.title;
+        document.title = ' ';
+
         const win = window.open('', '_blank');
+        win.document.open();
         win.document.write(html);
         win.document.close();
         win.document.title = ' ';
+
+        setTimeout(() => {
+            document.title = previousTitle;
+        }, 800);
     }
 
     /* ==========================================
