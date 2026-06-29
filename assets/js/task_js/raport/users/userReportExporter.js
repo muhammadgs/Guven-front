@@ -841,6 +841,32 @@ const UserReportExporter = (() => {
         font-size: 13px; font-weight: 600;
     }
     .print-bar button:hover { background: rgba(255,255,255,0.3); }
+
+    @media screen {
+        .print-report,
+        .pdf-report,
+        .report-print-wrapper {
+            padding-top: 86px !important;
+        }
+
+        .pdf-header {
+            min-height: 118px !important;
+            padding-top: 20px !important;
+            padding-bottom: 20px !important;
+            overflow: visible !important;
+        }
+
+        .profile-area,
+        .user-info,
+        .gf44-report-logo {
+            overflow: visible !important;
+        }
+
+        .gf44-report-logo {
+            flex-shrink: 0 !important;
+        }
+    }
+
     @media print {
         html,
         body {
