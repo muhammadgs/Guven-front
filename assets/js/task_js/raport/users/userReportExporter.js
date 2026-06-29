@@ -12,6 +12,14 @@ const UserReportExporter = (() => {
     ========================================== */
     function fmtDate(date) {
         if (!date) return '-';
+
+        const raw = String(date).trim();
+        const dateOnlyMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (dateOnlyMatch) {
+            const [, year, month, day] = dateOnlyMatch;
+            return `${day}.${month}.${year}`;
+        }
+
         const d = new Date(date);
         if (isNaN(d)) return '-';
         const day   = String(d.getDate()).padStart(2, '0');
@@ -41,6 +49,49 @@ const UserReportExporter = (() => {
 
     function firstValue(...values) {
         return values.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
+    }
+
+    function getReportPeriod(d = {}) {
+        const start = firstValue(
+            d?.dateRange?.start,
+            d?.dateRange?.startDate,
+            d?.period?.start,
+            d?.period?.startDate,
+            d?.startDate,
+            d?.fromDate,
+            d?.date_from,
+            d?.filters?.startDate,
+            d?.filters?.date_from,
+            d?._startDate,
+            typeof document !== 'undefined' ? document.getElementById('userReportStartDate')?.value : '',
+            typeof document !== 'undefined' ? document.getElementById('reportStartDate')?.value : '',
+            typeof document !== 'undefined' ? document.getElementById('urmStartDate')?.value : '',
+            typeof document !== 'undefined' ? document.querySelector('[name="startDate"]')?.value : '',
+            typeof document !== 'undefined' ? document.querySelector('[name="date_from"]')?.value : ''
+        );
+
+        const end = firstValue(
+            d?.dateRange?.end,
+            d?.dateRange?.endDate,
+            d?.period?.end,
+            d?.period?.endDate,
+            d?.endDate,
+            d?.toDate,
+            d?.date_to,
+            d?.filters?.endDate,
+            d?.filters?.date_to,
+            d?._endDate,
+            typeof document !== 'undefined' ? document.getElementById('userReportEndDate')?.value : '',
+            typeof document !== 'undefined' ? document.getElementById('reportEndDate')?.value : '',
+            typeof document !== 'undefined' ? document.getElementById('urmEndDate')?.value : '',
+            typeof document !== 'undefined' ? document.querySelector('[name="endDate"]')?.value : '',
+            typeof document !== 'undefined' ? document.querySelector('[name="date_to"]')?.value : ''
+        );
+
+        return {
+            start: start ? fmtDate(start) : '-',
+            end: end ? fmtDate(end) : '-'
+        };
     }
 
     function cleanText(value, fallback = '-') {
@@ -475,6 +526,7 @@ const UserReportExporter = (() => {
         const position = emp.position || '-';
         const department = emp.department_name || '-';
         const companyCode = emp.company_code || '';
+        const period = getReportPeriod(d);
 
         const months = ['Yan','Fev','Mar','Apr','May','İyn','İyl','Avq','Sen','Okt','Noy','Dek'];
 
@@ -788,7 +840,7 @@ const UserReportExporter = (() => {
         <div class="user-info">
             <h1>${name}</h1>
             <p>${position} &nbsp;|&nbsp; ${department} &nbsp;|&nbsp; ${companyCode}</p>
-            <p style="margin-top:4px;">Hesabat dövrü: <strong>${fmtDate(userData._startDate)} — ${fmtDate(userData._endDate)}</strong></p>
+            <p class="report-period" style="margin-top:4px;">Hesabat dövrü: <strong>${period.start} — ${period.end}</strong></p>
         </div>
     </div>
     <div class="logo-area report-logo pdf-logo gf44-logo gf44-report-logo">
