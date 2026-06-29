@@ -221,6 +221,8 @@ class ProfileApp {
 
             this.setupTaskManagerButton();
 
+            this.setupProtocolNotesButton();
+
             // 8. Modul event listener-larını qur
             this.bindModuleButtons();
 
@@ -1669,6 +1671,59 @@ class ProfileApp {
         }
     }
 
+
+    // ==================== PRATAKOL-QEYDLƏR DÜYMƏSİ ====================
+    setupProtocolNotesButton() {
+        const protocolNotesBtn = document.getElementById('protocolNotesBtn');
+
+        if (protocolNotesBtn) {
+            const newBtn = protocolNotesBtn.cloneNode(true);
+            protocolNotesBtn.parentNode.replaceChild(newBtn, protocolNotesBtn);
+
+            newBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                this.clearAllSections();
+
+                const container = document.querySelector('main .overflow-y-auto') || document.querySelector('main');
+                if (!container) return;
+
+                const oldSection = document.getElementById('protocolNotesSection');
+                if (oldSection) oldSection.remove();
+
+                const protocolNotesSection = document.createElement('section');
+                protocolNotesSection.id = 'protocolNotesSection';
+                protocolNotesSection.className = 'profile-section w-full';
+                protocolNotesSection.style.display = 'block';
+
+                protocolNotesSection.innerHTML = `
+                    <div class="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-soft backdrop-blur-xl">
+                        <div class="mb-6 flex items-center gap-4">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-blue">
+                                <i class="fas fa-clipboard-list text-2xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-3xl font-bold text-brand-ink">Pratakol-Qeydlər</h2>
+                                <p class="mt-1 text-sm text-slate-500">Bu bölmə hazırlanır.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(protocolNotesSection);
+
+                document.querySelectorAll('nav a').forEach(a => {
+                    a.classList.remove('bg-brand-soft', 'text-brand-blue');
+                });
+                newBtn.classList.add('bg-brand-soft', 'text-brand-blue');
+
+                const sidebar = document.getElementById('mainSidebar');
+                if (sidebar) sidebar.classList.add('sidebar-collapsed');
+            });
+        }
+    }
+
     /**
      * Dashboard üçün scroll rejimini yalnız Əsas səhifə aktiv olanda saxla.
      */
@@ -1751,7 +1806,8 @@ class ProfileApp {
             'permissionsSection',
             'positionsSection',
             'obligationsSection',
-            'taskManagerSection'
+            'taskManagerSection',
+            'protocolNotesSection'
         ];
 
         sectionsToRemove.forEach(id => {
