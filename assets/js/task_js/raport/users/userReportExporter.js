@@ -641,7 +641,7 @@ const UserReportExporter = (() => {
     .report-print-wrapper,
     .report-container {
         margin: 0 auto !important;
-        padding: 6mm 7mm 6mm 7mm !important;
+        padding: 2mm 7mm 5mm 7mm !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
@@ -866,7 +866,8 @@ const UserReportExporter = (() => {
         .report-print-wrapper,
         .report-container {
             margin: 0 auto !important;
-            padding: 6mm 7mm 6mm 7mm !important;
+            padding: 2mm 7mm 5mm 7mm !important;
+            transform: translateY(-2mm);
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
