@@ -228,26 +228,16 @@ class UserReportModal {
               this._apiGet(`/reports/full?start_date=${s}&end_date=${e}`)
             ]);
 
-            // 🔥 DEBUG - Cavabları yoxla
-            console.log('📊 EMPLOYEE REPORT:', empReport);
-            console.log('📊 FULL REPORT:', fullReport);
 
             // 🔥 DÜZƏLİŞ: success flag-ini yoxla, əgər yoxdursa birbaşa data-nı istifadə et
             const employeeData = empReport?.success ? empReport.data : (empReport?.data || empReport);
             const fullData = fullReport?.success ? fullReport.data : (fullReport?.data || fullReport);
-
-            console.log('📊 employeeData keys:', Object.keys(employeeData || {}));
-            console.log('📊 fullData keys:', Object.keys(fullData || {}));
 
             const employee = employeeData?.employee || {};
             const userTasks = employeeData?.tasks || [];
             const performance = employeeData?.performance || {};
             const allEmployees = fullData?.employees || [];
             const allTasks = fullData?.detailed_tasks || [];
-
-            console.log('📊 userTasks sayı:', userTasks.length);
-            console.log('📊 allTasks sayı:', allTasks.length);
-            console.log('📊 allEmployees sayı:', allEmployees.length);
 
             const d = this._buildUserData(employee, userTasks, performance, allEmployees, allTasks);
             this.currentUserData = d;
@@ -275,16 +265,8 @@ class UserReportModal {
     _mergeTaskDetails(tasks, allTasks) {
         if (!Array.isArray(tasks) || !Array.isArray(allTasks) || !allTasks.length) return tasks || [];
 
-        const fieldsToPreserve = [
-            'notes', 'note', 'comment', 'comments', 'task_note', 'task_notes',
-            'admin_note', 'worker_note', 'executor_note', 'completion_note',
-            'rejection_reason', 'cancel_reason',
-            'completed_date', 'completion_date', 'completed_at', 'finished_at',
-            'done_at', 'execution_completed_at',
-            'execution_duration', 'execution_duration_minutes', 'duration',
-            'duration_minutes', 'actual_duration', 'actual_duration_minutes',
-            'created_at', 'created_date'
-        ];
+        const firstValue = (...values) =>
+            values.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
 
         const detailByKey = new Map();
         allTasks.forEach(task => {
@@ -296,20 +278,40 @@ class UserReportModal {
         });
 
         return tasks.map(task => {
-            const detail = [task.id, task.task_id, task.task_code, task.code]
+            const full = [task.id, task.task_id, task.task_code, task.code]
                 .map(key => key !== undefined && key !== null ? detailByKey.get(String(key)) : null)
-                .find(Boolean);
+                .find(Boolean) || {};
 
-            if (!detail) return task;
-
-            const merged = {...detail, ...task};
-            fieldsToPreserve.forEach(field => {
-                if ((merged[field] === undefined || merged[field] === null || String(merged[field]).trim() === '') &&
-                    detail[field] !== undefined && detail[field] !== null && String(detail[field]).trim() !== '') {
-                    merged[field] = detail[field];
-                }
-            });
-            return merged;
+            return {
+                ...full,
+                ...task,
+                notes: firstValue(
+                    task.notes, task.note, task.comment, task.comments, task.task_note, task.task_notes,
+                    task.description_note, task.admin_note, task.worker_note, task.executor_note,
+                    task.employee_note, task.completion_note, task.result_note, task.final_note,
+                    task.reject_reason, task.rejection_reason, task.cancel_reason, task.cancellation_reason,
+                    full.notes, full.note, full.comment, full.comments, full.task_note, full.task_notes,
+                    full.description_note, full.admin_note, full.worker_note, full.executor_note,
+                    full.employee_note, full.completion_note, full.result_note, full.final_note,
+                    full.reject_reason, full.rejection_reason, full.cancel_reason, full.cancellation_reason
+                ),
+                completed_date: firstValue(
+                    task.completed_date, task.completion_date, task.completed_at, task.finished_at,
+                    task.done_at, task.executed_at, task.execution_date, task.execution_completed_at,
+                    task.completedAt, task.finishedAt, full.completed_date, full.completion_date,
+                    full.completed_at, full.finished_at, full.done_at, full.executed_at,
+                    full.execution_date, full.execution_completed_at, full.completedAt, full.finishedAt
+                ),
+                execution_duration_minutes: firstValue(
+                    task.execution_duration_minutes, task.execution_duration, task.execution_time_minutes,
+                    task.execution_time, task.duration_minutes, task.duration, task.actual_duration_minutes,
+                    task.actual_duration, task.completed_duration, task.work_duration_minutes,
+                    task.work_duration, full.execution_duration_minutes, full.execution_duration,
+                    full.execution_time_minutes, full.execution_time, full.duration_minutes, full.duration,
+                    full.actual_duration_minutes, full.actual_duration, full.completed_duration,
+                    full.work_duration_minutes, full.work_duration
+                )
+            };
         });
     }
 
