@@ -36,58 +36,96 @@ const UserReportExporter = (() => {
         return values.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
     }
 
+    function cleanText(value, fallback = '-') {
+        const text = String(value || '').trim();
+        if (!text || text === 'null' || text === 'undefined') return fallback;
+        return text;
+    }
+
+    function shortText(value, max = 90) {
+        const text = cleanText(value);
+        if (text === '-') return '-';
+        return text.length > max ? text.slice(0, max).trim() + '...' : text;
+    }
+
     function getTaskNotes(t = {}) {
-        return firstValue(
+        return cleanText(firstValue(
             t.notes,
             t.note,
             t.comment,
             t.comments,
             t.task_note,
             t.task_notes,
+            t.description_note,
             t.admin_note,
             t.worker_note,
             t.executor_note,
+            t.employee_note,
             t.completion_note,
+            t.result_note,
+            t.final_note,
+            t.reject_reason,
             t.rejection_reason,
-            t.cancel_reason
-        ) || '-';
+            t.cancel_reason,
+            t.cancellation_reason
+        ));
     }
 
-    function getTaskCompletedDate(t = {}) {
+    function getTaskCompletedDateRaw(t = {}) {
         return firstValue(
             t.completed_date,
             t.completion_date,
             t.completed_at,
             t.finished_at,
             t.done_at,
-            t.execution_completed_at
+            t.executed_at,
+            t.execution_date,
+            t.execution_completed_at,
+            t.completedAt,
+            t.finishedAt
         );
     }
 
+    function getTaskCompletedDate(t = {}) {
+        const value = getTaskCompletedDateRaw(t);
+        return value ? fmtDate(value) : '-';
+    }
+
     function getTaskDuration(t = {}) {
-        const directDuration = firstValue(
+        const direct = firstValue(
             t.execution_duration,
             t.execution_duration_minutes,
+            t.execution_time,
+            t.execution_time_minutes,
             t.duration,
             t.duration_minutes,
             t.actual_duration,
-            t.actual_duration_minutes
+            t.actual_duration_minutes,
+            t.completed_duration,
+            t.work_duration,
+            t.work_duration_minutes
         );
 
-        if (directDuration) {
-            const directDurationText = String(directDuration);
-            const n = Number(directDuration);
-            if (!Number.isNaN(n)) {
-                if (directDurationText.includes('saat') || directDurationText.includes('gün') || directDurationText.includes('dəq')) {
-                    return directDurationText;
-                }
-                return `${n} dəq`;
+        if (direct) {
+            const raw = String(direct).trim();
+
+            if (/[a-zA-ZəğıöşüçƏĞIİÖŞÜÇ]/.test(raw)) {
+                return raw;
             }
-            return directDurationText;
+
+            const n = Number(raw);
+            if (!Number.isNaN(n)) {
+                if (n < 60) return `${n} dəq`;
+                const hours = Math.floor(n / 60);
+                const mins = n % 60;
+                return mins ? `${hours} saat ${mins} dəq` : `${hours} saat`;
+            }
+
+            return raw;
         }
 
-        const created = firstValue(t.created_at, t.created_date);
-        const completed = getTaskCompletedDate(t);
+        const created = firstValue(t.created_at, t.created_date, t.createdAt);
+        const completed = getTaskCompletedDateRaw(t);
 
         if (!created || !completed) return '-';
 
@@ -96,8 +134,17 @@ const UserReportExporter = (() => {
 
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '-';
 
-        const days = Math.max(0, Math.round((end - start) / 86400000));
-        return `${days} gün`;
+        const diffMs = Math.max(0, end - start);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffDays >= 1) return `${diffDays} gün`;
+
+        const diffMinutes = Math.round(diffMs / 60000);
+        if (diffMinutes < 60) return `${diffMinutes} dəq`;
+
+        const hours = Math.floor(diffMinutes / 60);
+        const mins = diffMinutes % 60;
+        return mins ? `${hours} saat ${mins} dəq` : `${hours} saat`;
     }
 
     function calcDuration(t) {
@@ -113,11 +160,6 @@ const UserReportExporter = (() => {
         return map[priority] || priority || '-';
     }
 
-    function shortText(value, max = 90) {
-        const text = String(value || '-').trim();
-        if (!text || text === 'null' || text === 'undefined') return '-';
-        return text.length > max ? text.slice(0, max).trim() + '...' : text;
-    }
 
     /* ==========================================
        EXCEL EXPORT
@@ -183,7 +225,7 @@ const UserReportExporter = (() => {
             statusLabel(t.status),
             fmtDate(t.created_at),
             fmtDate(t.due_date),
-            fmtDate(getTaskCompletedDate(t)),
+            getTaskCompletedDate(t),
             getTaskDuration(t),
             getPriorityLabel(t.priority)
         ]);
@@ -321,20 +363,20 @@ const UserReportExporter = (() => {
         // Task siyahısı - BÜTÜN DETALLAR alt-alta
         const taskRows = d.tasks.slice(0, 50).map((t, i) => {
             const isLate = t.status === 'overdue' ||
-                (t.due_date && !getTaskCompletedDate(t) && new Date(t.due_date) < new Date());
+                (t.due_date && !getTaskCompletedDateRaw(t) && new Date(t.due_date) < new Date());
             return `
             <tr class="${isLate ? 'row-late' : ''}">
                 <td class="num">${i + 1}</td>
                 <td class="task-name">
-                    <strong>${t.task_title || '-'}</strong>
-                    <small>Kod: ${t.task_code || '-'}</small>
+                    <strong>${t.task_title || t.title || '-'}</strong>
+                    <small>Kod: ${t.task_code || t.code || '-'}</small>
                 </td>
-                <td class="text-cell">${shortText(t.task_description || t.description || t.note)}</td>
+                <td class="text-cell">${shortText(t.task_description || t.description || t.details || t.content, 90)}</td>
                 <td class="text-cell">${shortText(getTaskNotes(t), 90)}</td>
                 <td><span class="badge badge-${t.status || 'pending'}">${statusLabel(t.status)}</span></td>
                 <td>${fmtDate(t.created_at || t.created_date)}</td>
-                <td>${fmtDate(t.due_date)}</td>
-                <td>${fmtDate(getTaskCompletedDate(t))}</td>
+                <td>${fmtDate(t.due_date || t.deadline || t.end_date)}</td>
+                <td>${getTaskCompletedDate(t)}</td>
                 <td>${getTaskDuration(t)}</td>
                 <td>${getPriorityLabel(t.priority)}</td>
             </tr>`;
@@ -427,7 +469,7 @@ const UserReportExporter = (() => {
     .task-table th,
     .task-table td {
         border-right: 1px solid rgba(0, 0, 0, 0.45);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.14);
         padding: 7px 6px;
         vertical-align: top;
         text-align: left;
