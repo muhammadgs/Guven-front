@@ -759,6 +759,12 @@ const TaskManagerLoader = {
             '../assets/js/task_js/tableManager.js',
             '../assets/js/task_js/taskEditModul.js',
             '../assets/js/task_js/websocketManager.js',
+            '../assets/js/task_js/raport/card/ReportCardsManager.js',
+            '../assets/js/task_js/raport/card/report_stats_click_patch.js',
+            '../assets/js/task_js/raport/report.js',
+            '../assets/js/task_js/raport/card/report_fixes.js',
+            '../assets/js/task_js/raport/users/userReportExporter.js',
+            '../assets/js/task_js/raport/users/userReportModal.js',
             '../assets/js/task_js/task.js',
             '../assets/js/task_js/circularNav.js'
         ];
@@ -772,7 +778,7 @@ const TaskManagerLoader = {
         }
 
         scripts.forEach(src => {
-            if (document.querySelector(`script[src="${src}"]`)) {
+            if (Array.from(document.scripts).some(script => (script.getAttribute('src') || '').split('?')[0] === src)) {
                 loadedCount++;
                 if (loadedCount === totalScripts) {
                     console.log('✅ TaskManagerLoader: Bütün script-lər artıq yüklənib');
@@ -782,7 +788,7 @@ const TaskManagerLoader = {
             }
 
             const script = document.createElement('script');
-            script.src = src;
+            script.src = `${src}?v=2026.06.29.01`;
             script.async = false;
 
             script.onload = () => {
@@ -885,7 +891,7 @@ const TaskManagerLoader = {
 
     // CSS fayllarını yüklə
     loadTaskManagerStyles: function() {
-        const version = '2026.06.02.01';
+        const version = '2026.06.29.01';
         const taskStyles = [
             '../assets/css/task_css/task.css',
             '../assets/css/task_css/edit_module.css',
