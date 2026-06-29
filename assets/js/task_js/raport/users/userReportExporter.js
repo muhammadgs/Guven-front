@@ -609,6 +609,13 @@ const UserReportExporter = (() => {
 <meta charset="UTF-8">
 <title>GF44 — ${name} Hesabatı</title>
 <style>
+    html,
+    body,
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; font-size: 13px; }
     .pdf-report { width: 100%; max-width: 100%; overflow: visible; }
@@ -806,6 +813,54 @@ const UserReportExporter = (() => {
             box-sizing: border-box !important;
         }
 
+        .pdf-header {
+            background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        .pdf-header * {
+            color: inherit;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        .gf44-icon {
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
+        .gf44-icon small {
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .section-title {
+            color: #2563eb !important;
+            border-bottom-color: #3b82f6 !important;
+        }
+
+        table thead th,
+        .task-table thead th {
+            background: #1e40af !important;
+            color: #ffffff !important;
+        }
+
+        .kpi-card,
+        .badge,
+        tr.row-late td,
+        tr.highlight td,
+        .gf44-stamp {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
+
         .print-bar { display: none !important; }
         body { margin-top: 0; }
     }
@@ -868,9 +923,20 @@ ${monthlyRows ? `
     </table>
 </div>` : ''}
 
-<!-- BÜTÜN TASKLAR (DETALLI SİYAHI) -->
+<!-- MÜQAYİSƏ -->
+${comparisonRows ? `
 <div class="section">
-    <div class="section-title">📝 Task siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
+    <div class="section-title">🏆 İşçilər arasında müqayisə (İlk 15)</div>
+    <table>
+        <thead><tr><th>Yer</th><th>İşçi</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
+        <tbody>${comparisonRows}</tbody>
+    </table>
+    <p style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu işçini göstərir. Reytinq tamamlanan task sayına görədir.</p>
+</div>` : ''}
+
+<!-- TAPŞIRIQ SİYAHISI (DETALLI SİYAHI) -->
+<div class="section">
+    <div class="section-title">📝 Tapşırıq siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
     <table class="task-table">
         <thead>
             <tr>
@@ -890,17 +956,6 @@ ${monthlyRows ? `
         <tbody>${taskRows || '<tr><td colspan="11" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
     </table>
 </div>
-
-<!-- MÜQAYİSƏ -->
-${comparisonRows ? `
-<div class="section">
-    <div class="section-title">🏆 İşçilər arasında müqayisə (İlk 15)</div>
-    <table>
-        <thead><tr><th>Yer</th><th>İşçi</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
-        <tbody>${comparisonRows}</tbody>
-    </table>
-    <p style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu işçini göstərir. Reytinq tamamlanan task sayına görədir.</p>
-</div>` : ''}
 
 <!-- FOOTER -->
 <div class="pdf-footer">
