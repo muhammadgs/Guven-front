@@ -1704,7 +1704,7 @@ class ProfileApp {
                                 <i class="fas fa-clipboard-list text-2xl"></i>
                             </div>
                             <div>
-                                <h2 class="text-3xl font-bold text-brand-ink">Pratakol-Qeydlər</h2>
+                                <h2 class="text-3xl font-bold text-brand-ink">Pratakol/Qeydlər</h2>
                                 <p class="mt-1 text-sm text-slate-500">Bu bölmə hazırlanır.</p>
                             </div>
                         </div>
