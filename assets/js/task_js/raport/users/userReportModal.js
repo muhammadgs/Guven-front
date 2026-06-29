@@ -217,12 +217,26 @@ class UserReportModal {
 
 
     _withSelectedDateRange(userData) {
-        const start = document.getElementById('urmStartDate')?.value || this._fmtDate(this.dateRange.start, 'YYYY-MM-DD');
-        const end = document.getElementById('urmEndDate')?.value || this._fmtDate(this.dateRange.end, 'YYYY-MM-DD');
+        const startInput = document.getElementById('urmStartDate');
+        const endInput = document.getElementById('urmEndDate');
+
+        const start = startInput?.value || '';
+        const end = endInput?.value || '';
 
         return {
             ...userData,
+
+            // PDF üçün birbaşa header-dən gələn tarix
+            pdfPeriodStart: start,
+            pdfPeriodEnd: end,
+
+            // compatibility üçün
             dateRange: { start, end },
+            period: { start, end },
+            startDate: start,
+            endDate: end,
+            date_from: start,
+            date_to: end,
             _startDate: start,
             _endDate: end
         };

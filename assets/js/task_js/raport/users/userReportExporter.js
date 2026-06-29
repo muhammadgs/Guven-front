@@ -52,41 +52,25 @@ const UserReportExporter = (() => {
     }
 
     function getReportPeriod(d = {}) {
-        const start = firstValue(
-            d?.dateRange?.start,
-            d?.dateRange?.startDate,
-            d?.period?.start,
-            d?.period?.startDate,
-            d?.startDate,
-            d?.fromDate,
-            d?.date_from,
-            d?.filters?.startDate,
-            d?.filters?.date_from,
-            d?._startDate,
-            typeof document !== 'undefined' ? document.getElementById('userReportStartDate')?.value : '',
-            typeof document !== 'undefined' ? document.getElementById('reportStartDate')?.value : '',
-            typeof document !== 'undefined' ? document.getElementById('urmStartDate')?.value : '',
-            typeof document !== 'undefined' ? document.querySelector('[name="startDate"]')?.value : '',
-            typeof document !== 'undefined' ? document.querySelector('[name="date_from"]')?.value : ''
-        );
+        const start =
+            d?.pdfPeriodStart ||
+            (typeof document !== 'undefined' ? document.getElementById('urmStartDate')?.value : '') ||
+            d?.dateRange?.start ||
+            d?.period?.start ||
+            d?.startDate ||
+            d?._startDate ||
+            d?.date_from ||
+            '';
 
-        const end = firstValue(
-            d?.dateRange?.end,
-            d?.dateRange?.endDate,
-            d?.period?.end,
-            d?.period?.endDate,
-            d?.endDate,
-            d?.toDate,
-            d?.date_to,
-            d?.filters?.endDate,
-            d?.filters?.date_to,
-            d?._endDate,
-            typeof document !== 'undefined' ? document.getElementById('userReportEndDate')?.value : '',
-            typeof document !== 'undefined' ? document.getElementById('reportEndDate')?.value : '',
-            typeof document !== 'undefined' ? document.getElementById('urmEndDate')?.value : '',
-            typeof document !== 'undefined' ? document.querySelector('[name="endDate"]')?.value : '',
-            typeof document !== 'undefined' ? document.querySelector('[name="date_to"]')?.value : ''
-        );
+        const end =
+            d?.pdfPeriodEnd ||
+            (typeof document !== 'undefined' ? document.getElementById('urmEndDate')?.value : '') ||
+            d?.dateRange?.end ||
+            d?.period?.end ||
+            d?.endDate ||
+            d?._endDate ||
+            d?.date_to ||
+            '';
 
         return {
             start: start ? fmtDate(start) : '-',
