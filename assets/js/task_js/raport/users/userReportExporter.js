@@ -609,13 +609,18 @@ const UserReportExporter = (() => {
 <meta charset="UTF-8">
 <title> </title>
 <style>
+    @page {
+        size: A4 landscape;
+        margin: 0;
+    }
     html,
     body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        min-height: 100%;
-        background: #ffffff;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 100% !important;
+        background: #ffffff !important;
+        overflow: visible !important;
     }
     html,
     body,
@@ -628,32 +633,61 @@ const UserReportExporter = (() => {
     body {
         font-family: Arial, sans-serif;
         color: #1e293b;
-        background: #fff;
+        background: #fff !important;
         font-size: 13px;
-        padding: 8mm 8mm 6mm 8mm;
     }
     .print-report,
     .pdf-report,
     .report-print-wrapper,
     .report-container {
         margin: 0 auto !important;
-        padding-top: 8mm !important;
+        padding: 6mm 7mm 6mm 7mm !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
         overflow: visible !important;
     }
-    @page { size: A4 landscape; margin: 0; }
     @media print { .no-print { display: none !important; } }
 
     /* HEADER: Profil Sol, Logo Sağ */
-    .pdf-header {
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 16px; width: 100%; max-width: 100%; box-sizing: border-box;
-        padding: 18px 20px; background: linear-gradient(135deg,#1e40af,#3b82f6);
-        color: #fff; border-radius: 8px; margin-bottom: 20px; overflow: visible;
+    .pdf-header,
+    .report-header,
+    .print-header {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        width: 100%;
+        max-width: 100%;
+        min-height: 92px;
+        box-sizing: border-box;
+        padding: 18px 24px;
+        background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        margin-top: 0 !important;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .pdf-header-title {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        color: #ffffff;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+        text-align: center;
+        white-space: nowrap;
+        line-height: 1.1;
+        pointer-events: none;
+        z-index: 1;
     }
     .profile-area {
+        position: relative;
+        z-index: 2;
         display: flex; align-items: center; gap: 20px; min-width: 0;
     }
     .pdf-avatar {
@@ -666,7 +700,10 @@ const UserReportExporter = (() => {
     .user-info h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
     .user-info p  { font-size: 12px; color: rgba(255,255,255,0.85); }
     .logo-area {
+        position: relative;
+        z-index: 2;
         text-align: right; flex: 0 0 auto; max-width: 150px; box-sizing: border-box;
+        margin-left: auto;
     }
     .gf44-icon {
         font-size: 28px; font-weight: 900;
@@ -822,7 +859,7 @@ const UserReportExporter = (() => {
         .report-print-wrapper,
         .report-container {
             margin: 0 auto !important;
-            padding: 8mm 8mm 6mm 8mm !important;
+            padding: 6mm 7mm 6mm 7mm !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -853,7 +890,9 @@ const UserReportExporter = (() => {
             box-sizing: border-box !important;
         }
 
-        .pdf-header {
+        .pdf-header,
+        .report-header,
+        .print-header {
             background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
             color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
@@ -861,8 +900,11 @@ const UserReportExporter = (() => {
             color-adjust: exact !important;
         }
 
-        .pdf-header * {
-            color: inherit;
+        .pdf-header *,
+        .report-header *,
+        .print-header *,
+        .pdf-header-title {
+            color: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
             color-adjust: exact !important;
@@ -878,6 +920,14 @@ const UserReportExporter = (() => {
 
         .gf44-icon small {
             color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .gf44-report-logo,
+        .gf44-report-logo * {
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
         }
 
         .section-title {
@@ -913,7 +963,7 @@ const UserReportExporter = (() => {
     <span><strong>GF44</strong> — ${name} İşçi Hesabatı</span>
     <div style="display:flex; gap:8px;">
         <!-- Browser print headers/footers are controlled by the browser print dialog. -->
-        <button onclick="window.print()">🖨️ Çap et</button>
+        <button onclick="printTaskReport()">🖨️ Çap et</button>
         <button onclick="window.close()">✕ Bağla</button>
     </div>
 </div>
@@ -928,6 +978,7 @@ const UserReportExporter = (() => {
             <p class="report-period" style="margin-top:4px;">Hesabat dövrü: <strong>${period.start} — ${period.end}</strong></p>
         </div>
     </div>
+    <div class="pdf-header-title">Tapşırıqların hesabatı</div>
     <div class="logo-area report-logo pdf-logo gf44-logo gf44-report-logo">
         <div class="gf44-icon">
             GF44
@@ -1003,6 +1054,24 @@ ${comparisonRows ? `
     <span class="gf44-stamp">GF44</span>
 </div>
 
+<script>
+    document.title = ' ';
+    function printTaskReport() {
+        const previousTitle = window.opener && window.opener.document ? window.opener.document.title : '';
+        document.title = ' ';
+        if (window.opener && window.opener.document) {
+            window.opener.document.title = ' ';
+        }
+        window.focus();
+        window.print();
+        setTimeout(() => {
+            document.title = ' ';
+            if (window.opener && window.opener.document) {
+                window.opener.document.title = previousTitle;
+            }
+        }, 500);
+    }
+</script>
 </body>
 </html>`;
 
