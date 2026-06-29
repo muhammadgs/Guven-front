@@ -178,7 +178,7 @@ class UserReportModal {
         });
         document.getElementById('urmPdfBtn').addEventListener('click', () => {
             if (this.currentUserData && typeof UserReportExporter !== 'undefined')
-                UserReportExporter.toPDF(this.currentUserData, this.allUsersData);
+                UserReportExporter.toPDF(this._withSelectedDateRange(this.currentUserData), this.allUsersData);
         });
 
         document.addEventListener('keydown', e => {
@@ -216,6 +216,18 @@ class UserReportModal {
     }
 
 
+    _withSelectedDateRange(userData) {
+        const start = document.getElementById('urmStartDate')?.value || this._fmtDate(this.dateRange.start, 'YYYY-MM-DD');
+        const end = document.getElementById('urmEndDate')?.value || this._fmtDate(this.dateRange.end, 'YYYY-MM-DD');
+
+        return {
+            ...userData,
+            dateRange: { start, end },
+            _startDate: start,
+            _endDate: end
+        };
+    }
+
     /* ── API ──────────────────────────────────────────────── */
     async _loadAndRender(userId) {
           this._showLoading();
@@ -239,7 +251,9 @@ class UserReportModal {
             const allEmployees = fullData?.employees || [];
             const allTasks = fullData?.detailed_tasks || [];
 
-            const d = this._buildUserData(employee, userTasks, performance, allEmployees, allTasks);
+            const d = this._withSelectedDateRange(
+              this._buildUserData(employee, userTasks, performance, allEmployees, allTasks)
+            );
             this.currentUserData = d;
             this.allUsersData = allEmployees;
 
