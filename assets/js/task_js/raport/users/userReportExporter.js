@@ -1032,7 +1032,7 @@ ${comparisonRows ? `
         <thead>
             <tr>
                 <th class="col-num">#</th>
-                <th class="col-task">Task adı / Kodu</th>
+                <th class="col-task">Tapşırıq adı / Kodu</th>
                 <th class="col-type">İşin növü</th>
                 <th class="col-desc">Açıqlama</th>
                 <th class="col-notes">Qeydlər</th>
