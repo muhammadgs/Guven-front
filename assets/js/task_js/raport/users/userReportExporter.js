@@ -51,6 +51,12 @@ const UserReportExporter = (() => {
         return map[priority] || priority || '-';
     }
 
+    function shortText(value, max = 90) {
+        const text = String(value || '-').trim();
+        if (!text || text === 'null' || text === 'undefined') return '-';
+        return text.length > max ? text.slice(0, max).trim() + '...' : text;
+    }
+
     /* ==========================================
        EXCEL EXPORT
     ========================================== */
@@ -256,14 +262,19 @@ const UserReportExporter = (() => {
                 (t.due_date && !t.completed_date && new Date(t.due_date) < new Date());
             return `
             <tr class="${isLate ? 'row-late' : ''}">
-                <td class="num">${i+1}</td>
-                <td><strong>${t.task_title || '-'}</strong><br><span style="font-size:10px; color:#666;">Kod: ${t.task_code || '-'}</span></td>
+                <td class="num">${i + 1}</td>
+                <td class="task-name">
+                    <strong>${t.task_title || '-'}</strong>
+                    <small>Kod: ${t.task_code || '-'}</small>
+                </td>
+                <td class="text-cell">${shortText(t.task_description || t.description || t.note)}</td>
+                <td class="text-cell">${shortText(t.notes || t.comment || t.comments || t.admin_note || t.worker_note)}</td>
                 <td><span class="badge badge-${t.status || 'pending'}">${statusLabel(t.status)}</span></td>
-                <td class="num">${fmtDate(t.created_at)}</td>
-                <td class="num">${fmtDate(t.due_date)}</td>
-                <td class="num">${fmtDate(t.completed_date)}</td>
-                <td class="num">${calcDuration(t)}</td>
-                <td class="num">${getPriorityLabel(t.priority)}</td>
+                <td>${fmtDate(t.created_at)}</td>
+                <td>${fmtDate(t.due_date)}</td>
+                <td>${fmtDate(t.completed_date)}</td>
+                <td>${calcDuration(t)}</td>
+                <td>${getPriorityLabel(t.priority)}</td>
             </tr>`;
         }).join('');
 
@@ -345,24 +356,42 @@ const UserReportExporter = (() => {
     th { background: #1e40af; color: #fff; padding: 7px 8px; text-align: left;
          font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
     td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-    .task-details-table { table-layout: fixed; }
-    .task-details-table th,
-    .task-details-table td { text-align: left; vertical-align: middle; }
-    .task-details-table th:nth-child(1),
-    .task-details-table td:nth-child(1) { text-align: center; }
-    .task-details-table th:nth-child(3),
-    .task-details-table td:nth-child(3),
-    .task-details-table th:nth-child(4),
-    .task-details-table td:nth-child(4),
-    .task-details-table th:nth-child(5),
-    .task-details-table td:nth-child(5),
-    .task-details-table th:nth-child(6),
-    .task-details-table td:nth-child(6),
-    .task-details-table th:nth-child(7),
-    .task-details-table td:nth-child(7),
-    .task-details-table th:nth-child(8),
-    .task-details-table td:nth-child(8) { text-align: center; }
-    .task-details-table td:nth-child(2) { overflow-wrap: anywhere; }
+    .task-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        font-size: 11px;
+    }
+    .task-table th,
+    .task-table td {
+        vertical-align: top;
+        padding: 8px 7px;
+        text-align: left;
+    }
+    .task-table .col-num { width: 4%; text-align: center; }
+    .task-table .col-task { width: 20%; }
+    .task-table .col-desc { width: 17%; }
+    .task-table .col-notes { width: 15%; }
+    .task-table .col-status { width: 9%; }
+    .task-table .col-created { width: 9%; }
+    .task-table .col-due { width: 9%; }
+    .task-table .col-completed { width: 9%; }
+    .task-table .col-duration { width: 5%; }
+    .task-table .col-priority { width: 5%; }
+    .task-table .num { text-align: center; }
+    .task-table .text-cell {
+        font-size: 11px;
+        line-height: 1.35;
+        color: #334155;
+        word-break: break-word;
+    }
+    .task-table .task-name { word-break: break-word; }
+    .task-table .task-name small {
+        display: block;
+        margin-top: 2px;
+        color: #64748b;
+        font-size: 10px;
+    }
     tr:hover td { background: #f8fafc; }
     tr.row-late td { background: #fff5f5; }
     tr.highlight td { background: #eff6ff; font-weight: 700; color: #1d4ed8; }
@@ -467,30 +496,22 @@ ${monthlyRows ? `
 <!-- BÜTÜN TASKLAR (DETALLI SİYAHI) -->
 <div class="section">
     <div class="section-title">📝 Task siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
-    <table class="task-details-table">
-        <colgroup>
-            <col style="width: 4%">
-            <col style="width: 24%">
-            <col style="width: 12%">
-            <col style="width: 13%">
-            <col style="width: 13%">
-            <col style="width: 13%">
-            <col style="width: 11%">
-            <col style="width: 10%">
-        </colgroup>
+    <table class="task-table">
         <thead>
             <tr>
-                <th class="num">#</th>
-                <th>Task adı / Kodu</th>
-                <th>Status</th>
-                <th>Yaradılma</th>
-                <th>Son müddət</th>
-                <th>Tamamlanma</th>
-                <th>Müddət</th>
-                <th>Prioritet</th>
+                <th class="col-num">#</th>
+                <th class="col-task">Task adı / Kodu</th>
+                <th class="col-desc">Açıqlama</th>
+                <th class="col-notes">Qeydlər</th>
+                <th class="col-status">Status</th>
+                <th class="col-created">Yaradılma</th>
+                <th class="col-due">Son müddət</th>
+                <th class="col-completed">Tamamlanma</th>
+                <th class="col-duration">Müddət</th>
+                <th class="col-priority">Prioritet</th>
             </tr>
         </thead>
-        <tbody>${taskRows || '<tr><td colspan="8" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
+        <tbody>${taskRows || '<tr><td colspan="10" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
     </table>
 </div>
 
