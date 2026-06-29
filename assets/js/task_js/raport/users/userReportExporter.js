@@ -82,7 +82,8 @@ const UserReportExporter = (() => {
             t.execution_date,
             t.execution_completed_at,
             t.completedAt,
-            t.finishedAt
+            t.finishedAt,
+            t.completedDate
         );
     }
 
@@ -626,7 +627,7 @@ ${monthlyRows ? `
                 <th class="col-status">Status</th>
                 <th class="col-created">Yaradılma</th>
                 <th class="col-due">Son müddət</th>
-                <th class="col-completed">Tamamlanma</th>
+                <th class="col-completed">Tamamlanan</th>
                 <th class="col-duration">Müddət</th>
                 <th class="col-priority">Prioritet</th>
             </tr>

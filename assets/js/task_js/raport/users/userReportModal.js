@@ -298,9 +298,10 @@ class UserReportModal {
                 completed_date: firstValue(
                     task.completed_date, task.completion_date, task.completed_at, task.finished_at,
                     task.done_at, task.executed_at, task.execution_date, task.execution_completed_at,
-                    task.completedAt, task.finishedAt, full.completed_date, full.completion_date,
+                    task.completedAt, task.finishedAt, task.completedDate, full.completed_date, full.completion_date,
                     full.completed_at, full.finished_at, full.done_at, full.executed_at,
-                    full.execution_date, full.execution_completed_at, full.completedAt, full.finishedAt
+                    full.execution_date, full.execution_completed_at, full.completedAt, full.finishedAt,
+                    full.completedDate
                 ),
                 execution_duration_minutes: firstValue(
                     task.execution_duration_minutes, task.execution_duration, task.execution_time_minutes,
