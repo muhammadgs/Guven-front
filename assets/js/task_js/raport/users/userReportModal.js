@@ -220,17 +220,17 @@ class UserReportModal {
         const startInput = document.getElementById('urmStartDate');
         const endInput = document.getElementById('urmEndDate');
 
-        const start = startInput?.value || '';
-        const end = endInput?.value || '';
+        const start = startInput?.value || this._fmtDate(this.dateRange.start, 'YYYY-MM-DD');
+        const end = endInput?.value || this._fmtDate(this.dateRange.end, 'YYYY-MM-DD');
 
         return {
             ...userData,
 
-            // PDF üçün birbaşa header-dən gələn tarix
+            // Main source for PDF
             pdfPeriodStart: start,
             pdfPeriodEnd: end,
 
-            // compatibility üçün
+            // Keep compatibility with existing exporter logic
             dateRange: { start, end },
             period: { start, end },
             startDate: start,
