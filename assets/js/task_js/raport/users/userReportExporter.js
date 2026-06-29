@@ -52,25 +52,31 @@ const UserReportExporter = (() => {
     }
 
     function getReportPeriod(d = {}) {
-        const start =
-            d?.pdfPeriodStart ||
-            (typeof document !== 'undefined' ? document.getElementById('urmStartDate')?.value : '') ||
-            d?.dateRange?.start ||
-            d?.period?.start ||
-            d?.startDate ||
-            d?._startDate ||
-            d?.date_from ||
-            '';
+        const start = firstValue(
+            d?.pdfPeriodStart,
+            d?.dateRange?.start,
+            d?.dateRange?.startDate,
+            d?.period?.start,
+            d?.period?.startDate,
+            d?.startDate,
+            d?.fromDate,
+            d?.date_from,
+            d?._startDate,
+            typeof document !== 'undefined' ? document.getElementById('urmStartDate')?.value : ''
+        );
 
-        const end =
-            d?.pdfPeriodEnd ||
-            (typeof document !== 'undefined' ? document.getElementById('urmEndDate')?.value : '') ||
-            d?.dateRange?.end ||
-            d?.period?.end ||
-            d?.endDate ||
-            d?._endDate ||
-            d?.date_to ||
-            '';
+        const end = firstValue(
+            d?.pdfPeriodEnd,
+            d?.dateRange?.end,
+            d?.dateRange?.endDate,
+            d?.period?.end,
+            d?.period?.endDate,
+            d?.endDate,
+            d?.toDate,
+            d?.date_to,
+            d?._endDate,
+            typeof document !== 'undefined' ? document.getElementById('urmEndDate')?.value : ''
+        );
 
         return {
             start: start ? fmtDate(start) : '-',
