@@ -607,8 +607,16 @@ const UserReportExporter = (() => {
 <html lang="az">
 <head>
 <meta charset="UTF-8">
-<title>GF44 — ${name} Hesabatı</title>
+<title> </title>
 <style>
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        min-height: 100%;
+        background: #ffffff;
+    }
     html,
     body,
     * {
@@ -617,9 +625,25 @@ const UserReportExporter = (() => {
         color-adjust: exact !important;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, sans-serif; color: #1e293b; background: #fff; font-size: 13px; }
-    .pdf-report { width: 100%; max-width: 100%; overflow: visible; }
-    @page { size: A4 landscape; margin: 8mm; }
+    body {
+        font-family: Arial, sans-serif;
+        color: #1e293b;
+        background: #fff;
+        font-size: 13px;
+        padding: 8mm 8mm 6mm 8mm;
+    }
+    .print-report,
+    .pdf-report,
+    .report-print-wrapper,
+    .report-container {
+        margin: 0 auto !important;
+        padding-top: 8mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+    }
+    @page { size: A4 landscape; margin: 0; }
     @media print { .no-print { display: none !important; } }
 
     /* HEADER: Profil Sol, Logo Sağ */
@@ -776,14 +800,29 @@ const UserReportExporter = (() => {
     @media print {
         html,
         body {
-            width: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            min-height: 100% !important;
             max-width: 100% !important;
+            background: #ffffff !important;
             overflow: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
         }
 
         .print-report,
         .pdf-report,
-        .report-print-wrapper {
+        .report-print-wrapper,
+        .report-container {
+            margin: 0 auto !important;
+            padding: 8mm 8mm 6mm 8mm !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -793,6 +832,7 @@ const UserReportExporter = (() => {
         .report-header,
         .pdf-header,
         .print-header {
+            margin-top: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -862,9 +902,8 @@ const UserReportExporter = (() => {
         }
 
         .print-bar { display: none !important; }
-        body { margin-top: 0; }
+        body { margin-top: 0 !important; }
     }
-    body { margin-top: 56px; }
 </style>
 </head>
 <body class="print-report pdf-report report-print-wrapper">
@@ -873,6 +912,7 @@ const UserReportExporter = (() => {
 <div class="print-bar no-print">
     <span><strong>GF44</strong> — ${name} İşçi Hesabatı</span>
     <div style="display:flex; gap:8px;">
+        <!-- Browser print headers/footers are controlled by the browser print dialog. -->
         <button onclick="window.print()">🖨️ Çap et</button>
         <button onclick="window.close()">✕ Bağla</button>
     </div>
@@ -969,6 +1009,7 @@ ${comparisonRows ? `
         const win = window.open('', '_blank');
         win.document.write(html);
         win.document.close();
+        win.document.title = ' ';
     }
 
     /* ==========================================
