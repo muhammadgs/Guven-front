@@ -271,7 +271,50 @@ class UserReportModal {
     }
 
     /* ── Build Data ───────────────────────────────────────── */
+
+    _mergeTaskDetails(tasks, allTasks) {
+        if (!Array.isArray(tasks) || !Array.isArray(allTasks) || !allTasks.length) return tasks || [];
+
+        const fieldsToPreserve = [
+            'notes', 'note', 'comment', 'comments', 'task_note', 'task_notes',
+            'admin_note', 'worker_note', 'executor_note', 'completion_note',
+            'rejection_reason', 'cancel_reason',
+            'completed_date', 'completion_date', 'completed_at', 'finished_at',
+            'done_at', 'execution_completed_at',
+            'execution_duration', 'execution_duration_minutes', 'duration',
+            'duration_minutes', 'actual_duration', 'actual_duration_minutes',
+            'created_at', 'created_date'
+        ];
+
+        const detailByKey = new Map();
+        allTasks.forEach(task => {
+            [task.id, task.task_id, task.task_code, task.code].forEach(key => {
+                if (key !== undefined && key !== null && String(key).trim() !== '') {
+                    detailByKey.set(String(key), task);
+                }
+            });
+        });
+
+        return tasks.map(task => {
+            const detail = [task.id, task.task_id, task.task_code, task.code]
+                .map(key => key !== undefined && key !== null ? detailByKey.get(String(key)) : null)
+                .find(Boolean);
+
+            if (!detail) return task;
+
+            const merged = {...detail, ...task};
+            fieldsToPreserve.forEach(field => {
+                if ((merged[field] === undefined || merged[field] === null || String(merged[field]).trim() === '') &&
+                    detail[field] !== undefined && detail[field] !== null && String(detail[field]).trim() !== '') {
+                    merged[field] = detail[field];
+                }
+            });
+            return merged;
+        });
+    }
+
     _buildUserData(employee, tasks, performance, allEmployees, allTasks) {
+        tasks = this._mergeTaskDetails(tasks || [], allTasks || []);
         const now = new Date();
         const filter = (st) => tasks.filter(t => t.status === st);
 

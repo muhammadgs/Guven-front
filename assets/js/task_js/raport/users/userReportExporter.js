@@ -32,14 +32,76 @@ const UserReportExporter = (() => {
         return map[status] || status || '-';
     }
 
-    function calcDuration(t) {
-        if (t.completed_date && t.created_at) {
-            const days = Math.round(
-                (new Date(t.completed_date) - new Date(t.created_at)) / 86400000
-            );
-            return `${days} gün`;
+    function firstValue(...values) {
+        return values.find(v => v !== undefined && v !== null && String(v).trim() !== '') || '';
+    }
+
+    function getTaskNotes(t = {}) {
+        return firstValue(
+            t.notes,
+            t.note,
+            t.comment,
+            t.comments,
+            t.task_note,
+            t.task_notes,
+            t.admin_note,
+            t.worker_note,
+            t.executor_note,
+            t.completion_note,
+            t.rejection_reason,
+            t.cancel_reason
+        ) || '-';
+    }
+
+    function getTaskCompletedDate(t = {}) {
+        return firstValue(
+            t.completed_date,
+            t.completion_date,
+            t.completed_at,
+            t.finished_at,
+            t.done_at,
+            t.execution_completed_at
+        );
+    }
+
+    function getTaskDuration(t = {}) {
+        const directDuration = firstValue(
+            t.execution_duration,
+            t.execution_duration_minutes,
+            t.duration,
+            t.duration_minutes,
+            t.actual_duration,
+            t.actual_duration_minutes
+        );
+
+        if (directDuration) {
+            const directDurationText = String(directDuration);
+            const n = Number(directDuration);
+            if (!Number.isNaN(n)) {
+                if (directDurationText.includes('saat') || directDurationText.includes('gün') || directDurationText.includes('dəq')) {
+                    return directDurationText;
+                }
+                return `${n} dəq`;
+            }
+            return directDurationText;
         }
-        return '-';
+
+        const created = firstValue(t.created_at, t.created_date);
+        const completed = getTaskCompletedDate(t);
+
+        if (!created || !completed) return '-';
+
+        const start = new Date(created);
+        const end = new Date(completed);
+
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '-';
+
+        const days = Math.max(0, Math.round((end - start) / 86400000));
+        return `${days} gün`;
+    }
+
+    function calcDuration(t) {
+        return getTaskDuration(t);
     }
 
     function getPriorityLabel(priority) {
@@ -121,8 +183,8 @@ const UserReportExporter = (() => {
             statusLabel(t.status),
             fmtDate(t.created_at),
             fmtDate(t.due_date),
-            fmtDate(t.completed_date),
-            calcDuration(t),
+            fmtDate(getTaskCompletedDate(t)),
+            getTaskDuration(t),
             getPriorityLabel(t.priority)
         ]);
         const ws2 = XLSX.utils.aoa_to_sheet([taskHeader, ...taskRows]);
@@ -259,7 +321,7 @@ const UserReportExporter = (() => {
         // Task siyahısı - BÜTÜN DETALLAR alt-alta
         const taskRows = d.tasks.slice(0, 50).map((t, i) => {
             const isLate = t.status === 'overdue' ||
-                (t.due_date && !t.completed_date && new Date(t.due_date) < new Date());
+                (t.due_date && !getTaskCompletedDate(t) && new Date(t.due_date) < new Date());
             return `
             <tr class="${isLate ? 'row-late' : ''}">
                 <td class="num">${i + 1}</td>
@@ -268,12 +330,12 @@ const UserReportExporter = (() => {
                     <small>Kod: ${t.task_code || '-'}</small>
                 </td>
                 <td class="text-cell">${shortText(t.task_description || t.description || t.note)}</td>
-                <td class="text-cell">${shortText(t.notes || t.comment || t.comments || t.admin_note || t.worker_note)}</td>
+                <td class="text-cell">${shortText(getTaskNotes(t), 90)}</td>
                 <td><span class="badge badge-${t.status || 'pending'}">${statusLabel(t.status)}</span></td>
-                <td>${fmtDate(t.created_at)}</td>
+                <td>${fmtDate(t.created_at || t.created_date)}</td>
                 <td>${fmtDate(t.due_date)}</td>
-                <td>${fmtDate(t.completed_date)}</td>
-                <td>${calcDuration(t)}</td>
+                <td>${fmtDate(getTaskCompletedDate(t))}</td>
+                <td>${getTaskDuration(t)}</td>
                 <td>${getPriorityLabel(t.priority)}</td>
             </tr>`;
         }).join('');
@@ -364,19 +426,35 @@ const UserReportExporter = (() => {
     }
     .task-table th,
     .task-table td {
+        border-right: 1px solid rgba(0, 0, 0, 0.45);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+        padding: 7px 6px;
         vertical-align: top;
-        padding: 8px 7px;
         text-align: left;
     }
-    .task-table .col-num { width: 4%; text-align: center; }
-    .task-table .col-task { width: 20%; }
+    .task-table th:first-child,
+    .task-table td:first-child {
+        border-left: 1px solid rgba(0, 0, 0, 0.45);
+    }
+    .task-table thead th {
+        border-top: 1px solid rgba(0, 0, 0, 0.45);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.55);
+        background: #1e40af;
+        color: #fff;
+        font-weight: 700;
+    }
+    .task-table tbody tr:last-child td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+    }
+    .task-table .col-num { width: 3.5%; text-align: center; }
+    .task-table .col-task { width: 18%; }
     .task-table .col-desc { width: 17%; }
     .task-table .col-notes { width: 15%; }
     .task-table .col-status { width: 9%; }
     .task-table .col-created { width: 9%; }
     .task-table .col-due { width: 9%; }
     .task-table .col-completed { width: 9%; }
-    .task-table .col-duration { width: 5%; }
+    .task-table .col-duration { width: 5.5%; }
     .task-table .col-priority { width: 5%; }
     .task-table .num { text-align: center; }
     .task-table .text-cell {
