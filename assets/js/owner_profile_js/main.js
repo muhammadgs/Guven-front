@@ -1712,7 +1712,7 @@ class ProfileApp {
                         </div>
 
                         <div class="protocol-tabs" role="tablist" aria-label="Pratakol və qeydlər">
-                            <button class="protocol-tab active" data-protocol-tab="protocol" type="button" role="tab" aria-selected="true" aria-controls="protocolPanel">
+                            <button class="protocol-tab" data-protocol-tab="protocol" type="button" role="tab" aria-selected="false" aria-controls="protocolPanel">
                                 <i class="fas fa-clipboard-check"></i>
                                 <span>Pratakol</span>
                             </button>
@@ -1722,7 +1722,7 @@ class ProfileApp {
                             </button>
                         </div>
 
-                        <div class="protocol-tab-panel active" id="protocolPanel" role="tabpanel">
+                        <div class="protocol-tab-panel" id="protocolPanel" role="tabpanel">
                             <div class="protocol-top-grid">
                                 <div class="protocol-info-card">
                                     <span>Tarix</span>
@@ -1867,25 +1867,40 @@ class ProfileApp {
     }
 
     async initProtocolNotesSection() {
-        const today = this.getTodayDateAz();
-        document.getElementById('protocolTodayDate').textContent = today;
-        document.getElementById('protocolLeaderName').textContent = this.getCurrentLeaderName();
+        this.protocolPanelInitialized = false;
+        this.notesPanelInitialized = false;
         this.initProtocolTabs();
+    }
+
+    async initProtocolPanelIfNeeded() {
+        if (this.protocolPanelInitialized) return;
+        this.protocolPanelInitialized = true;
+        const today = this.getTodayDateAz();
+        const dateEl = document.getElementById('protocolTodayDate');
+        const leaderEl = document.getElementById('protocolLeaderName');
+        if (dateEl && !dateEl.textContent.trim()) dateEl.textContent = today;
+        if (leaderEl && !leaderEl.textContent.trim()) leaderEl.textContent = this.getCurrentLeaderName();
         await this.initProtocolParticipants(today);
         this.initProtocolNotes(today);
+    }
+
+    initNotesPanelIfNeeded() {
+        this.notesPanelInitialized = true;
     }
 
     initProtocolTabs() {
         const tabs = document.querySelectorAll('.protocol-tab');
         const protocolPanel = document.getElementById('protocolPanel');
         const notesPanel = document.getElementById('notesPanel');
-        tabs.forEach(tab => tab.addEventListener('click', () => {
+        tabs.forEach(tab => tab.addEventListener('click', async () => {
             const selected = tab.dataset.protocolTab;
             tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
             tab.classList.add('active');
             tab.setAttribute('aria-selected', 'true');
             protocolPanel?.classList.toggle('active', selected === 'protocol');
             notesPanel?.classList.toggle('active', selected === 'notes');
+            if (selected === 'protocol') await this.initProtocolPanelIfNeeded();
+            if (selected === 'notes') this.initNotesPanelIfNeeded();
         }));
     }
 
