@@ -1722,60 +1722,84 @@ class ProfileApp {
                             </button>
                         </div>
 
-                        <div id="protocolPageView" class="protocol-page-view hidden">
+                        <div id="protocolListView" class="protocol-page-view hidden">
                             <div class="protocol-page-top">
-                                <button class="protocol-back-btn" data-protocol-back type="button">
+                                <button class="protocol-back-btn" data-back-to-protocol-home type="button">
                                     <i class="fas fa-arrow-left"></i>
                                     Geri
                                 </button>
                                 <h2>Pratakol</h2>
+                                <button id="createProtocolBtn" class="protocol-create-btn" type="button">
+                                    <i class="fas fa-plus"></i>
+                                    Yeni pratakol yarat
+                                </button>
                             </div>
 
-                            <div class="protocol-top-grid">
-                                <div class="protocol-info-card">
-                                    <span>Tarix</span>
-                                    <strong id="protocolTodayDate"></strong>
+                            <div class="protocol-lists-grid">
+                                <div class="protocol-list-card">
+                                    <h3>Əvvəlki pratakollar</h3>
+                                    <div id="completedProtocolsList"></div>
                                 </div>
-                                <div class="protocol-info-card">
-                                    <span>Rəhbər</span>
-                                    <strong id="protocolLeaderName"></strong>
+                                <div class="protocol-list-card">
+                                    <h3>Tamamlanmamış pratakollar</h3>
+                                    <div id="incompleteProtocolsList"></div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div id="protocolDetailView" class="protocol-page-view hidden">
+                            <div class="protocol-page-top">
+                                <button class="protocol-back-btn" data-back-to-protocol-list type="button">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Geri
+                                </button>
+                                <h2 id="protocolDetailTitle"></h2>
+                            </div>
+
+                            <div class="protocol-top-grid protocol-top-grid-three">
+                                <div class="protocol-info-card"><span>Tarix</span><strong id="protocolDetailDate"></strong></div>
+                                <div class="protocol-info-card"><span>Rəhbər</span><strong id="protocolDetailLeader"></strong></div>
+                                <div class="protocol-info-card"><span>Pratakolun başlığı</span><strong id="protocolDetailProtocolTitle"></strong></div>
                             </div>
 
                             <div class="protocol-main-grid">
                                 <div class="protocol-participants-card">
-                                    <div class="protocol-card-header">
-                                        <div>
-                                            <h3>Əməkdaşların siyahısı</h3>
-                                            <p>İştirak edən əməkdaşlar</p>
-                                        </div>
-                                        <button id="addProtocolEmployeeBtn" class="protocol-small-btn" type="button">
-                                            <i class="fas fa-plus"></i>
-                                            Əməkdaş əlavə et
-                                        </button>
-                                    </div>
-                                    <div id="protocolParticipantsList" class="protocol-participants-list"></div>
+                                    <div class="protocol-card-header"><div><h3>Əməkdaşların siyahısı</h3><p>Seçilmiş iştirakçılar</p></div></div>
+                                    <div id="protocolDetailParticipantsList"></div>
                                 </div>
-
                                 <div class="protocol-notes-card">
-                                    <div class="protocol-card-header">
-                                        <div>
-                                            <h3>Qeyd</h3>
-                                            <p>Pratakol qeydləri</p>
-                                        </div>
+                                    <div class="protocol-card-header"><div><h3>Qeyd</h3><p>Pratakol qeydləri</p></div></div>
+                                    <textarea id="protocolDetailNoteText" placeholder="Pratakol qeydlərini yazın..."></textarea>
+                                    <div id="protocolParticipantActions" class="protocol-participant-actions hidden">
+                                        <button id="acceptProtocolBtn" class="protocol-accept-btn" type="button">Qəbul et</button>
+                                        <button id="rejectProtocolBtn" class="protocol-reject-btn" type="button">İmtina et</button>
                                     </div>
-                                    <textarea id="protocolNoteText" placeholder="Pratakol qeydlərini yazın..."></textarea>
-                                    <button id="saveProtocolNoteBtn" class="protocol-save-btn" type="button">
-                                        <i class="fas fa-save"></i>
-                                        Yadda saxla
-                                    </button>
+                                    <button id="saveProtocolDetailNoteBtn" class="protocol-save-btn" type="button"><i class="fas fa-save"></i> Yadda saxla</button>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div id="createProtocolModal" class="protocol-modal hidden">
+                            <div class="protocol-modal-card">
+                                <div class="protocol-modal-header"><h3>Yeni pratakol yarat</h3><button data-close-create-protocol-modal type="button"><i class="fas fa-times"></i></button></div>
+                                <div class="protocol-form-group"><label>Tarix</label><input id="protocolCreateDate" type="text" readonly /></div>
+                                <div class="protocol-form-group"><label>Pratakolun başlığı</label><input id="protocolTitleInput" type="text" placeholder="Pratakolun başlığını yazın..." required /></div>
+                                <div class="protocol-form-group"><label>Əməkdaşlar</label><input id="protocolEmployeeSearch" type="text" placeholder="Əməkdaş axtar..." /><div id="protocolEmployeeSelectList" class="protocol-employee-select-list"></div></div>
+                                <div class="protocol-modal-actions"><button data-close-create-protocol-modal type="button">Ləğv et</button><button id="submitCreateProtocolBtn" class="protocol-save-btn" type="button">Yarat</button></div>
+                            </div>
+                        </div>
+
+                        <div id="protocolEmployeeInfoModal" class="protocol-modal hidden">
+                            <div class="protocol-modal-card protocol-small-modal-card">
+                                <div class="protocol-modal-header"><h3>Əməkdaş məlumatı</h3><button data-close-employee-info-modal type="button"><i class="fas fa-times"></i></button></div>
+                                <div id="protocolEmployeeInfoContent"></div>
+                                <div class="protocol-modal-actions"><button data-close-employee-info-modal type="button">Ləğv et</button><button id="confirmEmployeeProtocolInfoBtn" class="protocol-save-btn" type="button">Təsdiq et</button></div>
                             </div>
                         </div>
 
                         <div id="notesPageView" class="protocol-page-view hidden">
                             <div class="protocol-page-top">
-                                <button class="protocol-back-btn" data-protocol-back type="button">
+                                <button class="protocol-back-btn" data-back-to-protocol-home type="button">
                                     <i class="fas fa-arrow-left"></i>
                                     Geri
                                 </button>
@@ -1812,14 +1836,16 @@ class ProfileApp {
         return `${day}.${month}.${year}`;
     }
 
-    getProtocolStorageKey(date) { return `gf44_protocol_participants_${date}`; }
-    getProtocolNoteKey(date) { return `gf44_protocol_note_${date}`; }
+    createProtocolId() { return `protocol_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
+    getProtocolsStorageKey() { return 'gf44_protocols'; }
+    getProtocolNotificationsKey() { return 'gf44_protocol_notifications'; }
+    getProtocolRemovedLogKey() { return 'gf44_protocol_removed_participants'; }
 
     escapeProtocolHtml(value = '') {
         return String(value).replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
     }
 
-    getCurrentLeaderName() {
+    getCurrentUserForProtocol() {
         const sources = [window.currentUser, window.owner, window.profile, window.app?.user];
         try {
             const saved = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -1829,21 +1855,12 @@ class ProfileApp {
             if (!user) continue;
             const combined = `${user.first_name || user.ceo_name || ''} ${user.last_name || user.ceo_lastname || ''}`.trim();
             const name = user.full_name || user.name || user.username || combined;
-            if (name) return name;
+            if (name || user.id || user.user_id) return { id: String(user.id || user.user_id || user.uuid || user.users_uuid || name || 'owner'), name: name || 'Rəhbər' };
         }
-        return 'Rəhbər';
+        return { id: 'owner', name: 'Rəhbər' };
     }
 
-    canManageProtocolParticipants() {
-        let role = window.currentUser?.role || window.app?.user?.role || window.userRole || localStorage.getItem('role') || '';
-        try {
-            const saved = JSON.parse(localStorage.getItem('userData') || '{}');
-            role = role || saved.user?.role || saved.role || saved.user?.user_type || saved.user_type || '';
-        } catch (e) {}
-        const normalizedRole = String(role).toLowerCase();
-        if (!normalizedRole && document.body?.classList.contains('owner-profile')) return true;
-        return ['owner', 'admin', 'manager', 'leader', 'rəhbər', 'rehber', 'sahibkar', 'ceo', 'director'].includes(normalizedRole);
-    }
+    getCurrentLeaderName() { return this.getCurrentUserForProtocol().name; }
 
     normalizeProtocolEmployee(emp) {
         const fullName = emp.full_name || emp.name || `${emp.first_name || emp.ceo_name || ''} ${emp.last_name || emp.ceo_lastname || ''}`.trim() || emp.username || 'Adsız əməkdaş';
@@ -1857,6 +1874,9 @@ class ProfileApp {
 
     async getProtocolEmployees() {
         if (this.employeesService?.employees?.length) return this.employeesService.employees.map(emp => this.normalizeProtocolEmployee(emp));
+        const globalLists = [window.employees, window.workers, window.allEmployees, window.staff, window.companyEmployees];
+        const foundGlobal = globalLists.find(list => Array.isArray(list) && list.length);
+        if (foundGlobal) return foundGlobal.map(emp => this.normalizeProtocolEmployee(emp));
         try {
             let companyCode = this.currentCompanyCode || this.employeesService?.currentCompanyCode;
             if (!companyCode) {
@@ -1874,174 +1894,233 @@ class ProfileApp {
         return [];
     }
 
-    loadProtocolParticipants(date) {
-        try { return JSON.parse(localStorage.getItem(this.getProtocolStorageKey(date)) || '[]'); } catch (e) { return []; }
+    loadProtocols() {
+        try { return JSON.parse(localStorage.getItem(this.getProtocolsStorageKey()) || '[]'); } catch (e) { return []; }
     }
 
-    saveProtocolParticipants(date, participants) {
-        localStorage.setItem(this.getProtocolStorageKey(date), JSON.stringify(participants));
+    saveProtocols(protocols) { localStorage.setItem(this.getProtocolsStorageKey(), JSON.stringify(protocols.map(p => this.normalizeProtocolStatus(p)))); }
+
+    normalizeProtocolStatus(protocol) {
+        return { ...protocol, status: this.isProtocolCompleted(protocol) ? 'completed' : 'incomplete' };
     }
+
+    isProtocolCompleted(protocol) {
+        return Array.isArray(protocol?.participants) && protocol.participants.length > 0 && protocol.participants.every(p => p.status === 'accepted' || p.status === 'rejected');
+    }
+
+    getProtocolById(protocolId) { return this.loadProtocols().find(protocol => String(protocol.id) === String(protocolId)); }
+
+    updateProtocol(protocolId, updater) {
+        const protocols = this.loadProtocols();
+        const index = protocols.findIndex(protocol => String(protocol.id) === String(protocolId));
+        if (index === -1) return null;
+        protocols[index] = this.normalizeProtocolStatus(updater(protocols[index]) || protocols[index]);
+        this.saveProtocols(protocols);
+        return protocols[index];
+    }
+
+    addProtocolNotification(notification) {
+        const notifications = (() => { try { return JSON.parse(localStorage.getItem(this.getProtocolNotificationsKey()) || '[]'); } catch (e) { return []; } })();
+        notifications.unshift({ id: `notification_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, createdAt: new Date().toISOString(), read: false, ...notification });
+        localStorage.setItem(this.getProtocolNotificationsKey(), JSON.stringify(notifications));
+    }
+
+    protocolStatusLabels() { return { completed: 'Tamamlanıb', incomplete: 'Tamamlanmayıb' }; }
+    participantStatusLabels() { return { pending: 'Gözləyir', accepted: 'Qəbul etdi', rejected: 'İmtina etdi' }; }
 
     async initProtocolNotesSection() {
-        this.protocolPanelInitialized = false;
-        this.notesPanelInitialized = false;
-
+        this.protocolEmployeesCache = await this.getProtocolEmployees();
+        this.currentProtocolId = null;
+        this.selectedProtocolEmployeeInfoId = null;
         const homeView = document.getElementById('protocolHomeView');
-        const protocolPage = document.getElementById('protocolPageView');
+        const protocolListView = document.getElementById('protocolListView');
+        const protocolDetailView = document.getElementById('protocolDetailView');
         const notesPage = document.getElementById('notesPageView');
-        const openBtns = document.querySelectorAll('[data-open-protocol-page]');
-        const backBtns = document.querySelectorAll('[data-protocol-back]');
-
-        homeView?.classList.remove('hidden');
-        protocolPage?.classList.add('hidden');
-        notesPage?.classList.add('hidden');
-
-        openBtns.forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const page = btn.dataset.openProtocolPage;
-
-                homeView?.classList.add('hidden');
-                protocolPage?.classList.add('hidden');
-                notesPage?.classList.add('hidden');
-
-                if (page === 'protocol') {
-                    protocolPage?.classList.remove('hidden');
-                    await this.initProtocolPanelIfNeeded();
-                }
-
-                if (page === 'notes') {
-                    notesPage?.classList.remove('hidden');
-                    this.initNotesPanelIfNeeded();
-                }
-            });
-        });
-
-        backBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                protocolPage?.classList.add('hidden');
-                notesPage?.classList.add('hidden');
-                homeView?.classList.remove('hidden');
-            });
-        });
+        const showView = (view) => {
+            [homeView, protocolListView, protocolDetailView, notesPage].forEach(el => el?.classList.add('hidden'));
+            view?.classList.remove('hidden');
+        };
+        document.querySelector('[data-open-protocol-page="protocol"]')?.addEventListener('click', () => { showView(protocolListView); this.renderProtocolLists(); });
+        document.querySelector('[data-open-protocol-page="notes"]')?.addEventListener('click', () => { showView(notesPage); });
+        document.querySelectorAll('[data-back-to-protocol-home]').forEach(btn => btn.addEventListener('click', () => showView(homeView)));
+        document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { showView(protocolListView); this.renderProtocolLists(); }));
+        document.getElementById('createProtocolBtn')?.addEventListener('click', () => this.openCreateProtocolModal());
+        document.querySelectorAll('[data-close-create-protocol-modal]').forEach(btn => btn.addEventListener('click', () => this.closeCreateProtocolModal()));
+        document.getElementById('protocolEmployeeSearch')?.addEventListener('input', () => this.renderProtocolEmployeeSelectList());
+        document.getElementById('submitCreateProtocolBtn')?.addEventListener('click', () => this.createProtocolFromModal());
+        document.getElementById('saveProtocolDetailNoteBtn')?.addEventListener('click', () => this.saveCurrentProtocolNote());
+        document.getElementById('acceptProtocolBtn')?.addEventListener('click', () => this.respondToProtocol('accepted'));
+        document.getElementById('rejectProtocolBtn')?.addEventListener('click', () => this.respondToProtocol('rejected'));
+        document.querySelectorAll('[data-close-employee-info-modal]').forEach(btn => btn.addEventListener('click', () => this.closeEmployeeInfoModal()));
+        document.getElementById('confirmEmployeeProtocolInfoBtn')?.addEventListener('click', () => this.confirmEmployeeProtocolInfo());
+        showView(homeView);
     }
 
-    async initProtocolPanelIfNeeded() {
-        if (this.protocolPanelInitialized) return;
-        this.protocolPanelInitialized = true;
-        const today = this.getTodayDateAz();
-        const dateEl = document.getElementById('protocolTodayDate');
-        const leaderEl = document.getElementById('protocolLeaderName');
-        if (dateEl && !dateEl.textContent.trim()) dateEl.textContent = today;
-        if (leaderEl && !leaderEl.textContent.trim()) leaderEl.textContent = this.getCurrentLeaderName();
-        await this.initProtocolParticipants(today);
-        this.initProtocolNotes(today);
+    renderProtocolLists() {
+        const protocols = this.loadProtocols().map(p => this.normalizeProtocolStatus(p));
+        this.saveProtocols(protocols);
+        const render = (items, emptyText) => items.length ? items.map(protocol => this.renderProtocolListItem(protocol)).join('') : `<div class="protocol-empty-state">${emptyText}</div>`;
+        const completed = protocols.filter(p => p.status === 'completed');
+        const incomplete = protocols.filter(p => p.status !== 'completed');
+        const completedEl = document.getElementById('completedProtocolsList');
+        const incompleteEl = document.getElementById('incompleteProtocolsList');
+        if (completedEl) completedEl.innerHTML = render(completed, 'Tamamlanmış pratakol yoxdur.');
+        if (incompleteEl) incompleteEl.innerHTML = render(incomplete, 'Tamamlanmamış pratakol yoxdur.');
+        document.querySelectorAll('[data-open-protocol-detail]').forEach(item => item.addEventListener('click', () => this.openProtocolDetail(item.dataset.openProtocolDetail)));
     }
 
-    initNotesPanelIfNeeded() {
-        this.notesPanelInitialized = true;
+    renderProtocolListItem(protocol) {
+        const labels = this.protocolStatusLabels();
+        const counts = this.getProtocolCounts(protocol);
+        return `<button class="protocol-list-item" type="button" data-open-protocol-detail="${this.escapeProtocolHtml(protocol.id)}">
+            <div class="protocol-list-item-head"><span class="protocol-list-item-title">${this.escapeProtocolHtml(protocol.title)}</span><span class="protocol-status-badge ${protocol.status}">${labels[protocol.status]}</span></div>
+            <div class="protocol-list-item-meta">${this.escapeProtocolHtml(protocol.createdDateAz)} • Rəhbər: ${this.escapeProtocolHtml(protocol.createdBy?.name || 'Rəhbər')} • İştirakçı: ${counts.total}</div>
+            <div class="protocol-list-item-stats"><span><i class="fas fa-check"></i> ${counts.accepted}</span><span><i class="fas fa-times"></i> ${counts.rejected}</span><span><i class="fas fa-clock"></i> ${counts.pending}</span></div>
+        </button>`;
     }
 
-    async initProtocolParticipants(today) {
-        const addBtn = document.getElementById('addProtocolEmployeeBtn');
-        const canManage = this.canManageProtocolParticipants();
-        if (addBtn) {
-            addBtn.style.display = canManage ? 'inline-flex' : 'none';
-            addBtn.addEventListener('click', async () => this.openProtocolEmployeeSelector(today));
-        }
-        this.renderProtocolParticipants(today);
+    getProtocolCounts(protocol) {
+        const participants = Array.isArray(protocol.participants) ? protocol.participants : [];
+        return { total: participants.length, accepted: participants.filter(p => p.status === 'accepted').length, rejected: participants.filter(p => p.status === 'rejected').length, pending: participants.filter(p => p.status === 'pending').length };
     }
 
-    renderProtocolParticipants(today) {
-        const list = document.getElementById('protocolParticipantsList');
+    openCreateProtocolModal() {
+        const modal = document.getElementById('createProtocolModal');
+        const dateInput = document.getElementById('protocolCreateDate');
+        const titleInput = document.getElementById('protocolTitleInput');
+        const searchInput = document.getElementById('protocolEmployeeSearch');
+        if (dateInput) dateInput.value = this.getTodayDateAz();
+        if (titleInput) titleInput.value = '';
+        if (searchInput) searchInput.value = '';
+        this.renderProtocolEmployeeSelectList();
+        modal?.classList.remove('hidden');
+    }
+
+    closeCreateProtocolModal() { document.getElementById('createProtocolModal')?.classList.add('hidden'); }
+
+    renderProtocolEmployeeSelectList() {
+        const list = document.getElementById('protocolEmployeeSelectList');
         if (!list) return;
-        const participants = this.loadProtocolParticipants(today);
-        if (!participants.length) {
-            list.innerHTML = '<div class="protocol-empty-state">İştirakçı əlavə edilməyib.</div>';
-            return;
-        }
-        list.innerHTML = participants.map(emp => `
-            <button class="protocol-participant-item" type="button" data-protocol-participant-id="${this.escapeProtocolHtml(emp.id)}">
-                <span class="protocol-participant-avatar">${this.escapeProtocolHtml((emp.fullName || 'Ə').charAt(0).toUpperCase())}</span>
-                <span class="protocol-participant-main">
-                    <strong>${this.escapeProtocolHtml(emp.fullName)}</strong>
-                    <small>${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small>
-                </span>
-                <span class="protocol-date-badge">${this.escapeProtocolHtml(emp.date || today)}</span>
-            </button>`).join('');
-        list.querySelectorAll('[data-protocol-participant-id]').forEach(item => {
-            item.addEventListener('click', () => this.openProtocolEmployeeDetails(today, item.dataset.protocolParticipantId));
-        });
+        const term = (document.getElementById('protocolEmployeeSearch')?.value || '').toLowerCase().trim();
+        const employees = (this.protocolEmployeesCache || []).filter(emp => `${emp.fullName} ${emp.department}`.toLowerCase().includes(term));
+        list.innerHTML = employees.length ? employees.map(emp => `<label class="protocol-employee-select-row"><input type="checkbox" value="${this.escapeProtocolHtml(emp.id)}"><span class="protocol-participant-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span><span><strong>${this.escapeProtocolHtml(emp.fullName)}</strong><small>${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small></span></label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>';
     }
 
-    async openProtocolEmployeeSelector(today) {
-        const employees = await this.getProtocolEmployees();
-        const participants = this.loadProtocolParticipants(today);
-        const selectedIds = new Set(participants.map(emp => String(emp.id)));
-        this.closeProtocolModal();
-        const modal = document.createElement('div');
-        modal.className = 'protocol-modal-backdrop';
-        modal.innerHTML = `
-            <div class="protocol-modal" role="dialog" aria-modal="true">
-                <div class="protocol-modal-header"><h3>Əməkdaş əlavə et</h3><button class="protocol-modal-close" type="button">×</button></div>
-                <input class="protocol-search-input" type="search" placeholder="Əməkdaş axtar...">
-                <div class="protocol-employee-options">
-                    ${employees.length ? employees.map(emp => `
-                        <label class="protocol-employee-option" data-protocol-employee-name="${this.escapeProtocolHtml(emp.fullName.toLowerCase())}">
-                            <input type="checkbox" value="${this.escapeProtocolHtml(emp.id)}" ${selectedIds.has(String(emp.id)) ? 'disabled checked' : ''}>
-                            <span class="protocol-participant-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span>
-                            <span><strong>${this.escapeProtocolHtml(emp.fullName)}</strong><small>${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small></span>
-                        </label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>'}
-                </div>
-                <div class="protocol-modal-actions"><button class="protocol-cancel-btn" type="button">Ləğv et</button><button class="protocol-save-btn" type="button" id="confirmProtocolEmployees">Əlavə et</button></div>
-            </div>`;
-        document.body.appendChild(modal);
-        modal.querySelector('.protocol-modal-close').addEventListener('click', () => this.closeProtocolModal());
-        modal.querySelector('.protocol-cancel-btn').addEventListener('click', () => this.closeProtocolModal());
-        modal.addEventListener('click', e => { if (e.target === modal) this.closeProtocolModal(); });
-        modal.querySelector('.protocol-search-input').addEventListener('input', e => {
-            const term = e.target.value.toLowerCase().trim();
-            modal.querySelectorAll('.protocol-employee-option').forEach(row => row.style.display = row.dataset.protocolEmployeeName.includes(term) ? 'flex' : 'none');
-        });
-        modal.querySelector('#confirmProtocolEmployees').addEventListener('click', () => {
-            const checked = [...modal.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)')].map(input => input.value);
-            const additions = employees.filter(emp => checked.includes(String(emp.id))).map(emp => ({ ...emp, date: today, dates: [today], notes: '' }));
-            this.saveProtocolParticipants(today, [...participants, ...additions]);
-            this.renderProtocolParticipants(today);
-            this.closeProtocolModal();
-        });
+    createProtocolFromModal() {
+        const title = (document.getElementById('protocolTitleInput')?.value || '').trim();
+        if (!title) { alert('Pratakolun başlığı boş ola bilməz.'); return; }
+        const checked = [...document.querySelectorAll('#protocolEmployeeSelectList input[type="checkbox"]:checked')].map(input => input.value);
+        if (!checked.length) { alert('Ən azı bir əməkdaş seçilməlidir.'); return; }
+        const currentUser = this.getCurrentUserForProtocol();
+        const selected = (this.protocolEmployeesCache || []).filter(emp => checked.includes(String(emp.id)));
+        const protocol = {
+            id: this.createProtocolId(), title, createdAt: new Date().toISOString(), createdDateAz: this.getTodayDateAz(),
+            createdBy: { id: currentUser.id, name: currentUser.name }, status: 'incomplete', note: '',
+            participants: selected.map(emp => ({ id: emp.id, name: emp.fullName, department: emp.department || 'Şöbə qeyd edilməyib', status: 'pending', respondedAt: null, note: '', confirmed: false }))
+        };
+        this.saveProtocols([protocol, ...this.loadProtocols()]);
+        selected.forEach(emp => this.addProtocolNotification({ toUserId: emp.id, protocolId: protocol.id, text: `${currentUser.name} sizin üçün yeni pratakol yaratdı: ${title}` }));
+        this.closeCreateProtocolModal();
+        this.openProtocolDetail(protocol.id);
     }
 
-    openProtocolEmployeeDetails(today, employeeId) {
-        const employee = this.loadProtocolParticipants(today).find(emp => String(emp.id) === String(employeeId));
-        if (!employee) return;
-        const note = localStorage.getItem(this.getProtocolNoteKey(today)) || '';
-        this.closeProtocolModal();
-        const modal = document.createElement('div');
-        modal.className = 'protocol-modal-backdrop';
-        modal.innerHTML = `
-            <div class="protocol-modal protocol-details-modal" role="dialog" aria-modal="true">
-                <div class="protocol-modal-header"><h3>Əməkdaş məlumatı</h3><button class="protocol-modal-close" type="button">×</button></div>
-                <div class="protocol-detail-row"><strong>${this.escapeProtocolHtml(employee.fullName)}</strong></div>
-                <div class="protocol-detail-row">Şöbə: ${this.escapeProtocolHtml(employee.department || 'Qeyd edilməyib')}</div>
-                <div class="protocol-detail-row"><strong>İştirak tarixləri:</strong><ul>${(employee.dates || [employee.date || today]).map(date => `<li>${this.escapeProtocolHtml(date)}</li>`).join('')}</ul></div>
-                <div class="protocol-detail-row"><strong>Qeydlər:</strong><p>${this.escapeProtocolHtml(note || employee.notes || 'Qeyd yoxdur.')}</p></div>
-            </div>`;
-        document.body.appendChild(modal);
-        modal.querySelector('.protocol-modal-close').addEventListener('click', () => this.closeProtocolModal());
-        modal.addEventListener('click', e => { if (e.target === modal) this.closeProtocolModal(); });
+    openProtocolDetail(protocolId) {
+        const protocol = this.getProtocolById(protocolId);
+        if (!protocol) return;
+        this.currentProtocolId = protocol.id;
+        document.getElementById('protocolListView')?.classList.add('hidden');
+        document.getElementById('protocolDetailView')?.classList.remove('hidden');
+        this.renderProtocolDetail();
     }
 
-    closeProtocolModal() { document.querySelector('.protocol-modal-backdrop')?.remove(); }
+    renderProtocolDetail() {
+        const protocol = this.getProtocolById(this.currentProtocolId);
+        if (!protocol) return;
+        const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || ''; };
+        setText('protocolDetailTitle', protocol.title); setText('protocolDetailDate', protocol.createdDateAz); setText('protocolDetailLeader', protocol.createdBy?.name || 'Rəhbər'); setText('protocolDetailProtocolTitle', protocol.title);
+        const noteEl = document.getElementById('protocolDetailNoteText'); if (noteEl) noteEl.value = protocol.note || '';
+        this.renderProtocolDetailParticipants(protocol);
+        this.renderProtocolParticipantActions(protocol);
+    }
 
-    initProtocolNotes(today) {
-        const textarea = document.getElementById('protocolNoteText');
-        const saveBtn = document.getElementById('saveProtocolNoteBtn');
-        if (textarea) textarea.value = localStorage.getItem(this.getProtocolNoteKey(today)) || '';
-        if (saveBtn && textarea) saveBtn.addEventListener('click', () => {
-            localStorage.setItem(this.getProtocolNoteKey(today), textarea.value);
-            saveBtn.classList.add('protocol-saved');
-            setTimeout(() => saveBtn.classList.remove('protocol-saved'), 1200);
+    renderProtocolDetailParticipants(protocol) {
+        const list = document.getElementById('protocolDetailParticipantsList');
+        if (!list) return;
+        const labels = this.participantStatusLabels();
+        const canRemove = String(protocol.createdBy?.id) === String(this.getCurrentUserForProtocol().id);
+        list.innerHTML = protocol.participants?.length ? protocol.participants.map(p => `<div class="protocol-participant-row" data-protocol-info-id="${this.escapeProtocolHtml(p.id)}"><div class="protocol-participant-left"><span class="protocol-participant-avatar">${this.escapeProtocolHtml((p.name || 'Ə').charAt(0).toUpperCase())}</span><span class="protocol-participant-main"><strong>${this.escapeProtocolHtml(p.name)}</strong><small>${this.escapeProtocolHtml(p.department || 'Şöbə qeyd edilməyib')}</small></span></div><span class="protocol-participant-status ${p.status}"><i class="fas ${p.status === 'accepted' ? 'fa-check' : p.status === 'rejected' ? 'fa-times' : 'fa-clock'}"></i> ${labels[p.status]}</span><span class="protocol-date-badge">${this.escapeProtocolHtml(p.respondedAt ? this.formatProtocolDateAz(p.respondedAt) : protocol.createdDateAz)}</span>${canRemove ? `<button class="protocol-remove-participant-btn" type="button" data-remove-protocol-participant="${this.escapeProtocolHtml(p.id)}"><i class="fas fa-trash"></i></button>` : ''}</div>`).join('') : '<div class="protocol-empty-state">İştirakçı yoxdur.</div>';
+        list.querySelectorAll('[data-protocol-info-id]').forEach(row => row.addEventListener('click', () => this.openEmployeeInfoModal(row.dataset.protocolInfoId)));
+        list.querySelectorAll('[data-remove-protocol-participant]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); this.removeProtocolParticipant(btn.dataset.removeProtocolParticipant); }));
+    }
+
+    formatProtocolDateAz(iso) { try { return new Date(iso).toLocaleDateString('az-AZ'); } catch (e) { return ''; } }
+
+    renderProtocolParticipantActions(protocol) {
+        const actions = document.getElementById('protocolParticipantActions');
+        const currentUser = this.getCurrentUserForProtocol();
+        const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
+        const isCreator = String(protocol.createdBy?.id) === String(currentUser.id);
+        actions?.classList.toggle('hidden', !participant || isCreator || participant.status !== 'pending');
+    }
+
+    saveCurrentProtocolNote() {
+        const note = document.getElementById('protocolDetailNoteText')?.value || '';
+        const currentUser = this.getCurrentUserForProtocol();
+        this.updateProtocol(this.currentProtocolId, protocol => {
+            protocol.note = note;
+            const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
+            if (participant && String(protocol.createdBy?.id) !== String(currentUser.id)) participant.note = note;
+            return protocol;
         });
+        document.getElementById('saveProtocolDetailNoteBtn')?.classList.add('protocol-saved');
+        setTimeout(() => document.getElementById('saveProtocolDetailNoteBtn')?.classList.remove('protocol-saved'), 1200);
+        this.renderProtocolDetail();
+    }
+
+    respondToProtocol(status) {
+        const currentUser = this.getCurrentUserForProtocol();
+        const updated = this.updateProtocol(this.currentProtocolId, protocol => {
+            const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
+            if (participant && participant.status === 'pending' && String(protocol.createdBy?.id) !== String(currentUser.id)) { participant.status = status; participant.respondedAt = new Date().toISOString(); participant.note = document.getElementById('protocolDetailNoteText')?.value || participant.note || ''; }
+            return protocol;
+        });
+        if (updated) this.addProtocolNotification({ toUserId: updated.createdBy?.id, protocolId: updated.id, text: `${currentUser.name} pratakolu ${status === 'accepted' ? 'qəbul etdi' : 'pratakoldan imtina etdi'}: ${updated.title}` });
+        this.renderProtocolDetail();
+    }
+
+    removeProtocolParticipant(participantId) {
+        if (!confirm('Bu əməkdaşı pratakoldan çıxartmaq istəyirsiniz?')) return;
+        this.updateProtocol(this.currentProtocolId, protocol => {
+            const participant = protocol.participants?.find(p => String(p.id) === String(participantId));
+            if (participant) {
+                const log = (() => { try { return JSON.parse(localStorage.getItem(this.getProtocolRemovedLogKey()) || '[]'); } catch (e) { return []; } })();
+                log.push({ protocolId: protocol.id, removedAt: new Date().toISOString(), participant });
+                localStorage.setItem(this.getProtocolRemovedLogKey(), JSON.stringify(log));
+            }
+            protocol.participants = (protocol.participants || []).filter(p => String(p.id) !== String(participantId));
+            return protocol;
+        });
+        this.renderProtocolDetail();
+    }
+
+    openEmployeeInfoModal(participantId) {
+        const protocol = this.getProtocolById(this.currentProtocolId);
+        const participant = protocol?.participants?.find(p => String(p.id) === String(participantId));
+        if (!participant) return;
+        this.selectedProtocolEmployeeInfoId = participant.id;
+        const labels = this.participantStatusLabels();
+        const content = document.getElementById('protocolEmployeeInfoContent');
+        if (content) content.innerHTML = `<div class="protocol-detail-row"><strong>${this.escapeProtocolHtml(participant.name)}</strong></div><div class="protocol-detail-row">Tarix: ${this.escapeProtocolHtml(participant.respondedAt ? this.formatProtocolDateAz(participant.respondedAt) : protocol.createdDateAz)}</div><div class="protocol-detail-row">Status: ${this.escapeProtocolHtml(labels[participant.status])}</div><div class="protocol-detail-row"><strong>Əməkdaşın qeydi:</strong><p>${this.escapeProtocolHtml(participant.note || 'Qeyd yoxdur.')}</p></div>`;
+        document.getElementById('protocolEmployeeInfoModal')?.classList.remove('hidden');
+    }
+
+    closeEmployeeInfoModal() { document.getElementById('protocolEmployeeInfoModal')?.classList.add('hidden'); }
+
+    confirmEmployeeProtocolInfo() {
+        const participantId = this.selectedProtocolEmployeeInfoId;
+        this.updateProtocol(this.currentProtocolId, protocol => { const p = protocol.participants?.find(item => String(item.id) === String(participantId)); if (p) p.confirmed = true; return protocol; });
+        this.closeEmployeeInfoModal();
+        this.renderProtocolDetail();
     }
 
     injectProtocolNotesStyles() {
@@ -2049,7 +2128,7 @@ class ProfileApp {
         const style = document.createElement('style');
         style.id = 'protocolNotesStyles';
         style.textContent = `
-            .hidden{display:none!important}.protocol-notes-header{display:flex;align-items:center;gap:16px}.protocol-notes-icon{width:56px;height:56px;border-radius:22px;display:grid;place-items:center;background:rgba(59,130,246,.12);color:#2563eb;font-size:24px}.protocol-notes-header h2{margin:0;color:#1f2937;font-size:30px;font-weight:800}.protocol-notes-header p,.protocol-card-header p{margin:4px 0 0;color:#64748b;font-size:14px}.protocol-home-view{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:28px;margin-top:28px}.protocol-main-action{min-height:112px;border-radius:30px;border:1px solid rgba(59,130,246,.18);background:rgba(255,255,255,.74);box-shadow:0 18px 45px rgba(15,23,42,.08);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;gap:16px;font-size:26px;font-weight:800;color:#1f2937;cursor:pointer;transition:all .22s ease}.protocol-main-action i{font-size:28px;color:#3b82f6}.protocol-main-action:hover{transform:translateY(-2px);box-shadow:0 22px 52px rgba(59,130,246,.14);border-color:rgba(59,130,246,.35)}.protocol-main-action:first-child{background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95));color:#fff}.protocol-main-action:first-child i{color:#fff}.protocol-page-view{margin-top:28px}.protocol-page-top{display:flex;align-items:center;gap:18px;margin-bottom:24px}.protocol-page-top h2{margin:0;font-size:30px;font-weight:800;color:#1f2937}.protocol-back-btn{border:none;border-radius:18px;padding:12px 18px;background:rgba(239,246,255,.95);color:#2563eb;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.12);display:inline-flex;align-items:center;gap:8px}.protocol-top-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:20px;margin-bottom:24px}.protocol-info-card,.protocol-participants-card,.protocol-notes-card{border-radius:28px;background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.85);box-shadow:0 18px 50px rgba(15,23,42,.08);padding:24px;backdrop-filter:blur(18px)}.protocol-info-card span{display:block;color:#64748b;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.protocol-info-card strong{display:block;margin-top:8px;color:#1f2937;font-size:24px}.protocol-main-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(420px,1.4fr);gap:24px;align-items:stretch}.protocol-card-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.protocol-card-header h3,.protocol-notes-card h3{margin:0;color:#1f2937;font-size:20px;font-weight:800}.protocol-notes-card>p{margin:8px 0 0;color:#64748b}.protocol-small-btn,.protocol-save-btn{border:none;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;padding:11px 16px;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.22);display:inline-flex;align-items:center;gap:8px}.protocol-save-btn.protocol-saved{background:linear-gradient(135deg,#22c55e,#16a34a)}.protocol-participants-list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px}.protocol-participant-item{width:100%;text-align:left;border-radius:18px;background:rgba(248,250,252,.92);border:1px solid rgba(226,232,240,.75);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s ease}.protocol-participant-item:hover{border-color:rgba(59,130,246,.32);transform:translateY(-1px)}.protocol-participant-avatar{width:42px;height:42px;min-width:42px;border-radius:50%;display:grid;place-items:center;background:rgba(59,130,246,.13);color:#2563eb;font-weight:800}.protocol-participant-main{display:flex;flex:1;min-width:0;flex-direction:column}.protocol-participant-main strong,.protocol-employee-option strong{color:#1f2937}.protocol-participant-main small,.protocol-employee-option small{display:block;color:#64748b}.protocol-date-badge{border-radius:999px;background:rgba(37,99,235,.1);color:#2563eb;padding:6px 10px;font-size:12px;font-weight:800}#protocolNoteText{width:100%;min-height:260px;border-radius:22px;border:1px solid rgba(203,213,225,.75);background:rgba(255,255,255,.86);resize:vertical;padding:18px;font-family:inherit;font-size:16px;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:16px}.protocol-empty-state{border-radius:18px;background:rgba(248,250,252,.72);border:1px dashed rgba(148,163,184,.5);padding:18px;text-align:center;color:#64748b}.protocol-modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.35);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}.protocol-modal{width:min(620px,100%);max-height:86vh;overflow:auto;border-radius:28px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.9);box-shadow:0 28px 80px rgba(15,23,42,.22);padding:24px}.protocol-modal-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.protocol-modal-header h3{margin:0;color:#1f2937;font-size:22px;font-weight:800}.protocol-modal-close{width:38px;height:38px;border:none;border-radius:14px;background:rgba(239,246,255,.9);color:#2563eb;font-size:26px;line-height:1;cursor:pointer}.protocol-search-input{width:100%;border-radius:18px;border:1px solid rgba(203,213,225,.8);background:rgba(255,255,255,.9);padding:13px 16px;margin-bottom:16px;outline:none}.protocol-employee-options{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto}.protocol-employee-option{display:flex;align-items:center;gap:12px;border-radius:18px;border:1px solid rgba(226,232,240,.78);background:rgba(248,250,252,.86);padding:12px;cursor:pointer}.protocol-employee-option input{width:18px;height:18px;accent-color:#2563eb}.protocol-modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:18px}.protocol-cancel-btn{border:none;border-radius:18px;background:rgba(226,232,240,.85);color:#334155;font-weight:700;padding:11px 16px;cursor:pointer}.protocol-detail-row{color:#334155;margin:12px 0}.protocol-detail-row ul{margin:8px 0 0 20px}.protocol-notes-placeholder{min-height:180px}@media (max-width:1100px){.protocol-main-grid{grid-template-columns:1fr}}@media (max-width:800px){.protocol-home-view,.protocol-top-grid{grid-template-columns:1fr}.protocol-notes-page{padding:20px}.protocol-card-header{align-items:flex-start;flex-direction:column}.protocol-main-action{font-size:22px;min-height:92px}}
+            .hidden{display:none!important}.protocol-notes-header{display:flex;align-items:center;gap:16px}.protocol-notes-icon{width:56px;height:56px;border-radius:22px;display:grid;place-items:center;background:rgba(59,130,246,.12);color:#2563eb;font-size:24px}.protocol-notes-header h2{margin:0;color:#1f2937;font-size:30px;font-weight:800}.protocol-notes-header p,.protocol-card-header p{margin:4px 0 0;color:#64748b;font-size:14px}.protocol-home-view{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:28px;margin-top:28px}.protocol-main-action{min-height:112px;border-radius:30px;border:1px solid rgba(59,130,246,.18);background:rgba(255,255,255,.74);box-shadow:0 18px 45px rgba(15,23,42,.08);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;gap:16px;font-size:26px;font-weight:800;color:#1f2937;cursor:pointer;transition:all .22s ease}.protocol-main-action i{font-size:28px;color:#3b82f6}.protocol-main-action:hover{transform:translateY(-2px);box-shadow:0 22px 52px rgba(59,130,246,.14);border-color:rgba(59,130,246,.35)}.protocol-main-action:first-child{background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95));color:#fff}.protocol-main-action:first-child i{color:#fff}.protocol-page-view{margin-top:28px}.protocol-page-top,.protocol-modal-header,.protocol-modal-actions{display:flex;align-items:center;justify-content:space-between;gap:16px}.protocol-page-top{margin-bottom:24px}.protocol-page-top h2{margin:0;font-size:30px;font-weight:800;color:#1f2937}.protocol-back-btn,.protocol-create-btn{border:none;border-radius:18px;padding:12px 18px;background:rgba(239,246,255,.95);color:#2563eb;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.12);display:inline-flex;align-items:center;gap:8px}.protocol-create-btn,.protocol-save-btn{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}.protocol-lists-grid{display:grid;grid-template-columns:repeat(2,minmax(340px,1fr));gap:24px;margin-top:24px}.protocol-list-card,.protocol-modal-card,.protocol-info-card,.protocol-participants-card,.protocol-notes-card{border-radius:28px;background:rgba(255,255,255,.76);border:1px solid rgba(226,232,240,.85);box-shadow:0 18px 50px rgba(15,23,42,.08);backdrop-filter:blur(18px)}.protocol-list-card{padding:24px;min-height:360px}.protocol-list-card h3{margin:0 0 16px;font-size:24px;font-weight:800;color:#1f2937}.protocol-list-item{width:100%;text-align:left;border-radius:18px;background:rgba(248,250,252,.94);border:1px solid rgba(226,232,240,.8);padding:16px;margin-top:12px;cursor:pointer;transition:all .2s ease}.protocol-list-item:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(37,99,235,.12)}.protocol-list-item-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.protocol-list-item-title{font-size:18px;font-weight:800;color:#1f2937}.protocol-list-item-meta{margin-top:6px;font-size:14px;color:#64748b}.protocol-list-item-stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;color:#475569;font-weight:700}.protocol-status-badge,.protocol-participant-status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 10px;font-size:13px;font-weight:700}.protocol-status-badge.completed,.protocol-participant-status.accepted{background:rgba(34,197,94,.12);color:#16a34a}.protocol-status-badge.incomplete,.protocol-participant-status.pending{background:rgba(245,158,11,.14);color:#d97706}.protocol-participant-status.rejected{background:rgba(239,68,68,.12);color:#dc2626}.protocol-modal{position:fixed;inset:0;background:rgba(15,23,42,.38);backdrop-filter:blur(10px);display:grid;place-items:center;z-index:9999}.protocol-modal.hidden{display:none!important}.protocol-modal-card{width:min(780px,calc(100vw - 40px));max-height:88vh;overflow-y:auto;padding:28px}.protocol-small-modal-card{width:min(520px,calc(100vw - 40px))}.protocol-modal-header h3{margin:0;color:#1f2937;font-size:22px;font-weight:800}.protocol-modal-header button{width:38px;height:38px;border:none;border-radius:14px;background:rgba(239,246,255,.9);color:#2563eb;cursor:pointer}.protocol-form-group{margin-top:18px}.protocol-form-group label{display:block;margin-bottom:8px;font-weight:800;color:#1f2937}.protocol-form-group input{width:100%;border-radius:18px;border:1px solid rgba(203,213,225,.8);padding:14px 16px;font-family:inherit;font-size:16px;outline:none;box-sizing:border-box}.protocol-employee-select-list{max-height:280px;overflow-y:auto;border-radius:18px;border:1px solid rgba(226,232,240,.85);padding:10px;margin-top:12px}.protocol-employee-select-row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px}.protocol-employee-select-row:hover{background:rgba(239,246,255,.85)}.protocol-employee-select-row input{width:18px;height:18px;accent-color:#2563eb}.protocol-top-grid{display:grid;gap:20px;margin-bottom:24px}.protocol-top-grid-three{grid-template-columns:repeat(3,minmax(220px,1fr))}.protocol-info-card,.protocol-participants-card,.protocol-notes-card{padding:24px}.protocol-info-card span{display:block;color:#64748b;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.protocol-info-card strong{display:block;margin-top:8px;color:#1f2937;font-size:24px}.protocol-main-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(420px,1.4fr);gap:24px;align-items:stretch}.protocol-card-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.protocol-card-header h3,.protocol-notes-card h3{margin:0;color:#1f2937;font-size:20px;font-weight:800}.protocol-participant-row{border-radius:18px;background:rgba(248,250,252,.94);border:1px solid rgba(226,232,240,.8);padding:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;margin-bottom:12px}.protocol-participant-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}.protocol-participant-avatar{width:42px;height:42px;min-width:42px;border-radius:50%;display:grid;place-items:center;background:rgba(59,130,246,.13);color:#2563eb;font-weight:800}.protocol-participant-main{display:flex;flex:1;min-width:0;flex-direction:column}.protocol-participant-main strong,.protocol-employee-select-row strong{color:#1f2937}.protocol-participant-main small,.protocol-employee-select-row small{display:block;color:#64748b}.protocol-date-badge{border-radius:999px;background:rgba(37,99,235,.1);color:#2563eb;padding:6px 10px;font-size:12px;font-weight:800}.protocol-remove-participant-btn{border:none;border-radius:12px;background:rgba(239,68,68,.1);color:#dc2626;width:34px;height:34px;cursor:pointer}.protocol-notes-card textarea{width:100%;min-height:260px;border-radius:22px;border:1px solid rgba(203,213,225,.75);background:rgba(255,255,255,.86);resize:vertical;padding:18px;font-family:inherit;font-size:16px;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:16px}.protocol-empty-state{border-radius:18px;background:rgba(248,250,252,.72);border:1px dashed rgba(148,163,184,.5);padding:18px;text-align:center;color:#64748b}.protocol-save-btn,.protocol-modal-actions button{border:none;border-radius:18px;font-weight:800;padding:12px 18px;cursor:pointer}.protocol-save-btn.protocol-saved{background:linear-gradient(135deg,#22c55e,#16a34a)}.protocol-modal-actions button:first-child{background:rgba(226,232,240,.85);color:#334155}.protocol-participant-actions{display:flex;gap:12px;margin-top:16px}.protocol-accept-btn{border:none;border-radius:16px;background:#22c55e;color:#fff;font-weight:800;padding:12px 18px;cursor:pointer}.protocol-reject-btn{border:none;border-radius:16px;background:#ef4444;color:#fff;font-weight:800;padding:12px 18px;cursor:pointer}.protocol-detail-row{color:#334155;margin:12px 0}.protocol-notes-placeholder{min-height:180px}@media (max-width:1100px){.protocol-lists-grid,.protocol-main-grid,.protocol-top-grid,.protocol-top-grid-three{grid-template-columns:1fr}}@media (max-width:800px){.protocol-home-view{grid-template-columns:1fr}.protocol-notes-page{padding:20px}.protocol-page-top{align-items:flex-start;flex-direction:column}.protocol-main-action{font-size:22px;min-height:92px}.protocol-participant-row{align-items:flex-start;flex-direction:column}}
         `;
         document.head.appendChild(style);
     }
