@@ -1717,10 +1717,10 @@ class ProfileApp {
                             <div class="protocol-page-top protocol-page-top-clean">
                                 <div class="protocol-actions-stack">
                                     <div class="protocol-notes-control">
+                                        <span class="protocol-notes-label">Qeydlər</span>
                                         <button id="openNotesPageBtn" class="protocol-notes-round-btn" type="button" title="Qeydlər" aria-label="Qeydlər">
                                             <i class="fas fa-note-sticky"></i>
                                         </button>
-                                        <span class="protocol-notes-label">Qeydlər</span>
                                     </div>
                                     <button id="createProtocolBtn" class="protocol-create-btn" type="button">
                                         <i class="fas fa-plus"></i>
