@@ -133,12 +133,12 @@ class EmployeesService {
             <div class="mb-8">
                 <div class="flex items-center justify-between">
                     <div>
-                        <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">İşçilər</span>
-                        <p class="text-slate-500 mt-2">Şirkətinizin işçi siyahısı</p>
+                        <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Əməkdaşlar</span>
+                        <p class="text-slate-500 mt-2">Şirkətinizin əməkdaş siyahısı</p>
                     </div>
                     <div class="flex gap-3">
                         <button id="addEmployeeBtn" class="px-4 py-2 bg-brand-blue text-white rounded-xl hover:bg-blue-600 transition flex items-center gap-2">
-                            <i class="fa-solid fa-user-plus"></i> Yeni İşçi
+                            <i class="fa-solid fa-user-plus"></i> Yeni Əməkdaş
                         </button>
                         <button id="backToProfileFromEmployeesBtn" class="px-4 py-2 bg-brand-soft text-brand-blue rounded-xl hover:bg-brand-blue hover:text-white transition flex items-center gap-2">
                             <i class="fa-solid fa-arrow-left"></i> Profilə Qayıt
@@ -152,7 +152,7 @@ class EmployeesService {
                 <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600">Cəmi İşçi</p>
+                            <p class="text-sm text-gray-600">Cəmi Əməkdaş</p>
                             <p class="text-2xl font-bold text-gray-900" id="totalEmployeesCount">0</p>
                         </div>
                         <div class="h-12 w-12 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -163,7 +163,7 @@ class EmployeesService {
                 <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-600">Aktiv İşçi</p>
+                            <p class="text-sm text-gray-600">Aktiv Əməkdaş</p>
                             <p class="text-2xl font-bold text-gray-900" id="activeEmployeesCount">0</p>
                         </div>
                         <div class="h-12 w-12 rounded-lg bg-green-500/20 flex items-center justify-center">
@@ -207,8 +207,8 @@ class EmployeesService {
                 <div class="flex gap-2">
                     <select id="employeeFilter" class="px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-blue">
                         <option value="all">Hamısı</option>
-                        <option value="active">Aktiv işçilər</option>
-                        <option value="inactive">Deaktiv işçilər</option>
+                        <option value="active">Aktiv əməkdaşlar</option>
+                        <option value="inactive">Deaktiv əməkdaşlar</option>
                     </select>
                     <button id="refreshEmployeesBtn" class="px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 flex items-center gap-2">
                         <i class="fa-solid fa-rotate-right"></i> Yenilə
@@ -220,7 +220,7 @@ class EmployeesService {
             <div id="employeesTableContainer" class="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div class="text-center py-16">
                     <div class="inline-block h-12 w-12 animate-spin rounded-full border-4 border-brand-blue border-t-transparent"></div>
-                    <p class="text-gray-500 mt-4">İşçi siyahısı yüklənir...</p>
+                    <p class="text-gray-500 mt-4">Əməkdaş siyahısı yüklənir...</p>
                 </div>
             </div>
 
@@ -359,7 +359,7 @@ class EmployeesService {
                             <i class="fa-solid fa-exclamation-triangle text-3xl text-red-500"></i>
                         </div>
                         <h3 class="text-xl font-semibold text-gray-700 mb-2">Xəta baş verdi</h3>
-                        <p class="text-gray-500 mb-6">İşçilər yüklənə bilmədi</p>
+                        <p class="text-gray-500 mb-6">Əməkdaşlar yüklənə bilmədi</p>
                         <button onclick="window.employeesService?.loadEmployees()" 
                                 class="px-6 py-3 bg-brand-blue text-white rounded-xl hover:bg-blue-600">
                             <i class="fa-solid fa-refresh mr-2"></i> Təkrar cəhd et
@@ -581,10 +581,10 @@ class EmployeesService {
                 <div class="inline-block h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
                     <i class="fa-solid fa-users text-3xl text-gray-400"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-700 mb-2">İşçi tapılmadı</h3>
-                <p class="text-gray-500 mb-6">Axtarış kriteriyalarınıza uyğun işçi tapılmadı</p>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">Əməkdaş tapılmadı</h3>
+                <p class="text-gray-500 mb-6">Axtarış kriteriyalarınıza uyğun əməkdaş tapılmadı</p>
                 <button class="reset-employee-search px-6 py-3 bg-brand-blue text-white rounded-xl hover:bg-blue-600 font-medium">
-                    <i class="fa-solid fa-refresh mr-2"></i> Bütün işçiləri göstər
+                    <i class="fa-solid fa-refresh mr-2"></i> Bütün əməkdaşları göstər
                 </button>
             </div>
         `;
@@ -599,7 +599,7 @@ class EmployeesService {
                 <table class="w-full">
                     <thead>
                         <tr class="bg-gray-50 border-b">
-                            <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">İşçi</th>
+                            <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Əməkdaş</th>
                             <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Email</th>
                             <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Telefon</th>
                             <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Departament</th>
@@ -735,7 +735,7 @@ class EmployeesService {
         try {
             // İşçi məlumatlarını yüklə
             const employee = await this.getEmployeeById(employeeId);
-            const employeeName = `${employee.first_name || ''} ${employee.last_name || ''}`.trim() || 'İşçi';
+            const employeeName = `${employee.first_name || ''} ${employee.last_name || ''}`.trim() || 'Əməkdaş';
 
             this.closeModals();
 
@@ -809,7 +809,7 @@ class EmployeesService {
                                     <p class="text-sm text-blue-800">
                                         <i class="fa-solid fa-info-circle mr-2"></i>
                                         Aşağıdakı şirkətlərdən bir və ya bir neçəsini seçin. 
-                                        İşçi seçilən şirkətlərdə xidmət göstərə biləcək.
+                                        Əməkdaş seçilən şirkətlərdə xidmət göstərə biləcək.
                                     </p>
                                 </div>
                                 
@@ -1091,7 +1091,7 @@ class EmployeesService {
 
         } catch (error) {
             console.error('❌ Xəta:', error);
-            this.showError('İşçi məlumatları göstərilmədi');
+            this.showError('Əməkdaş məlumatları göstərilmədi');
         }
     }
 
@@ -1113,8 +1113,8 @@ class EmployeesService {
             <div class="mb-8">
                 <div class="flex items-center justify-between">
                     <div>
-                        <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">İşçi Detalları</span>
-                        <p class="text-slate-500 mt-2">İşçi haqqında ətraflı məlumat</p>
+                        <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Əməkdaş Detalları</span>
+                        <p class="text-slate-500 mt-2">Əməkdaş haqqında ətraflı məlumat</p>
                     </div>
                 </div>
             </div>
@@ -1145,7 +1145,7 @@ class EmployeesService {
                                         <i class="fa-solid fa-user-plus text-green-600"></i>
                                     </div>
                                     <div>
-                                        <h3 class="text-xl font-bold text-gray-900">Yeni İşçi Əlavə Et</h3>
+                                        <h3 class="text-xl font-bold text-gray-900">Yeni Əməkdaş Əlavə Et</h3>
                                         <p class="text-gray-600 text-sm">Məlumatları daxil edin</p>
                                     </div>
                                 </div>
@@ -1227,7 +1227,7 @@ class EmployeesService {
                                             </div>
                                             <p class="text-xs text-gray-500 mt-2">
                                                 <i class="fa-solid fa-info-circle"></i>
-                                                İşçi bu şifrə ilə sistemə daxil ola biləcək
+                                                Əməkdaş bu şifrə ilə sistemə daxil ola biləcək
                                             </p>
                                         </div>
                                     </div>
@@ -1258,7 +1258,7 @@ class EmployeesService {
                                     <h4 class="text-lg font-semibold text-yellow-800 mb-4">Status</h4>
                                     <div class="flex items-center">
                                         <input type="checkbox" id="addIsActive" checked class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                        <label for="addIsActive" class="ml-2 text-sm text-gray-700">Aktiv işçi</label>
+                                        <label for="addIsActive" class="ml-2 text-sm text-gray-700">Aktiv əməkdaş</label>
                                     </div>
                                 </div>
                                 
@@ -1327,7 +1327,7 @@ class EmployeesService {
                                             <i class="fa-solid fa-user-edit text-amber-600"></i>
                                         </div>
                                         <div>
-                                            <h3 class="text-xl font-bold text-gray-900">İşçi Redaktəsi</h3>
+                                            <h3 class="text-xl font-bold text-gray-900">Əməkdaş Redaktəsi</h3>
                                             <p class="text-gray-600 text-sm">ID: ${employee.id}</p>
                                         </div>
                                     </div>
@@ -1414,7 +1414,7 @@ class EmployeesService {
                                         <h4 class="text-lg font-semibold text-yellow-800 mb-4">Status</h4>
                                         <div class="flex items-center">
                                             <input type="checkbox" id="editIsActive" ${employee.is_active ? 'checked' : ''} class="h-4 w-4 text-blue-600 border-gray-300 rounded">
-                                            <label for="editIsActive" class="ml-2 text-sm text-gray-700">Aktiv işçi</label>
+                                            <label for="editIsActive" class="ml-2 text-sm text-gray-700">Aktiv əməkdaş</label>
                                         </div>
                                     </div>
                                     
@@ -1439,7 +1439,7 @@ class EmployeesService {
 
         } catch (error) {
             console.error('❌ Xəta:', error);
-            this.showError('İşçi məlumatları yüklənmədi: ' + error.message);
+            this.showError('Əməkdaş məlumatları yüklənmədi: ' + error.message);
         }
     }
 
@@ -1648,7 +1648,7 @@ class EmployeesService {
                         ceo_phone: document.getElementById('addPhone').value || '',
                         ceo_password: document.getElementById('addPassword').value,
                         fin_code: document.getElementById('addFinCode').value || '',
-                        position: document.getElementById('addPosition').value || 'İşçi',
+                        position: document.getElementById('addPosition').value || 'Əməkdaş',
                         company_code: this.currentCompanyCode,
                         is_active: document.getElementById('addIsActive').checked,
                         department_id: document.getElementById('addDepartment').value || null,
@@ -1701,7 +1701,7 @@ class EmployeesService {
                     this.closeModals();
 
                     // Uğur mesajı
-                    this.showSuccess('İşçi uğurla əlavə edildi');
+                    this.showSuccess('Əməkdaş uğurla əlavə edildi');
 
                 } catch (error) {
                     console.error('❌ Xəta:', error);
@@ -1735,14 +1735,14 @@ class EmployeesService {
             const employee = await this.getEmployeeById(employeeId);
             const name = `${employee.first_name || employee.ceo_name || ''} ${employee.last_name || employee.ceo_lastname || ''}`.trim();
 
-            if (!confirm(`"${name}" adlı işçini silmək istədiyinizə əminsiniz?`)) return;
+            if (!confirm(`"${name}" adlı əməkdaşı silmək istədiyinizə əminsiniz?`)) return;
 
             await this.api.delete(`/users/${employeeId}/soft`);
-            this.showSuccess('İşçi silindi');
+            this.showSuccess('Əməkdaş silindi');
             await this.loadEmployees();
         } catch (error) {
             console.error('❌ Xəta:', error);
-            this.showError('İşçi silinmədi: ' + error.message);
+            this.showError('Əməkdaş silinmədi: ' + error.message);
         }
     }
 
