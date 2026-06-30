@@ -1711,18 +1711,26 @@ class ProfileApp {
                             </div>
                         </div>
 
-                        <div class="protocol-tabs" role="tablist" aria-label="Pratakol və qeydlər">
-                            <button class="protocol-tab" data-protocol-tab="protocol" type="button" role="tab" aria-selected="false" aria-controls="protocolPanel">
+                        <div id="protocolHomeView" class="protocol-home-view">
+                            <button class="protocol-main-action" data-open-protocol-page="protocol" type="button">
                                 <i class="fas fa-clipboard-check"></i>
                                 <span>Pratakol</span>
                             </button>
-                            <button class="protocol-tab" data-protocol-tab="notes" type="button" role="tab" aria-selected="false" aria-controls="notesPanel">
+                            <button class="protocol-main-action" data-open-protocol-page="notes" type="button">
                                 <i class="fas fa-note-sticky"></i>
                                 <span>Qeydlər</span>
                             </button>
                         </div>
 
-                        <div class="protocol-tab-panel" id="protocolPanel" role="tabpanel">
+                        <div id="protocolPageView" class="protocol-page-view hidden">
+                            <div class="protocol-page-top">
+                                <button class="protocol-back-btn" data-protocol-back type="button">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Geri
+                                </button>
+                                <h2>Pratakol</h2>
+                            </div>
+
                             <div class="protocol-top-grid">
                                 <div class="protocol-info-card">
                                     <span>Tarix</span>
@@ -1765,7 +1773,15 @@ class ProfileApp {
                             </div>
                         </div>
 
-                        <div class="protocol-tab-panel" id="notesPanel" role="tabpanel">
+                        <div id="notesPageView" class="protocol-page-view hidden">
+                            <div class="protocol-page-top">
+                                <button class="protocol-back-btn" data-protocol-back type="button">
+                                    <i class="fas fa-arrow-left"></i>
+                                    Geri
+                                </button>
+                                <h2>Qeydlər</h2>
+                            </div>
+
                             <div class="protocol-notes-card protocol-notes-placeholder">
                                 <h3>Qeydlər</h3>
                                 <p>Qeydlər bölməsi hazırlanır.</p>
@@ -1869,7 +1885,44 @@ class ProfileApp {
     async initProtocolNotesSection() {
         this.protocolPanelInitialized = false;
         this.notesPanelInitialized = false;
-        this.initProtocolTabs();
+
+        const homeView = document.getElementById('protocolHomeView');
+        const protocolPage = document.getElementById('protocolPageView');
+        const notesPage = document.getElementById('notesPageView');
+        const openBtns = document.querySelectorAll('[data-open-protocol-page]');
+        const backBtns = document.querySelectorAll('[data-protocol-back]');
+
+        homeView?.classList.remove('hidden');
+        protocolPage?.classList.add('hidden');
+        notesPage?.classList.add('hidden');
+
+        openBtns.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const page = btn.dataset.openProtocolPage;
+
+                homeView?.classList.add('hidden');
+                protocolPage?.classList.add('hidden');
+                notesPage?.classList.add('hidden');
+
+                if (page === 'protocol') {
+                    protocolPage?.classList.remove('hidden');
+                    await this.initProtocolPanelIfNeeded();
+                }
+
+                if (page === 'notes') {
+                    notesPage?.classList.remove('hidden');
+                    this.initNotesPanelIfNeeded();
+                }
+            });
+        });
+
+        backBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                protocolPage?.classList.add('hidden');
+                notesPage?.classList.add('hidden');
+                homeView?.classList.remove('hidden');
+            });
+        });
     }
 
     async initProtocolPanelIfNeeded() {
@@ -1886,22 +1939,6 @@ class ProfileApp {
 
     initNotesPanelIfNeeded() {
         this.notesPanelInitialized = true;
-    }
-
-    initProtocolTabs() {
-        const tabs = document.querySelectorAll('.protocol-tab');
-        const protocolPanel = document.getElementById('protocolPanel');
-        const notesPanel = document.getElementById('notesPanel');
-        tabs.forEach(tab => tab.addEventListener('click', async () => {
-            const selected = tab.dataset.protocolTab;
-            tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
-            tab.classList.add('active');
-            tab.setAttribute('aria-selected', 'true');
-            protocolPanel?.classList.toggle('active', selected === 'protocol');
-            notesPanel?.classList.toggle('active', selected === 'notes');
-            if (selected === 'protocol') await this.initProtocolPanelIfNeeded();
-            if (selected === 'notes') this.initNotesPanelIfNeeded();
-        }));
     }
 
     async initProtocolParticipants(today) {
@@ -2012,7 +2049,8 @@ class ProfileApp {
         const style = document.createElement('style');
         style.id = 'protocolNotesStyles';
         style.textContent = `
-            .protocol-notes-header{display:flex;align-items:center;gap:16px}.protocol-notes-icon{width:56px;height:56px;border-radius:22px;display:grid;place-items:center;background:rgba(59,130,246,.12);color:#2563eb;font-size:24px}.protocol-notes-header h2{margin:0;color:#1f2937;font-size:30px;font-weight:800}.protocol-notes-header p,.protocol-card-header p{margin:4px 0 0;color:#64748b;font-size:14px}.protocol-tabs{display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:22px;margin:28px 0}.protocol-tab{min-height:96px;border-radius:28px;border:1px solid rgba(59,130,246,.18);background:rgba(255,255,255,.72);box-shadow:0 18px 45px rgba(15,23,42,.08);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;gap:14px;font-size:24px;font-weight:700;color:#1f2937;cursor:pointer;transition:all .22s ease}.protocol-tab.active{background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95));color:#fff;border-color:rgba(37,99,235,.45);transform:translateY(-1px)}.protocol-tab-panel{display:none}.protocol-tab-panel.active{display:block}.protocol-top-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:20px;margin-bottom:24px}.protocol-info-card,.protocol-participants-card,.protocol-notes-card{border-radius:28px;background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.85);box-shadow:0 18px 50px rgba(15,23,42,.08);padding:24px;backdrop-filter:blur(18px)}.protocol-info-card span{display:block;color:#64748b;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.protocol-info-card strong{display:block;margin-top:8px;color:#1f2937;font-size:24px}.protocol-main-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(420px,1.4fr);gap:24px;align-items:stretch}.protocol-card-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.protocol-card-header h3{margin:0;color:#1f2937;font-size:20px;font-weight:800}.protocol-small-btn,.protocol-save-btn{border:none;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;padding:11px 16px;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.22);display:inline-flex;align-items:center;gap:8px}.protocol-save-btn.protocol-saved{background:linear-gradient(135deg,#22c55e,#16a34a)}.protocol-participants-list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px}.protocol-participant-item{width:100%;text-align:left;border-radius:18px;background:rgba(248,250,252,.92);border:1px solid rgba(226,232,240,.75);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s ease}.protocol-participant-item:hover{border-color:rgba(59,130,246,.32);transform:translateY(-1px)}.protocol-participant-avatar{width:42px;height:42px;min-width:42px;border-radius:50%;display:grid;place-items:center;background:rgba(59,130,246,.13);color:#2563eb;font-weight:800}.protocol-participant-main{display:flex;flex:1;min-width:0;flex-direction:column}.protocol-participant-main strong,.protocol-employee-option strong{color:#1f2937}.protocol-participant-main small,.protocol-employee-option small{display:block;color:#64748b}.protocol-date-badge{border-radius:999px;background:rgba(37,99,235,.1);color:#2563eb;padding:6px 10px;font-size:12px;font-weight:800}#protocolNoteText{width:100%;min-height:260px;border-radius:22px;border:1px solid rgba(203,213,225,.75);background:rgba(255,255,255,.86);resize:vertical;padding:18px;font-family:inherit;font-size:16px;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:16px}.protocol-empty-state{border-radius:18px;background:rgba(248,250,252,.72);border:1px dashed rgba(148,163,184,.5);padding:18px;text-align:center;color:#64748b}.protocol-modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.35);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}.protocol-modal{width:min(620px,100%);max-height:86vh;overflow:auto;border-radius:28px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.9);box-shadow:0 28px 80px rgba(15,23,42,.22);padding:24px}.protocol-modal-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.protocol-modal-header h3{margin:0;color:#1f2937;font-size:22px;font-weight:800}.protocol-modal-close{width:38px;height:38px;border:none;border-radius:14px;background:rgba(239,246,255,.9);color:#2563eb;font-size:26px;line-height:1;cursor:pointer}.protocol-search-input{width:100%;border-radius:18px;border:1px solid rgba(203,213,225,.8);background:rgba(255,255,255,.9);padding:13px 16px;margin-bottom:16px;outline:none}.protocol-employee-options{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto}.protocol-employee-option{display:flex;align-items:center;gap:12px;border-radius:18px;border:1px solid rgba(226,232,240,.78);background:rgba(248,250,252,.86);padding:12px;cursor:pointer}.protocol-employee-option input{width:18px;height:18px;accent-color:#2563eb}.protocol-modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:18px}.protocol-cancel-btn{border:none;border-radius:18px;background:rgba(226,232,240,.85);color:#334155;font-weight:700;padding:11px 16px;cursor:pointer}.protocol-detail-row{color:#334155;margin:12px 0}.protocol-detail-row ul{margin:8px 0 0 20px}.protocol-notes-placeholder{min-height:180px} @media (max-width:1100px){.protocol-main-grid{grid-template-columns:1fr}} @media (max-width:800px){.protocol-tabs,.protocol-top-grid{grid-template-columns:1fr}.protocol-notes-page{padding:20px}.protocol-card-header{align-items:flex-start;flex-direction:column}.protocol-tab{font-size:20px;min-height:82px}}`;
+            .hidden{display:none!important}.protocol-notes-header{display:flex;align-items:center;gap:16px}.protocol-notes-icon{width:56px;height:56px;border-radius:22px;display:grid;place-items:center;background:rgba(59,130,246,.12);color:#2563eb;font-size:24px}.protocol-notes-header h2{margin:0;color:#1f2937;font-size:30px;font-weight:800}.protocol-notes-header p,.protocol-card-header p{margin:4px 0 0;color:#64748b;font-size:14px}.protocol-home-view{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:28px;margin-top:28px}.protocol-main-action{min-height:112px;border-radius:30px;border:1px solid rgba(59,130,246,.18);background:rgba(255,255,255,.74);box-shadow:0 18px 45px rgba(15,23,42,.08);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;gap:16px;font-size:26px;font-weight:800;color:#1f2937;cursor:pointer;transition:all .22s ease}.protocol-main-action i{font-size:28px;color:#3b82f6}.protocol-main-action:hover{transform:translateY(-2px);box-shadow:0 22px 52px rgba(59,130,246,.14);border-color:rgba(59,130,246,.35)}.protocol-main-action:first-child{background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95));color:#fff}.protocol-main-action:first-child i{color:#fff}.protocol-page-view{margin-top:28px}.protocol-page-top{display:flex;align-items:center;gap:18px;margin-bottom:24px}.protocol-page-top h2{margin:0;font-size:30px;font-weight:800;color:#1f2937}.protocol-back-btn{border:none;border-radius:18px;padding:12px 18px;background:rgba(239,246,255,.95);color:#2563eb;font-weight:800;cursor:pointer;box-shadow:0 10px 24px rgba(37,99,235,.12);display:inline-flex;align-items:center;gap:8px}.protocol-top-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:20px;margin-bottom:24px}.protocol-info-card,.protocol-participants-card,.protocol-notes-card{border-radius:28px;background:rgba(255,255,255,.74);border:1px solid rgba(255,255,255,.85);box-shadow:0 18px 50px rgba(15,23,42,.08);padding:24px;backdrop-filter:blur(18px)}.protocol-info-card span{display:block;color:#64748b;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.protocol-info-card strong{display:block;margin-top:8px;color:#1f2937;font-size:24px}.protocol-main-grid{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(420px,1.4fr);gap:24px;align-items:stretch}.protocol-card-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.protocol-card-header h3,.protocol-notes-card h3{margin:0;color:#1f2937;font-size:20px;font-weight:800}.protocol-notes-card>p{margin:8px 0 0;color:#64748b}.protocol-small-btn,.protocol-save-btn{border:none;border-radius:18px;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;font-weight:700;padding:11px 16px;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.22);display:inline-flex;align-items:center;gap:8px}.protocol-save-btn.protocol-saved{background:linear-gradient(135deg,#22c55e,#16a34a)}.protocol-participants-list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;padding-right:4px}.protocol-participant-item{width:100%;text-align:left;border-radius:18px;background:rgba(248,250,252,.92);border:1px solid rgba(226,232,240,.75);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s ease}.protocol-participant-item:hover{border-color:rgba(59,130,246,.32);transform:translateY(-1px)}.protocol-participant-avatar{width:42px;height:42px;min-width:42px;border-radius:50%;display:grid;place-items:center;background:rgba(59,130,246,.13);color:#2563eb;font-weight:800}.protocol-participant-main{display:flex;flex:1;min-width:0;flex-direction:column}.protocol-participant-main strong,.protocol-employee-option strong{color:#1f2937}.protocol-participant-main small,.protocol-employee-option small{display:block;color:#64748b}.protocol-date-badge{border-radius:999px;background:rgba(37,99,235,.1);color:#2563eb;padding:6px 10px;font-size:12px;font-weight:800}#protocolNoteText{width:100%;min-height:260px;border-radius:22px;border:1px solid rgba(203,213,225,.75);background:rgba(255,255,255,.86);resize:vertical;padding:18px;font-family:inherit;font-size:16px;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:16px}.protocol-empty-state{border-radius:18px;background:rgba(248,250,252,.72);border:1px dashed rgba(148,163,184,.5);padding:18px;text-align:center;color:#64748b}.protocol-modal-backdrop{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.35);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px}.protocol-modal{width:min(620px,100%);max-height:86vh;overflow:auto;border-radius:28px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.9);box-shadow:0 28px 80px rgba(15,23,42,.22);padding:24px}.protocol-modal-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.protocol-modal-header h3{margin:0;color:#1f2937;font-size:22px;font-weight:800}.protocol-modal-close{width:38px;height:38px;border:none;border-radius:14px;background:rgba(239,246,255,.9);color:#2563eb;font-size:26px;line-height:1;cursor:pointer}.protocol-search-input{width:100%;border-radius:18px;border:1px solid rgba(203,213,225,.8);background:rgba(255,255,255,.9);padding:13px 16px;margin-bottom:16px;outline:none}.protocol-employee-options{display:flex;flex-direction:column;gap:10px;max-height:360px;overflow:auto}.protocol-employee-option{display:flex;align-items:center;gap:12px;border-radius:18px;border:1px solid rgba(226,232,240,.78);background:rgba(248,250,252,.86);padding:12px;cursor:pointer}.protocol-employee-option input{width:18px;height:18px;accent-color:#2563eb}.protocol-modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:18px}.protocol-cancel-btn{border:none;border-radius:18px;background:rgba(226,232,240,.85);color:#334155;font-weight:700;padding:11px 16px;cursor:pointer}.protocol-detail-row{color:#334155;margin:12px 0}.protocol-detail-row ul{margin:8px 0 0 20px}.protocol-notes-placeholder{min-height:180px}@media (max-width:1100px){.protocol-main-grid{grid-template-columns:1fr}}@media (max-width:800px){.protocol-home-view,.protocol-top-grid{grid-template-columns:1fr}.protocol-notes-page{padding:20px}.protocol-card-header{align-items:flex-start;flex-direction:column}.protocol-main-action{font-size:22px;min-height:92px}}
+        `;
         document.head.appendChild(style);
     }
 
