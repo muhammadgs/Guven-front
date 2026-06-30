@@ -994,7 +994,7 @@ const UserReportExporter = (() => {
 
 <!-- PRINT BAR -->
 <div class="print-bar no-print">
-    <span><strong>GF44</strong> — ${name} İşçi Hesabatı</span>
+    <span><strong>GF44</strong> — ${name} Əməkdaş Hesabatı</span>
     <div style="display:flex; gap:8px;">
         <!-- Browser print headers/footers are controlled by the browser print dialog. -->
         <button onclick="printTaskReport()">🖨️ Çap et</button>
@@ -1033,7 +1033,7 @@ const UserReportExporter = (() => {
         <div class="kpi-card"><div class="kpi-val">${d.waitingApproval}</div><div class="kpi-lbl">Təsdiq gözləyir</div></div>
         <div class="kpi-card"><div class="kpi-val">${d.avgCompDays}</div><div class="kpi-lbl">Ort. müddət (gün)</div></div>
         <div class="kpi-card"><div class="kpi-val">${d.ontimeRate}%</div><div class="kpi-lbl">Vaxtında bitirmə</div></div>
-        <div class="kpi-card"><div class="kpi-val">${d.currentRank || '-'}</div><div class="kpi-lbl">Reytinq</div><div class="kpi-sub">${d.totalPeers} işçi arasında</div></div>
+        <div class="kpi-card"><div class="kpi-val">${d.currentRank || '-'}</div><div class="kpi-lbl">Reytinq</div><div class="kpi-sub">${d.totalPeers} əməkdaş arasında</div></div>
         <div class="kpi-card"><div class="kpi-val">${d.createdByUser.length}</div><div class="kpi-lbl">Yaratdığı tasklar</div></div>
     </div>
 </div>
@@ -1051,12 +1051,12 @@ ${monthlyRows ? `
 <!-- MÜQAYİSƏ -->
 ${comparisonRows ? `
 <div class="section">
-    <div class="section-title">🏆 İşçilər arasında müqayisə (İlk 15)</div>
+    <div class="section-title">🏆 Əməkdaşlar arasında müqayisə (İlk 15)</div>
     <table>
-        <thead><tr><th>Yer</th><th>İşçi</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
+        <thead><tr><th>Yer</th><th>Əməkdaş</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
         <tbody>${comparisonRows}</tbody>
     </table>
-    <p style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu işçini göstərir. Reytinq tamamlanan task sayına görədir.</p>
+    <p style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu əməkdaşı göstərir. Reytinq tamamlanan tapşırıq sayına görədir.</p>
 </div>` : ''}
 
 <!-- TAPŞIRIQ SİYAHISI (DETALLI SİYAHI) -->
