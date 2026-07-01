@@ -890,10 +890,13 @@ const UserReportExporter = (() => {
         .print-report,
         .pdf-report,
         .report-print-wrapper,
-        .report-container {
-            margin: 0 auto !important;
-            padding: 2mm 7mm 5mm 7mm !important;
-            transform: translateY(-2mm);
+        .report-container,
+        .print-document,
+        .pdf-print-root,
+        .report-print-root {
+            margin: 0 !important;
+            padding: 12mm !important;
+            transform: none !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
@@ -986,37 +989,62 @@ const UserReportExporter = (() => {
             border-bottom: none !important;
         }
 
-        .employee-comparison-section + .task-list-section {
+        .employee-comparison-section + .task-list-section,
+        .employee-comparison-section + .print-task-list-section,
+        .employee-comparison-section + .report-task-list-section,
+        .employee-comparison-section + .pdf-task-list-section {
             border-top: none !important;
         }
 
         /*
-         * The blue strip that appeared after the employee comparison table was the
-         * task list table header starting at the bottom of the previous print page.
-         * Move the entire detailed task list to a fresh printed page so its title
-         * and header cannot be orphaned below the comparison section.
+         * Keep the detailed task-list heading, blue underline and table header as
+         * one print section. The whole section must start on a fresh page so no
+         * orphaned title/header/blue line remains below the comparison table.
          */
-        .task-list-section {
+        .task-list-section,
+        .print-task-list-section,
+        .report-task-list-section,
+        .pdf-task-list-section {
             break-before: page !important;
             page-break-before: always !important;
-            break-inside: auto !important;
-            page-break-inside: auto !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
             border-top: 0 !important;
             margin-top: 0 !important;
         }
 
-        .task-list-section .section-title {
+        .task-list-section .section-title,
+        .print-task-list-section .section-title,
+        .report-task-list-section .section-title,
+        .pdf-task-list-section .section-title {
             break-after: avoid !important;
             page-break-after: avoid !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            margin-top: 0 !important;
         }
 
-        .task-list-section table thead {
+        .task-list-section table,
+        .print-task-list-section table,
+        .report-task-list-section table,
+        .pdf-task-list-section table {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+        }
+
+        .task-list-section thead,
+        .print-task-list-section thead,
+        .report-task-list-section thead,
+        .pdf-task-list-section thead {
             display: table-header-group !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
         }
 
-        .task-list-section table tr {
+        .task-list-section tr,
+        .print-task-list-section tr,
+        .report-task-list-section tr,
+        .pdf-task-list-section tr {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
         }
@@ -1112,7 +1140,7 @@ ${comparisonRows ? `
 </div>` : ''}
 
 <!-- TAPŞIRIQ SİYAHISI (DETALLI SİYAHI) -->
-<div class="section task-list-section">
+<section class="section task-list-section print-task-list-section report-task-list-section pdf-task-list-section">
     <div class="section-title">📝 Tapşırıq siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
     <table class="task-table">
         <thead>
@@ -1132,7 +1160,7 @@ ${comparisonRows ? `
         </thead>
         <tbody>${taskRows || '<tr><td colspan="11" style="text-align:center; color:#94a3b8;">Məlumat yoxdur</td></tr>'}</tbody>
     </table>
-</div>
+</section>
 
 <!-- FOOTER -->
 <div class="pdf-footer">
