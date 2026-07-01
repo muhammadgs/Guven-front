@@ -990,6 +990,37 @@ const UserReportExporter = (() => {
             border-top: none !important;
         }
 
+        /*
+         * The blue strip that appeared after the employee comparison table was the
+         * task list table header starting at the bottom of the previous print page.
+         * Move the entire detailed task list to a fresh printed page so its title
+         * and header cannot be orphaned below the comparison section.
+         */
+        .task-list-section {
+            break-before: page !important;
+            page-break-before: always !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+            border-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        .task-list-section .section-title {
+            break-after: avoid !important;
+            page-break-after: avoid !important;
+        }
+
+        .task-list-section table thead {
+            display: table-header-group !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+
+        .task-list-section table tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+
         table thead th,
         .task-table thead th {
             background: #1e40af !important;
