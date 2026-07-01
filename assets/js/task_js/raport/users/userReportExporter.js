@@ -981,6 +981,14 @@ const UserReportExporter = (() => {
             content: none !important;
         }
 
+        .employee-comparison-note {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .employee-comparison-section table {
             border-bottom: none !important;
         }
@@ -1136,7 +1144,7 @@ ${comparisonRows ? `
         <thead><tr><th>Yer</th><th>Əməkdaş</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
         <tbody>${comparisonRows}</tbody>
     </table>
-    <p style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu əməkdaşı göstərir. Reytinq tamamlanan tapşırıq sayına görədir.</p>
+    <p class="employee-comparison-note" style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu əməkdaşı göstərir. Reytinq tamamlanan tapşırıq sayına görədir.</p>
 </div>` : ''}
 
 <!-- TAPŞIRIQ SİYAHISI (DETALLI SİYAHI) -->
