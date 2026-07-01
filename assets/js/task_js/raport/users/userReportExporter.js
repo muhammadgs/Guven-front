@@ -969,6 +969,27 @@ const UserReportExporter = (() => {
             border-bottom-color: #3b82f6 !important;
         }
 
+        .employee-comparison-section {
+            border-bottom: none !important;
+        }
+
+        .employee-comparison-section::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .employee-comparison-section table {
+            border-bottom: none !important;
+        }
+
+        .employee-comparison-section table tbody tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        .employee-comparison-section + .task-list-section {
+            border-top: none !important;
+        }
+
         table thead th,
         .task-table thead th {
             background: #1e40af !important;
@@ -1050,7 +1071,7 @@ ${monthlyRows ? `
 
 <!-- MÜQAYİSƏ -->
 ${comparisonRows ? `
-<div class="section">
+<div class="section employee-comparison-section">
     <div class="section-title">🏆 Əməkdaşlar arasında müqayisə (İlk 15)</div>
     <table>
         <thead><tr><th>Yer</th><th>Əməkdaş</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
@@ -1060,7 +1081,7 @@ ${comparisonRows ? `
 </div>` : ''}
 
 <!-- TAPŞIRIQ SİYAHISI (DETALLI SİYAHI) -->
-<div class="section">
+<div class="section task-list-section">
     <div class="section-title">📝 Tapşırıq siyahısı (Bütün detallar) ${d.tasks.length > 50 ? '(ilk 50)' : ''}</div>
     <table class="task-table">
         <thead>
