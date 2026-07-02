@@ -1945,35 +1945,30 @@ class ProfileApp {
 
     isWorkerProtocolMode() { return true; }
 
-    canCreateProtocol() {
-        try {
-            const saved = JSON.parse(localStorage.getItem('userData') || '{}');
-            return Boolean(saved?.permissions?.protocol_create || saved?.user?.permissions?.protocol_create || saved?.can_create_protocol || saved?.user?.can_create_protocol);
-        } catch (e) { return false; }
-    }
+    canUseProtocolModule() { return true; }
 
-    canManageProtocolParticipants(protocol) {
-        return Boolean(protocol && String(protocol.createdBy?.id) === String(this.getCurrentUserForProtocol().id));
-    }
+    canCreateProtocol() { return this.canUseProtocolModule(); }
 
-    canCompleteProtocol(protocol) { return this.canManageProtocolParticipants(protocol); }
+    canManageProtocolParticipants() { return this.canUseProtocolModule(); }
 
-    isCurrentUserProtocolParticipant(protocol) {
-        const currentUser = this.getCurrentUserForProtocol();
-        return Boolean(protocol?.participants?.some(p => String(p.id) === String(currentUser.id)));
-    }
+    canCompleteProtocol() { return this.canUseProtocolModule(); }
 
-    getVisibleProtocolsForCurrentUser() {
-        return this.loadProtocols().filter(protocol => this.isCurrentUserProtocolParticipant(protocol) || this.canManageProtocolParticipants(protocol));
-    }
+    canDeleteProtocol() { return this.canUseProtocolModule(); }
 
-    applyWorkerProtocolPermissions(protocol) {
+    canWriteProtocolNote() { return this.canUseProtocolModule(); }
+
+    canOpenNotes() { return this.canUseProtocolModule(); }
+
+    getVisibleProtocolsForCurrentUser() { return this.canUseProtocolModule() ? this.loadProtocols() : []; }
+
+    applyWorkerProtocolPermissions() {
+        const canUseProtocolModule = this.canUseProtocolModule();
         const createBtn = document.getElementById('createProtocolBtn');
-        if (createBtn) createBtn.classList.toggle('hidden', !this.canCreateProtocol());
+        if (createBtn) createBtn.classList.toggle('hidden', !canUseProtocolModule);
         const addBtn = document.getElementById('openAddProtocolEmployeeBtn');
-        if (addBtn) addBtn.classList.toggle('hidden', !this.canManageProtocolParticipants(protocol));
+        if (addBtn) addBtn.classList.toggle('hidden', !canUseProtocolModule);
         const completeBtn = document.getElementById('completeProtocolBtn');
-        if (completeBtn) completeBtn.classList.toggle('hidden', !this.canCompleteProtocol(protocol));
+        if (completeBtn) completeBtn.classList.toggle('hidden', !canUseProtocolModule);
     }
 
     getTodayDateAz() {
@@ -2096,7 +2091,7 @@ class ProfileApp {
         };
         document.getElementById('openNotesPageBtn')?.addEventListener('click', () => { this.renderProtocolNotesPage(); showView(notesPage); });
         document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { showView(protocolListView); this.renderProtocolLists(); }));
-        document.getElementById('protocolBackBtn')?.addEventListener('click', () => this.returnToProtocolList());
+        document.getElementById('protocolBackBtn')?.addEventListener('click', () => this.openProtocolExitConfirmModal());
         document.getElementById('completeProtocolBtn')?.addEventListener('click', () => this.completeCurrentProtocol());
         document.getElementById('createProtocolBtn')?.addEventListener('click', () => this.openCreateProtocolModal());
         document.querySelectorAll('[data-close-create-protocol-modal]').forEach(btn => btn.addEventListener('click', () => this.closeCreateProtocolModal()));
@@ -2127,6 +2122,7 @@ class ProfileApp {
 
     renderProtocolLists() {
         const protocols = this.getVisibleProtocolsForCurrentUser().map(p => this.normalizeProtocolStatus(p));
+        this.saveProtocols(protocols);
         const render = (items, emptyText, emptyIcon = 'fa-folder-open', emptyClass = '') => items.length ? items.map(protocol => this.renderProtocolListItem(protocol)).join('') : `<div class="protocol-empty-state"><div class="protocol-empty-icon ${emptyClass}"><i class="fas ${emptyIcon}"></i></div><p>${emptyText}</p></div>`;
         const completed = protocols.filter(p => p.status === 'completed');
         const incomplete = protocols.filter(p => p.status !== 'completed');
@@ -2268,12 +2264,7 @@ class ProfileApp {
         if (!protocol) return;
         const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || ''; };
         setText('protocolDetailDate', protocol.createdDateAz); setText('protocolDetailLeader', protocol.createdBy?.name || 'Rəhbər'); setText('protocolDetailProtocolTitle', protocol.title);
-        const noteEl = document.getElementById('protocolDetailNoteText');
-        if (noteEl) {
-            const currentUser = this.getCurrentUserForProtocol();
-            const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
-            noteEl.value = participant?.note || '';
-        }
+        const noteEl = document.getElementById('protocolDetailNoteText'); if (noteEl) noteEl.value = protocol.note || '';
         this.applyWorkerProtocolPermissions(protocol);
         this.renderProtocolDetailParticipants(protocol);
         this.renderProtocolParticipantActions(protocol);
@@ -2301,8 +2292,7 @@ class ProfileApp {
 
     completeCurrentProtocol() {
         if (!this.currentProtocolId) return;
-        const protocol = this.getProtocolById(this.currentProtocolId);
-        if (!this.canCompleteProtocol(protocol)) return;
+        if (!this.canCompleteProtocol()) return;
         this.updateProtocol(this.currentProtocolId, protocol => ({ ...protocol, status: 'completed', completedAt: new Date().toISOString() }));
         this.returnToProtocolList();
     }
@@ -2311,7 +2301,7 @@ class ProfileApp {
         const list = document.getElementById('protocolDetailParticipantsList');
         if (!list) return;
         const labels = this.participantStatusLabels();
-        const canRemove = this.canManageProtocolParticipants(protocol);
+        const canRemove = this.canManageProtocolParticipants();
         const participants = Array.isArray(protocol.participants) ? protocol.participants : [];
         const term = (this.protocolParticipantSearchTerm || '').toLowerCase().trim();
         const filteredParticipants = term ? participants.filter(p => `${p.name || ''} ${p.email || ''} ${p.department || ''}`.toLowerCase().includes(term)) : participants;
@@ -2331,7 +2321,7 @@ class ProfileApp {
 
     openAddProtocolEmployeeModal() {
         if (!this.currentProtocolId) return;
-        if (!this.canManageProtocolParticipants(this.getProtocolById(this.currentProtocolId))) return;
+        if (!this.canManageProtocolParticipants()) return;
         this.addProtocolEmployeeSearchTerm = '';
         const searchInput = document.getElementById('addProtocolEmployeeSearchInput');
         if (searchInput) searchInput.value = '';
@@ -2383,10 +2373,9 @@ class ProfileApp {
         const note = document.getElementById('protocolDetailNoteText')?.value || '';
         const currentUser = this.getCurrentUserForProtocol();
         this.updateProtocol(this.currentProtocolId, protocol => {
-            const isCreator = String(protocol.createdBy?.id) === String(currentUser.id);
-            if (isCreator) protocol.note = note;
+            protocol.note = note;
             const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
-            if (participant) participant.note = note;
+            if (participant && String(protocol.createdBy?.id) !== String(currentUser.id)) participant.note = note;
             return protocol;
         });
         document.getElementById('saveProtocolDetailNoteBtn')?.classList.add('protocol-saved');
@@ -2409,32 +2398,34 @@ class ProfileApp {
     renderProtocolNotesPage() {
         const notesCard = document.querySelector('#notesPageView .protocol-notes-card');
         if (!notesCard) return;
-        const currentUser = this.getCurrentUserForProtocol();
         const protocols = this.getVisibleProtocolsForCurrentUser();
         const notes = [];
         protocols.forEach(protocol => {
-            const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
-            const note = (participant?.note || '').trim();
-            if (note) notes.push({ protocol, note, date: participant.respondedAt || protocol.createdAt });
+            const protocolNote = (protocol.note || '').trim();
+            if (protocolNote) notes.push({ protocol, note: protocolNote, date: protocol.updatedAt || protocol.completedAt || protocol.createdAt });
+            (protocol.participants || []).forEach(participant => {
+                const participantNote = (participant.note || '').trim();
+                if (participantNote) notes.push({ protocol, note: participantNote, date: participant.respondedAt || protocol.createdAt, participant });
+            });
         });
         notesCard.innerHTML = notes.length ? `
             <div class="protocol-card-header protocol-section-title-row">
                 <div class="protocol-section-title-icon"><i class="fas fa-note-sticky"></i></div>
-                <div><h3>Qeydlər</h3><p>Sizə aid pratakol qeydləri</p></div>
+                <div><h3>Qeydlər</h3><p>Pratakol qeydləri</p></div>
             </div>
             <div class="protocol-worker-notes-list">
                 ${notes.map(item => `<div class="protocol-worker-note-item">
                     <div class="protocol-list-item-title">${this.escapeProtocolHtml(item.protocol.title || 'Pratakol')}</div>
-                    <div class="protocol-list-item-meta"><span><i class="fas fa-calendar-alt"></i>${this.escapeProtocolHtml(item.date ? this.formatProtocolDateAz(item.date) : item.protocol.createdDateAz)}</span><span><i class="fas fa-user-tie"></i>Rəhbər: ${this.escapeProtocolHtml(item.protocol.createdBy?.name || 'Rəhbər')}</span></div>
+                    <div class="protocol-list-item-meta"><span><i class="fas fa-calendar-alt"></i>${this.escapeProtocolHtml(item.date ? this.formatProtocolDateAz(item.date) : item.protocol.createdDateAz)}</span><span><i class="fas fa-user-tie"></i>Rəhbər: ${this.escapeProtocolHtml(item.protocol.createdBy?.name || 'Rəhbər')}</span>${item.participant ? `<span><i class="fas fa-user"></i>${this.escapeProtocolHtml(item.participant.name || 'Əməkdaş')}</span>` : ''}</div>
                     <p>${this.escapeProtocolHtml(item.note)}</p>
                 </div>`).join('')}
             </div>` : `
-            <div class="protocol-empty-state"><div class="protocol-empty-icon"><i class="fas fa-note-sticky"></i></div><p>Sizə aid qeyd yoxdur.</p></div>`;
+            <div class="protocol-empty-state"><div class="protocol-empty-icon"><i class="fas fa-note-sticky"></i></div><p>Qeyd yoxdur.</p></div>`;
     }
 
     openProtocolRemoveParticipantConfirmModal(participantId) {
         if (!participantId) return;
-        if (!this.canManageProtocolParticipants(this.getProtocolById(this.currentProtocolId))) return;
+        if (!this.canManageProtocolParticipants()) return;
         this.pendingRemoveProtocolParticipantId = participantId;
         document.getElementById('protocolRemoveParticipantConfirmOverlay')?.classList.remove('hidden');
     }
