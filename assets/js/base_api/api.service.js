@@ -350,6 +350,63 @@ class ApiService {
         return this.requestOneC(endpoint, 'DELETE');
     }
 
+
+    // ==================== PROTOCOL / QEYDLƏR ====================
+    unwrapProtocolResponse(response) {
+        if (response?.success === false) {
+            throw new Error(response.error || response.message || 'Protocol API xətası');
+        }
+        return response?.data ?? response;
+    }
+
+    async startProtocol() {
+        return this.unwrapProtocolResponse(await this.post('/protocols/start'));
+    }
+
+    async getProtocols() {
+        return this.unwrapProtocolResponse(await this.get('/protocols'));
+    }
+
+    async getProtocolAvailableEmployees(protocolId) {
+        return this.unwrapProtocolResponse(await this.get(`/protocols/${protocolId}/available-employees`));
+    }
+
+    async addProtocolParticipant(protocolId, employeeId) {
+        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/participants`, {
+            employee_id: employeeId
+        }));
+    }
+
+    async removeProtocolParticipant(protocolId, employeeId) {
+        return this.unwrapProtocolResponse(await this.delete(`/protocols/${protocolId}/participants/${employeeId}`));
+    }
+
+    async updateProtocolTitle(protocolId, title) {
+        return this.unwrapProtocolResponse(await this.patch(`/protocols/${protocolId}/title`, {
+            title
+        }));
+    }
+
+    async completeProtocol(protocolId, payload) {
+        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/complete`, payload));
+    }
+
+    async addProtocolNote(protocolId, content, noteOrder = 0) {
+        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/notes`, {
+            content,
+            note_order: noteOrder
+        }));
+    }
+
+    // Backward-compatible names used by the current Pratakol/Qeydlər UI.
+    start() { return this.startProtocol(); }
+    getAvailableEmployees(protocolId) { return this.getProtocolAvailableEmployees(protocolId); }
+    addParticipant(protocolId, employeeId) { return this.addProtocolParticipant(protocolId, employeeId); }
+    removeParticipant(protocolId, employeeId) { return this.removeProtocolParticipant(protocolId, employeeId); }
+    updateTitle(protocolId, title) { return this.updateProtocolTitle(protocolId, title); }
+    complete(protocolId, payload) { return this.completeProtocol(protocolId, payload); }
+    addNote(protocolId, content, noteOrder = 0) { return this.addProtocolNote(protocolId, content, noteOrder); }
+
     // ==================== AUTH ====================
     async getCurrentUser() {
         return await this.get('/auth/me');
@@ -408,6 +465,7 @@ window.ApiService = ApiService;
 
 // ✅ Global makeApiRequest — bütün köhnə JS-lər bunu axtarır
 const _apiServiceInstance = new ApiService();
+window.apiService = window.apiService || _apiServiceInstance;
 
 window.makeApiRequest = async function(endpoint, method = 'GET', data = null, isFormData = false) {
     if (isFormData) {

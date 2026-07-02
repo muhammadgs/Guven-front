@@ -1926,8 +1926,7 @@ class ProfileApp {
 
 
     getProtocolService() {
-        if (!window.protocolService && window.ProtocolService) window.protocolService = new window.ProtocolService(window.apiService || window.api || this.api);
-        return window.protocolService;
+        return window.apiService || window.api || this.api;
     }
 
     getProtocolApiError(error) { return error?.message || 'Əməliyyat zamanı xəta baş verdi.'; }
@@ -2262,7 +2261,8 @@ class ProfileApp {
         if (message) { list.innerHTML = `<div class="protocol-empty-state">${this.escapeProtocolHtml(message)}</div>`; return; }
         const term = (document.getElementById('protocolEmployeeSearch')?.value || '').toLowerCase().trim();
         const employees = (this.protocolEmployeesCache || []).filter(emp => `${emp.fullName} ${emp.department}`.toLowerCase().includes(term));
-        list.innerHTML = employees.length ? employees.map(emp => `<label class="protocol-employee-select-row protocol-employee-row"><span class="protocol-employee-main"><span class="protocol-participant-avatar protocol-employee-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span><span class="protocol-employee-info"><strong class="protocol-employee-name">${this.escapeProtocolHtml(emp.fullName)}</strong><small class="protocol-employee-department">${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small></span></span><input class="protocol-employee-checkbox" type="checkbox" value="${this.escapeProtocolHtml(emp.id)}"></label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>';
+        const selectedIds = new Set((this.getProtocolById(this.currentProtocolId)?.participants || []).map(p => String(p.id)));
+        list.innerHTML = employees.length ? employees.map(emp => `<label class="protocol-employee-select-row protocol-employee-row"><span class="protocol-employee-main"><span class="protocol-participant-avatar protocol-employee-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span><span class="protocol-employee-info"><strong class="protocol-employee-name">${this.escapeProtocolHtml(emp.fullName)}</strong><small class="protocol-employee-department">${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small></span></span><input class="protocol-employee-checkbox" type="checkbox" value="${this.escapeProtocolHtml(emp.id)}" ${selectedIds.has(String(emp.id)) ? 'checked' : ''}></label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>';
         list.querySelectorAll('.protocol-employee-checkbox').forEach(input => input.addEventListener('change', async () => {
             input.disabled = true;
             const employee = (this.protocolEmployeesCache || []).find(emp => String(emp.id) === String(input.value));
