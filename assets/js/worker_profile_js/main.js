@@ -2010,9 +2010,43 @@ class ProfileApp {
         return {
             id: String(emp.id || emp.user_id || emp.uuid || emp.users_uuid || fullName),
             fullName,
+            name: fullName,
+            email: emp.email || emp.mail || '',
             department: emp.department_name || emp.department || emp.department_title || emp.work_type || '',
             raw: emp
         };
+    }
+
+    getProtocolApi() {
+        if (!this.protocolApi) this.protocolApi = window.protocolApi || (window.ProtocolApiService ? new window.ProtocolApiService(window.api || this.api) : null);
+        return this.protocolApi;
+    }
+
+    getProtocolErrorMessage(error, fallback = 'Əməliyyat zamanı xəta baş verdi.') {
+        return error?.data?.detail || error?.data?.message || error?.detail || error?.message || error?.error || fallback;
+    }
+
+    isProtocolApiError(response) { return response && response.success === false; }
+
+    setProtocolButtonLoading(button, isLoading, text = null) {
+        if (!button) return;
+        if (isLoading) {
+            button.dataset.originalHtml = button.dataset.originalHtml || button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${this.escapeProtocolHtml(text || 'Yüklənir...')}`;
+        } else {
+            button.disabled = false;
+            if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
+            delete button.dataset.originalHtml;
+        }
+    }
+
+    showProtocolFeedback(message, type = 'success') {
+        if (window.Swal?.fire) {
+            window.Swal.fire({ icon: type === 'error' ? 'error' : 'success', title: message, timer: 1800, showConfirmButton: false });
+        } else {
+            alert(message);
+        }
     }
 
     async getProtocolEmployees() {
@@ -2073,7 +2107,7 @@ class ProfileApp {
 
     async initProtocolNotesSection() {
         this.protocolMode = 'worker';
-        this.protocolEmployeesCache = await this.getProtocolEmployees();
+        this.protocolEmployeesCache = [];
         this.currentProtocolId = null;
         this.selectedProtocolEmployeeInfoId = null;
         this.protocolParticipantSearchTerm = '';
@@ -2206,17 +2240,47 @@ class ProfileApp {
         return { total: participants.length, accepted: participants.filter(p => p.status === 'accepted').length, rejected: participants.filter(p => p.status === 'rejected').length, pending: participants.filter(p => p.status === 'pending').length };
     }
 
-    openCreateProtocolModal() {
-        if (!this.canCreateProtocol()) return;
-        const modal = document.getElementById('createProtocolModal');
-        const dateInput = document.getElementById('protocolCreateDate');
-        const titleInput = document.getElementById('protocolTitleInput');
-        const searchInput = document.getElementById('protocolEmployeeSearch');
-        if (dateInput) dateInput.value = this.getTodayDateAz();
-        if (titleInput) titleInput.value = '';
-        if (searchInput) searchInput.value = '';
-        this.renderProtocolEmployeeSelectList();
-        modal?.classList.remove('hidden');
+    async openCreateProtocolModal() {
+        const createBtn = document.getElementById('createProtocolBtn');
+        try {
+            this.setProtocolButtonLoading(createBtn, true, 'Yaradılır...');
+            const draft = await this.getProtocolApi().startProtocol();
+            if (this.isProtocolApiError(draft)) throw new Error(this.getProtocolErrorMessage(draft));
+            const currentUser = this.getCurrentUserForProtocol();
+            const protocol = { id: draft.id, title: draft.title || 'Yeni Protokol', createdAt: draft.created_at || draft.createdAt || new Date().toISOString(), createdDateAz: this.getTodayDateAz(), createdBy: { id: currentUser.id, name: currentUser.name }, status: 'incomplete', note: '', participants: [] };
+            this.currentProtocolId = protocol.id;
+            this.saveProtocols([protocol, ...this.loadProtocols().filter(p => String(p.id) !== String(protocol.id))]);
+            const modal = document.getElementById('createProtocolModal');
+            const dateInput = document.getElementById('protocolCreateDate');
+            const titleInput = document.getElementById('protocolTitleInput');
+            const searchInput = document.getElementById('protocolEmployeeSearch');
+            if (dateInput) dateInput.value = this.getTodayDateAz();
+            if (titleInput) titleInput.value = '';
+            if (searchInput) searchInput.value = '';
+            modal?.classList.remove('hidden');
+            await this.loadAvailableProtocolEmployees(protocol.id);
+        } catch (error) {
+            console.error('Pratakol draft yaradılmadı:', error);
+            this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Yeni pratakol yaradılmadı.'), 'error');
+        } finally {
+            this.setProtocolButtonLoading(createBtn, false);
+        }
+    }
+
+    async loadAvailableProtocolEmployees(protocolId) {
+        const list = document.getElementById('protocolEmployeeSelectList') || document.getElementById('addProtocolEmployeeList');
+        if (list) list.innerHTML = '<div class="protocol-empty-state"><i class="fas fa-spinner fa-spin"></i> Əməkdaşlar yüklənir...</div>';
+        try {
+            const response = await this.getProtocolApi().getAvailableEmployees(protocolId);
+            if (this.isProtocolApiError(response)) throw new Error(this.getProtocolErrorMessage(response));
+            const employees = Array.isArray(response) ? response : (response?.data || []);
+            this.protocolEmployeesCache = employees.map(emp => this.normalizeProtocolEmployee(emp));
+            this.renderProtocolEmployeeSelectList();
+            this.renderAddProtocolEmployeeList();
+        } catch (error) {
+            console.error('Pratakol əməkdaşları yüklənmədi:', error);
+            if (list) list.innerHTML = `<div class="protocol-empty-state">${this.escapeProtocolHtml(this.getProtocolErrorMessage(error, 'Əməkdaşlar yüklənmədi.'))}</div>`;
+        }
     }
 
     closeCreateProtocolModal() { document.getElementById('createProtocolModal')?.classList.add('hidden'); }
@@ -2226,25 +2290,51 @@ class ProfileApp {
         if (!list) return;
         const term = (document.getElementById('protocolEmployeeSearch')?.value || '').toLowerCase().trim();
         const employees = (this.protocolEmployeesCache || []).filter(emp => `${emp.fullName} ${emp.department}`.toLowerCase().includes(term));
-        list.innerHTML = employees.length ? employees.map(emp => `<label class="protocol-employee-select-row protocol-employee-row"><span class="protocol-employee-main"><span class="protocol-participant-avatar protocol-employee-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span><span class="protocol-employee-info"><strong class="protocol-employee-name">${this.escapeProtocolHtml(emp.fullName)}</strong><small class="protocol-employee-department">${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}</small></span></span><input class="protocol-employee-checkbox" type="checkbox" value="${this.escapeProtocolHtml(emp.id)}"></label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>';
+        const selectedIds = new Set((this.getProtocolById(this.currentProtocolId)?.participants || []).map(p => String(p.id)));
+        list.innerHTML = employees.length ? employees.map(emp => `<label class="protocol-employee-select-row protocol-employee-row"><span class="protocol-employee-main"><span class="protocol-participant-avatar protocol-employee-avatar">${this.escapeProtocolHtml(emp.fullName.charAt(0).toUpperCase())}</span><span class="protocol-employee-info"><strong class="protocol-employee-name">${this.escapeProtocolHtml(emp.fullName)}</strong><small class="protocol-employee-department">${this.escapeProtocolHtml(emp.department || 'Şöbə qeyd edilməyib')}${emp.email ? ' • ' + this.escapeProtocolHtml(emp.email) : ''}</small></span></span><input class="protocol-employee-checkbox" type="checkbox" value="${this.escapeProtocolHtml(emp.id)}" ${selectedIds.has(String(emp.id)) ? 'checked' : ''}></label>`).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>';
+        list.querySelectorAll('.protocol-employee-checkbox').forEach(input => input.addEventListener('change', () => this.toggleDraftProtocolParticipant(input)));
     }
 
-    createProtocolFromModal() {
+    async toggleDraftProtocolParticipant(input) {
+        const employeeId = input?.value;
+        if (!employeeId || !this.currentProtocolId) return;
+        input.disabled = true;
+        try {
+            if (input.checked) await this.addEmployeeToCurrentProtocol(employeeId, { silent: true });
+            else await this.removeProtocolParticipant(employeeId, { silent: true });
+        } catch (error) {
+            input.checked = !input.checked;
+            console.error('Pratakol iştirakçı seçimi dəyişmədi:', error);
+            this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Əməkdaş seçimi yadda saxlanmadı.'), 'error');
+        } finally {
+            input.disabled = false;
+        }
+    }
+
+    async createProtocolFromModal() {
+        const submitBtn = document.getElementById('submitCreateProtocolBtn');
         const title = (document.getElementById('protocolTitleInput')?.value || '').trim();
-        if (!title) { alert('Pratakolun başlığı boş ola bilməz.'); return; }
-        const checked = [...document.querySelectorAll('#protocolEmployeeSelectList input[type="checkbox"]:checked')].map(input => input.value);
-        if (!checked.length) { alert('Ən azı bir əməkdaş seçilməlidir.'); return; }
-        const currentUser = this.getCurrentUserForProtocol();
-        const selected = (this.protocolEmployeesCache || []).filter(emp => checked.includes(String(emp.id)));
-        const protocol = {
-            id: this.createProtocolId(), title, createdAt: new Date().toISOString(), createdDateAz: this.getTodayDateAz(),
-            createdBy: { id: currentUser.id, name: currentUser.name }, status: 'incomplete', note: '',
-            participants: selected.map(emp => ({ id: emp.id, name: emp.fullName, department: emp.department || 'Şöbə qeyd edilməyib', status: 'pending', respondedAt: null, note: '', confirmed: false }))
-        };
-        this.saveProtocols([protocol, ...this.loadProtocols()]);
-        selected.forEach(emp => this.addProtocolNotification({ toUserId: emp.id, protocolId: protocol.id, text: `${currentUser.name} sizin üçün yeni pratakol yaratdı: ${title}` }));
-        this.closeCreateProtocolModal();
-        this.openProtocolDetail(protocol.id);
+        if (!title) { this.showProtocolFeedback('Pratakolun başlığı boş ola bilməz.', 'error'); return; }
+        const protocol = this.getProtocolById(this.currentProtocolId);
+        const participants = protocol?.participants || [];
+        if (!participants.length) { this.showProtocolFeedback('Ən azı bir əməkdaş seçilməlidir.', 'error'); return; }
+        try {
+            this.setProtocolButtonLoading(submitBtn, true, 'Yaradılır...');
+            const titleResponse = await this.getProtocolApi().updateProtocolTitle(this.currentProtocolId, title);
+            if (this.isProtocolApiError(titleResponse)) throw new Error(this.getProtocolErrorMessage(titleResponse));
+            const completePayload = { title, description: document.getElementById('protocolDetailNoteText')?.value || '', employee_ids: participants.map(p => Number(p.id)).filter(Number.isFinite) };
+            const completeResponse = await this.getProtocolApi().completeProtocol(this.currentProtocolId, completePayload);
+            if (this.isProtocolApiError(completeResponse)) throw new Error(this.getProtocolErrorMessage(completeResponse));
+            this.updateProtocol(this.currentProtocolId, p => ({ ...p, title, status: 'incomplete', completedAt: new Date().toISOString() }));
+            this.closeCreateProtocolModal();
+            this.renderProtocolLists();
+            this.openProtocolDetail(this.currentProtocolId);
+        } catch (error) {
+            console.error('Pratakol tamamlanmadı:', error);
+            this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Pratakol yaradılmadı.'), 'error');
+        } finally {
+            this.setProtocolButtonLoading(submitBtn, false);
+        }
     }
 
     openProtocolDetail(protocolId) {
@@ -2344,19 +2434,29 @@ class ProfileApp {
         list.querySelectorAll('[data-add-protocol-employee]').forEach(btn => btn.addEventListener('click', () => this.addEmployeeToCurrentProtocol(btn.dataset.addProtocolEmployee)));
     }
 
-    addEmployeeToCurrentProtocol(employeeId) {
+    async addEmployeeToCurrentProtocol(employeeId, options = {}) {
         const employee = (this.protocolEmployeesCache || []).find(emp => String(emp.id) === String(employeeId));
-        if (!employee || !this.currentProtocolId) return;
-        const updated = this.updateProtocol(this.currentProtocolId, protocol => {
-            const exists = (protocol.participants || []).some(p => String(p.id) === String(employee.id));
-            if (!exists) {
-                protocol.participants = [...(protocol.participants || []), { id: employee.id, name: employee.fullName, email: employee.raw?.email || employee.raw?.mail || '', department: employee.department || 'Şöbə qeyd edilməyib', status: 'pending', respondedAt: null, date: protocol.createdDateAz || this.getTodayDateAz(), note: '', confirmed: false }];
-            }
-            return protocol;
-        });
-        if (updated) this.addProtocolNotification({ toUserId: employee.id, protocolId: updated.id, text: `${updated.createdBy?.name || 'Rəhbər'} sizi pratakola əlavə etdi: ${updated.title}` });
-        this.renderProtocolDetail();
-        this.renderAddProtocolEmployeeList();
+        if (!employee || !this.currentProtocolId) return null;
+        const exists = (this.getProtocolById(this.currentProtocolId)?.participants || []).some(p => String(p.id) === String(employee.id));
+        if (exists) return this.getProtocolById(this.currentProtocolId);
+        try {
+            const response = await this.getProtocolApi().addProtocolParticipant(this.currentProtocolId, employee.id);
+            if (this.isProtocolApiError(response)) throw new Error(this.getProtocolErrorMessage(response));
+            const updated = this.updateProtocol(this.currentProtocolId, protocol => {
+                protocol.participants = [...(protocol.participants || []), { id: employee.id, name: employee.fullName, email: employee.email || employee.raw?.email || employee.raw?.mail || '', department: employee.department || 'Şöbə qeyd edilməyib', status: 'pending', respondedAt: null, date: protocol.createdDateAz || this.getTodayDateAz(), note: '', confirmed: false }];
+                return protocol;
+            });
+            if (updated) this.addProtocolNotification({ toUserId: employee.id, protocolId: updated.id, text: `${updated.createdBy?.name || 'Rəhbər'} sizi pratakola əlavə etdi: ${updated.title}` });
+            if (!options.silent) this.showProtocolFeedback('Əməkdaş pratakola əlavə edildi.');
+            this.renderProtocolDetail();
+            this.renderAddProtocolEmployeeList();
+            this.renderProtocolEmployeeSelectList();
+            return updated;
+        } catch (error) {
+            console.error('Əməkdaş pratakola əlavə edilmədi:', error);
+            if (!options.silent) this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Əməkdaş əlavə edilmədi.'), 'error');
+            throw error;
+        }
     }
 
     formatProtocolDateAz(iso) { try { return new Date(iso).toLocaleDateString('az-AZ'); } catch (e) { return ''; } }
@@ -2369,18 +2469,28 @@ class ProfileApp {
         actions?.classList.toggle('hidden', !participant || isCreator || participant.status !== 'pending');
     }
 
-    saveCurrentProtocolNote() {
+    async saveCurrentProtocolNote() {
         const note = document.getElementById('protocolDetailNoteText')?.value || '';
-        const currentUser = this.getCurrentUserForProtocol();
-        this.updateProtocol(this.currentProtocolId, protocol => {
-            protocol.note = note;
-            const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
-            if (participant && String(protocol.createdBy?.id) !== String(currentUser.id)) participant.note = note;
-            return protocol;
-        });
-        document.getElementById('saveProtocolDetailNoteBtn')?.classList.add('protocol-saved');
-        setTimeout(() => document.getElementById('saveProtocolDetailNoteBtn')?.classList.remove('protocol-saved'), 1200);
-        this.renderProtocolDetail();
+        const btn = document.getElementById('saveProtocolDetailNoteBtn');
+        try {
+            this.setProtocolButtonLoading(btn, true, 'Saxlanılır...');
+            const response = await this.getProtocolApi().addProtocolNote(this.currentProtocolId, note, 0);
+            if (this.isProtocolApiError(response)) throw new Error(this.getProtocolErrorMessage(response));
+            const currentUser = this.getCurrentUserForProtocol();
+            this.updateProtocol(this.currentProtocolId, protocol => {
+                protocol.note = note;
+                const participant = protocol.participants?.find(p => String(p.id) === String(currentUser.id));
+                if (participant && String(protocol.createdBy?.id) !== String(currentUser.id)) participant.note = note;
+                return protocol;
+            });
+            btn?.classList.add('protocol-saved');
+            setTimeout(() => btn?.classList.remove('protocol-saved'), 1200);
+            this.showProtocolFeedback('Qeyd yadda saxlanıldı.');
+            this.renderProtocolDetail();
+        } catch (error) {
+            console.error('Pratakol qeydi saxlanmadı:', error);
+            this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Qeyd saxlanmadı.'), 'error');
+        } finally { this.setProtocolButtonLoading(btn, false); }
     }
 
     respondToProtocol(status) {
@@ -2435,25 +2545,36 @@ class ProfileApp {
         this.pendingRemoveProtocolParticipantId = null;
     }
 
-    confirmProtocolRemoveParticipant() {
+    async confirmProtocolRemoveParticipant() {
         const participantId = this.pendingRemoveProtocolParticipantId;
         if (!participantId) return;
         this.closeProtocolRemoveParticipantConfirmModal();
-        this.removeProtocolParticipant(participantId);
+        try { await this.removeProtocolParticipant(participantId); } catch (error) {}
     }
 
-    removeProtocolParticipant(participantId) {
-        this.updateProtocol(this.currentProtocolId, protocol => {
-            const participant = protocol.participants?.find(p => String(p.id) === String(participantId));
-            if (participant) {
-                const log = (() => { try { return JSON.parse(localStorage.getItem(this.getProtocolRemovedLogKey()) || '[]'); } catch (e) { return []; } })();
-                log.push({ protocolId: protocol.id, removedAt: new Date().toISOString(), participant });
-                localStorage.setItem(this.getProtocolRemovedLogKey(), JSON.stringify(log));
-            }
-            protocol.participants = (protocol.participants || []).filter(p => String(p.id) !== String(participantId));
-            return protocol;
-        });
-        this.renderProtocolDetail();
+    async removeProtocolParticipant(participantId, options = {}) {
+        try {
+            const response = await this.getProtocolApi().removeProtocolParticipant(this.currentProtocolId, participantId);
+            if (this.isProtocolApiError(response)) throw new Error(this.getProtocolErrorMessage(response));
+            this.updateProtocol(this.currentProtocolId, protocol => {
+                const participant = protocol.participants?.find(p => String(p.id) === String(participantId));
+                if (participant) {
+                    const log = (() => { try { return JSON.parse(localStorage.getItem(this.getProtocolRemovedLogKey()) || '[]'); } catch (e) { return []; } })();
+                    log.push({ protocolId: protocol.id, removedAt: new Date().toISOString(), participant });
+                    localStorage.setItem(this.getProtocolRemovedLogKey(), JSON.stringify(log));
+                }
+                protocol.participants = (protocol.participants || []).filter(p => String(p.id) !== String(participantId));
+                return protocol;
+            });
+            if (!options.silent) this.showProtocolFeedback('Əməkdaş pratakoldan çıxarıldı.');
+            this.renderProtocolDetail();
+            this.renderProtocolEmployeeSelectList();
+            this.renderAddProtocolEmployeeList();
+        } catch (error) {
+            console.error('Əməkdaş pratakoldan çıxarılmadı:', error);
+            if (!options.silent) this.showProtocolFeedback(this.getProtocolErrorMessage(error, 'Əməkdaş çıxarılmadı.'), 'error');
+            throw error;
+        }
     }
 
     openEmployeeInfoModal(participantId) {
