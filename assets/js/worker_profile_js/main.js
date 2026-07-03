@@ -1912,44 +1912,19 @@ class ProfileApp {
                         </div>
 
                         <div id="notesPageView" class="protocol-page-view hidden">
-                            <div class="protocol-page-top protocol-notes-editor-top">
+                            <div class="protocol-page-top">
                                 <button class="protocol-back-btn" data-back-to-protocol-list type="button">
                                     <i class="fas fa-arrow-left"></i>
                                     Geri
                                 </button>
                                 <h2>Qeydlər</h2>
-                                <div class="protocol-notes-icon-actions" aria-label="Qeyd siyahıları">
-                                    <button id="openIncomingNotesBtn" class="protocol-note-icon-btn" type="button" title="Gələn qeydlər" aria-label="Gələn qeydlər"><i class="fas fa-inbox"></i><span id="incomingNotesBadge" class="protocol-note-badge hidden">0</span></button>
-                                    <button id="openSentNotesBtn" class="protocol-note-icon-btn" type="button" title="Göndərilən qeydlər" aria-label="Göndərilən qeydlər"><i class="fas fa-paper-plane"></i><span id="sentNotesBadge" class="protocol-note-badge hidden">0</span></button>
-                                    <button id="openSavedNotesBtn" class="protocol-note-icon-btn" type="button" title="Yadda saxlananlar" aria-label="Yadda saxlananlar"><i class="fas fa-bookmark"></i></button>
-                                    <button id="openDeletedNotesBtn" class="protocol-note-icon-btn" type="button" title="Silinənlər" aria-label="Silinənlər"><i class="fas fa-trash-alt"></i></button>
-                                </div>
                             </div>
 
-                            <div class="protocol-notes-card protocol-editor-card">
-                                <div class="protocol-editor-grid">
-                                    <label>Tarix<input id="protocolNoteDate" type="text" readonly /></label>
-                                    <label>Əməkdaş<input id="protocolNoteEmployee" type="text" readonly /></label>
-                                </div>
-                                <label class="protocol-note-title-label">Başlıq<input id="protocolNoteTitle" type="text" placeholder="Qeydin başlığını yazın..." /></label>
-                                <div class="protocol-rich-toolbar" aria-label="Rich text toolbar">
-                                    <select id="protocolNoteFontSize" title="Şrift ölçüsü" aria-label="Şrift ölçüsü">
-                                        ${[8,9,10,11,12,14,16,18,20,22,24,26,28,32,36,40,48,56,64].map(size => `<option value="${size}" ${size === 16 ? 'selected' : ''}>${size}</option>`).join('')}
-                                    </select>
-                                    <button type="button" data-note-command="bold"><i class="fas fa-bold"></i></button>
-                                    <button type="button" data-note-command="italic"><i class="fas fa-italic"></i></button>
-                                    <button type="button" data-note-command="underline"><i class="fas fa-underline"></i></button>
-                                    <button type="button" data-note-command="insertUnorderedList"><i class="fas fa-list-ul"></i></button>
-                                </div>
-                                <div id="protocolNoteEditor" class="protocol-rich-editor" contenteditable="true" data-placeholder="Qeydin mətnini yazın..."></div>
-                                <div id="protocolNoteMessage" class="protocol-note-message hidden"></div>
-                                <div class="protocol-note-actions"><button id="saveProtocolNoteDraftBtn" class="protocol-secondary-btn" type="button"><i class="fas fa-save"></i> Yadda saxla</button><button id="openSendNoteModalBtn" class="protocol-save-btn" type="button"><i class="fas fa-paper-plane"></i> Göndər</button></div>
+                            <div class="protocol-notes-card protocol-notes-placeholder">
+                                <h3>Qeydlər</h3>
+                                <p>Qeydlər bölməsi hazırlanır.</p>
                             </div>
                         </div>
-
-                        <div id="sendProtocolNoteModal" class="protocol-modal hidden"><div class="protocol-modal-card protocol-note-send-modal"><div class="protocol-modal-header"><h3><i class="fas fa-paper-plane"></i> Qeydi göndər</h3><button data-close-note-modal type="button"><i class="fas fa-times"></i></button></div><div id="sendNoteValidation" class="protocol-note-validation hidden"></div><div class="protocol-send-grid"><section><h4>Əməkdaş kodu ilə göndər</h4><input id="noteEmployeeCodeInput" class="protocol-note-input" type="text" placeholder="Əməkdaş kodunu yazın..." /><div id="codeEmployeeResult" class="protocol-note-recipient-result"></div><button id="selectCodeEmployeeBtn" class="protocol-secondary-btn" type="button">Bu əməkdaşa göndər</button></section><section><h4>Şirkət və əməkdaş siyahısı ilə göndər</h4><select id="noteCompanySelect" class="protocol-note-input"><option value="">Şirkət seçin...</option></select><div class="protocol-list-search"><i class="fas fa-search"></i><input id="noteEmployeeListSearch" type="text" placeholder="Əməkdaş axtar..." /></div><div id="companyEmployeeList" class="protocol-note-employee-list"></div></section></div><div id="selectedNoteRecipient" class="protocol-selected-recipient hidden"></div><div class="protocol-modal-actions"><button data-close-note-modal type="button">Ləğv et</button><button id="confirmSendProtocolNoteBtn" class="protocol-save-btn" type="button">Göndər</button></div></div></div>
-                        <div id="protocolNoteListModal" class="protocol-modal hidden"><div class="protocol-modal-card protocol-note-list-modal"><div class="protocol-modal-header"><h3 id="protocolNoteListTitle">Qeydlər</h3><button data-close-note-list-modal type="button"><i class="fas fa-times"></i></button></div><div id="protocolNoteListContent" class="protocol-note-list-content"></div></div></div>
-                        <div id="protocolNoteDeleteConfirmOverlay" class="protocol-delete-confirm-overlay hidden"><div class="protocol-delete-confirm-modal"><div class="protocol-delete-confirm-icon"><i class="fas fa-trash-alt"></i></div><h3>Bu qeyd silinsin?</h3><div class="protocol-delete-confirm-actions"><button id="confirmDeleteNoteYes" class="protocol-delete-confirm-yes" type="button">Bəli</button><button id="confirmDeleteNoteNo" class="protocol-delete-confirm-no" type="button">Xeyr</button></div></div></div>
                     </div>
                 `;
 
@@ -2168,9 +2143,6 @@ class ProfileApp {
         this.addProtocolEmployeeSearchTerm = '';
         this.pendingRemoveProtocolParticipantId = null;
         this.pendingDeleteProtocolId = null;
-        this.protocolNotesState = { incoming: [], sent: [], saved: [], deleted: [] };
-        this.protocolNoteCompanyEmployees = [];
-        this.selectedProtocolNoteRecipient = null;
         this.completedProtocolSearchQuery = '';
         this.incompleteProtocolSearchQuery = '';
         const protocolListView = document.getElementById('protocolListView');
@@ -2206,7 +2178,6 @@ class ProfileApp {
         document.getElementById('confirmRemoveParticipantNo')?.addEventListener('click', () => this.closeProtocolRemoveParticipantConfirmModal());
         document.getElementById('confirmRemoveParticipantYes')?.addEventListener('click', () => this.confirmProtocolRemoveParticipant());
         document.getElementById('protocolRemoveParticipantConfirmOverlay')?.addEventListener('click', (event) => { if (event.target?.id === 'protocolRemoveParticipantConfirmOverlay') this.closeProtocolRemoveParticipantConfirmModal(); });
-        this.bindProtocolNotesEditorEvents();
         showView(protocolListView);
         document.getElementById('createProtocolBtn')?.classList.toggle('hidden', !this.canCreateProtocol());
         this.refreshProtocolListsFromApi();
@@ -2579,103 +2550,33 @@ class ProfileApp {
     }
 
 
-    async loadProtocolNotesData() {
-        const service = this.getProtocolService();
-        const safeList = value => Array.isArray(value) ? value : (value?.items || value?.notes || value?.data || []);
-        try {
-            const [incoming, sent, saved, deleted] = await Promise.all([
-                service?.getProtocolIncomingNotes?.(),
-                service?.getProtocolSentNotes?.(),
-                service?.getProtocolSavedNotes?.(),
-                service?.getProtocolDeletedNotes?.()
-            ]);
-            this.protocolNotesState = { incoming: safeList(incoming), sent: safeList(sent), saved: safeList(saved), deleted: safeList(deleted) };
-        } catch (error) {
-            console.warn('⚠️ Qeyd endpointləri yüklənmədi. Backend endpoint tələb olunur.', error);
-            this.protocolNotesState = this.protocolNotesState || { incoming: [], sent: [], saved: [], deleted: [] };
-        }
-        this.updateProtocolNoteBadges();
+    renderProtocolNotesPage() {
+        const notesCard = document.querySelector('#notesPageView .protocol-notes-card');
+        if (!notesCard) return;
+        const protocols = this.getVisibleProtocolsForCurrentUser();
+        const notes = [];
+        protocols.forEach(protocol => {
+            const protocolNote = (protocol.note || '').trim();
+            if (protocolNote) notes.push({ protocol, note: protocolNote, date: protocol.updatedAt || protocol.completedAt || protocol.createdAt });
+            (protocol.participants || []).forEach(participant => {
+                const participantNote = (participant.note || '').trim();
+                if (participantNote) notes.push({ protocol, note: participantNote, date: participant.respondedAt || protocol.createdAt, participant });
+            });
+        });
+        notesCard.innerHTML = notes.length ? `
+            <div class="protocol-card-header protocol-section-title-row">
+                <div class="protocol-section-title-icon"><i class="fas fa-note-sticky"></i></div>
+                <div><h3>Qeydlər</h3><p>Pratakol qeydləri</p></div>
+            </div>
+            <div class="protocol-worker-notes-list">
+                ${notes.map(item => `<div class="protocol-worker-note-item">
+                    <div class="protocol-list-item-title">${this.escapeProtocolHtml(item.protocol.title || 'Pratakol')}</div>
+                    <div class="protocol-list-item-meta"><span><i class="fas fa-calendar-alt"></i>${this.escapeProtocolHtml(item.date ? this.formatProtocolDateAz(item.date) : item.protocol.createdDateAz)}</span><span><i class="fas fa-user-tie"></i>Rəhbər: ${this.escapeProtocolHtml(item.protocol.createdBy?.name || 'Rəhbər')}</span>${item.participant ? `<span><i class="fas fa-user"></i>${this.escapeProtocolHtml(item.participant.name || 'Əməkdaş')}</span>` : ''}</div>
+                    <p>${this.escapeProtocolHtml(item.note)}</p>
+                </div>`).join('')}
+            </div>` : `
+            <div class="protocol-empty-state"><div class="protocol-empty-icon"><i class="fas fa-note-sticky"></i></div><p>Qeyd yoxdur.</p></div>`;
     }
-
-    async renderProtocolNotesPage() {
-        const dateInput = document.getElementById('protocolNoteDate');
-        const employeeInput = document.getElementById('protocolNoteEmployee');
-        if (dateInput) dateInput.value = this.getTodayDateAz();
-        if (employeeInput) employeeInput.value = this.getCurrentUserForProtocol().name;
-        await this.loadProtocolNotesData();
-    }
-
-    updateProtocolNoteBadges() {
-        const state = this.protocolNotesState || { incoming: [], sent: [] };
-        const incomingCount = (state.incoming || []).filter(note => !note.read && !note.is_read).length;
-        const sentCount = (state.sent || []).length;
-        const setBadge = (id, count) => { const el = document.getElementById(id); if (!el) return; el.textContent = count > 99 ? '99+' : String(count); el.classList.toggle('hidden', !count); };
-        setBadge('incomingNotesBadge', incomingCount);
-        setBadge('sentNotesBadge', sentCount);
-    }
-
-    bindProtocolNotesEditorEvents() {
-        document.getElementById('protocolNoteFontSize')?.addEventListener('change', e => { document.execCommand('fontSize', false, '4'); this.applyProtocolFontSize(e.target.value); });
-        document.querySelectorAll('[data-note-command]').forEach(btn => btn.addEventListener('click', () => document.execCommand(btn.dataset.noteCommand, false, null)));
-        document.getElementById('saveProtocolNoteDraftBtn')?.addEventListener('click', () => this.saveProtocolNoteDraft());
-        document.getElementById('openSendNoteModalBtn')?.addEventListener('click', () => this.openSendProtocolNoteModal());
-        document.querySelectorAll('[data-close-note-modal]').forEach(btn => btn.addEventListener('click', () => this.closeSendProtocolNoteModal()));
-        document.getElementById('noteEmployeeCodeInput')?.addEventListener('input', e => this.lookupProtocolNoteEmployeeByCode(e.target.value));
-        document.getElementById('selectCodeEmployeeBtn')?.addEventListener('click', () => this.selectProtocolNoteRecipient(this.protocolCodeRecipient));
-        document.getElementById('noteCompanySelect')?.addEventListener('change', e => this.loadProtocolNoteEmployeesForCompany(e.target.value));
-        document.getElementById('noteEmployeeListSearch')?.addEventListener('input', () => this.renderProtocolNoteCompanyEmployees());
-        document.getElementById('confirmSendProtocolNoteBtn')?.addEventListener('click', () => this.sendProtocolNoteToRecipient());
-        document.getElementById('openIncomingNotesBtn')?.addEventListener('click', () => this.openProtocolNoteList('incoming'));
-        document.getElementById('openSentNotesBtn')?.addEventListener('click', () => this.openProtocolNoteList('sent'));
-        document.getElementById('openSavedNotesBtn')?.addEventListener('click', () => this.openProtocolNoteList('saved'));
-        document.getElementById('openDeletedNotesBtn')?.addEventListener('click', () => this.openProtocolNoteList('deleted'));
-        document.querySelectorAll('[data-close-note-list-modal]').forEach(btn => btn.addEventListener('click', () => document.getElementById('protocolNoteListModal')?.classList.add('hidden')));
-        document.getElementById('confirmDeleteNoteNo')?.addEventListener('click', () => this.closeProtocolNoteDeleteConfirm());
-        document.getElementById('confirmDeleteNoteYes')?.addEventListener('click', () => this.confirmDeleteProtocolNote());
-    }
-
-    applyProtocolFontSize(size) { document.querySelectorAll('#protocolNoteEditor font[size="4"]').forEach(el => { el.removeAttribute('size'); el.style.fontSize = `${size}px`; }); }
-
-    getProtocolNotePayload() { return { title: document.getElementById('protocolNoteTitle')?.value?.trim() || 'Başlıqsız qeyd', content: document.getElementById('protocolNoteEditor')?.innerHTML || '', created_at: new Date().toISOString() }; }
-    showProtocolNoteMessage(text, type = 'info') { const el = document.getElementById('protocolNoteMessage'); if (!el) return; el.textContent = text; el.className = `protocol-note-message ${type}`; }
-
-    async saveProtocolNoteDraft() {
-        try { await this.getProtocolService()?.saveProtocolNoteDraft?.(this.getProtocolNotePayload()); this.showProtocolNoteMessage('Qeyd yadda saxlandı.', 'success'); await this.loadProtocolNotesData(); }
-        catch (error) { console.warn('Backend endpoint tələb olunur', error); this.showProtocolNoteMessage('Backend endpoint tələb olunur', 'error'); }
-    }
-
-    async openSendProtocolNoteModal() { this.selectedProtocolNoteRecipient = null; this.renderSelectedProtocolNoteRecipient(); document.getElementById('sendProtocolNoteModal')?.classList.remove('hidden'); await this.loadProtocolNoteCompanies(); }
-    closeSendProtocolNoteModal() { document.getElementById('sendProtocolNoteModal')?.classList.add('hidden'); }
-
-    normalizeNoteEmployee(emp = {}) { const name = emp.full_name || emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || 'Adsız əməkdaş'; return { id: emp.id || emp.user_id || emp.uuid || emp.code || name, name, code: emp.code || emp.employee_code || emp.user_code || '', department: emp.department || emp.department_name || 'Şöbə qeyd edilməyib', company: emp.company || emp.company_name || emp.company_code || '' }; }
-    renderRecipientCard(emp, button = false) { if (!emp) return ''; return `<div class="protocol-recipient-card"><strong>${this.escapeProtocolHtml(emp.name)}</strong><span>Kod: ${this.escapeProtocolHtml(emp.code || '-')}</span><span>Şöbə: ${this.escapeProtocolHtml(emp.department || '-')}</span>${emp.company ? `<span>Şirkət: ${this.escapeProtocolHtml(emp.company)}</span>` : ''}${button ? `<button class="protocol-secondary-btn" data-select-note-employee="${this.escapeProtocolHtml(emp.id)}" type="button">Seç</button>` : ''}</div>`; }
-
-    async lookupProtocolNoteEmployeeByCode(code) {
-        const box = document.getElementById('codeEmployeeResult'); this.protocolCodeRecipient = null; if (!box) return; if (!code.trim()) { box.innerHTML = ''; return; }
-        try { const res = await this.getProtocolService()?.findProtocolNoteEmployeeByCode?.(code.trim()); const emp = res ? this.normalizeNoteEmployee(res.employee || res) : null; this.protocolCodeRecipient = emp; box.innerHTML = emp ? this.renderRecipientCard(emp) : '<div class="protocol-note-validation">Bu kodla əməkdaş tapılmadı.</div>'; }
-        catch (error) { box.innerHTML = '<div class="protocol-note-validation">Backend endpoint tələb olunur</div>'; }
-    }
-
-    async loadProtocolNoteCompanies() {
-        const select = document.getElementById('noteCompanySelect'); if (!select) return;
-        try { const res = await this.getProtocolService()?.getProtocolNoteCompanies?.(); const list = Array.isArray(res) ? res : (res?.items || res?.companies || []); select.innerHTML = '<option value="">Şirkət seçin...</option>' + list.map(c => `<option value="${this.escapeProtocolHtml(c.code || c.id || c.company_code)}">${this.escapeProtocolHtml(c.name || c.company_name || c.code)}</option>`).join(''); }
-        catch (error) { console.warn('Backend endpoint tələb olunur', error); }
-    }
-
-    async loadProtocolNoteEmployeesForCompany(companyCode) { this.protocolNoteCompanyEmployees = []; if (!companyCode) return this.renderProtocolNoteCompanyEmployees(); try { const res = await this.getProtocolService()?.getProtocolNoteEmployeesByCompany?.(companyCode); const list = Array.isArray(res) ? res : (res?.items || res?.employees || []); this.protocolNoteCompanyEmployees = list.map(e => this.normalizeNoteEmployee(e)); } catch (error) { console.warn('Backend endpoint tələb olunur', error); } this.renderProtocolNoteCompanyEmployees(); }
-    renderProtocolNoteCompanyEmployees() { const box = document.getElementById('companyEmployeeList'); if (!box) return; const term = (document.getElementById('noteEmployeeListSearch')?.value || '').toLowerCase(); const list = (this.protocolNoteCompanyEmployees || []).filter(e => `${e.name} ${e.code} ${e.department}`.toLowerCase().includes(term)); box.innerHTML = list.length ? list.map(e => this.renderRecipientCard(e, true)).join('') : '<div class="protocol-empty-state">Əməkdaş tapılmadı.</div>'; box.querySelectorAll('[data-select-note-employee]').forEach(btn => btn.addEventListener('click', () => this.selectProtocolNoteRecipient((this.protocolNoteCompanyEmployees || []).find(e => String(e.id) === String(btn.dataset.selectNoteEmployee))))); }
-    selectProtocolNoteRecipient(emp) { if (!emp) return; this.selectedProtocolNoteRecipient = emp; this.renderSelectedProtocolNoteRecipient(); }
-    renderSelectedProtocolNoteRecipient() { const box = document.getElementById('selectedNoteRecipient'); if (!box) return; box.classList.toggle('hidden', !this.selectedProtocolNoteRecipient); box.innerHTML = this.selectedProtocolNoteRecipient ? `<strong>Seçilmiş recipient:</strong>${this.renderRecipientCard(this.selectedProtocolNoteRecipient)}` : ''; }
-
-    async sendProtocolNoteToRecipient() { const validation = document.getElementById('sendNoteValidation'); if (!this.selectedProtocolNoteRecipient) { if (validation) { validation.textContent = 'Zəhmət olmasa göndəriləcək əməkdaşı seçin.'; validation.classList.remove('hidden'); } return; } try { await this.getProtocolService()?.sendProtocolNote?.({ ...this.getProtocolNotePayload(), recipient_id: this.selectedProtocolNoteRecipient.id }); this.showProtocolNoteMessage('Qeyd uğurla göndərildi.', 'success'); this.closeSendProtocolNoteModal(); document.getElementById('protocolNoteTitle').value = ''; document.getElementById('protocolNoteEditor').innerHTML = ''; await this.loadProtocolNotesData(); } catch (error) { if (validation) { validation.textContent = 'Backend endpoint tələb olunur'; validation.classList.remove('hidden'); } } }
-
-    openProtocolNoteList(type) { this.currentProtocolNoteListType = type; const titles = { incoming: 'Gələn qeydlər', sent: 'Göndərilən qeydlər', saved: 'Yadda saxlanan qeydlər', deleted: 'Silinən qeydlər' }; document.getElementById('protocolNoteListTitle').textContent = titles[type] || 'Qeydlər'; const list = (this.protocolNotesState?.[type] || []); const content = document.getElementById('protocolNoteListContent'); content.innerHTML = list.length ? list.map(n => this.renderProtocolNoteListItem(n, type)).join('') : '<div class="protocol-empty-state"><div class="protocol-empty-icon"><i class="fas fa-note-sticky"></i></div><p>Qeyd yoxdur.</p></div>'; content.querySelectorAll('[data-delete-note]').forEach(btn => btn.addEventListener('click', () => this.openProtocolNoteDeleteConfirm(btn.dataset.deleteNote))); document.getElementById('protocolNoteListModal')?.classList.remove('hidden'); }
-    renderProtocolNoteListItem(note, type) { const person = type === 'sent' ? (note.recipient_name || note.to_name || 'Əməkdaş') : (note.sender_name || note.from_name || 'Əməkdaş'); const status = type === 'incoming' ? ((note.read || note.is_read) ? 'Oxunub' : 'Oxunmayıb') : (type === 'sent' ? 'Göndərildi' : 'Yadda saxlanıb'); const preview = String(note.content || note.text || '').replace(/<[^>]+>/g, '').slice(0, 120); return `<div class="protocol-note-list-item"><div><strong>${this.escapeProtocolHtml(person)}</strong><span>${this.escapeProtocolHtml(this.formatProtocolDateAz(note.created_at || note.createdAt || new Date()))}</span></div><h4>${this.escapeProtocolHtml(note.title || 'Başlıqsız qeyd')}</h4><p>${this.escapeProtocolHtml(preview)}</p><span class="protocol-note-status">${this.escapeProtocolHtml(status)}</span><button class="protocol-delete-btn" data-delete-note="${this.escapeProtocolHtml(note.id || note.uuid || '')}" type="button" title="Sil"><i class="fas fa-trash-alt"></i></button></div>`; }
-    openProtocolNoteDeleteConfirm(noteId) { this.pendingDeleteNoteId = noteId; document.getElementById('protocolNoteDeleteConfirmOverlay')?.classList.remove('hidden'); }
-    closeProtocolNoteDeleteConfirm() { this.pendingDeleteNoteId = null; document.getElementById('protocolNoteDeleteConfirmOverlay')?.classList.add('hidden'); }
-    async confirmDeleteProtocolNote() { const id = this.pendingDeleteNoteId; this.closeProtocolNoteDeleteConfirm(); if (!id) return; try { await this.getProtocolService()?.deleteProtocolNote?.(id); await this.loadProtocolNotesData(); this.openProtocolNoteList(this.currentProtocolNoteListType || 'incoming'); } catch (error) { alert('Backend endpoint tələb olunur'); } }
-
-    // Köhnə protokol qeydləri renderer-i yeni Qeydlər səhifəsi ilə əvəz olundu.
 
     openProtocolRemoveParticipantConfirmModal(participantId) {
         if (!participantId) return;
@@ -2747,7 +2648,6 @@ class ProfileApp {
 .protocol-detail-view .protocol-participants-header{display:flex;align-items:center;justify-content:space-between;gap:14px}.protocol-detail-view .protocol-section-title-left{display:flex;align-items:center;gap:12px;min-width:0}.protocol-detail-view .protocol-add-employee-btn{width:46px;height:46px;min-width:46px;border-radius:16px;border:1px solid rgba(59,130,246,.24);background:rgba(219,234,254,.82);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(37,99,235,.10);transition:all .22s ease}.protocol-detail-view .protocol-add-employee-btn:hover{transform:translateY(-1px);background:rgba(191,219,254,.95);box-shadow:0 14px 30px rgba(37,99,235,.16)}.protocol-detail-view .protocol-add-employee-btn i{font-size:18px}.protocol-detail-view .protocol-participant-search-wrap{margin:14px 0 16px;min-height:48px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px}.protocol-detail-view .protocol-participant-search-wrap i{color:#3b82f6;font-size:15px}.protocol-detail-view .protocol-participant-search-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-detail-view .protocol-participant-search-wrap input::placeholder{color:#94a3b8}.protocol-add-employee-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.34);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}.protocol-add-employee-overlay.hidden{display:none!important}.protocol-add-employee-modal{width:min(620px,100%);max-height:min(720px,86vh);border-radius:32px;padding:28px;background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.92);box-shadow:0 28px 80px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden}.protocol-add-employee-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.protocol-add-employee-header h3{margin:0;font-size:26px;font-weight:800;color:#1f2937}.protocol-add-employee-header p{margin:6px 0 0;font-size:15px;font-weight:600;color:#64748b}.protocol-add-employee-header button{width:44px;height:44px;border-radius:16px;border:none;background:rgba(219,234,254,.78);color:#2563eb;cursor:pointer}.protocol-add-employee-search{min-height:52px;border-radius:18px;background:rgba(248,250,252,.95);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px;margin-bottom:16px}.protocol-add-employee-search i{color:#3b82f6}.protocol-add-employee-search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-add-employee-search input::placeholder{color:#94a3b8}.protocol-add-employee-list{flex:1;min-height:0;overflow-y:auto;padding-right:6px}.protocol-add-employee-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:18px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.86);margin-bottom:10px}.protocol-add-employee-main{display:flex;align-items:center;gap:12px;min-width:0}.protocol-add-employee-avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:rgba(219,234,254,.92);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.protocol-add-employee-name{font-size:16px;font-weight:800;color:#1f2937}.protocol-add-employee-dept{margin-top:3px;font-size:13px;font-weight:600;color:#64748b}.protocol-add-employee-row-btn{min-height:38px;padding:0 14px;border-radius:14px;border:none;background:#2563eb;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px rgba(37,99,235,.14)}
             @media (max-width:1000px){.protocol-toolbar{flex-direction:column;gap:18px}.protocol-toolbar-actions{align-items:flex-start}.protocol-lists-grid{grid-template-columns:1fr}.protocol-list-card{min-height:320px}}
             @media (max-width:800px){.protocol-notes-page.employees-like-layout{padding:20px!important}.protocol-participant-row{align-items:flex-start;flex-direction:column}.protocol-notes-round-btn{width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important}.protocol-notes-label{font-size:20px!important}}
-            .protocol-notes-editor-top{display:grid!important;grid-template-columns:auto 1fr auto;align-items:center}.protocol-notes-editor-top h2{text-align:center}.protocol-notes-icon-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.protocol-note-icon-btn{position:relative;width:48px;height:48px;border-radius:17px;border:1px solid rgba(59,130,246,.20);background:rgba(255,255,255,.84);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 12px 28px rgba(37,99,235,.10);cursor:pointer;transition:all .22s ease}.protocol-note-icon-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.16)}.protocol-note-badge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #fff}.protocol-editor-card{display:flex;flex-direction:column;gap:16px;overflow:auto}.protocol-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(180px,1fr));gap:14px}.protocol-editor-card label{font-weight:800;color:#1f2937}.protocol-editor-card input,.protocol-note-input,.protocol-editor-card select{width:100%;margin-top:8px;border-radius:18px;border:1px solid rgba(203,213,225,.82);background:rgba(255,255,255,.84);padding:13px 15px;font:inherit;font-weight:650;color:#1f2937;outline:none;box-sizing:border-box}.protocol-rich-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;border-radius:20px;background:rgba(239,246,255,.78);border:1px solid rgba(191,219,254,.72)}.protocol-rich-toolbar select{width:auto;min-width:96px;margin:0;padding:10px 12px;border-radius:14px}.protocol-rich-toolbar button{width:40px;height:40px;border:none;border-radius:14px;background:#fff;color:#2563eb;cursor:pointer;box-shadow:0 6px 16px rgba(37,99,235,.08)}.protocol-rich-editor{min-height:240px;border-radius:22px;border:1px solid rgba(203,213,225,.82);background:rgba(255,255,255,.88);padding:18px;font-size:16px;color:#1f2937;outline:none;overflow:auto}.protocol-rich-editor:empty:before{content:attr(data-placeholder);color:#94a3b8}.protocol-note-actions{display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap}.protocol-note-message,.protocol-note-validation{border-radius:16px;padding:12px 14px;font-weight:800;background:rgba(239,246,255,.9);color:#2563eb}.protocol-note-message.success{background:rgba(220,252,231,.9);color:#15803d}.protocol-note-message.error,.protocol-note-validation{background:rgba(254,242,242,.92);color:#dc2626}.protocol-note-send-modal{width:min(980px,calc(100vw - 36px))}.protocol-send-grid{display:grid;grid-template-columns:1fr 1.25fr;gap:18px;margin-top:18px}.protocol-send-grid section{border-radius:24px;background:rgba(248,250,252,.78);border:1px solid rgba(226,232,240,.84);padding:18px}.protocol-send-grid h4{margin:0 0 12px;font-size:18px;font-weight:900;color:#1f2937}.protocol-note-recipient-result{margin:12px 0}.protocol-recipient-card{display:flex;align-items:flex-start;gap:8px;flex-direction:column;border-radius:18px;border:1px solid rgba(191,219,254,.72);background:rgba(255,255,255,.82);padding:14px;margin:10px 0;color:#475569}.protocol-recipient-card strong{color:#1f2937;font-size:16px}.protocol-note-employee-list,.protocol-note-list-content{max-height:390px;overflow:auto;padding-right:6px}.protocol-selected-recipient{margin-top:16px;border-radius:20px;background:rgba(219,234,254,.55);border:1px solid rgba(147,197,253,.55);padding:14px}.protocol-note-list-item{position:relative;border-radius:20px;background:rgba(248,250,252,.86);border:1px solid rgba(226,232,240,.86);padding:16px 70px 16px 16px;margin-bottom:12px}.protocol-note-list-item>div{display:flex;gap:10px;flex-wrap:wrap;color:#64748b;font-weight:700}.protocol-note-list-item h4{margin:8px 0 6px;font-size:18px;font-weight:900;color:#1f2937}.protocol-note-list-item p{margin:0;color:#475569;font-weight:600}.protocol-note-list-item .protocol-delete-btn{position:absolute;top:16px;right:16px}.protocol-note-status{display:inline-flex;margin-top:10px;border-radius:999px;padding:6px 10px;background:rgba(37,99,235,.10);color:#2563eb;font-size:13px;font-weight:900}@media (max-width:900px){.protocol-notes-editor-top{grid-template-columns:1fr}.protocol-notes-editor-top h2{text-align:left}.protocol-notes-icon-actions{justify-content:flex-start}.protocol-send-grid,.protocol-editor-grid{grid-template-columns:1fr}.protocol-note-send-modal{width:calc(100vw - 24px);padding:20px}.protocol-note-icon-btn{width:44px;height:44px}}
         `;
         document.head.appendChild(style);
     }
