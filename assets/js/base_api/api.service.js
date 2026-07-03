@@ -477,52 +477,6 @@ class ApiService {
         );
     }
 
-    // Qeydlər səhifəsi API-ləri. Backend endpoint tələb olunur: backend bu path-ləri dəstəkləmirsə,
-    // UI xəta mesajı göstərir və localStorage-only final etmir.
-    async saveProtocolNoteDraft(payload) {
-        return this.unwrapProtocolResponse(await this.post('/protocols/notes/drafts', payload));
-    }
-
-    async sendProtocolNote(payload) {
-        return this.unwrapProtocolResponse(await this.post('/protocols/notes/send', payload));
-    }
-
-    async findProtocolNoteEmployeeByCode(code) {
-        return this.unwrapProtocolResponse(await this.get(`/protocols/notes/employees/code/${encodeURIComponent(code)}`));
-    }
-
-    async getProtocolNoteCompanies() {
-        return this.unwrapProtocolResponse(await this.get('/protocols/notes/companies'));
-    }
-
-    async getProtocolNoteEmployeesByCompany(companyCode) {
-        return this.unwrapProtocolResponse(await this.get(`/protocols/notes/companies/${encodeURIComponent(companyCode)}/employees`));
-    }
-
-    async getProtocolIncomingNotes() {
-        return this.unwrapProtocolResponse(await this.get('/protocols/notes/incoming'));
-    }
-
-    async getProtocolSentNotes() {
-        return this.unwrapProtocolResponse(await this.get('/protocols/notes/sent'));
-    }
-
-    async getProtocolSavedNotes() {
-        return this.unwrapProtocolResponse(await this.get('/protocols/notes/saved'));
-    }
-
-    async getProtocolDeletedNotes() {
-        return this.unwrapProtocolResponse(await this.get('/protocols/notes/deleted'));
-    }
-
-    async deleteProtocolNote(noteId) {
-        return this.unwrapProtocolResponse(await this.delete(`/protocols/notes/${encodeURIComponent(noteId)}`));
-    }
-
-    async markProtocolNoteAsRead(noteId) {
-        return this.unwrapProtocolResponse(await this.post(`/protocols/notes/${encodeURIComponent(noteId)}/read`));
-    }
-
 
     // ==================== AUTH ====================
     async getCurrentUser() {
