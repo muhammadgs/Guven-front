@@ -1892,10 +1892,16 @@ class ProfileApp {
                                     Geri
                                 </button>
                                 <div class="notes-page-actions" aria-label="Qeyd siyahıları">
+                                    <button id="openIncomingNotesModalBtn" class="notes-icon-btn notes-badge-btn" type="button" title="Gələn qeydlər" aria-label="Gələn qeydlər">
+                                        <i class="fas fa-inbox"></i><span id="incomingNotesBadge" class="notes-icon-badge hidden">0</span>
+                                    </button>
+                                    <button id="openSentNotesModalBtn" class="notes-icon-btn notes-badge-btn" type="button" title="Göndərilən qeydlər" aria-label="Göndərilən qeydlər">
+                                        <i class="fas fa-paper-plane"></i><span id="sentNotesBadge" class="notes-icon-badge hidden">0</span>
+                                    </button>
                                     <button id="openSavedNotesModalBtn" class="notes-icon-btn" type="button" title="Yadda saxlanan qeydlər" aria-label="Yadda saxlanan qeydlər">
                                         <i class="fas fa-bookmark"></i>
                                     </button>
-                                    <button id="openDraftNotesModalBtn" class="notes-icon-btn notes-trash-btn" type="button" title="Yarımçıq qeydlər" aria-label="Yarımçıq qeydlər">
+                                    <button id="openDraftNotesModalBtn" class="notes-icon-btn notes-trash-btn" type="button" title="Silinənlər" aria-label="Silinənlər">
                                         <i class="fas fa-trash-can"></i>
                                     </button>
                                 </div>
@@ -1912,7 +1918,7 @@ class ProfileApp {
                                     <div class="notes-editor-toolbar" aria-label="Mətn formatlama paneli">
                                         <label class="notes-color-picker" title="Hərfin rəngi"><i class="fas fa-palette"></i><input id="noteTextColor" type="color" value="#1f2937" /></label>
                                         <select id="noteFontFamily" title="Fontu dəyiş"><option value="Inter, sans-serif">Inter</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times New Roman</option><option value="Courier New, monospace">Courier New</option></select>
-                                        <select id="noteFontSize" title="Şrift ölçüsü"><option value="3">Normal</option><option value="4">Böyük</option><option value="5">Daha böyük</option><option value="2">Kiçik</option></select>
+                                        <select id="noteFontSize" title="Şrift ölçüsü"><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="14">14</option><option value="16" selected>16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="26">26</option><option value="28">28</option><option value="32">32</option><option value="36">36</option><option value="40">40</option><option value="48">48</option><option value="56">56</option><option value="64">64</option></select>
                                         <button type="button" data-note-command="underline" title="Altından xətt"><i class="fas fa-underline"></i></button>
                                         <button type="button" data-note-command="italic" title="Yana əyilən hərf"><i class="fas fa-italic"></i></button>
                                         <button type="button" data-note-command="justifyLeft" title="Sola yerləşdir"><i class="fas fa-align-left"></i></button>
@@ -1932,6 +1938,28 @@ class ProfileApp {
                             <div class="protocol-modal-card notes-list-modal-card">
                                 <div class="protocol-modal-header"><h3 id="notesListModalTitle">Qeydlər</h3><button id="closeNotesListModal" type="button"><i class="fas fa-times"></i></button></div>
                                 <div id="notesListModalBody" class="notes-list-modal-body"></div>
+                            </div>
+                        </div>
+
+                        <div id="sendNoteModal" class="protocol-modal hidden">
+                            <div class="protocol-modal-card send-note-modal-card">
+                                <div class="protocol-modal-header"><h3>Qeydi göndər</h3><button id="closeSendNoteModal" type="button"><i class="fas fa-times"></i></button></div>
+                                <div id="sendNoteValidation" class="send-note-validation hidden">Zəhmət olmasa göndəriləcək əməkdaşı seçin.</div>
+                                <div class="send-note-grid">
+                                    <div class="send-note-method-card">
+                                        <h4><i class="fas fa-id-badge"></i> Əməkdaş kodu ilə göndər</h4>
+                                        <input id="sendNoteEmployeeCode" class="send-note-input" type="text" placeholder="Əməkdaş kodunu yazın..." />
+                                        <div id="sendNoteCodeResult" class="send-note-result"></div>
+                                    </div>
+                                    <div class="send-note-method-card">
+                                        <h4><i class="fas fa-building"></i> Şirkət seçərək əməkdaş seçmək</h4>
+                                        <select id="sendNoteCompanySelect" class="send-note-input"><option value="">Şirkət seçin...</option></select>
+                                        <input id="sendNoteEmployeeSearch" class="send-note-input" type="text" placeholder="Əməkdaş axtarın..." />
+                                        <div id="sendNoteEmployeeList" class="send-note-employee-list"></div>
+                                    </div>
+                                </div>
+                                <div id="selectedSendNoteEmployee" class="selected-send-employee hidden"></div>
+                                <div class="protocol-modal-actions send-note-actions"><button id="cancelSendNoteModal" type="button">Ləğv et</button><button id="confirmSendNoteBtn" class="protocol-save-btn" type="button">Göndər</button></div>
                             </div>
                         </div>
 
@@ -2153,7 +2181,9 @@ class ProfileApp {
         document.getElementById('openNotesPageBtn')?.addEventListener('click', () => { showView(notesPage); this.initStandaloneNotesEditor(); });
         document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { this.saveStandaloneNoteDraftIfNeeded(); showView(protocolListView); this.renderProtocolLists(); }));
         document.getElementById('saveStandaloneNoteBtn')?.addEventListener('click', () => this.saveStandaloneNote('saved'));
-        document.getElementById('sendStandaloneNoteBtn')?.addEventListener('click', () => this.sendStandaloneNote());
+        document.getElementById('sendStandaloneNoteBtn')?.addEventListener('click', () => this.openSendStandaloneNoteModal());
+        document.getElementById('openIncomingNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('incoming'));
+        document.getElementById('openSentNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('sent'));
         document.getElementById('openSavedNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('saved'));
         document.getElementById('openDraftNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('draft'));
         document.getElementById('closeNotesListModal')?.addEventListener('click', () => this.closeStandaloneNotesModal());
@@ -2161,6 +2191,13 @@ class ProfileApp {
         document.getElementById('confirmDeleteNoteNo')?.addEventListener('click', () => this.closeStandaloneNoteDeleteConfirm());
         document.getElementById('confirmDeleteNoteYes')?.addEventListener('click', () => this.confirmDeleteStandaloneNote());
         document.getElementById('noteDeleteConfirmOverlay')?.addEventListener('click', (event) => { if (event.target?.id === 'noteDeleteConfirmOverlay') this.closeStandaloneNoteDeleteConfirm(); });
+        document.getElementById('closeSendNoteModal')?.addEventListener('click', () => this.closeSendStandaloneNoteModal());
+        document.getElementById('cancelSendNoteModal')?.addEventListener('click', () => this.closeSendStandaloneNoteModal());
+        document.getElementById('sendNoteModal')?.addEventListener('click', (event) => { if (event.target?.id === 'sendNoteModal') this.closeSendStandaloneNoteModal(); });
+        document.getElementById('sendNoteEmployeeCode')?.addEventListener('input', (event) => this.handleSendNoteCodeSearch(event.target.value));
+        document.getElementById('sendNoteCompanySelect')?.addEventListener('change', (event) => this.loadSendNoteCompanyEmployees(event.target.value));
+        document.getElementById('sendNoteEmployeeSearch')?.addEventListener('input', () => this.renderSendNoteEmployeeList());
+        document.getElementById('confirmSendNoteBtn')?.addEventListener('click', () => this.confirmSendStandaloneNote());
         this.bindStandaloneNoteToolbar();
         document.getElementById('protocolBackBtn')?.addEventListener('click', () => this.openProtocolExitConfirmModal());
         document.getElementById('completeProtocolBtn')?.addEventListener('click', () => this.completeCurrentProtocol());
@@ -2187,10 +2224,14 @@ class ProfileApp {
         document.getElementById('confirmRemoveParticipantYes')?.addEventListener('click', () => this.confirmProtocolRemoveParticipant());
         document.getElementById('protocolRemoveParticipantConfirmOverlay')?.addEventListener('click', (event) => { if (event.target?.id === 'protocolRemoveParticipantConfirmOverlay') this.closeProtocolRemoveParticipantConfirmModal(); });
         showView(protocolListView);
+        this.refreshStandaloneNoteBadges();
         this.refreshProtocolListsFromApi();
     }
 
-    getStandaloneNotesStorageKey(type = 'saved') { return type === 'draft' ? 'gf44_protocol_note_drafts' : 'gf44_protocol_saved_notes'; }
+    getStandaloneNotesStorageKey(type = 'saved') {
+        const keys = { draft: 'gf44_protocol_note_drafts', saved: 'gf44_protocol_saved_notes', incoming: 'gf44_protocol_incoming_notes', sent: 'gf44_protocol_sent_notes' };
+        return keys[type] || keys.saved;
+    }
 
     loadStandaloneNotes(type = 'saved') {
         try {
@@ -2236,7 +2277,7 @@ class ProfileApp {
         }));
         document.getElementById('noteTextColor')?.addEventListener('input', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('foreColor', false, event.target.value); });
         document.getElementById('noteFontFamily')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('fontName', false, event.target.value); });
-        document.getElementById('noteFontSize')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('fontSize', false, event.target.value); });
+        document.getElementById('noteFontSize')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); this.applyStandaloneNoteFontSize(event.target.value); });
     }
 
     buildStandaloneNote(type = 'saved') {
@@ -2256,8 +2297,115 @@ class ProfileApp {
         this.initStandaloneNotesEditor();
     }
 
-    sendStandaloneNote() {
-        this.saveStandaloneNote('saved');
+    sendStandaloneNote() { this.openSendStandaloneNoteModal(); }
+
+
+    applyStandaloneNoteFontSize(size) {
+        const editor = document.getElementById('noteEditorContent');
+        editor?.focus();
+        document.execCommand('fontSize', false, '7');
+        editor?.querySelectorAll('font[size="7"]').forEach(font => {
+            const span = document.createElement('span');
+            span.style.fontSize = `${Number(size) || 16}px`;
+            span.innerHTML = font.innerHTML;
+            font.replaceWith(span);
+        });
+    }
+
+    async requestStandaloneNotes(endpoint, method = 'GET', data = null) {
+        const api = this.getProtocolService();
+        if (!api?.request) return null;
+        // TODO: Backend endpoint tələb olunur (protocol notes endpoints backend-də təsdiqlənməlidir)
+        return api.request(endpoint, method, data);
+    }
+
+    normalizeStandaloneNoteFromApi(note = {}, type = 'saved') {
+        const sender = note.sender || note.from_employee || {};
+        const receiver = note.receiver || note.to_employee || {};
+        return {
+            id: note.id || note.uuid || this.createStandaloneNoteId(), type,
+            title: note.title || 'Başlıqsız qeyd', date: this.formatProtocolDateAz(note.created_at || note.createdAt) || note.date || this.getTodayDateAz(),
+            employee: note.employee || note.sender_name || sender.full_name || sender.name || note.receiver_name || receiver.full_name || receiver.name || 'Əməkdaş',
+            senderName: note.sender_name || sender.full_name || sender.name || note.employee || 'Əməkdaş',
+            receiverName: note.receiver_name || receiver.full_name || receiver.name || note.employee || 'Əməkdaş',
+            content: note.content || note.body || '', text: note.text || this.stripProtocolHtml(note.content || note.body || ''),
+            read: !!(note.read || note.is_read), status: note.status || (type === 'sent' ? 'Göndərildi' : ''), createdAt: note.created_at || note.createdAt || new Date().toISOString()
+        };
+    }
+
+    stripProtocolHtml(value = '') { const div = document.createElement('div'); div.innerHTML = value; return div.textContent || div.innerText || ''; }
+
+    async fetchStandaloneNotes(type = 'saved') {
+        const local = this.loadStandaloneNotes(type);
+        const endpoints = { incoming: '/protocol-notes/incoming', sent: '/protocol-notes/sent', saved: '/protocol-notes/saved', draft: '/protocol-notes/deleted' };
+        try {
+            const res = await this.requestStandaloneNotes(endpoints[type] || endpoints.saved);
+            const list = res?.data || res?.items || res?.notes || (Array.isArray(res) ? res : null);
+            if (Array.isArray(list)) { const mapped = list.map(n => this.normalizeStandaloneNoteFromApi(n, type)); this.saveStandaloneNotes(type, mapped); return mapped; }
+        } catch (error) { console.warn('⚠️ Qeydlər API-dən yüklənmədi:', error); }
+        return local;
+    }
+
+    async refreshStandaloneNoteBadges() {
+        const incoming = await this.fetchStandaloneNotes('incoming');
+        const sent = await this.fetchStandaloneNotes('sent');
+        this.setNotesBadge('incomingNotesBadge', incoming.filter(n => !n.read).length);
+        this.setNotesBadge('sentNotesBadge', sent.length);
+    }
+
+    setNotesBadge(id, count) { const el = document.getElementById(id); if (!el) return; el.textContent = count; el.classList.toggle('hidden', !count); }
+
+    async openSendStandaloneNoteModal() {
+        const note = this.buildStandaloneNote('sent');
+        if (!note.text) { alert('Zəhmət olmasa qeyd kontentini yazın.'); return; }
+        this.pendingSendStandaloneNote = note; this.selectedSendNoteEmployee = null; this.sendNoteEmployees = [];
+        document.getElementById('sendNoteValidation')?.classList.add('hidden');
+        const codeInput = document.getElementById('sendNoteEmployeeCode'); if (codeInput) codeInput.value = '';
+        document.getElementById('sendNoteCodeResult').innerHTML = '';
+        document.getElementById('sendNoteEmployeeList').innerHTML = '';
+        document.getElementById('selectedSendNoteEmployee')?.classList.add('hidden');
+        await this.populateSendNoteCompanies();
+        document.getElementById('sendNoteModal')?.classList.remove('hidden');
+    }
+
+    closeSendStandaloneNoteModal() { document.getElementById('sendNoteModal')?.classList.add('hidden'); }
+
+    async populateSendNoteCompanies() {
+        const select = document.getElementById('sendNoteCompanySelect'); if (!select) return;
+        let companies = [];
+        try { const res = await this.requestStandaloneNotes('/companies/'); companies = res?.data || res?.items || (Array.isArray(res) ? res : []); } catch(e) { console.warn('⚠️ Şirkət siyahısı yüklənmədi:', e); }
+        const currentCode = this.currentCompanyCode || this.employeesService?.currentCompanyCode;
+        if (!companies.length && currentCode) companies = [{ company_code: currentCode, company_name: 'Cari şirkət' }];
+        select.innerHTML = '<option value="">Şirkət seçin...</option>' + companies.map(c => `<option value="${this.escapeProtocolHtml(c.company_code || c.code || c.id)}">${this.escapeProtocolHtml(c.company_name || c.name || c.company_code || c.code)}</option>`).join('');
+    }
+
+    mapSendNoteEmployee(emp = {}) { const m = this.normalizeProtocolEmployee(emp); return { ...m, code: emp.employee_code || emp.code || emp.user_code || emp.fin_code || '', company: emp.company_name || emp.company || '', companyCode: emp.company_code || emp.companyCode || '' }; }
+
+    async handleSendNoteCodeSearch(code) {
+        const box = document.getElementById('sendNoteCodeResult'); if (!box) return; const q = (code || '').trim();
+        if (!q) { box.innerHTML = ''; return; }
+        const employees = await this.getProtocolEmployees();
+        let found = employees.map(e => this.mapSendNoteEmployee(e.raw || e)).find(e => String(e.code).toLowerCase() === q.toLowerCase());
+        if (!found) { try { const res = await this.requestStandaloneNotes(`/users/search?employee_code=${encodeURIComponent(q)}`); const list = res?.data || res?.items || (Array.isArray(res) ? res : []); found = list.map(e => this.mapSendNoteEmployee(e)).find(Boolean); } catch(e) {} }
+        box.innerHTML = found ? this.renderSendNoteEmployeeCard(found) : '<div class="send-note-empty">Bu kodla əməkdaş tapılmadı.</div>';
+        if (found) { this.selectSendNoteEmployee(found); }
+    }
+
+    renderSendNoteEmployeeCard(emp) { return `<div class="send-note-employee-card"><strong>${this.escapeProtocolHtml(emp.fullName)}</strong><span>Əməkdaş kodu: ${this.escapeProtocolHtml(emp.code || '-')}</span><span>Şöbə: ${this.escapeProtocolHtml(emp.department || '-')}</span>${emp.company ? `<span>Şirkət: ${this.escapeProtocolHtml(emp.company)}</span>` : ''}</div>`; }
+
+    async loadSendNoteCompanyEmployees(companyCode) { if (!companyCode) { this.sendNoteEmployees = []; this.renderSendNoteEmployeeList(); return; } try { const res = await this.getProtocolService()?.getUsersByCompany?.(companyCode) || await this.requestStandaloneNotes(`/users/company/${companyCode}`); const list = res?.data || (Array.isArray(res) ? res : []); this.sendNoteEmployees = list.map(e => this.mapSendNoteEmployee(e)); } catch(e) { this.sendNoteEmployees = []; } this.renderSendNoteEmployeeList(); }
+
+    renderSendNoteEmployeeList() { const el = document.getElementById('sendNoteEmployeeList'); if (!el) return; const q = (document.getElementById('sendNoteEmployeeSearch')?.value || '').toLowerCase(); const list = (this.sendNoteEmployees || []).filter(e => `${e.fullName} ${e.code} ${e.department}`.toLowerCase().includes(q)); el.innerHTML = list.length ? list.map(e => `<div class="send-note-employee-row"><div><strong>${this.escapeProtocolHtml(e.fullName)}</strong><span>${this.escapeProtocolHtml(e.code || '-')} · ${this.escapeProtocolHtml(e.department || '-')}</span></div><button type="button" data-select-send-employee="${this.escapeProtocolHtml(e.id)}">Seç</button></div>`).join('') : '<div class="send-note-empty">Əməkdaş tapılmadı.</div>'; el.querySelectorAll('[data-select-send-employee]').forEach(btn => btn.addEventListener('click', () => this.selectSendNoteEmployee(list.find(e => String(e.id) === String(btn.dataset.selectSendEmployee))))); }
+
+    selectSendNoteEmployee(emp) { if (!emp) return; this.selectedSendNoteEmployee = emp; const el = document.getElementById('selectedSendNoteEmployee'); if (el) { el.classList.remove('hidden'); el.innerHTML = `<h4>Seçilmiş əməkdaş</h4>${this.renderSendNoteEmployeeCard(emp)}`; } document.getElementById('sendNoteValidation')?.classList.add('hidden'); }
+
+    async confirmSendStandaloneNote() {
+        if (!this.selectedSendNoteEmployee) { document.getElementById('sendNoteValidation')?.classList.remove('hidden'); return; }
+        const note = { ...this.pendingSendStandaloneNote, receiverId: this.selectedSendNoteEmployee.id, receiverName: this.selectedSendNoteEmployee.fullName, receiverCode: this.selectedSendNoteEmployee.code, status: 'Göndərildi' };
+        try { await this.requestStandaloneNotes('/protocol-notes/send', 'POST', { title: note.title, content: note.content, receiver_id: note.receiverId, receiver_code: note.receiverCode }); } catch (e) { console.warn('⚠️ Qeyd backend-ə göndərilmədi:', e); }
+        this.saveStandaloneNotes('sent', [note, ...this.loadStandaloneNotes('sent')]);
+        const editor = document.getElementById('noteEditorContent'); if (editor) editor.innerHTML = '';
+        this.currentStandaloneNoteDirty = false; this.closeSendStandaloneNoteModal(); this.initStandaloneNotesEditor(); this.refreshStandaloneNoteBadges(); alert('Qeyd uğurla göndərildi.');
     }
 
     saveStandaloneNoteDraftIfNeeded() {
@@ -2270,20 +2418,22 @@ class ProfileApp {
         this.currentStandaloneNoteDirty = false;
     }
 
-    openStandaloneNotesModal(type = 'saved') {
+    async openStandaloneNotesModal(type = 'saved') {
         this.currentStandaloneNotesModalType = type;
         const modal = document.getElementById('notesListModal');
         const title = document.getElementById('notesListModalTitle');
         const body = document.getElementById('notesListModalBody');
-        if (title) title.textContent = type === 'draft' ? 'Yarımçıq qeydlər' : 'Yadda saxlanan qeydlər';
-        const notes = this.loadStandaloneNotes(type);
+        if (title) title.textContent = ({ draft: 'Silinənlər', saved: 'Yadda saxlanan qeydlər', incoming: 'Gələn qeydlər', sent: 'Göndərilən qeydlər' })[type] || 'Qeydlər';
+        const notes = await this.fetchStandaloneNotes(type);
         if (body) body.innerHTML = notes.length ? notes.map(note => `
             <div class="notes-list-item">
                 <div class="notes-list-main">
                     <strong>${this.escapeProtocolHtml(note.title)}</strong>
+                    <span><i class="fas fa-user"></i>${this.escapeProtocolHtml(type === 'sent' ? (note.receiverName || note.employee) : type === 'incoming' ? (note.senderName || note.employee) : note.employee)}</span>
                     <span><i class="fas fa-calendar-day"></i>${this.escapeProtocolHtml(note.date)}</span>
-                    <span><i class="fas fa-user"></i>${this.escapeProtocolHtml(note.employee)}</span>
                     <p>${this.escapeProtocolHtml(note.text || 'Kontent yoxdur')}</p>
+                    ${type === 'incoming' ? `<em class="notes-status-pill ${note.read ? 'read' : 'unread'}">${note.read ? 'Oxunub' : 'Oxunmayıb'}</em>` : ''}
+                    ${type === 'sent' ? '<em class="notes-status-pill sent">Göndərildi</em>' : ''}
                 </div>
                 <button class="notes-list-delete-btn" type="button" data-delete-note-id="${this.escapeProtocolHtml(note.id)}" aria-label="Qeydi sil"><i class="fas fa-trash-can"></i></button>
             </div>`).join('') : '<div class="protocol-empty-state"><p>Bu bölmədə qeyd yoxdur.</p></div>';
@@ -2303,13 +2453,15 @@ class ProfileApp {
         document.getElementById('noteDeleteConfirmOverlay')?.classList.add('hidden');
     }
 
-    confirmDeleteStandaloneNote() {
+    async confirmDeleteStandaloneNote() {
         const pending = this.pendingDeleteStandaloneNote;
         if (!pending) return;
+        try { await this.requestStandaloneNotes(`/protocol-notes/${encodeURIComponent(pending.noteId)}`, 'DELETE'); } catch (e) { console.warn('⚠️ Qeyd backend-dən silinmədi:', e); }
         const notes = this.loadStandaloneNotes(pending.type).filter(note => String(note.id) !== String(pending.noteId));
         this.saveStandaloneNotes(pending.type, notes);
         this.closeStandaloneNoteDeleteConfirm();
         this.openStandaloneNotesModal(pending.type);
+        this.refreshStandaloneNoteBadges();
     }
 
     renderProtocolLists() {
@@ -2725,6 +2877,7 @@ class ProfileApp {
 .protocol-detail-view .protocol-participants-header{display:flex;align-items:center;justify-content:space-between;gap:14px}.protocol-detail-view .protocol-section-title-left{display:flex;align-items:center;gap:12px;min-width:0}.protocol-detail-view .protocol-add-employee-btn{width:46px;height:46px;min-width:46px;border-radius:16px;border:1px solid rgba(59,130,246,.24);background:rgba(219,234,254,.82);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(37,99,235,.10);transition:all .22s ease}.protocol-detail-view .protocol-add-employee-btn:hover{transform:translateY(-1px);background:rgba(191,219,254,.95);box-shadow:0 14px 30px rgba(37,99,235,.16)}.protocol-detail-view .protocol-add-employee-btn i{font-size:18px}.protocol-detail-view .protocol-participant-search-wrap{margin:14px 0 16px;min-height:48px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px}.protocol-detail-view .protocol-participant-search-wrap i{color:#3b82f6;font-size:15px}.protocol-detail-view .protocol-participant-search-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-detail-view .protocol-participant-search-wrap input::placeholder{color:#94a3b8}.protocol-add-employee-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.34);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}.protocol-add-employee-overlay.hidden{display:none!important}.protocol-add-employee-modal{width:min(620px,100%);max-height:min(720px,86vh);border-radius:32px;padding:28px;background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.92);box-shadow:0 28px 80px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden}.protocol-add-employee-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.protocol-add-employee-header h3{margin:0;font-size:26px;font-weight:800;color:#1f2937}.protocol-add-employee-header p{margin:6px 0 0;font-size:15px;font-weight:600;color:#64748b}.protocol-add-employee-header button{width:44px;height:44px;border-radius:16px;border:none;background:rgba(219,234,254,.78);color:#2563eb;cursor:pointer}.protocol-add-employee-search{min-height:52px;border-radius:18px;background:rgba(248,250,252,.95);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px;margin-bottom:16px}.protocol-add-employee-search i{color:#3b82f6}.protocol-add-employee-search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-add-employee-search input::placeholder{color:#94a3b8}.protocol-add-employee-list{flex:1;min-height:0;overflow-y:auto;padding-right:6px}.protocol-add-employee-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:18px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.86);margin-bottom:10px}.protocol-add-employee-main{display:flex;align-items:center;gap:12px;min-width:0}.protocol-add-employee-avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:rgba(219,234,254,.92);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.protocol-add-employee-name{font-size:16px;font-weight:800;color:#1f2937}.protocol-add-employee-dept{margin-top:3px;font-size:13px;font-weight:600;color:#64748b}.protocol-add-employee-row-btn{min-height:38px;padding:0 14px;border-radius:14px;border:none;background:#2563eb;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px rgba(37,99,235,.14)}
 
             .protocol-notes-editor-top{align-items:center}.notes-page-actions{margin-left:auto;display:flex;align-items:center;gap:12px}.notes-icon-btn{width:52px;height:52px;border-radius:18px;border:1px solid rgba(59,130,246,.22);background:rgba(255,255,255,.86);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.10);transition:all .22s ease}.notes-icon-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.16)}.notes-trash-btn{border-color:rgba(248,113,113,.24);color:#ef4444;background:rgba(254,242,242,.9)}.notes-editor-shell{flex:1;min-height:0;overflow:auto;border-radius:32px;background:rgba(255,255,255,.74);border:1px solid rgba(226,232,240,.9);box-shadow:0 18px 48px rgba(15,23,42,.07);padding:24px;display:flex;flex-direction:column;gap:16px}.notes-editor-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px}.notes-meta-card{border-radius:22px;background:linear-gradient(135deg,rgba(239,246,255,.95),rgba(255,255,255,.82));border:1px solid rgba(191,219,254,.62);padding:16px 18px;display:flex;flex-direction:column;gap:6px}.notes-meta-card span,.notes-title-label{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#64748b}.notes-meta-card strong{font-size:19px;font-weight:900;color:#1f2937}.notes-title-input{width:100%;min-height:56px;border-radius:20px;border:1px solid rgba(203,213,225,.9);background:rgba(248,250,252,.9);padding:0 18px;font-size:18px;font-weight:900;color:#1f2937;outline:none;box-sizing:border-box}.notes-rich-editor-card{border-radius:26px;border:1px solid rgba(203,213,225,.86);background:rgba(248,250,252,.72);overflow:hidden;display:flex;flex-direction:column;min-height:360px}.notes-editor-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid rgba(203,213,225,.72);background:rgba(255,255,255,.78)}.notes-editor-toolbar button,.notes-editor-toolbar select,.notes-color-picker{height:42px;border-radius:14px;border:1px solid rgba(203,213,225,.9);background:#fff;color:#334155;font-weight:800;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.notes-editor-toolbar button{width:42px;padding:0}.notes-color-picker input{width:24px;height:24px;border:none;background:transparent;padding:0;cursor:pointer}.notes-editor-content{flex:1;min-height:280px;padding:22px;font-size:16px;line-height:1.65;color:#1f2937;background:rgba(255,255,255,.72);outline:none;overflow:auto}.notes-editor-content:empty:before{content:attr(data-placeholder);color:#94a3b8;font-weight:700}.notes-editor-actions{display:flex;justify-content:flex-end;gap:14px}.notes-send-btn{border:none;border-radius:18px;font-weight:900;padding:12px 20px;cursor:pointer;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 12px 28px rgba(34,197,94,.18)}.notes-list-modal-card{width:min(760px,calc(100vw - 40px))}.notes-list-modal-body{margin-top:18px;max-height:62vh;overflow:auto;padding-right:8px}.notes-list-item{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-radius:22px;background:rgba(248,250,252,.88);border:1px solid rgba(226,232,240,.86);padding:16px 18px;margin-bottom:12px}.notes-list-main{min-width:0;display:flex;flex-direction:column;gap:7px}.notes-list-main strong{font-size:18px;font-weight:900;color:#1f2937}.notes-list-main span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#64748b}.notes-list-main span i{color:#3b82f6}.notes-list-main p{margin:4px 0 0;color:#475569;font-weight:600;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.notes-list-delete-btn{width:42px;height:42px;min-width:42px;border-radius:15px;border:1px solid rgba(248,113,113,.24);background:rgba(254,242,242,.9);color:#ef4444;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.notes-list-delete-btn:hover{background:rgba(254,226,226,.96)}
+.notes-badge-btn{position:relative}.notes-icon-badge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(239,68,68,.24);border:2px solid #fff}.send-note-modal-card{width:min(980px,calc(100vw - 40px))}.send-note-validation{margin-top:16px;border-radius:16px;background:rgba(254,226,226,.9);border:1px solid rgba(248,113,113,.35);color:#dc2626;font-weight:800;padding:12px 14px}.send-note-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:18px;margin-top:20px}.send-note-method-card{border-radius:24px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.9);padding:18px;box-shadow:0 12px 28px rgba(15,23,42,.05)}.send-note-method-card h4{margin:0 0 14px;font-size:17px;font-weight:900;color:#1f2937;display:flex;gap:9px;align-items:center}.send-note-method-card h4 i{color:#2563eb}.send-note-input{width:100%;min-height:48px;border-radius:16px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.92);padding:0 14px;font-size:15px;font-weight:700;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:12px}.send-note-result,.send-note-employee-list{display:flex;flex-direction:column;gap:10px}.send-note-employee-list{max-height:260px;overflow:auto;padding-right:4px}.send-note-employee-card,.selected-send-employee{border-radius:18px;background:rgba(239,246,255,.78);border:1px solid rgba(147,197,253,.38);padding:14px;display:flex;flex-direction:column;gap:6px}.send-note-employee-card strong{font-size:16px;font-weight:900;color:#1f2937}.send-note-employee-card span{font-size:13px;font-weight:700;color:#64748b}.send-note-empty{border-radius:16px;border:1px dashed rgba(148,163,184,.45);padding:14px;color:#64748b;font-weight:800;text-align:center}.send-note-employee-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;background:rgba(255,255,255,.82);border:1px solid rgba(226,232,240,.86);padding:12px}.send-note-employee-row strong{display:block;color:#1f2937;font-weight:900}.send-note-employee-row span{display:block;margin-top:4px;color:#64748b;font-size:13px;font-weight:700}.send-note-employee-row button{border:none;border-radius:14px;background:#2563eb;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.selected-send-employee{margin-top:18px;background:linear-gradient(135deg,rgba(219,234,254,.88),rgba(255,255,255,.86))}.selected-send-employee h4{margin:0 0 10px;font-size:16px;font-weight:900;color:#1f2937}.send-note-actions{justify-content:flex-end;margin-top:20px}.notes-status-pill{width:max-content;border-radius:999px;padding:6px 10px;font-size:12px;font-style:normal;font-weight:900}.notes-status-pill.unread{background:rgba(59,130,246,.12);color:#2563eb}.notes-status-pill.read{background:rgba(148,163,184,.16);color:#64748b}.notes-status-pill.sent{background:rgba(34,197,94,.12);color:#16a34a}@media (max-width:820px){.send-note-grid{grid-template-columns:1fr}.notes-page-actions{gap:8px}.notes-icon-btn{width:46px;height:46px;border-radius:16px}}
             @media (max-width:1000px){.protocol-toolbar{flex-direction:column;gap:18px}.protocol-toolbar-actions{align-items:flex-start}.protocol-lists-grid{grid-template-columns:1fr}.protocol-list-card{min-height:320px}}
             @media (max-width:800px){.protocol-notes-page.employees-like-layout{padding:20px!important}.protocol-participant-row{align-items:flex-start;flex-direction:column}.protocol-notes-round-btn{width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important}.protocol-notes-label{font-size:20px!important}}
         `;
