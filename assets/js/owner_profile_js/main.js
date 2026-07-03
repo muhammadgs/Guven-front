@@ -1886,17 +1886,64 @@ class ProfileApp {
                         </div>
 
                         <div id="notesPageView" class="protocol-page-view hidden">
-                            <div class="protocol-page-top">
+                            <div class="protocol-page-top protocol-notes-editor-top">
                                 <button class="protocol-back-btn" data-back-to-protocol-list type="button">
                                     <i class="fas fa-arrow-left"></i>
                                     Geri
                                 </button>
-                                <h2>Qeydlər</h2>
+                                <div class="notes-page-actions" aria-label="Qeyd siyahıları">
+                                    <button id="openSavedNotesModalBtn" class="notes-icon-btn" type="button" title="Yadda saxlanan qeydlər" aria-label="Yadda saxlanan qeydlər">
+                                        <i class="fas fa-bookmark"></i>
+                                    </button>
+                                    <button id="openDraftNotesModalBtn" class="notes-icon-btn notes-trash-btn" type="button" title="Yarımçıq qeydlər" aria-label="Yarımçıq qeydlər">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="protocol-notes-card protocol-notes-placeholder">
-                                <h3>Qeydlər</h3>
-                                <p>Qeydlər bölməsi hazırlanır.</p>
+                            <div class="notes-editor-shell">
+                                <div class="notes-editor-meta-grid">
+                                    <div class="notes-meta-card"><span>Tarix</span><strong id="noteEditorDate"></strong></div>
+                                    <div class="notes-meta-card"><span>Əməkdaş</span><strong id="noteEditorEmployee"></strong></div>
+                                </div>
+                                <label class="notes-title-label" for="noteEditorTitle">Başlıq</label>
+                                <input id="noteEditorTitle" class="notes-title-input" type="text" readonly />
+                                <div class="notes-rich-editor-card">
+                                    <div class="notes-editor-toolbar" aria-label="Mətn formatlama paneli">
+                                        <label class="notes-color-picker" title="Hərfin rəngi"><i class="fas fa-palette"></i><input id="noteTextColor" type="color" value="#1f2937" /></label>
+                                        <select id="noteFontFamily" title="Fontu dəyiş"><option value="Inter, sans-serif">Inter</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times New Roman</option><option value="Courier New, monospace">Courier New</option></select>
+                                        <select id="noteFontSize" title="Şrift ölçüsü"><option value="3">Normal</option><option value="4">Böyük</option><option value="5">Daha böyük</option><option value="2">Kiçik</option></select>
+                                        <button type="button" data-note-command="underline" title="Altından xətt"><i class="fas fa-underline"></i></button>
+                                        <button type="button" data-note-command="italic" title="Yana əyilən hərf"><i class="fas fa-italic"></i></button>
+                                        <button type="button" data-note-command="justifyLeft" title="Sola yerləşdir"><i class="fas fa-align-left"></i></button>
+                                        <button type="button" data-note-command="justifyCenter" title="Mərkəzə yerləşdir"><i class="fas fa-align-center"></i></button>
+                                        <button type="button" data-note-command="justifyRight" title="Sağa yerləşdir"><i class="fas fa-align-right"></i></button>
+                                    </div>
+                                    <div id="noteEditorContent" class="notes-editor-content" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Qeydin kontentini buraya yazın..."></div>
+                                </div>
+                                <div class="notes-editor-actions">
+                                    <button id="saveStandaloneNoteBtn" class="protocol-save-btn" type="button"><i class="fas fa-save"></i> Yadda saxla</button>
+                                    <button id="sendStandaloneNoteBtn" class="notes-send-btn" type="button"><i class="fas fa-paper-plane"></i> Göndər</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="notesListModal" class="protocol-modal hidden">
+                            <div class="protocol-modal-card notes-list-modal-card">
+                                <div class="protocol-modal-header"><h3 id="notesListModalTitle">Qeydlər</h3><button id="closeNotesListModal" type="button"><i class="fas fa-times"></i></button></div>
+                                <div id="notesListModalBody" class="notes-list-modal-body"></div>
+                            </div>
+                        </div>
+
+                        <div id="noteDeleteConfirmOverlay" class="protocol-delete-confirm-overlay hidden">
+                            <div class="protocol-delete-confirm-modal">
+                                <div class="protocol-delete-confirm-icon"><i class="fas fa-trash-alt"></i></div>
+                                <h3>Qeydi sil</h3>
+                                <p>Bu qeyd silinsin?</p>
+                                <div class="protocol-delete-confirm-actions">
+                                    <button id="confirmDeleteNoteYes" class="protocol-delete-confirm-yes" type="button">Bəli</button>
+                                    <button id="confirmDeleteNoteNo" class="protocol-delete-confirm-no" type="button">Xeyr</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2103,8 +2150,18 @@ class ProfileApp {
             [protocolListView, protocolDetailView, notesPage].forEach(el => el?.classList.add('hidden'));
             view?.classList.remove('hidden');
         };
-        document.getElementById('openNotesPageBtn')?.addEventListener('click', () => { showView(notesPage); });
-        document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { showView(protocolListView); this.renderProtocolLists(); }));
+        document.getElementById('openNotesPageBtn')?.addEventListener('click', () => { showView(notesPage); this.initStandaloneNotesEditor(); });
+        document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { this.saveStandaloneNoteDraftIfNeeded(); showView(protocolListView); this.renderProtocolLists(); }));
+        document.getElementById('saveStandaloneNoteBtn')?.addEventListener('click', () => this.saveStandaloneNote('saved'));
+        document.getElementById('sendStandaloneNoteBtn')?.addEventListener('click', () => this.sendStandaloneNote());
+        document.getElementById('openSavedNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('saved'));
+        document.getElementById('openDraftNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('draft'));
+        document.getElementById('closeNotesListModal')?.addEventListener('click', () => this.closeStandaloneNotesModal());
+        document.getElementById('notesListModal')?.addEventListener('click', (event) => { if (event.target?.id === 'notesListModal') this.closeStandaloneNotesModal(); });
+        document.getElementById('confirmDeleteNoteNo')?.addEventListener('click', () => this.closeStandaloneNoteDeleteConfirm());
+        document.getElementById('confirmDeleteNoteYes')?.addEventListener('click', () => this.confirmDeleteStandaloneNote());
+        document.getElementById('noteDeleteConfirmOverlay')?.addEventListener('click', (event) => { if (event.target?.id === 'noteDeleteConfirmOverlay') this.closeStandaloneNoteDeleteConfirm(); });
+        this.bindStandaloneNoteToolbar();
         document.getElementById('protocolBackBtn')?.addEventListener('click', () => this.openProtocolExitConfirmModal());
         document.getElementById('completeProtocolBtn')?.addEventListener('click', () => this.completeCurrentProtocol());
         document.getElementById('createProtocolBtn')?.addEventListener('click', () => this.openCreateProtocolModal());
@@ -2131,6 +2188,128 @@ class ProfileApp {
         document.getElementById('protocolRemoveParticipantConfirmOverlay')?.addEventListener('click', (event) => { if (event.target?.id === 'protocolRemoveParticipantConfirmOverlay') this.closeProtocolRemoveParticipantConfirmModal(); });
         showView(protocolListView);
         this.refreshProtocolListsFromApi();
+    }
+
+    getStandaloneNotesStorageKey(type = 'saved') { return type === 'draft' ? 'gf44_protocol_note_drafts' : 'gf44_protocol_saved_notes'; }
+
+    loadStandaloneNotes(type = 'saved') {
+        try {
+            const notes = JSON.parse(localStorage.getItem(this.getStandaloneNotesStorageKey(type)) || '[]');
+            return Array.isArray(notes) ? notes : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    saveStandaloneNotes(type = 'saved', notes = []) {
+        localStorage.setItem(this.getStandaloneNotesStorageKey(type), JSON.stringify(notes));
+    }
+
+    createStandaloneNoteId() { return `note_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
+
+    getStandaloneNoteTitle() {
+        const user = this.getCurrentUserForProtocol();
+        return `${this.getTodayDateAz()} — ${user.name}`;
+    }
+
+    initStandaloneNotesEditor() {
+        const user = this.getCurrentUserForProtocol();
+        const title = this.getStandaloneNoteTitle();
+        const dateEl = document.getElementById('noteEditorDate');
+        const employeeEl = document.getElementById('noteEditorEmployee');
+        const titleEl = document.getElementById('noteEditorTitle');
+        if (dateEl) dateEl.textContent = this.getTodayDateAz();
+        if (employeeEl) employeeEl.textContent = user.name;
+        if (titleEl) titleEl.value = title;
+        const editor = document.getElementById('noteEditorContent');
+        if (editor && !editor.dataset.draftWatchBound) {
+            editor.dataset.draftWatchBound = 'true';
+            editor.addEventListener('input', () => { this.currentStandaloneNoteDirty = true; });
+        }
+        this.currentStandaloneNoteDirty = false;
+    }
+
+    bindStandaloneNoteToolbar() {
+        document.querySelectorAll('[data-note-command]').forEach(btn => btn.addEventListener('click', () => {
+            document.getElementById('noteEditorContent')?.focus();
+            document.execCommand(btn.dataset.noteCommand, false, null);
+        }));
+        document.getElementById('noteTextColor')?.addEventListener('input', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('foreColor', false, event.target.value); });
+        document.getElementById('noteFontFamily')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('fontName', false, event.target.value); });
+        document.getElementById('noteFontSize')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('fontSize', false, event.target.value); });
+    }
+
+    buildStandaloneNote(type = 'saved') {
+        const user = this.getCurrentUserForProtocol();
+        const editor = document.getElementById('noteEditorContent');
+        return { id: this.createStandaloneNoteId(), type, title: this.getStandaloneNoteTitle(), date: this.getTodayDateAz(), employee: user.name, employeeId: user.id, content: editor?.innerHTML || '', text: editor?.innerText?.trim() || '', createdAt: new Date().toISOString() };
+    }
+
+    saveStandaloneNote(type = 'saved') {
+        const note = this.buildStandaloneNote(type);
+        if (!note.text) { alert('Zəhmət olmasa qeyd kontentini yazın.'); return; }
+        const notes = this.loadStandaloneNotes(type);
+        this.saveStandaloneNotes(type, [note, ...notes]);
+        const editor = document.getElementById('noteEditorContent');
+        if (editor) editor.innerHTML = '';
+        this.currentStandaloneNoteDirty = false;
+        this.initStandaloneNotesEditor();
+    }
+
+    sendStandaloneNote() {
+        this.saveStandaloneNote('saved');
+    }
+
+    saveStandaloneNoteDraftIfNeeded() {
+        const editor = document.getElementById('noteEditorContent');
+        const text = editor?.innerText?.trim() || '';
+        if (!this.currentStandaloneNoteDirty || !text) return;
+        const note = this.buildStandaloneNote('draft');
+        const drafts = this.loadStandaloneNotes('draft');
+        this.saveStandaloneNotes('draft', [note, ...drafts]);
+        this.currentStandaloneNoteDirty = false;
+    }
+
+    openStandaloneNotesModal(type = 'saved') {
+        this.currentStandaloneNotesModalType = type;
+        const modal = document.getElementById('notesListModal');
+        const title = document.getElementById('notesListModalTitle');
+        const body = document.getElementById('notesListModalBody');
+        if (title) title.textContent = type === 'draft' ? 'Yarımçıq qeydlər' : 'Yadda saxlanan qeydlər';
+        const notes = this.loadStandaloneNotes(type);
+        if (body) body.innerHTML = notes.length ? notes.map(note => `
+            <div class="notes-list-item">
+                <div class="notes-list-main">
+                    <strong>${this.escapeProtocolHtml(note.title)}</strong>
+                    <span><i class="fas fa-calendar-day"></i>${this.escapeProtocolHtml(note.date)}</span>
+                    <span><i class="fas fa-user"></i>${this.escapeProtocolHtml(note.employee)}</span>
+                    <p>${this.escapeProtocolHtml(note.text || 'Kontent yoxdur')}</p>
+                </div>
+                <button class="notes-list-delete-btn" type="button" data-delete-note-id="${this.escapeProtocolHtml(note.id)}" aria-label="Qeydi sil"><i class="fas fa-trash-can"></i></button>
+            </div>`).join('') : '<div class="protocol-empty-state"><p>Bu bölmədə qeyd yoxdur.</p></div>';
+        body?.querySelectorAll('[data-delete-note-id]').forEach(btn => btn.addEventListener('click', () => this.openStandaloneNoteDeleteConfirm(btn.dataset.deleteNoteId, type)));
+        modal?.classList.remove('hidden');
+    }
+
+    closeStandaloneNotesModal() { document.getElementById('notesListModal')?.classList.add('hidden'); }
+
+    openStandaloneNoteDeleteConfirm(noteId, type = 'saved') {
+        this.pendingDeleteStandaloneNote = { noteId, type };
+        document.getElementById('noteDeleteConfirmOverlay')?.classList.remove('hidden');
+    }
+
+    closeStandaloneNoteDeleteConfirm() {
+        this.pendingDeleteStandaloneNote = null;
+        document.getElementById('noteDeleteConfirmOverlay')?.classList.add('hidden');
+    }
+
+    confirmDeleteStandaloneNote() {
+        const pending = this.pendingDeleteStandaloneNote;
+        if (!pending) return;
+        const notes = this.loadStandaloneNotes(pending.type).filter(note => String(note.id) !== String(pending.noteId));
+        this.saveStandaloneNotes(pending.type, notes);
+        this.closeStandaloneNoteDeleteConfirm();
+        this.openStandaloneNotesModal(pending.type);
     }
 
     renderProtocolLists() {
@@ -2544,6 +2723,8 @@ class ProfileApp {
             .protocol-detail-view{padding-top:22px}.protocol-detail-view .protocol-page-top{margin-bottom:18px}.protocol-detail-view .protocol-page-top{display:flex;align-items:center;justify-content:space-between;gap:16px}.protocol-detail-view .protocol-complete-btn{min-height:52px;padding:0 22px;border-radius:18px;border:1px solid rgba(34,197,94,.28);background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 14px 32px rgba(34,197,94,.18);transition:all .22s ease}.protocol-detail-view .protocol-complete-btn:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(34,197,94,.24)}.protocol-detail-view .protocol-complete-btn i{font-size:18px}.protocol-detail-view .protocol-top-grid{gap:18px;margin-bottom:18px}.protocol-detail-view .protocol-top-grid-three{grid-template-columns:repeat(3,minmax(240px,1fr))}.protocol-detail-view .protocol-main-grid{grid-template-columns:minmax(340px,.85fr) minmax(420px,1.35fr);gap:22px;align-items:stretch;margin-top:4px}.protocol-detail-view .protocol-info-card{display:flex;align-items:center;gap:14px;padding:22px 24px;border-radius:28px;background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.88);box-shadow:0 14px 34px rgba(15,23,42,.06)}.protocol-detail-view .protocol-info-icon{width:48px;height:48px;min-width:48px;border-radius:16px;background:rgba(219,234,254,.82);color:#3b82f6;display:inline-flex;align-items:center;justify-content:center}.protocol-detail-view .protocol-info-icon i,.protocol-detail-view .protocol-info-icon svg{font-size:20px;color:#3b82f6}.protocol-detail-view .protocol-info-label{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#64748b;margin-bottom:6px}.protocol-detail-view .protocol-info-value{font-size:24px;font-weight:800;color:#1f2937;line-height:1.2}.protocol-detail-view .protocol-participants-card,.protocol-detail-view .protocol-notes-card{padding:24px;border-radius:30px;background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.88);box-shadow:0 18px 48px rgba(15,23,42,.07)}.protocol-detail-view .protocol-section-title-row{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:18px}.protocol-detail-view .protocol-section-title-icon{width:44px;height:44px;min-width:44px;border-radius:15px;background:rgba(219,234,254,.78);color:#3b82f6;display:inline-flex;align-items:center;justify-content:center}.protocol-detail-view .protocol-section-title-icon i,.protocol-detail-view .protocol-section-title-icon svg{font-size:18px;color:#3b82f6}.protocol-detail-view .protocol-section-title-row h3{margin:0;font-size:24px;font-weight:800;color:#1f2937}.protocol-detail-view .protocol-section-title-row p{margin:4px 0 0;font-size:14px;font-weight:600;color:#64748b}.protocol-detail-view .protocol-participant-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px;background:rgba(248,250,252,.78);border:1px solid rgba(226,232,240,.82);margin-bottom:12px}.protocol-detail-view .protocol-participant-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}.protocol-detail-view .protocol-participant-avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:rgba(219,234,254,.92);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.protocol-detail-view .protocol-participant-main{display:flex;align-items:flex-start;gap:0;min-width:0;flex:1;flex-direction:column}.protocol-detail-view .protocol-participant-main strong{font-size:16px;font-weight:800;color:#1f2937}.protocol-detail-view .protocol-participant-main small{margin-top:3px;font-size:13px;font-weight:600;color:#64748b}.protocol-detail-view .protocol-participant-remove-btn{width:40px;height:40px;min-width:40px;border-radius:14px;border:1px solid rgba(248,113,113,.22);background:rgba(254,242,242,.88);color:#ef4444;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 8px 18px rgba(239,68,68,.08);transition:all .22s ease}.protocol-detail-view .protocol-participant-remove-btn i,.protocol-detail-view .protocol-participant-remove-btn svg{font-size:16px;color:#ef4444}.protocol-detail-view .protocol-participant-remove-btn:hover{transform:translateY(-1px);background:rgba(254,226,226,.95);box-shadow:0 12px 24px rgba(239,68,68,.14)}.protocol-detail-view .protocol-participant-remove-btn:active{transform:translateY(0)}.protocol-detail-view .protocol-notes-card textarea{min-height:250px;border-radius:22px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.78);padding:18px 20px;font-size:16px;font-weight:600;color:#1f2937;resize:vertical}.protocol-detail-view .protocol-notes-card textarea::placeholder{color:#94a3b8}@media (max-width:1100px){.protocol-detail-view .protocol-top-grid-three{grid-template-columns:1fr}.protocol-detail-view .protocol-main-grid{grid-template-columns:1fr}}
 
 .protocol-detail-view .protocol-participants-header{display:flex;align-items:center;justify-content:space-between;gap:14px}.protocol-detail-view .protocol-section-title-left{display:flex;align-items:center;gap:12px;min-width:0}.protocol-detail-view .protocol-add-employee-btn{width:46px;height:46px;min-width:46px;border-radius:16px;border:1px solid rgba(59,130,246,.24);background:rgba(219,234,254,.82);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(37,99,235,.10);transition:all .22s ease}.protocol-detail-view .protocol-add-employee-btn:hover{transform:translateY(-1px);background:rgba(191,219,254,.95);box-shadow:0 14px 30px rgba(37,99,235,.16)}.protocol-detail-view .protocol-add-employee-btn i{font-size:18px}.protocol-detail-view .protocol-participant-search-wrap{margin:14px 0 16px;min-height:48px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px}.protocol-detail-view .protocol-participant-search-wrap i{color:#3b82f6;font-size:15px}.protocol-detail-view .protocol-participant-search-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-detail-view .protocol-participant-search-wrap input::placeholder{color:#94a3b8}.protocol-add-employee-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.34);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}.protocol-add-employee-overlay.hidden{display:none!important}.protocol-add-employee-modal{width:min(620px,100%);max-height:min(720px,86vh);border-radius:32px;padding:28px;background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.92);box-shadow:0 28px 80px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden}.protocol-add-employee-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.protocol-add-employee-header h3{margin:0;font-size:26px;font-weight:800;color:#1f2937}.protocol-add-employee-header p{margin:6px 0 0;font-size:15px;font-weight:600;color:#64748b}.protocol-add-employee-header button{width:44px;height:44px;border-radius:16px;border:none;background:rgba(219,234,254,.78);color:#2563eb;cursor:pointer}.protocol-add-employee-search{min-height:52px;border-radius:18px;background:rgba(248,250,252,.95);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px;margin-bottom:16px}.protocol-add-employee-search i{color:#3b82f6}.protocol-add-employee-search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-add-employee-search input::placeholder{color:#94a3b8}.protocol-add-employee-list{flex:1;min-height:0;overflow-y:auto;padding-right:6px}.protocol-add-employee-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:18px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.86);margin-bottom:10px}.protocol-add-employee-main{display:flex;align-items:center;gap:12px;min-width:0}.protocol-add-employee-avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:rgba(219,234,254,.92);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.protocol-add-employee-name{font-size:16px;font-weight:800;color:#1f2937}.protocol-add-employee-dept{margin-top:3px;font-size:13px;font-weight:600;color:#64748b}.protocol-add-employee-row-btn{min-height:38px;padding:0 14px;border-radius:14px;border:none;background:#2563eb;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px rgba(37,99,235,.14)}
+
+            .protocol-notes-editor-top{align-items:center}.notes-page-actions{margin-left:auto;display:flex;align-items:center;gap:12px}.notes-icon-btn{width:52px;height:52px;border-radius:18px;border:1px solid rgba(59,130,246,.22);background:rgba(255,255,255,.86);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.10);transition:all .22s ease}.notes-icon-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.16)}.notes-trash-btn{border-color:rgba(248,113,113,.24);color:#ef4444;background:rgba(254,242,242,.9)}.notes-editor-shell{flex:1;min-height:0;overflow:auto;border-radius:32px;background:rgba(255,255,255,.74);border:1px solid rgba(226,232,240,.9);box-shadow:0 18px 48px rgba(15,23,42,.07);padding:24px;display:flex;flex-direction:column;gap:16px}.notes-editor-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px}.notes-meta-card{border-radius:22px;background:linear-gradient(135deg,rgba(239,246,255,.95),rgba(255,255,255,.82));border:1px solid rgba(191,219,254,.62);padding:16px 18px;display:flex;flex-direction:column;gap:6px}.notes-meta-card span,.notes-title-label{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#64748b}.notes-meta-card strong{font-size:19px;font-weight:900;color:#1f2937}.notes-title-input{width:100%;min-height:56px;border-radius:20px;border:1px solid rgba(203,213,225,.9);background:rgba(248,250,252,.9);padding:0 18px;font-size:18px;font-weight:900;color:#1f2937;outline:none;box-sizing:border-box}.notes-rich-editor-card{border-radius:26px;border:1px solid rgba(203,213,225,.86);background:rgba(248,250,252,.72);overflow:hidden;display:flex;flex-direction:column;min-height:360px}.notes-editor-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid rgba(203,213,225,.72);background:rgba(255,255,255,.78)}.notes-editor-toolbar button,.notes-editor-toolbar select,.notes-color-picker{height:42px;border-radius:14px;border:1px solid rgba(203,213,225,.9);background:#fff;color:#334155;font-weight:800;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.notes-editor-toolbar button{width:42px;padding:0}.notes-color-picker input{width:24px;height:24px;border:none;background:transparent;padding:0;cursor:pointer}.notes-editor-content{flex:1;min-height:280px;padding:22px;font-size:16px;line-height:1.65;color:#1f2937;background:rgba(255,255,255,.72);outline:none;overflow:auto}.notes-editor-content:empty:before{content:attr(data-placeholder);color:#94a3b8;font-weight:700}.notes-editor-actions{display:flex;justify-content:flex-end;gap:14px}.notes-send-btn{border:none;border-radius:18px;font-weight:900;padding:12px 20px;cursor:pointer;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 12px 28px rgba(34,197,94,.18)}.notes-list-modal-card{width:min(760px,calc(100vw - 40px))}.notes-list-modal-body{margin-top:18px;max-height:62vh;overflow:auto;padding-right:8px}.notes-list-item{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-radius:22px;background:rgba(248,250,252,.88);border:1px solid rgba(226,232,240,.86);padding:16px 18px;margin-bottom:12px}.notes-list-main{min-width:0;display:flex;flex-direction:column;gap:7px}.notes-list-main strong{font-size:18px;font-weight:900;color:#1f2937}.notes-list-main span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#64748b}.notes-list-main span i{color:#3b82f6}.notes-list-main p{margin:4px 0 0;color:#475569;font-weight:600;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.notes-list-delete-btn{width:42px;height:42px;min-width:42px;border-radius:15px;border:1px solid rgba(248,113,113,.24);background:rgba(254,242,242,.9);color:#ef4444;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.notes-list-delete-btn:hover{background:rgba(254,226,226,.96)}
             @media (max-width:1000px){.protocol-toolbar{flex-direction:column;gap:18px}.protocol-toolbar-actions{align-items:flex-start}.protocol-lists-grid{grid-template-columns:1fr}.protocol-list-card{min-height:320px}}
             @media (max-width:800px){.protocol-notes-page.employees-like-layout{padding:20px!important}.protocol-participant-row{align-items:flex-start;flex-direction:column}.protocol-notes-round-btn{width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important}.protocol-notes-label{font-size:20px!important}}
         `;
@@ -2601,6 +2782,7 @@ class ProfileApp {
      */
     clearAllSections() {
         console.log('🧹 Bütün bölmələr təmizlənir...');
+        this.saveStandaloneNoteDraftIfNeeded?.();
 
         // Restore padding if it was removed
         const container = document.querySelector('main .overflow-y-auto');
