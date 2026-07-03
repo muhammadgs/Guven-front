@@ -351,7 +351,9 @@ class ApiService {
     }
 
 
+
     // ==================== PROTOCOL / QEYDLƏR ====================
+
     unwrapProtocolResponse(response) {
         if (response?.success === false) {
             throw new Error(response.error || response.message || 'Protocol API xətası');
@@ -359,53 +361,122 @@ class ApiService {
         return response?.data ?? response;
     }
 
-    async startProtocol() {
+    // ✅ YENİ: Məlumat göndərən startProtocol
+    async startProtocol(data = null) {
+        if (data) {
+            return this.unwrapProtocolResponse(await this.post('/protocols/start', data));
+        }
         return this.unwrapProtocolResponse(await this.post('/protocols/start'));
     }
 
-    async getProtocols() {
-        return this.unwrapProtocolResponse(await this.get('/protocols'));
+    // ✅ YENİ: Məlumat göndərən createProtocol
+    async createProtocol(data) {
+        return this.unwrapProtocolResponse(await this.post('/protocols/', data));
     }
 
-    async getProtocolAvailableEmployees(protocolId) {
-        return this.unwrapProtocolResponse(await this.get(`/protocols/${protocolId}/available-employees`));
+    // ✅ YENİ: Protokolları gətir (filtrlərlə)
+    async getProtocols(filters = {}) {
+        const params = new URLSearchParams(filters).toString();
+        const url = params ? `/protocols?${params}` : '/protocols';
+        return this.unwrapProtocolResponse(await this.get(url));
     }
 
-    async addProtocolParticipant(protocolId, employeeId) {
-        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/participants`, {
-            employee_id: employeeId
-        }));
+    // ✅ YENİ: Protokol məlumatlarını gətir
+    async getProtocol(protocolId) {
+        return this.unwrapProtocolResponse(await this.get(`/protocols/${protocolId}`));
     }
 
-    async removeProtocolParticipant(protocolId, employeeId) {
-        return this.unwrapProtocolResponse(await this.delete(`/protocols/${protocolId}/participants/${employeeId}`));
+    // ✅ YENİ: Protokol yenilə
+    async updateProtocol(protocolId, data) {
+        return this.unwrapProtocolResponse(await this.put(`/protocols/${protocolId}`, data));
     }
 
-    async updateProtocolTitle(protocolId, title) {
-        return this.unwrapProtocolResponse(await this.patch(`/protocols/${protocolId}/title`, {
-            title
-        }));
+    // ✅ YENİ: Protokol sil
+    async deleteProtocol(protocolId) {
+        return this.unwrapProtocolResponse(await this.delete(`/protocols/${protocolId}`));
     }
 
+    // ✅ YENİ: Protokol iştirakçılarını gətir
+    async getProtocolParticipants(protocolId) {
+        return this.unwrapProtocolResponse(await this.get(`/protocols/${protocolId}/participants`));
+    }
+
+    // ✅ YENİ: Protokola iştirakçı əlavə et
+    async addProtocolParticipant(protocolId, userId) {
+        const params = new URLSearchParams();
+        // userId array ola bilər
+        if (Array.isArray(userId)) {
+            userId.forEach(id => params.append('user_ids', id));
+        } else {
+            params.append('user_ids', userId);
+        }
+        return this.unwrapProtocolResponse(
+            await this.post(`/protocols/${protocolId}/participants?${params.toString()}`)
+        );
+    }
+
+    // ✅ YENİ: Protokoldan iştirakçı çıxar
+    async removeProtocolParticipant(protocolId, userId) {
+        return this.unwrapProtocolResponse(
+            await this.delete(`/protocols/${protocolId}/participants/${userId}`)
+        );
+    }
+
+    // ✅ YENİ: Protokolu tamamla
     async completeProtocol(protocolId, payload) {
-        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/complete`, payload));
+        return this.unwrapProtocolResponse(
+            await this.post(`/protocols/${protocolId}/complete`, payload)
+        );
     }
 
-    async addProtocolNote(protocolId, content, noteOrder = 0) {
-        return this.unwrapProtocolResponse(await this.post(`/protocols/${protocolId}/notes`, {
-            content,
-            note_order: noteOrder
-        }));
+    // ✅ YENİ: İstifadəçiləri axtar (protokola əlavə etmək üçün)
+    async searchUsersForProtocol(search, companyCode = null) {
+        const params = new URLSearchParams({ search });
+        if (companyCode) {
+            params.append('company_code', companyCode);
+        }
+        return this.unwrapProtocolResponse(
+            await this.get(`/protocols/users/search?${params.toString()}`)
+        );
     }
 
-    // Backward-compatible names used by the current Pratakol/Qeydlər UI.
-    start() { return this.startProtocol(); }
-    getAvailableEmployees(protocolId) { return this.getProtocolAvailableEmployees(protocolId); }
-    addParticipant(protocolId, employeeId) { return this.addProtocolParticipant(protocolId, employeeId); }
-    removeParticipant(protocolId, employeeId) { return this.removeProtocolParticipant(protocolId, employeeId); }
-    updateTitle(protocolId, title) { return this.updateProtocolTitle(protocolId, title); }
-    complete(protocolId, payload) { return this.completeProtocol(protocolId, payload); }
-    addNote(protocolId, content, noteOrder = 0) { return this.addProtocolNote(protocolId, content, noteOrder); }
+
+    // ==================== USERS ====================
+
+    async getUsersByCompany(companyCode) {
+        return this.unwrapProtocolResponse(await this.get(`/users/company/${companyCode}`));
+    }
+
+    // ✅ BACKWARD COMPATIBILITY (köhnə metodlar)
+    getAvailableEmployees(protocolId) {
+        return this.getProtocolParticipants(protocolId);
+    }
+
+    addParticipant(protocolId, employeeId) {
+        return this.addProtocolParticipant(protocolId, employeeId);
+    }
+
+    removeParticipant(protocolId, employeeId) {
+        return this.removeProtocolParticipant(protocolId, employeeId);
+    }
+
+    updateTitle(protocolId, title) {
+        return this.updateProtocol(protocolId, { title });
+    }
+
+    complete(protocolId, payload) {
+        return this.completeProtocol(protocolId, payload);
+    }
+
+    addNote(protocolId, content, noteOrder = 0) {
+        return this.unwrapProtocolResponse(
+            this.post(`/protocols/${protocolId}/notes`, {
+                content,
+                note_order: noteOrder
+            })
+        );
+    }
+
 
     // ==================== AUTH ====================
     async getCurrentUser() {

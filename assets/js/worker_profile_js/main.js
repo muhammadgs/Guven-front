@@ -2269,26 +2269,48 @@ class ProfileApp {
         return { total: participants.length, accepted: participants.filter(p => p.status === 'accepted').length, rejected: participants.filter(p => p.status === 'rejected').length, pending: participants.filter(p => p.status === 'pending').length };
     }
 
+    // main.js - openCreateProtocolModal metodunda dəyişiklik
+
     async openCreateProtocolModal() {
         if (!this.canCreateProtocol()) return;
         const button = document.getElementById('createProtocolBtn');
         this.setProtocolButtonLoading(button, true, 'Yaradılır...');
         try {
-            const draft = await this.getProtocolService().start();
+            // ✅ DÜZGÜN: Başlıq və təsvir ilə protokol yarat
+            const protocolData = {
+                title: 'Yeni Protokol',
+                description: '',
+                protocol_type: 'general',
+                company_code: this.currentCompanyCode || '',
+                participant_ids: []  // Boş, sonra əlavə ediləcək
+            };
+
+            const draft = await this.getProtocolService().createProtocol(protocolData);
+            // VƏ YA əgər start metodunu istifadə etmək istəyirsinizsə:
+            // const draft = await this.getProtocolService().start(protocolData);
+
             this.currentProtocolId = draft.id;
             const currentUser = this.getCurrentUserForProtocol();
-            const protocol = this.normalizeProtocolFromApi({ ...draft, createdBy: { id: currentUser.id, name: currentUser.name }, participants: [] });
+            const protocol = this.normalizeProtocolFromApi({
+                ...draft,
+                createdBy: { id: currentUser.id, name: currentUser.name },
+                participants: []
+            });
             this.saveProtocols([protocol, ...this.loadProtocols().filter(p => String(p.id) !== String(protocol.id))]);
+
             const modal = document.getElementById('createProtocolModal');
             const dateInput = document.getElementById('protocolCreateDate');
             const titleInput = document.getElementById('protocolTitleInput');
             const searchInput = document.getElementById('protocolEmployeeSearch');
+
             if (dateInput) dateInput.value = protocol.createdDateAz || this.getTodayDateAz();
             if (titleInput) titleInput.value = protocol.title === 'Yeni Protokol' ? '' : protocol.title;
             if (searchInput) searchInput.value = '';
+
             this.protocolEmployeesCache = [];
             this.renderProtocolEmployeeSelectList('Əməkdaşlar yüklənir...');
             modal?.classList.remove('hidden');
+
             try {
                 const employees = await this.getProtocolService().getAvailableEmployees(this.currentProtocolId);
                 this.protocolEmployeesCache = (Array.isArray(employees) ? employees : (employees?.employees || employees?.items || [])).map(emp => this.mapProtocolEmployee(emp));
