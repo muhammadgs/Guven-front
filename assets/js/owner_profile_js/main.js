@@ -2281,11 +2281,6 @@ class ProfileApp {
         return input?.value?.trim() || '';
     }
 
-    getDefaultStandaloneNoteTitle() {
-        const user = this.getCurrentUserForProtocol();
-        return `${this.getTodayDateAz()} — ${user.name}`;
-    }
-
     openNoteTitleRequiredModal() { document.getElementById('noteTitleRequiredModal')?.classList.remove('hidden'); }
     closeNoteTitleRequiredModal() { document.getElementById('noteTitleRequiredModal')?.classList.add('hidden'); document.getElementById('noteEditorTitle')?.focus(); }
     openNotesBackConfirmModal() { document.getElementById('notesBackConfirmModal')?.classList.remove('hidden'); }
@@ -2294,13 +2289,12 @@ class ProfileApp {
 
     initStandaloneNotesEditor() {
         const user = this.getCurrentUserForProtocol();
-        const title = this.getDefaultStandaloneNoteTitle();
         const dateEl = document.getElementById('noteEditorDate');
         const employeeEl = document.getElementById('noteEditorEmployee');
         const titleEl = document.getElementById('noteEditorTitle');
         if (dateEl) dateEl.textContent = this.getTodayDateAz();
         if (employeeEl) employeeEl.textContent = user.name;
-        if (titleEl) titleEl.value = title;
+        if (titleEl) titleEl.value = '';
         const editor = document.getElementById('noteEditorContent');
         if (titleEl && !titleEl.dataset.draftWatchBound) {
             titleEl.dataset.draftWatchBound = 'true';
