@@ -1912,7 +1912,7 @@ class ProfileApp {
                                     <div class="notes-meta-card"><span>Tarix</span><strong id="noteEditorDate"></strong></div>
                                     <div class="notes-meta-card"><span>Əməkdaş</span><strong id="noteEditorEmployee"></strong></div>
                                 </div>
-                                <label class="notes-title-label" for="noteEditorTitle">Başlıq</label>
+                                <label class="notes-title-label" for="noteEditorTitle">BAŞLIQ</label>
                                 <input id="noteEditorTitle" class="notes-title-input" type="text" placeholder="Qeyd başlığını yazın..." />
                                 <div class="notes-rich-editor-card">
                                     <div class="notes-editor-toolbar" aria-label="Mətn formatlama paneli">
