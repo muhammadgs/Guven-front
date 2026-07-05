@@ -1913,12 +1913,12 @@ class ProfileApp {
                                     <div class="notes-meta-card"><span>Əməkdaş</span><strong id="noteEditorEmployee"></strong></div>
                                 </div>
                                 <label class="notes-title-label" for="noteEditorTitle">Başlıq</label>
-                                <input id="noteEditorTitle" class="notes-title-input" type="text" readonly />
+                                <input id="noteEditorTitle" class="notes-title-input" type="text" placeholder="Qeyd başlığını yazın..." />
                                 <div class="notes-rich-editor-card">
                                     <div class="notes-editor-toolbar" aria-label="Mətn formatlama paneli">
                                         <label class="notes-color-picker" title="Hərfin rəngi"><i class="fas fa-palette"></i><input id="noteTextColor" type="color" value="#1f2937" /></label>
                                         <select id="noteFontFamily" title="Fontu dəyiş"><option value="Inter, sans-serif">Inter</option><option value="Arial, sans-serif">Arial</option><option value="Georgia, serif">Georgia</option><option value="Times New Roman, serif">Times New Roman</option><option value="Courier New, monospace">Courier New</option></select>
-                                        <select id="noteFontSize" title="Şrift ölçüsü"><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="14">14</option><option value="16" selected>16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="26">26</option><option value="28">28</option><option value="32">32</option><option value="36">36</option><option value="40">40</option><option value="48">48</option><option value="56">56</option><option value="64">64</option></select>
+                                        <div class="notes-font-size-dropdown" id="noteFontSizeDropdown"><button id="noteFontSizeTrigger" class="notes-font-size-trigger" type="button" title="Şrift ölçüsü" aria-haspopup="listbox" aria-expanded="false"><span id="noteFontSizeValue">16</span><i class="fas fa-chevron-down"></i></button><div id="noteFontSizeMenu" class="notes-font-size-menu hidden" role="listbox" aria-label="Şrift ölçüsü">${[8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64].map(size => `<button class="notes-font-size-option${size === 16 ? ' active' : ''}" type="button" role="option" aria-selected="${size === 16}" data-note-font-size="${size}">${size}</button>`).join('')}</div></div>
                                         <button type="button" data-note-command="underline" title="Altından xətt"><i class="fas fa-underline"></i></button>
                                         <button type="button" data-note-command="italic" title="Yana əyilən hərf"><i class="fas fa-italic"></i></button>
                                         <button type="button" data-note-command="justifyLeft" title="Sola yerləşdir"><i class="fas fa-align-left"></i></button>
@@ -1960,6 +1960,27 @@ class ProfileApp {
                                 </div>
                                 <div id="selectedSendNoteEmployee" class="selected-send-employee hidden"></div>
                                 <div class="protocol-modal-actions send-note-actions"><button id="cancelSendNoteModal" type="button">Ləğv et</button><button id="confirmSendNoteBtn" class="protocol-save-btn" type="button">Göndər</button></div>
+                            </div>
+                        </div>
+
+
+
+                        <div id="noteTitleRequiredModal" class="notes-glass-modal hidden">
+                            <div class="notes-glass-modal-card">
+                                <p>Zəhmət olmasa başlıq əlavə edin.</p>
+                                <div class="notes-glass-modal-actions single">
+                                    <button id="closeNoteTitleRequiredModal" class="notes-modal-primary" type="button">Bağla</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="notesBackConfirmModal" class="notes-glass-modal hidden">
+                            <div class="notes-glass-modal-card">
+                                <p>Çıxmaq istəyirsiz?</p>
+                                <div class="notes-glass-modal-actions">
+                                    <button id="confirmNotesBackYes" class="notes-modal-primary" type="button">Bəli</button>
+                                    <button id="confirmNotesBackNo" class="notes-modal-secondary" type="button">Xeyr</button>
+                                </div>
                             </div>
                         </div>
 
@@ -2178,8 +2199,10 @@ class ProfileApp {
             [protocolListView, protocolDetailView, notesPage].forEach(el => el?.classList.add('hidden'));
             view?.classList.remove('hidden');
         };
+        this.showProtocolNotesView = showView;
+        this.protocolNotesListViewElement = protocolListView;
         document.getElementById('openNotesPageBtn')?.addEventListener('click', () => { showView(notesPage); this.initStandaloneNotesEditor(); });
-        document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => { this.saveStandaloneNoteDraftIfNeeded(); showView(protocolListView); this.renderProtocolLists(); }));
+        document.querySelectorAll('[data-back-to-protocol-list]').forEach(btn => btn.addEventListener('click', () => this.openNotesBackConfirmModal()));
         document.getElementById('saveStandaloneNoteBtn')?.addEventListener('click', () => this.saveStandaloneNote('saved'));
         document.getElementById('sendStandaloneNoteBtn')?.addEventListener('click', () => this.openSendStandaloneNoteModal());
         document.getElementById('openIncomingNotesModalBtn')?.addEventListener('click', () => this.openStandaloneNotesModal('incoming'));
@@ -2198,6 +2221,11 @@ class ProfileApp {
         document.getElementById('sendNoteCompanySelect')?.addEventListener('change', (event) => this.loadSendNoteCompanyEmployees(event.target.value));
         document.getElementById('sendNoteEmployeeSearch')?.addEventListener('input', () => this.renderSendNoteEmployeeList());
         document.getElementById('confirmSendNoteBtn')?.addEventListener('click', () => this.confirmSendStandaloneNote());
+        document.getElementById('closeNoteTitleRequiredModal')?.addEventListener('click', () => this.closeNoteTitleRequiredModal());
+        document.getElementById('noteTitleRequiredModal')?.addEventListener('click', (event) => { if (event.target?.id === 'noteTitleRequiredModal') this.closeNoteTitleRequiredModal(); });
+        document.getElementById('confirmNotesBackNo')?.addEventListener('click', () => this.closeNotesBackConfirmModal());
+        document.getElementById('confirmNotesBackYes')?.addEventListener('click', () => this.confirmNotesBackNavigation());
+        document.getElementById('notesBackConfirmModal')?.addEventListener('click', (event) => { if (event.target?.id === 'notesBackConfirmModal') this.closeNotesBackConfirmModal(); });
         this.bindStandaloneNoteToolbar();
         document.getElementById('protocolBackBtn')?.addEventListener('click', () => this.openProtocolExitConfirmModal());
         document.getElementById('completeProtocolBtn')?.addEventListener('click', () => this.completeCurrentProtocol());
@@ -2249,13 +2277,24 @@ class ProfileApp {
     createStandaloneNoteId() { return `note_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`; }
 
     getStandaloneNoteTitle() {
+        const input = document.getElementById('noteEditorTitle');
+        return input?.value?.trim() || '';
+    }
+
+    getDefaultStandaloneNoteTitle() {
         const user = this.getCurrentUserForProtocol();
         return `${this.getTodayDateAz()} — ${user.name}`;
     }
 
+    openNoteTitleRequiredModal() { document.getElementById('noteTitleRequiredModal')?.classList.remove('hidden'); }
+    closeNoteTitleRequiredModal() { document.getElementById('noteTitleRequiredModal')?.classList.add('hidden'); document.getElementById('noteEditorTitle')?.focus(); }
+    openNotesBackConfirmModal() { document.getElementById('notesBackConfirmModal')?.classList.remove('hidden'); }
+    closeNotesBackConfirmModal() { document.getElementById('notesBackConfirmModal')?.classList.add('hidden'); }
+    confirmNotesBackNavigation() { this.saveStandaloneNoteDraftIfNeeded(); this.closeNotesBackConfirmModal(); this.showProtocolNotesView?.(this.protocolNotesListViewElement); this.renderProtocolLists(); }
+
     initStandaloneNotesEditor() {
         const user = this.getCurrentUserForProtocol();
-        const title = this.getStandaloneNoteTitle();
+        const title = this.getDefaultStandaloneNoteTitle();
         const dateEl = document.getElementById('noteEditorDate');
         const employeeEl = document.getElementById('noteEditorEmployee');
         const titleEl = document.getElementById('noteEditorTitle');
@@ -2263,6 +2302,10 @@ class ProfileApp {
         if (employeeEl) employeeEl.textContent = user.name;
         if (titleEl) titleEl.value = title;
         const editor = document.getElementById('noteEditorContent');
+        if (titleEl && !titleEl.dataset.draftWatchBound) {
+            titleEl.dataset.draftWatchBound = 'true';
+            titleEl.addEventListener('input', () => { this.currentStandaloneNoteDirty = true; });
+        }
         if (editor && !editor.dataset.draftWatchBound) {
             editor.dataset.draftWatchBound = 'true';
             editor.addEventListener('input', () => { this.currentStandaloneNoteDirty = true; });
@@ -2277,7 +2320,7 @@ class ProfileApp {
         }));
         document.getElementById('noteTextColor')?.addEventListener('input', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('foreColor', false, event.target.value); });
         document.getElementById('noteFontFamily')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); document.execCommand('fontName', false, event.target.value); });
-        document.getElementById('noteFontSize')?.addEventListener('change', (event) => { document.getElementById('noteEditorContent')?.focus(); this.applyStandaloneNoteFontSize(event.target.value); });
+        this.bindStandaloneNoteFontSizeDropdown();
     }
 
     buildStandaloneNote(type = 'saved') {
@@ -2286,7 +2329,35 @@ class ProfileApp {
         return { id: this.createStandaloneNoteId(), type, title: this.getStandaloneNoteTitle(), date: this.getTodayDateAz(), employee: user.name, employeeId: user.id, content: editor?.innerHTML || '', text: editor?.innerText?.trim() || '', createdAt: new Date().toISOString() };
     }
 
+    validateStandaloneNoteTitle() {
+        if (!this.getStandaloneNoteTitle().trim()) {
+            this.openNoteTitleRequiredModal();
+            return false;
+        }
+        return true;
+    }
+
+    bindStandaloneNoteFontSizeDropdown() {
+        const trigger = document.getElementById('noteFontSizeTrigger');
+        const menu = document.getElementById('noteFontSizeMenu');
+        if (!trigger || !menu || trigger.dataset.bound === 'true') return;
+        trigger.dataset.bound = 'true';
+        const closeMenu = () => { menu.classList.add('hidden'); trigger.setAttribute('aria-expanded', 'false'); };
+        trigger.addEventListener('click', (event) => { event.stopPropagation(); menu.classList.toggle('hidden'); trigger.setAttribute('aria-expanded', String(!menu.classList.contains('hidden'))); });
+        menu.querySelectorAll('[data-note-font-size]').forEach(option => option.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const size = option.dataset.noteFontSize || '16';
+            document.getElementById('noteFontSizeValue').textContent = size;
+            menu.querySelectorAll('[data-note-font-size]').forEach(btn => { btn.classList.toggle('active', btn === option); btn.setAttribute('aria-selected', String(btn === option)); });
+            closeMenu();
+            document.getElementById('noteEditorContent')?.focus();
+            this.applyStandaloneNoteFontSize(size);
+        }));
+        document.addEventListener('click', closeMenu);
+    }
+
     saveStandaloneNote(type = 'saved') {
+        if (!this.validateStandaloneNoteTitle()) return;
         const note = this.buildStandaloneNote(type);
         if (!note.text) { alert('Zəhmət olmasa qeyd kontentini yazın.'); return; }
         const notes = this.loadStandaloneNotes(type);
@@ -2356,6 +2427,7 @@ class ProfileApp {
     setNotesBadge(id, count) { const el = document.getElementById(id); if (!el) return; el.textContent = count; el.classList.toggle('hidden', !count); }
 
     async openSendStandaloneNoteModal() {
+        if (!this.validateStandaloneNoteTitle()) return;
         const note = this.buildStandaloneNote('sent');
         if (!note.text) { alert('Zəhmət olmasa qeyd kontentini yazın.'); return; }
         this.pendingSendStandaloneNote = note; this.selectedSendNoteEmployee = null; this.sendNoteEmployees = [];
@@ -2876,7 +2948,7 @@ class ProfileApp {
 
 .protocol-detail-view .protocol-participants-header{display:flex;align-items:center;justify-content:space-between;gap:14px}.protocol-detail-view .protocol-section-title-left{display:flex;align-items:center;gap:12px;min-width:0}.protocol-detail-view .protocol-add-employee-btn{width:46px;height:46px;min-width:46px;border-radius:16px;border:1px solid rgba(59,130,246,.24);background:rgba(219,234,254,.82);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 10px 22px rgba(37,99,235,.10);transition:all .22s ease}.protocol-detail-view .protocol-add-employee-btn:hover{transform:translateY(-1px);background:rgba(191,219,254,.95);box-shadow:0 14px 30px rgba(37,99,235,.16)}.protocol-detail-view .protocol-add-employee-btn i{font-size:18px}.protocol-detail-view .protocol-participant-search-wrap{margin:14px 0 16px;min-height:48px;border-radius:18px;background:rgba(255,255,255,.78);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px}.protocol-detail-view .protocol-participant-search-wrap i{color:#3b82f6;font-size:15px}.protocol-detail-view .protocol-participant-search-wrap input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-detail-view .protocol-participant-search-wrap input::placeholder{color:#94a3b8}.protocol-add-employee-overlay{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.34);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}.protocol-add-employee-overlay.hidden{display:none!important}.protocol-add-employee-modal{width:min(620px,100%);max-height:min(720px,86vh);border-radius:32px;padding:28px;background:rgba(255,255,255,.94);border:1px solid rgba(226,232,240,.92);box-shadow:0 28px 80px rgba(15,23,42,.18);display:flex;flex-direction:column;overflow:hidden}.protocol-add-employee-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px}.protocol-add-employee-header h3{margin:0;font-size:26px;font-weight:800;color:#1f2937}.protocol-add-employee-header p{margin:6px 0 0;font-size:15px;font-weight:600;color:#64748b}.protocol-add-employee-header button{width:44px;height:44px;border-radius:16px;border:none;background:rgba(219,234,254,.78);color:#2563eb;cursor:pointer}.protocol-add-employee-search{min-height:52px;border-radius:18px;background:rgba(248,250,252,.95);border:1px solid rgba(203,213,225,.75);display:flex;align-items:center;gap:10px;padding:0 16px;margin-bottom:16px}.protocol-add-employee-search i{color:#3b82f6}.protocol-add-employee-search input{flex:1;border:none;outline:none;background:transparent;font-size:15px;font-weight:600;color:#1f2937}.protocol-add-employee-search input::placeholder{color:#94a3b8}.protocol-add-employee-list{flex:1;min-height:0;overflow-y:auto;padding-right:6px}.protocol-add-employee-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px;border-radius:18px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.86);margin-bottom:10px}.protocol-add-employee-main{display:flex;align-items:center;gap:12px;min-width:0}.protocol-add-employee-avatar{width:44px;height:44px;min-width:44px;border-radius:50%;background:rgba(219,234,254,.92);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;font-weight:800}.protocol-add-employee-name{font-size:16px;font-weight:800;color:#1f2937}.protocol-add-employee-dept{margin-top:3px;font-size:13px;font-weight:600;color:#64748b}.protocol-add-employee-row-btn{min-height:38px;padding:0 14px;border-radius:14px;border:none;background:#2563eb;color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 10px 20px rgba(37,99,235,.14)}
 
-            .protocol-notes-editor-top{align-items:center}.notes-page-actions{margin-left:auto;display:flex;align-items:center;gap:12px}.notes-icon-btn{width:52px;height:52px;border-radius:18px;border:1px solid rgba(59,130,246,.22);background:rgba(255,255,255,.86);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.10);transition:all .22s ease}.notes-icon-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.16)}.notes-trash-btn{border-color:rgba(248,113,113,.24);color:#ef4444;background:rgba(254,242,242,.9)}.notes-editor-shell{flex:1;min-height:0;overflow:auto;border-radius:32px;background:rgba(255,255,255,.74);border:1px solid rgba(226,232,240,.9);box-shadow:0 18px 48px rgba(15,23,42,.07);padding:24px;display:flex;flex-direction:column;gap:16px}.notes-editor-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px}.notes-meta-card{border-radius:22px;background:linear-gradient(135deg,rgba(239,246,255,.95),rgba(255,255,255,.82));border:1px solid rgba(191,219,254,.62);padding:16px 18px;display:flex;flex-direction:column;gap:6px}.notes-meta-card span,.notes-title-label{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#64748b}.notes-meta-card strong{font-size:19px;font-weight:900;color:#1f2937}.notes-title-input{width:100%;min-height:56px;border-radius:20px;border:1px solid rgba(203,213,225,.9);background:rgba(248,250,252,.9);padding:0 18px;font-size:18px;font-weight:900;color:#1f2937;outline:none;box-sizing:border-box}.notes-rich-editor-card{border-radius:26px;border:1px solid rgba(203,213,225,.86);background:rgba(248,250,252,.72);overflow:hidden;display:flex;flex-direction:column;min-height:360px}.notes-editor-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid rgba(203,213,225,.72);background:rgba(255,255,255,.78)}.notes-editor-toolbar button,.notes-editor-toolbar select,.notes-color-picker{height:42px;border-radius:14px;border:1px solid rgba(203,213,225,.9);background:#fff;color:#334155;font-weight:800;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.notes-editor-toolbar button{width:42px;padding:0}.notes-color-picker input{width:24px;height:24px;border:none;background:transparent;padding:0;cursor:pointer}.notes-editor-content{flex:1;min-height:280px;padding:22px;font-size:16px;line-height:1.65;color:#1f2937;background:rgba(255,255,255,.72);outline:none;overflow:auto}.notes-editor-content:empty:before{content:attr(data-placeholder);color:#94a3b8;font-weight:700}.notes-editor-actions{display:flex;justify-content:flex-end;gap:14px}.notes-send-btn{border:none;border-radius:18px;font-weight:900;padding:12px 20px;cursor:pointer;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 12px 28px rgba(34,197,94,.18)}.notes-list-modal-card{width:min(760px,calc(100vw - 40px))}.notes-list-modal-body{margin-top:18px;max-height:62vh;overflow:auto;padding-right:8px}.notes-list-item{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-radius:22px;background:rgba(248,250,252,.88);border:1px solid rgba(226,232,240,.86);padding:16px 18px;margin-bottom:12px}.notes-list-main{min-width:0;display:flex;flex-direction:column;gap:7px}.notes-list-main strong{font-size:18px;font-weight:900;color:#1f2937}.notes-list-main span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#64748b}.notes-list-main span i{color:#3b82f6}.notes-list-main p{margin:4px 0 0;color:#475569;font-weight:600;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.notes-list-delete-btn{width:42px;height:42px;min-width:42px;border-radius:15px;border:1px solid rgba(248,113,113,.24);background:rgba(254,242,242,.9);color:#ef4444;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.notes-list-delete-btn:hover{background:rgba(254,226,226,.96)}
+            .protocol-notes-editor-top{align-items:center}.notes-page-actions{margin-left:auto;display:flex;align-items:center;gap:12px}.notes-icon-btn{width:52px;height:52px;border-radius:18px;border:1px solid rgba(59,130,246,.22);background:rgba(255,255,255,.86);color:#2563eb;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 28px rgba(37,99,235,.10);transition:all .22s ease}.notes-icon-btn:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(37,99,235,.16)}.notes-trash-btn{border-color:rgba(248,113,113,.24);color:#ef4444;background:rgba(254,242,242,.9)}.notes-editor-shell{flex:1;min-height:0;overflow:auto;border-radius:32px;background:rgba(255,255,255,.74);border:1px solid rgba(226,232,240,.9);box-shadow:0 18px 48px rgba(15,23,42,.07);padding:24px;display:flex;flex-direction:column;gap:16px}.notes-editor-meta-grid{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:14px}.notes-meta-card{border-radius:22px;background:linear-gradient(135deg,rgba(239,246,255,.95),rgba(255,255,255,.82));border:1px solid rgba(191,219,254,.62);padding:16px 18px;display:flex;flex-direction:column;gap:6px}.notes-meta-card span,.notes-title-label{font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;color:#64748b}.notes-meta-card strong{font-size:19px;font-weight:900;color:#1f2937}.notes-title-input{width:100%;min-height:56px;border-radius:20px;border:1px solid rgba(203,213,225,.9);background:rgba(248,250,252,.9);padding:0 18px;font-size:18px;font-weight:900;color:#1f2937;outline:none;box-sizing:border-box}.notes-rich-editor-card{border-radius:26px;border:1px solid rgba(203,213,225,.86);background:rgba(248,250,252,.72);overflow:hidden;display:flex;flex-direction:column;min-height:360px}.notes-editor-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border-bottom:1px solid rgba(203,213,225,.72);background:rgba(255,255,255,.78)}.notes-editor-toolbar button,.notes-editor-toolbar select,.notes-color-picker{height:42px;border-radius:14px;border:1px solid rgba(203,213,225,.9);background:#fff;color:#334155;font-weight:800;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}.notes-font-size-dropdown{position:relative;display:inline-flex}.notes-font-size-trigger{min-width:72px;width:auto!important}.notes-font-size-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:40;width:86px;max-height:220px;overflow-y:auto;border-radius:16px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.96);box-shadow:0 18px 42px rgba(15,23,42,.16);padding:6px;backdrop-filter:blur(10px)}.notes-font-size-menu.hidden{display:none!important}.notes-font-size-option{width:100%!important;height:34px;border:0;border-radius:11px;background:transparent;color:#334155;font-weight:900;cursor:pointer}.notes-font-size-option:hover,.notes-font-size-option.active{background:rgba(219,234,254,.9);color:#2563eb}.notes-glass-modal{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.30);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px}.notes-glass-modal.hidden{display:none!important}.notes-glass-modal-card{width:min(420px,100%);border-radius:28px;background:rgba(255,255,255,.93);border:1px solid rgba(226,232,240,.9);box-shadow:0 28px 80px rgba(15,23,42,.18);padding:28px;text-align:center}.notes-glass-modal-card p{margin:0;color:#1f2937;font-size:20px;font-weight:900}.notes-glass-modal-actions{margin-top:24px;display:flex;justify-content:center;gap:12px}.notes-glass-modal-actions.single{justify-content:center}.notes-modal-primary,.notes-modal-secondary{min-width:112px;min-height:44px;border-radius:16px;font-weight:900;cursor:pointer;border:1px solid transparent}.notes-modal-primary{background:#2563eb;color:#fff;box-shadow:0 12px 26px rgba(37,99,235,.20)}.notes-modal-secondary{background:rgba(248,250,252,.92);color:#334155;border-color:rgba(203,213,225,.9)}.notes-editor-toolbar button{width:42px;padding:0}.notes-color-picker input{width:24px;height:24px;border:none;background:transparent;padding:0;cursor:pointer}.notes-editor-content{flex:1;min-height:280px;padding:22px;font-size:16px;line-height:1.65;color:#1f2937;background:rgba(255,255,255,.72);outline:none;overflow:auto}.notes-editor-content:empty:before{content:attr(data-placeholder);color:#94a3b8;font-weight:700}.notes-editor-actions{display:flex;justify-content:flex-end;gap:14px}.notes-send-btn{border:none;border-radius:18px;font-weight:900;padding:12px 20px;cursor:pointer;color:#fff;background:linear-gradient(135deg,#22c55e,#16a34a);box-shadow:0 12px 28px rgba(34,197,94,.18)}.notes-list-modal-card{width:min(760px,calc(100vw - 40px))}.notes-list-modal-body{margin-top:18px;max-height:62vh;overflow:auto;padding-right:8px}.notes-list-item{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;border-radius:22px;background:rgba(248,250,252,.88);border:1px solid rgba(226,232,240,.86);padding:16px 18px;margin-bottom:12px}.notes-list-main{min-width:0;display:flex;flex-direction:column;gap:7px}.notes-list-main strong{font-size:18px;font-weight:900;color:#1f2937}.notes-list-main span{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#64748b}.notes-list-main span i{color:#3b82f6}.notes-list-main p{margin:4px 0 0;color:#475569;font-weight:600;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.notes-list-delete-btn{width:42px;height:42px;min-width:42px;border-radius:15px;border:1px solid rgba(248,113,113,.24);background:rgba(254,242,242,.9);color:#ef4444;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.notes-list-delete-btn:hover{background:rgba(254,226,226,.96)}
 .notes-badge-btn{position:relative}.notes-icon-badge{position:absolute;top:-7px;right:-7px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#ef4444;color:#fff;font-size:12px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(239,68,68,.24);border:2px solid #fff}.send-note-modal-card{width:min(980px,calc(100vw - 40px))}.send-note-validation{margin-top:16px;border-radius:16px;background:rgba(254,226,226,.9);border:1px solid rgba(248,113,113,.35);color:#dc2626;font-weight:800;padding:12px 14px}.send-note-grid{display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:18px;margin-top:20px}.send-note-method-card{border-radius:24px;background:rgba(248,250,252,.82);border:1px solid rgba(226,232,240,.9);padding:18px;box-shadow:0 12px 28px rgba(15,23,42,.05)}.send-note-method-card h4{margin:0 0 14px;font-size:17px;font-weight:900;color:#1f2937;display:flex;gap:9px;align-items:center}.send-note-method-card h4 i{color:#2563eb}.send-note-input{width:100%;min-height:48px;border-radius:16px;border:1px solid rgba(203,213,225,.9);background:rgba(255,255,255,.92);padding:0 14px;font-size:15px;font-weight:700;color:#1f2937;outline:none;box-sizing:border-box;margin-bottom:12px}.send-note-result,.send-note-employee-list{display:flex;flex-direction:column;gap:10px}.send-note-employee-list{max-height:260px;overflow:auto;padding-right:4px}.send-note-employee-card,.selected-send-employee{border-radius:18px;background:rgba(239,246,255,.78);border:1px solid rgba(147,197,253,.38);padding:14px;display:flex;flex-direction:column;gap:6px}.send-note-employee-card strong{font-size:16px;font-weight:900;color:#1f2937}.send-note-employee-card span{font-size:13px;font-weight:700;color:#64748b}.send-note-empty{border-radius:16px;border:1px dashed rgba(148,163,184,.45);padding:14px;color:#64748b;font-weight:800;text-align:center}.send-note-employee-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:18px;background:rgba(255,255,255,.82);border:1px solid rgba(226,232,240,.86);padding:12px}.send-note-employee-row strong{display:block;color:#1f2937;font-weight:900}.send-note-employee-row span{display:block;margin-top:4px;color:#64748b;font-size:13px;font-weight:700}.send-note-employee-row button{border:none;border-radius:14px;background:#2563eb;color:#fff;font-weight:900;padding:10px 14px;cursor:pointer}.selected-send-employee{margin-top:18px;background:linear-gradient(135deg,rgba(219,234,254,.88),rgba(255,255,255,.86))}.selected-send-employee h4{margin:0 0 10px;font-size:16px;font-weight:900;color:#1f2937}.send-note-actions{justify-content:flex-end;margin-top:20px}.notes-status-pill{width:max-content;border-radius:999px;padding:6px 10px;font-size:12px;font-style:normal;font-weight:900}.notes-status-pill.unread{background:rgba(59,130,246,.12);color:#2563eb}.notes-status-pill.read{background:rgba(148,163,184,.16);color:#64748b}.notes-status-pill.sent{background:rgba(34,197,94,.12);color:#16a34a}@media (max-width:820px){.send-note-grid{grid-template-columns:1fr}.notes-page-actions{gap:8px}.notes-icon-btn{width:46px;height:46px;border-radius:16px}}
             @media (max-width:1000px){.protocol-toolbar{flex-direction:column;gap:18px}.protocol-toolbar-actions{align-items:flex-start}.protocol-lists-grid{grid-template-columns:1fr}.protocol-list-card{min-height:320px}}
             @media (max-width:800px){.protocol-notes-page.employees-like-layout{padding:20px!important}.protocol-participant-row{align-items:flex-start;flex-direction:column}.protocol-notes-round-btn{width:64px!important;height:64px!important;min-width:64px!important;min-height:64px!important}.protocol-notes-label{font-size:20px!important}}
