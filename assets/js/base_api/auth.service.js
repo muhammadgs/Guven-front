@@ -380,7 +380,14 @@ class AuthService {
             ?.addEventListener('click', e => { e.stopPropagation(); this.toggleProfileMenu(); });
 
         document.getElementById('logoutBtn')
-            ?.addEventListener('click', () => this.handleLogout());
+            ?.addEventListener('click', () => {
+                if (this.isProfilePage()) {
+                    this.openLogoutConfirmModal();
+                    return;
+                }
+
+                this.handleLogout();
+            });
 
         document.addEventListener('click', e => {
             const menu = document.getElementById('profileMenu');
@@ -396,8 +403,68 @@ class AuthService {
         document.getElementById('profileMenu')?.classList.toggle('show');
     }
 
-    async handleLogout() {
-        if (!confirm('Hesabdan çıxmaq istədiyinizə əminsiniz?')) return;
+    isProfilePage() {
+        return window.location.pathname.endsWith('/worker/wp.html') ||
+            window.location.pathname.endsWith('/owner/owp.html');
+    }
+
+    openLogoutConfirmModal() {
+        let modal = document.getElementById('logoutConfirmModal');
+
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'logoutConfirmModal';
+            modal.className = 'fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/35 p-4 backdrop-blur-md';
+            modal.innerHTML = `
+                <div class="w-full max-w-sm rounded-[28px] border border-white/60 bg-white/90 p-7 text-center shadow-2xl shadow-slate-900/20 backdrop-blur-xl" role="dialog" aria-modal="true" aria-labelledby="logoutConfirmTitle">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-soft text-brand-blue shadow-lg shadow-blue-200/40">
+                        <i class="fa-solid fa-right-from-bracket text-2xl"></i>
+                    </div>
+                    <h2 id="logoutConfirmTitle" class="text-xl font-semibold text-brand-ink">Çıxmaq istəyirsiz?</h2>
+                    <div class="mt-7 grid grid-cols-2 gap-3">
+                        <button id="cancelLogoutBtn" type="button" class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200">Xeyr</button>
+                        <button id="confirmLogoutBtn" type="button" class="rounded-2xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200/70 transition hover:bg-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-200">Bəli</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) this.closeLogoutConfirmModal();
+            });
+
+            modal.querySelector('#cancelLogoutBtn')
+                ?.addEventListener('click', () => this.closeLogoutConfirmModal());
+            modal.querySelector('#confirmLogoutBtn')
+                ?.addEventListener('click', () => this.confirmLogout());
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    this.closeLogoutConfirmModal();
+                }
+            });
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        modal.querySelector('#confirmLogoutBtn')?.focus();
+    }
+
+    closeLogoutConfirmModal() {
+        const modal = document.getElementById('logoutConfirmModal');
+        if (!modal) return;
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async confirmLogout() {
+        this.closeLogoutConfirmModal();
+        await this.handleLogout(false);
+    }
+
+    async handleLogout(shouldConfirm = true) {
+        if (shouldConfirm && !confirm('Hesabdan çıxmaq istədiyinizə əminsiniz?')) return;
 
         // 🔥 Əvvəlcə clear et, sonra logout API çağır
         // (API 401 versə belə problem olmasın)
