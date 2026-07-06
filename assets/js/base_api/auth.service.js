@@ -422,8 +422,8 @@ class AuthService {
                     </div>
                     <h2 id="logoutConfirmTitle" class="text-xl font-semibold text-brand-ink">Çıxmaq istəyirsiz?</h2>
                     <div class="mt-7 grid grid-cols-2 gap-3">
-                        <button id="cancelLogoutBtn" type="button" class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200">Xeyr</button>
                         <button id="confirmLogoutBtn" type="button" class="rounded-2xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200/70 transition hover:bg-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-200">Bəli</button>
+                        <button id="cancelLogoutBtn" type="button" class="rounded-2xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-4 focus:ring-slate-200">Xeyr</button>
                     </div>
                 </div>
             `;
