@@ -235,3 +235,215 @@
 .auth-back:hover {
     color: #1D4ED8;
 }
+
+/* =========================
+   Sahibkar kartı — hover ilə rol seçimi
+========================= */
+
+.register-card--owner {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    padding: 0;
+    min-height: 310px;
+    cursor: pointer;
+}
+
+/* Kartın default üzü (ikon + başlıq + mətn) */
+.register-card--owner .register-card-face {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    text-decoration: none;
+    transition: opacity 0.3s ease, transform 0.35s ease;
+}
+
+/* Rol paneli — gizli vəziyyət */
+.owner-roles {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 28px;
+    background: linear-gradient(180deg, #F8FAFF 0%, #FFFFFF 70%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(16px);
+    transition:
+        opacity 0.28s ease,
+        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0s linear 0.38s;
+}
+
+.owner-roles-title {
+    margin: 0 0 6px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1E3A8A;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.25s ease, transform 0.3s ease;
+}
+
+/* Rol sətirləri — gizli vəziyyət */
+.owner-role {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid #DBEAFE;
+    border-radius: 14px;
+    background: #FFFFFF;
+    text-align: left;
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(2, 6, 23, 0.04);
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity 0.25s ease,
+        transform 0.3s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.owner-role-icon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    background: #DBEAFE;
+    color: #2563EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.owner-role-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.owner-role-info strong {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.owner-role-info span {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: #6B7280;
+}
+
+.owner-role-arrow {
+    margin-left: auto;
+    font-size: 13px;
+    color: #2563EB;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* ── Açılmış vəziyyət: hover / klaviatura fokusu / toxunuş (.roles-open) ── */
+
+.register-card--owner:hover .register-card-face,
+.register-card--owner:focus-within .register-card-face,
+.register-card--owner.roles-open .register-card-face {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+    pointer-events: none;
+}
+
+.register-card--owner:hover .owner-roles,
+.register-card--owner:focus-within .owner-roles,
+.register-card--owner.roles-open .owner-roles {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition:
+        opacity 0.28s ease,
+        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.register-card--owner:hover .owner-roles-title,
+.register-card--owner:focus-within .owner-roles-title,
+.register-card--owner.roles-open .owner-roles-title {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.05s;
+}
+
+.register-card--owner:hover .owner-role,
+.register-card--owner:focus-within .owner-role,
+.register-card--owner.roles-open .owner-role {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Pilləli (staggered) giriş */
+.register-card--owner:hover .owner-role:nth-of-type(1),
+.register-card--owner:focus-within .owner-role:nth-of-type(1),
+.register-card--owner.roles-open .owner-role:nth-of-type(1) {
+    transition-delay: 0.10s;
+}
+
+.register-card--owner:hover .owner-role:nth-of-type(2),
+.register-card--owner:focus-within .owner-role:nth-of-type(2),
+.register-card--owner.roles-open .owner-role:nth-of-type(2) {
+    transition-delay: 0.18s;
+}
+
+.register-card--owner:hover .owner-role:nth-of-type(3),
+.register-card--owner:focus-within .owner-role:nth-of-type(3),
+.register-card--owner.roles-open .owner-role:nth-of-type(3) {
+    transition-delay: 0.26s;
+}
+
+/* Rol sətrinin öz hover-i (stagger qaydalarından sonra gəlməlidir) */
+.register-card--owner .owner-roles .owner-role:hover,
+.register-card--owner .owner-roles .owner-role:focus-visible {
+    transition-delay: 0s;
+    border-color: #2563EB;
+    background: #EFF6FF;
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+    transform: translateY(0) translateX(4px);
+}
+
+.owner-role:hover .owner-role-icon,
+.owner-role:focus-visible .owner-role-icon {
+    background: #2563EB;
+    color: #FFFFFF;
+}
+
+.owner-role:hover .owner-role-arrow,
+.owner-role:focus-visible .owner-role-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .register-card--owner .register-card-face,
+    .owner-roles,
+    .owner-roles-title,
+    .owner-role,
+    .owner-role-icon,
+    .owner-role-arrow {
+        transition: none !important;
+    }
+}

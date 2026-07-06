@@ -25,54 +25,66 @@
   </script>
 
   <style>
-    /* ── Qeydiyyat növü seçimi ── */
-    .reg-type-selector {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+    /* ── Seçilmiş qeydiyyat növü paneli ── */
+    .selected-type-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       gap: 12px;
+      flex-wrap: wrap;
+      border: 1.5px solid #c7d2fe;
+      background: #eef2ff;
+      border-radius: 12px;
+      padding: 12px 16px;
       margin-bottom: 2rem;
     }
-    .reg-type-card {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: 1.25rem 1rem;
-      cursor: pointer;
-      transition: border-color .15s, background .15s;
-      text-align: center;
-      background: #fff;
-      user-select: none;
+    .selected-type-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .reg-type-card:hover {
-      border-color: #a5b4fc;
-      background: #f5f3ff;
+    .selected-type-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: #6366f1;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
     }
-    .reg-type-card.active {
-      border-color: #6366f1;
-      background: #eef2ff;
+    .selected-type-text {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
     }
-    .reg-type-card input[type="radio"] {
-      display: none;
-    }
-    .reg-type-card .rtc-icon {
-      font-size: 26px;
-      color: #94a3b8;
-      margin-bottom: 8px;
-      display: block;
-    }
-    .reg-type-card.active .rtc-icon {
-      color: #6366f1;
-    }
-    .reg-type-card strong {
-      display: block;
-      font-size: 14px;
+    .selected-type-text strong {
+      font-size: 15px;
       font-weight: 600;
       color: #1e293b;
-      margin-bottom: 4px;
     }
-    .reg-type-card span {
-      font-size: 12px;
+    .selected-type-text span {
+      font-size: 12.5px;
       color: #64748b;
       line-height: 1.4;
+    }
+    .selected-type-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #4f46e5;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: background .15s, color .15s;
+    }
+    .selected-type-back:hover {
+      background: #e0e7ff;
+      color: #3730a3;
     }
 
     /* ── Dinamik bölmələr ── */
@@ -102,8 +114,9 @@
     }
 
     @media (max-width: 600px) {
-      .reg-type-selector {
-        grid-template-columns: 1fr;
+      .selected-type-bar {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -145,7 +158,7 @@
 
         <header class="owner-header">
           <h1 class="owner-title">Qeydiyyatdan keçin</h1>
-          <p class="owner-subtitle">Növünüzü seçərək Güvən Finans sisteminə qeydiyyatdan keçin</p>
+          <p class="owner-subtitle">Məlumatlarınızı daxil edərək Güvən Finans sisteminə qeydiyyatdan keçin</p>
         </header>
 
         <!-- Status mesajı -->
@@ -154,38 +167,19 @@
         <form class="owner-form" data-owner-registration="" data-success-redirect="login.html" action="#" method="post" novalidate>
 
           <!-- ══════════════════════════════
-               1. QEYDIYYAT NÖVÜ SEÇİMİ
+               1. SEÇİLMİŞ QEYDİYYAT NÖVÜ
           ══════════════════════════════ -->
-          <div class="section-title">
-            <h3>Qeydiyyat növü</h3>
-          </div>
-
-          <div class="reg-type-selector">
-
-            <!-- Şirkət -->
-            <label class="reg-type-card active" for="rt_sirket">
-              <input type="radio" id="rt_sirket" name="reg_user_type" value="sirket" checked>
-              <i class="fas fa-building rtc-icon"></i>
-              <strong>Şirkət</strong>
-              <span>Hüquqi şəxs / MMC, SC, ASC</span>
-            </label>
-
-            <!-- Fiziki şəxs -->
-            <label class="reg-type-card" for="rt_fiziki">
-              <input type="radio" id="rt_fiziki" name="reg_user_type" value="fiziki">
-              <i class="fas fa-user-tie rtc-icon"></i>
-              <strong>Fiziki şəxs</strong>
-              <span>Fərdi sahibkar</span>
-            </label>
-
-            <!-- Vətəndaş -->
-            <label class="reg-type-card" for="rt_vetendas">
-              <input type="radio" id="rt_vetendas" name="reg_user_type" value="vetendas">
-              <i class="fas fa-id-card rtc-icon"></i>
-              <strong>Vətəndaş</strong>
-              <span>Şirkətsiz istifadəçi</span>
-            </label>
-
+          <div class="selected-type-bar">
+            <div class="selected-type-info">
+              <span class="selected-type-icon"><i class="fas fa-building" id="selected-type-icon"></i></span>
+              <span class="selected-type-text">
+                <strong id="selected-type-name">Şirkət</strong>
+                <span id="selected-type-desc">Hüquqi şəxs / MMC, SC, ASC</span>
+              </span>
+            </div>
+            <a href="register.html" class="selected-type-back">
+              <i class="fa-solid fa-arrow-left"></i> Növü dəyiş
+            </a>
           </div>
 
           <!-- ══════════════════════════════
@@ -616,18 +610,16 @@
      SCRIPTS
 ════════════════════════════════════════ -->
 
-<!-- Qeydiyyat növü keçidi -->
+<!-- Seçilmiş qeydiyyat növü -->
 <script>
   (function () {
-    const cards = document.querySelectorAll('.reg-type-card');
-    const radios = document.querySelectorAll('input[name="reg_user_type"]');
+    const TYPE_META = {
+      sirket:   { icon: 'fa-building', name: 'Şirkət',      desc: 'Hüquqi şəxs / MMC, SC, ASC' },
+      fiziki:   { icon: 'fa-user-tie', name: 'Fiziki şəxs', desc: 'Fərdi sahibkar' },
+      vetendas: { icon: 'fa-id-card',  name: 'Vətəndaş',    desc: 'Şirkətsiz istifadəçi' }
+    };
 
     function switchType(type) {
-      // Kartları güncəllə
-      cards.forEach(c => {
-        const radio = c.querySelector('input[type="radio"]');
-        c.classList.toggle('active', radio && radio.value === type);
-      });
       // Bölmələri göstər/gizlət
       ['sirket', 'fiziki', 'vetendas'].forEach(t => {
         const sec = document.getElementById('section-' + t);
@@ -645,20 +637,20 @@
       });
     }
 
-    radios.forEach(r => {
-      r.addEventListener('change', () => switchType(r.value));
-    });
+    // İlkin növ — register.html-dəki hover seçimindən gələn ?type= parametri
+    const urlType = new URLSearchParams(window.location.search).get('type');
+    const initialType = TYPE_META[urlType] ? urlType : 'sirket';
 
-    // Kart klikləri (label üçün)
-    cards.forEach(c => {
-      c.addEventListener('click', () => {
-        const radio = c.querySelector('input[type="radio"]');
-        if (radio) switchType(radio.value);
-      });
-    });
+    // Seçilmiş növ panelini doldur
+    const meta = TYPE_META[initialType];
+    const iconEl = document.getElementById('selected-type-icon');
+    const nameEl = document.getElementById('selected-type-name');
+    const descEl = document.getElementById('selected-type-desc');
+    if (iconEl) iconEl.className = 'fas ' + meta.icon;
+    if (nameEl) nameEl.textContent = meta.name;
+    if (descEl) descEl.textContent = meta.desc;
 
-    // İlkin vəziyyət
-    switchType('sirket');
+    switchType(initialType);
   })();
 </script>
 

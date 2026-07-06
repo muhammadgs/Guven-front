@@ -1382,7 +1382,12 @@ function setupUserTypeSwitch() {
         if (r) { r.checked = true; switchTo(r.value); }
     }));
 
-    switchTo('sirket');
+    // İlkin növ — register.html-dəki hover seçimindən gələn ?type= parametri
+    const urlType = new URLSearchParams(window.location.search).get('type');
+    const initialType = ['sirket', 'fiziki', 'vetendas'].includes(urlType) ? urlType : 'sirket';
+    const initialRadio = document.querySelector(`input[name="reg_user_type"][value="${initialType}"]`);
+    if (initialRadio) initialRadio.checked = true;
+    switchTo(initialType);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────

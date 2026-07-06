@@ -1241,3 +1241,39 @@ window.addEventListener('error', function(e) {
 window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
 });
+
+
+// ============ SAHİBKAR KARTI — ROL PANELİ (toxunuşlu cihazlar + klaviatura) ============
+(function () {
+    const ownerCard = document.querySelector('.register-card--owner');
+    if (!ownerCard) return;
+
+    const face = ownerCard.querySelector('.register-card-face');
+
+    // Hover dəstəyi olmayan cihazlarda (telefon/planşet) ilk toxunuş paneli açır
+    if (window.matchMedia('(hover: none)').matches && face) {
+        face.addEventListener('click', function (e) {
+            if (!ownerCard.classList.contains('roles-open')) {
+                e.preventDefault();
+                ownerCard.classList.add('roles-open');
+            }
+        });
+
+        // Kartdan kənara toxunanda panel bağlanır
+        document.addEventListener('click', function (e) {
+            if (!ownerCard.contains(e.target)) {
+                ownerCard.classList.remove('roles-open');
+            }
+        });
+    }
+
+    // Escape ilə paneli bağla
+    ownerCard.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            ownerCard.classList.remove('roles-open');
+            if (document.activeElement && ownerCard.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+        }
+    });
+})();
