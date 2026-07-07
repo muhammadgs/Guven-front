@@ -2912,48 +2912,143 @@ class ProfileApp {
         });
     }
 
-    async requestStandaloneNotes(endpoint, method = 'GET', data = null) {
-        const api = this.getProtocolService();
-        if (!api?.request) return null;
-        // TODO: Backend endpoint tələb olunur (protocol notes endpoints backend-də təsdiqlənməlidir)
-        return api.request(endpoint, method, data);
+    getStandaloneNotesApi() {
+        return this.getProtocolService()?.notes || window.apiService?.notes || window.api?.notes || null;
+    }
+
+    getStandaloneNoteContentText() {
+        const editor = document.getElementById('noteEditorContent');
+        return editor?.innerText?.trim() || '';
+    }
+
+    showStandaloneNotesFeedback(message) { alert(message); }
+    showStandaloneNotesError(message = 'Qeydlər yüklənmədi. Yenidən cəhd edin.') { alert(message); }
+
+    getNoteApiList(response) {
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.data)) return response.data;
+        if (Array.isArray(response?.items)) return response.items;
+        if (Array.isArray(response?.notes)) return response.notes;
+        if (Array.isArray(response?.results)) return response.results;
+        return [];
     }
 
     normalizeStandaloneNoteFromApi(note = {}, type = 'saved') {
-        const sender = note.sender || note.from_employee || {};
-        const receiver = note.receiver || note.to_employee || {};
+        const sender = note.sender || note.created_by || note.owner || note.from_employee || {};
+        const receiver = note.receiver || note.shared_to || note.to_employee || {};
+        const metadata = note.metadata || {};
+        const shares = note.shares || note.shared_with || note.recipients || [];
+        const receiverNames = Array.isArray(shares) ? shares.map(item => item.full_name || item.name || item.username || item.email || item.user?.full_name || item.user?.name).filter(Boolean).join(', ') : '';
         return {
-            id: note.id || note.uuid || this.createStandaloneNoteId(), type,
-            title: note.title || 'Başlıqsız qeyd', date: this.formatProtocolDateAz(note.created_at || note.createdAt) || note.date || this.getTodayDateAz(),
-            employee: note.employee || note.sender_name || sender.full_name || sender.name || note.receiver_name || receiver.full_name || receiver.name || 'Əməkdaş',
-            senderName: note.sender_name || sender.full_name || sender.name || note.employee || 'Əməkdaş',
-            receiverName: note.receiver_name || receiver.full_name || receiver.name || note.employee || 'Əməkdaş',
-            content: note.content || note.body || '', text: note.text || this.stripProtocolHtml(note.content || note.body || ''),
-            read: !!(note.read || note.is_read), status: note.status || (type === 'sent' ? 'Göndərildi' : ''), createdAt: note.created_at || note.createdAt || new Date().toISOString()
+            raw: note,
+            id: note.id || note.note_id || note.uuid || this.createStandaloneNoteId(),
+            type,
+            title: note.title || 'Başlıqsız qeyd',
+            date: this.formatProtocolDateAz(note.created_at || note.createdAt || note.updated_at) || note.date || this.getTodayDateAz(),
+            employee: note.employee || note.author_name || sender.full_name || sender.name || sender.username || 'Əməkdaş',
+            senderName: note.sender_name || sender.full_name || sender.name || sender.username || note.author_name || 'Göndərən məlum deyil',
+            receiverName: receiverNames || note.receiver_name || receiver.full_name || receiver.name || receiver.username || note.shared_with_names || 'Əməkdaş',
+            content: note.content || note.body || '',
+            text: note.text || this.stripProtocolHtml(note.content || note.body || ''),
+            noteType: note.note_type || note.type || 'general',
+            read: !!(note.read || note.is_read),
+            status: note.status || (type === 'sent' ? 'Göndərildi' : ''),
+            metadata,
+            isArchived: !!note.is_archived,
+            sharedWith: shares,
+            createdAt: note.created_at || note.createdAt || new Date().toISOString()
         };
     }
 
     stripProtocolHtml(value = '') { const div = document.createElement('div'); div.innerHTML = value; return div.textContent || div.innerText || ''; }
 
-    async fetchStandaloneNotes(type = 'saved') {
-        const local = this.loadStandaloneNotes(type);
-        const endpoints = { incoming: '/protocol-notes/incoming', sent: '/protocol-notes/sent', saved: '/protocol-notes/saved', draft: '/protocol-notes/deleted' };
+    isSentStandaloneNote(note = {}) {
+        const metadata = note.metadata || {};
+        const shares = note.shares || note.shared_with || note.recipients || [];
+        // TODO: Backend sent notes üçün ayrıca endpoint versə, burada onu istifadə etmək daha düzgün olacaq.
+        return metadata.source === 'protocol_notes' && metadata.sent === true || (Array.isArray(shares) && shares.length > 0);
+    }
+
+    async fetchStandaloneNotes(type = 'saved', params = {}) {
+        const api = this.getStandaloneNotesApi();
+        if (!api) return [];
         try {
-            const res = await this.requestStandaloneNotes(endpoints[type] || endpoints.saved);
-            const list = res?.data || res?.items || res?.notes || (Array.isArray(res) ? res : null);
-            if (Array.isArray(list)) { const mapped = list.map(n => this.normalizeStandaloneNoteFromApi(n, type)); this.saveStandaloneNotes(type, mapped); return mapped; }
-        } catch (error) { console.warn('⚠️ Qeydlər API-dən yüklənmədi:', error); }
-        return local;
+            let list = [];
+            if (type === 'incoming') {
+                list = this.getNoteApiList(await api.shared());
+                // TODO: Backend read/unread status qaytarsa badge yalnız oxunmamışları göstərməlidir.
+            } else if (type === 'draft') {
+                // TODO: Backend is_archived filter düzgün işləmirsə, backend tərəfdə düzəldilməlidir.
+                list = this.getNoteApiList(await api.list({ is_archived: true, ...params }));
+            } else {
+                const active = this.getNoteApiList(await api.list({ is_archived: false, ...params }));
+                list = type === 'sent' ? active.filter(note => this.isSentStandaloneNote(note)) : active.filter(note => !this.isSentStandaloneNote(note));
+            }
+            return list.map(n => this.normalizeStandaloneNoteFromApi(n, type));
+        } catch (error) {
+            this.showStandaloneNotesError();
+            return [];
+        }
     }
 
     async refreshStandaloneNoteBadges() {
         const incoming = await this.fetchStandaloneNotes('incoming');
         const sent = await this.fetchStandaloneNotes('sent');
-        this.setNotesBadge('incomingNotesBadge', incoming.filter(n => !n.read).length);
+        this.setNotesBadge('incomingNotesBadge', incoming.length);
         this.setNotesBadge('sentNotesBadge', sent.length);
     }
 
     setNotesBadge(id, count) { const el = document.getElementById(id); if (!el) return; el.textContent = count; el.classList.toggle('hidden', !count); }
+
+    buildStandaloneNotePayload({ sent = false, sharedWith = [] } = {}) {
+        return {
+            title: this.getStandaloneNoteTitle(),
+            content: document.getElementById('noteEditorContent')?.innerHTML || '',
+            note_type: 'general',
+            color: this.noteFormatState?.color || document.getElementById('noteTextColor')?.value || '#FFFFFF',
+            is_pinned: false,
+            is_archived: false,
+            shared_with: sharedWith,
+            metadata: { source: 'protocol_notes', ...(sent ? { sent: true } : { saved_only: true }) }
+        };
+    }
+
+    async saveStandaloneNote(type = 'saved') {
+        if (!this.validateStandaloneNoteTitle()) return;
+        if (!this.getStandaloneNoteContentText()) { alert('Zəhmət olmasa qeyd əlavə edin.'); return; }
+        const api = this.getStandaloneNotesApi();
+        if (!api) { this.showStandaloneNotesError('Qeyd yadda saxlanılmadı. Yenidən cəhd edin.'); return; }
+        const button = document.getElementById('saveStandaloneNoteBtn');
+        this.setProtocolButtonLoading(button, true, 'Yadda saxlanılır...');
+        try {
+            await api.create(this.buildStandaloneNotePayload({ sent: false, sharedWith: [] }));
+            const editor = document.getElementById('noteEditorContent');
+            if (editor) editor.innerHTML = '';
+            this.currentStandaloneNoteDirty = false;
+            this.initStandaloneNotesEditor();
+            await this.refreshStandaloneNoteBadges();
+            this.showStandaloneNotesFeedback('Qeyd uğurla yadda saxlanıldı.');
+        } catch (error) {
+            this.showStandaloneNotesError('Qeyd yadda saxlanılmadı. Yenidən cəhd edin.');
+        } finally {
+            this.setProtocolButtonLoading(button, false);
+        }
+    }
+
+    sendStandaloneNote() { this.openSendStandaloneNoteModal(); }
+
+
+    applyStandaloneNoteFontSize(size) {
+        const editor = document.getElementById('noteEditorContent');
+        editor?.focus();
+        document.execCommand('fontSize', false, '7');
+        editor?.querySelectorAll('font[size="7"]').forEach(font => {
+            const span = document.createElement('span');
+            span.style.fontSize = `${Number(size) || 16}px`;
+            span.innerHTML = font.innerHTML;
+            font.replaceWith(span);
+        });
+    }
 
     async openSendStandaloneNoteModal(noteToSend = null) {
         const isSavedNoteSend = !!noteToSend;
@@ -2968,7 +3063,7 @@ class ProfileApp {
             date: noteToSend.date || this.getTodayDateAz(),
             type: 'saved'
         } : this.buildStandaloneNote('sent');
-        if (!note.text) { alert('Zəhmət olmasa qeyd kontentini yazın.'); return; }
+        if (!note.text) { alert('Zəhmət olmasa qeyd əlavə edin.'); return; }
         this.selectedSavedNote = isSavedNoteSend ? note : null;
         this.pendingSendStandaloneNote = note; this.selectedSendNoteEmployee = null; this.sendNoteEmployees = [];
         document.getElementById('sendNoteValidation')?.classList.add('hidden');
@@ -2984,10 +3079,8 @@ class ProfileApp {
 
     async populateSendNoteCompanies() {
         const select = document.getElementById('sendNoteCompanySelect'); if (!select) return;
-        let companies = [];
-        try { const res = await this.requestStandaloneNotes('/companies/'); companies = res?.data || res?.items || (Array.isArray(res) ? res : []); } catch(e) { console.warn('⚠️ Şirkət siyahısı yüklənmədi:', e); }
         const currentCode = this.currentCompanyCode || this.employeesService?.currentCompanyCode;
-        if (!companies.length && currentCode) companies = [{ company_code: currentCode, company_name: 'Cari şirkət' }];
+        const companies = currentCode ? [{ company_code: currentCode, company_name: 'Cari şirkət' }] : [];
         select.innerHTML = '<option value="">Şirkət seçin...</option>' + companies.map(c => `<option value="${this.escapeProtocolHtml(c.company_code || c.code || c.id)}">${this.escapeProtocolHtml(c.company_name || c.name || c.company_code || c.code)}</option>`).join('');
     }
 
@@ -2997,15 +3090,14 @@ class ProfileApp {
         const box = document.getElementById('sendNoteCodeResult'); if (!box) return; const q = (code || '').trim();
         if (!q) { box.innerHTML = ''; return; }
         const employees = await this.getProtocolEmployees();
-        let found = employees.map(e => this.mapSendNoteEmployee(e.raw || e)).find(e => String(e.code).toLowerCase() === q.toLowerCase());
-        if (!found) { try { const res = await this.requestStandaloneNotes(`/users/search?employee_code=${encodeURIComponent(q)}`); const list = res?.data || res?.items || (Array.isArray(res) ? res : []); found = list.map(e => this.mapSendNoteEmployee(e)).find(Boolean); } catch(e) {} }
+        const found = employees.map(e => this.mapSendNoteEmployee(e.raw || e)).find(e => String(e.code).toLowerCase() === q.toLowerCase());
         box.innerHTML = found ? this.renderSendNoteEmployeeCard(found) : '<div class="send-note-empty">Bu kodla əməkdaş tapılmadı.</div>';
         if (found) { this.selectSendNoteEmployee(found); }
     }
 
     renderSendNoteEmployeeCard(emp) { return `<div class="send-note-employee-card"><strong>${this.escapeProtocolHtml(emp.fullName)}</strong><span>Əməkdaş kodu: ${this.escapeProtocolHtml(emp.code || '-')}</span><span>Şöbə: ${this.escapeProtocolHtml(emp.department || '-')}</span>${emp.company ? `<span>Şirkət: ${this.escapeProtocolHtml(emp.company)}</span>` : ''}</div>`; }
 
-    async loadSendNoteCompanyEmployees(companyCode) { if (!companyCode) { this.sendNoteEmployees = []; this.renderSendNoteEmployeeList(); return; } try { const res = await this.getProtocolService()?.getUsersByCompany?.(companyCode) || await this.requestStandaloneNotes(`/users/company/${companyCode}`); const list = res?.data || (Array.isArray(res) ? res : []); this.sendNoteEmployees = list.map(e => this.mapSendNoteEmployee(e)); } catch(e) { this.sendNoteEmployees = []; } this.renderSendNoteEmployeeList(); }
+    async loadSendNoteCompanyEmployees(companyCode) { if (!companyCode) { this.sendNoteEmployees = []; this.renderSendNoteEmployeeList(); return; } try { const res = await this.getProtocolService()?.getUsersByCompany?.(companyCode) || await this.getProtocolService()?.get?.(`/users/company/${companyCode}`); const list = res?.data || (Array.isArray(res) ? res : []); this.sendNoteEmployees = list.map(e => this.mapSendNoteEmployee(e)); } catch(e) { this.sendNoteEmployees = []; } this.renderSendNoteEmployeeList(); }
 
     renderSendNoteEmployeeList() { const el = document.getElementById('sendNoteEmployeeList'); if (!el) return; const q = (document.getElementById('sendNoteEmployeeSearch')?.value || '').toLowerCase(); const list = (this.sendNoteEmployees || []).filter(e => `${e.fullName} ${e.code} ${e.department}`.toLowerCase().includes(q)); el.innerHTML = list.length ? list.map(e => `<div class="send-note-employee-row"><div><strong>${this.escapeProtocolHtml(e.fullName)}</strong><span>${this.escapeProtocolHtml(e.code || '-')} · ${this.escapeProtocolHtml(e.department || '-')}</span></div><button type="button" data-select-send-employee="${this.escapeProtocolHtml(e.id)}">Seç</button></div>`).join('') : '<div class="send-note-empty">Əməkdaş tapılmadı.</div>'; el.querySelectorAll('[data-select-send-employee]').forEach(btn => btn.addEventListener('click', () => this.selectSendNoteEmployee(list.find(e => String(e.id) === String(btn.dataset.selectSendEmployee))))); }
 
@@ -3013,25 +3105,33 @@ class ProfileApp {
 
     async confirmSendStandaloneNote() {
         if (!this.selectedSendNoteEmployee) { document.getElementById('sendNoteValidation')?.classList.remove('hidden'); return; }
-        const note = { ...this.pendingSendStandaloneNote, receiverId: this.selectedSendNoteEmployee.id, receiverName: this.selectedSendNoteEmployee.fullName, receiverCode: this.selectedSendNoteEmployee.code, status: 'Göndərildi' };
-        try { await this.requestStandaloneNotes('/protocol-notes/send', 'POST', { note_id: note.id, title: note.title, content: note.content, author: note.employee, date: note.date, receiver_id: note.receiverId, receiver_code: note.receiverCode }); } catch (e) { console.warn('⚠️ Qeyd backend-ə göndərilmədi:', e); }
-        this.saveStandaloneNotes('sent', [note, ...this.loadStandaloneNotes('sent')]);
-        if (!this.selectedSavedNote) {
-            const editor = document.getElementById('noteEditorContent'); if (editor) editor.innerHTML = '';
-            this.currentStandaloneNoteDirty = false; this.initStandaloneNotesEditor();
+        const api = this.getStandaloneNotesApi();
+        if (!api) { this.showStandaloneNotesError('Qeyd göndərilmədi. Yenidən cəhd edin.'); return; }
+        const button = document.getElementById('confirmSendNoteBtn');
+        this.setProtocolButtonLoading(button, true, 'Göndərilir...');
+        try {
+            const selectedId = this.selectedSendNoteEmployee.id;
+            if (this.selectedSavedNote?.id) {
+                await api.share(this.selectedSavedNote.id, { shared_to: [selectedId], permissions: { can_edit: false, can_comment: true, can_share: false } });
+            } else {
+                const created = await api.create({ ...this.buildStandaloneNotePayload({ sent: true, sharedWith: [selectedId] }) });
+                const createdNote = created?.data || created;
+                const noteId = createdNote?.id || createdNote?.note_id;
+                if (noteId && !(Array.isArray(createdNote?.shared_with) && createdNote.shared_with.length)) {
+                    await api.share(noteId, { shared_to: [selectedId], permissions: { can_edit: false, can_comment: true, can_share: false } });
+                }
+                const editor = document.getElementById('noteEditorContent'); if (editor) editor.innerHTML = '';
+                this.currentStandaloneNoteDirty = false; this.initStandaloneNotesEditor();
+            }
+            this.closeSendStandaloneNoteModal(); await this.refreshStandaloneNoteBadges(); this.showStandaloneNotesFeedback('Qeyd uğurla göndərildi.');
+        } catch (error) {
+            this.showStandaloneNotesError('Qeyd göndərilmədi. Yenidən cəhd edin.');
+        } finally {
+            this.setProtocolButtonLoading(button, false);
         }
-        this.closeSendStandaloneNoteModal(); this.refreshStandaloneNoteBadges(); alert('Qeyd uğurla göndərildi.');
     }
 
-    saveStandaloneNoteDraftIfNeeded() {
-        const editor = document.getElementById('noteEditorContent');
-        const text = editor?.innerText?.trim() || '';
-        if (!this.currentStandaloneNoteDirty || !text) return;
-        const note = this.buildStandaloneNote('draft');
-        const drafts = this.loadStandaloneNotes('draft');
-        this.saveStandaloneNotes('draft', [note, ...drafts]);
-        this.currentStandaloneNoteDirty = false;
-    }
+    saveStandaloneNoteDraftIfNeeded() { this.currentStandaloneNoteDirty = false; }
 
     async openStandaloneNotesModal(type = 'saved') {
         this.currentStandaloneNotesModalType = type;
@@ -3039,15 +3139,17 @@ class ProfileApp {
         const title = document.getElementById('notesListModalTitle');
         const body = document.getElementById('notesListModalBody');
         if (title) title.textContent = ({ draft: 'Silinənlər', saved: 'Yadda saxlanan qeydlər', incoming: 'Gələn qeydlər', sent: 'Göndərilən qeydlər' })[type] || 'Qeydlər';
+        if (body) body.innerHTML = '<div class="protocol-empty-state"><p>Qeydlər yüklənir...</p></div>';
+        modal?.classList.remove('hidden');
         const notes = await this.fetchStandaloneNotes(type);
         if (body) body.innerHTML = notes.length ? notes.map(note => `
             <div class="notes-list-item">
                 <div class="notes-list-main">
                     <strong>${this.escapeProtocolHtml(note.title)}</strong>
-                    <span><i class="fas fa-user"></i>${this.escapeProtocolHtml(type === 'sent' ? (note.receiverName || note.employee) : type === 'incoming' ? (note.senderName || note.employee) : note.employee)}</span>
+                    <span><i class="fas fa-user"></i>${this.escapeProtocolHtml(type === 'sent' ? (note.receiverName || note.employee) : type === 'incoming' ? (note.senderName || 'Göndərən məlum deyil') : note.employee)}</span>
                     <span><i class="fas fa-calendar-day"></i>${this.escapeProtocolHtml(note.date)}</span>
+                    <span><i class="fas fa-note-sticky"></i>${this.escapeProtocolHtml(note.noteType || 'general')}</span>
                     <p>${this.escapeProtocolHtml(note.text || 'Kontent yoxdur')}</p>
-                    ${type === 'incoming' ? `<em class="notes-status-pill ${note.read ? 'read' : 'unread'}">${note.read ? 'Oxunub' : 'Oxunmayıb'}</em>` : ''}
                     ${type === 'sent' ? '<em class="notes-status-pill sent">Göndərildi</em>' : ''}
                 </div>
                 ${type === 'saved' ? `
@@ -3062,7 +3164,6 @@ class ProfileApp {
             if (savedNote) this.openSendStandaloneNoteModal(savedNote);
         }));
         body?.querySelectorAll('[data-delete-note-id]').forEach(btn => btn.addEventListener('click', () => this.openStandaloneNoteDeleteConfirm(btn.dataset.deleteNoteId, type)));
-        modal?.classList.remove('hidden');
     }
 
     closeStandaloneNotesModal() { document.getElementById('notesListModal')?.classList.add('hidden'); }
@@ -3080,12 +3181,17 @@ class ProfileApp {
     async confirmDeleteStandaloneNote() {
         const pending = this.pendingDeleteStandaloneNote;
         if (!pending) return;
-        try { await this.requestStandaloneNotes(`/protocol-notes/${encodeURIComponent(pending.noteId)}`, 'DELETE'); } catch (e) { console.warn('⚠️ Qeyd backend-dən silinmədi:', e); }
-        const notes = this.loadStandaloneNotes(pending.type).filter(note => String(note.id) !== String(pending.noteId));
-        this.saveStandaloneNotes(pending.type, notes);
-        this.closeStandaloneNoteDeleteConfirm();
-        this.openStandaloneNotesModal(pending.type);
-        this.refreshStandaloneNoteBadges();
+        const api = this.getStandaloneNotesApi();
+        if (!api) { this.showStandaloneNotesError('Qeyd silinmədi. Yenidən cəhd edin.'); return; }
+        try {
+            await api.delete(pending.noteId);
+            this.closeStandaloneNoteDeleteConfirm();
+            await this.openStandaloneNotesModal(pending.type);
+            await this.refreshStandaloneNoteBadges();
+            this.showStandaloneNotesFeedback('Qeyd silindi.');
+        } catch (error) {
+            this.showStandaloneNotesError('Qeyd silinmədi. Yenidən cəhd edin.');
+        }
     }
 
     openProtocolRemoveParticipantConfirmModal(participantId) {
