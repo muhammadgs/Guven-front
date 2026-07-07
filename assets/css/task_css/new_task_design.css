@@ -1490,3 +1490,70 @@
   font-family: "Poppins", Inter, Arial, sans-serif;
   font-weight: 400;
 }
+
+/* ===== Premium internal task create modal alignment ===== */
+.newtask-modal.liquid-task-modal {
+  border-radius: clamp(28px, 3.6vw, 44px);
+  background: linear-gradient(145deg, rgba(248, 251, 255, .96), rgba(231, 238, 248, .88));
+  border: 1px solid rgba(255, 255, 255, .78);
+  box-shadow: 0 32px 90px rgba(15, 23, 42, .28), inset 0 1px 0 rgba(255,255,255,.85);
+}
+
+.newtask-modal.liquid-task-modal .newtask-modal-header {
+  margin: 14px 14px 0;
+  padding: clamp(18px, 2.8vw, 28px) clamp(22px, 4vw, 42px);
+  border-radius: clamp(22px, 3vw, 34px);
+  color: #fff;
+  background:
+    radial-gradient(circle at 14% 0%, rgba(255,255,255,.28), transparent 28%),
+    linear-gradient(135deg, #4388ff 0%, #4169e1 46%, #223a8f 100%);
+  box-shadow: 0 18px 48px rgba(67, 136, 255, .28);
+}
+
+.newtask-modal.liquid-task-modal .newtask-modal-title h3,
+.newtask-modal.liquid-task-modal .newtask-modal-title-icon { color: #fff; }
+.newtask-modal.liquid-task-modal .newtask-modal-title-icon {
+  width: 48px; height: 48px; display: inline-grid; place-items: center;
+  border-radius: 18px; background: rgba(255,255,255,.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28);
+}
+.newtask-modal.liquid-task-modal .newtask-modal-close {
+  background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.26);
+}
+
+.newtask-modal.liquid-task-modal .newtask-modal-body { padding-top: 22px; }
+.newtask-modal.liquid-task-modal .glass-field,
+.newtask-modal.liquid-task-modal .newtask-form-group.full-width {
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255,255,255,.56);
+  border: 1px solid rgba(226, 234, 246, .92);
+  box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
+}
+.newtask-modal.liquid-task-modal .newtask-form-label { min-height: auto; margin-bottom: 10px; font-size: clamp(.92rem, 1.1vw, 1.05rem); letter-spacing: 0; }
+.newtask-modal.liquid-task-modal .newtask-form-label i { width: 22px; font-size: 1.05rem; }
+.newtask-modal.liquid-task-modal .newtask-select,
+.newtask-modal.liquid-task-modal .newtask-input,
+.newtask-modal.liquid-task-modal .newtask-textarea,
+.newtask-modal.liquid-task-modal .nt-select-trigger {
+  min-height: 50px;
+  border-radius: 16px !important;
+  border: 1px solid rgba(204, 216, 234, .95) !important;
+  background: rgba(255,255,255,.96) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(35, 62, 104, .06) !important;
+}
+.newtask-modal.liquid-task-modal .newtask-textarea { min-height: 118px; }
+.newtask-modal.liquid-task-modal .newtask-file-upload-area,
+.newtask-modal.liquid-task-modal .nt-voice-shell {
+  border-radius: 22px;
+  border: 1px dashed rgba(67, 136, 255, .38);
+  background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(241,246,255,.72));
+}
+.newtask-modal.liquid-task-modal .newtask-modal-footer {
+  margin: 0 14px 14px;
+  padding: 16px clamp(22px, 4vw, 42px);
+  border-radius: 24px;
+  background: rgba(255,255,255,.68);
+  border: 1px solid rgba(226,234,246,.92);
+}
+.newtask-modal.liquid-task-modal .newtask-btn { border-radius: 16px; min-height: 50px; }
