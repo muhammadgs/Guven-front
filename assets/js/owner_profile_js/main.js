@@ -1708,8 +1708,8 @@ class ProfileApp {
                                 <i class="fas fa-clipboard-list"></i>
                             </div>
                             <div>
-                                <h2>Pratakol/Qeydlər</h2>
-                                <p>Pratakol və qeydlərin idarə edilməsi.</p>
+                                <h2>Protokol/Qeydlər</h2>
+                                <p>Protokol və qeydlərin idarə edilməsi.</p>
                             </div>
                         </div>
 
@@ -1726,7 +1726,7 @@ class ProfileApp {
                                     </div>
                                     <button id="createProtocolBtn" class="protocol-create-btn" type="button">
                                         <i class="fas fa-plus"></i>
-                                        Yeni pratakol yarat
+                                        Yeni protokol yarat
                                     </button>
                                 </div>
                             </div>
@@ -1738,12 +1738,12 @@ class ProfileApp {
                                             <i class="fas fa-check-circle"></i>
                                         </div>
                                         <div>
-                                            <h3>Tamamlanan pratakollar</h3>
+                                            <h3>Tamamlanan protokollar</h3>
                                         </div>
                                     </div>
                                     <div class="protocol-list-search">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" class="completed-protocol-search-input" placeholder="Tamamlanan pratakol axtar..." />
+                                        <input type="text" class="completed-protocol-search-input" placeholder="Tamamlanan protokol axtar..." />
                                     </div>
                                     <div id="completedProtocolsList" class="protocol-list-scroll completed-protocols-scroll completed-protocols-list"></div>
                                 </div>
@@ -1753,12 +1753,12 @@ class ProfileApp {
                                             <i class="fas fa-clock"></i>
                                         </div>
                                         <div>
-                                            <h3>Tamamlanmamış pratakollar</h3>
+                                            <h3>Tamamlanmamış protokollar</h3>
                                         </div>
                                     </div>
                                     <div class="protocol-list-search">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" class="incomplete-protocol-search-input" placeholder="Tamamlanmamış pratakol axtar..." />
+                                        <input type="text" class="incomplete-protocol-search-input" placeholder="Tamamlanmamış protokol axtar..." />
                                     </div>
                                     <div id="incompleteProtocolsList" class="protocol-list-scroll incomplete-protocols-scroll incomplete-protocols-list"></div>
                                 </div>
@@ -1780,7 +1780,7 @@ class ProfileApp {
                             <div class="protocol-top-grid protocol-top-grid-three">
                                 <div class="protocol-info-card"><div class="protocol-info-icon"><i class="fas fa-calendar-days"></i></div><div><span class="protocol-info-label">Tarix</span><strong id="protocolDetailDate" class="protocol-info-value"></strong></div></div>
                                 <div class="protocol-info-card"><div class="protocol-info-icon"><i class="fas fa-user-tie"></i></div><div><span class="protocol-info-label">Rəhbər</span><strong id="protocolDetailLeader" class="protocol-info-value"></strong></div></div>
-                                <div class="protocol-info-card"><div class="protocol-info-icon"><i class="fas fa-clipboard-list"></i></div><div><span class="protocol-info-label">Pratakolun başlığı</span><strong id="protocolDetailProtocolTitle" class="protocol-info-value"></strong></div></div>
+                                <div class="protocol-info-card"><div class="protocol-info-icon"><i class="fas fa-clipboard-list"></i></div><div><span class="protocol-info-label">Protokolun başlığı</span><strong id="protocolDetailProtocolTitle" class="protocol-info-value"></strong></div></div>
                             </div>
 
                             <div class="protocol-main-grid">
@@ -1801,8 +1801,8 @@ class ProfileApp {
                                     <div id="protocolDetailParticipantsList"></div>
                                 </div>
                                 <div class="protocol-notes-card">
-                                    <div class="protocol-card-header protocol-section-title-row"><div class="protocol-section-title-icon"><i class="fas fa-note-sticky"></i></div><div><h3>Qeyd</h3><p>Pratakol qeydləri</p></div></div>
-                                    <textarea id="protocolDetailNoteText" placeholder="Pratakol qeydlərini yazın..."></textarea>
+                                    <div class="protocol-card-header protocol-section-title-row"><div class="protocol-section-title-icon"><i class="fas fa-note-sticky"></i></div><div><h3>Qeyd</h3><p>Protokol qeydləri</p></div></div>
+                                    <textarea id="protocolDetailNoteText" placeholder="Protokol qeydlərini yazın..."></textarea>
                                     <div id="protocolParticipantActions" class="protocol-participant-actions hidden">
                                         <button id="acceptProtocolBtn" class="protocol-accept-btn" type="button">Qəbul et</button>
                                         <button id="rejectProtocolBtn" class="protocol-reject-btn" type="button">İmtina et</button>
@@ -1814,9 +1814,9 @@ class ProfileApp {
 
                         <div id="createProtocolModal" class="protocol-modal protocol-create-modal hidden">
                             <div class="protocol-modal-card">
-                                <div class="protocol-modal-header"><h3>Yeni pratakol yarat</h3><button data-close-create-protocol-modal type="button"><i class="fas fa-times"></i></button></div>
+                                <div class="protocol-modal-header"><h3>Yeni protokol yarat</h3><button data-close-create-protocol-modal type="button"><i class="fas fa-times"></i></button></div>
                                 <div class="protocol-form-group"><label>Tarix</label><input id="protocolCreateDate" type="text" readonly /></div>
-                                <div class="protocol-form-group"><label>Pratakolun başlığı</label><input id="protocolTitleInput" type="text" placeholder="Pratakolun başlığını yazın..." required /></div>
+                                <div class="protocol-form-group"><label>Protokolun başlığı</label><input id="protocolTitleInput" type="text" placeholder="Protokolun başlığını yazın..." required /></div>
                                 <div class="protocol-form-group"><label>Əməkdaşlar</label><input id="protocolEmployeeSearch" type="text" placeholder="Əməkdaş axtar..." /><div id="protocolEmployeeSelectList" class="protocol-employee-select-list"></div></div>
                                 <div class="protocol-modal-actions"><button data-close-create-protocol-modal type="button">Ləğv et</button><button id="submitCreateProtocolBtn" class="protocol-save-btn" type="button">Yarat</button></div>
                             </div>
@@ -1825,7 +1825,7 @@ class ProfileApp {
                         <div id="addProtocolEmployeeModal" class="protocol-add-employee-overlay hidden">
                             <div class="protocol-add-employee-modal">
                                 <div class="protocol-add-employee-header">
-                                    <div><h3>Əməkdaş əlavə et</h3><p>Pratakola əlavə etmək istədiyiniz əməkdaşı seçin.</p></div>
+                                    <div><h3>Əməkdaş əlavə et</h3><p>Protokola əlavə etmək istədiyiniz əməkdaşı seçin.</p></div>
                                     <button id="closeAddProtocolEmployeeModal" type="button" aria-label="Bağla"><i class="fas fa-xmark"></i></button>
                                 </div>
                                 <div class="protocol-add-employee-search">
@@ -1849,8 +1849,8 @@ class ProfileApp {
                                 <div class="protocol-confirm-icon">
                                     <i class="fas fa-triangle-exclamation"></i>
                                 </div>
-                                <h3>Pratakol tamamlanmadı</h3>
-                                <p>Pratakol tamamlanmadı. Çıxmaq istədiyinizə əminsiz?</p>
+                                <h3>Protokol tamamlanmadı</h3>
+                                <p>Protokol tamamlanmadı. Çıxmaq istədiyinizə əminsiz?</p>
                                 <div class="protocol-confirm-actions">
                                     <button id="confirmProtocolExitYes" class="protocol-confirm-yes" type="button">Bəli</button>
                                     <button id="confirmProtocolExitNo" class="protocol-confirm-no" type="button">Xeyr</button>
@@ -1863,8 +1863,8 @@ class ProfileApp {
                                 <div class="protocol-delete-confirm-icon">
                                     <i class="fas fa-trash-alt"></i>
                                 </div>
-                                <h3>Pratakolu sil</h3>
-                                <p>Bu pratakolu silmək istədiyinizə əminsiz?</p>
+                                <h3>Protokolu sil</h3>
+                                <p>Bu protokolu silmək istədiyinizə əminsiz?</p>
                                 <div class="protocol-delete-confirm-actions">
                                     <button id="confirmDeleteProtocolYes" class="protocol-delete-confirm-yes" type="button">Bəli</button>
                                     <button id="confirmDeleteProtocolNo" class="protocol-delete-confirm-no" type="button">Xeyr</button>
@@ -1878,7 +1878,7 @@ class ProfileApp {
                                     <i class="fas fa-user-minus"></i>
                                 </div>
                                 <h3>Əməkdaşı çıxart</h3>
-                                <p>Bu əməkdaşı pratakoldan çıxartmaq istəyirsiz?</p>
+                                <p>Bu əməkdaşı protokoldan çıxartmaq istəyirsiz?</p>
                                 <div class="protocol-remove-confirm-actions">
                                     <button id="confirmRemoveParticipantYes" class="protocol-remove-confirm-yes" type="button">Bəli</button>
                                     <button id="confirmRemoveParticipantNo" class="protocol-remove-confirm-no" type="button">Xeyr</button>
@@ -2789,8 +2789,8 @@ class ProfileApp {
         const incomplete = protocols.filter(p => p.status !== 'completed');
         const visibleCompleted = this.filterProtocols(completed, this.completedProtocolSearchQuery);
         const visibleIncomplete = this.filterProtocols(incomplete, this.incompleteProtocolSearchQuery);
-        const completedEmptyText = (this.completedProtocolSearchQuery || '').trim() ? 'Axtarışa uyğun tamamlanan pratakol tapılmadı.' : 'Tamamlanmış pratakol yoxdur.';
-        const incompleteEmptyText = (this.incompleteProtocolSearchQuery || '').trim() ? 'Axtarışa uyğun tamamlanmamış pratakol tapılmadı.' : 'Tamamlanmamış pratakol yoxdur.';
+        const completedEmptyText = (this.completedProtocolSearchQuery || '').trim() ? 'Axtarışa uyğun tamamlanan protokol tapılmadı.' : 'Tamamlanmış protokol yoxdur.';
+        const incompleteEmptyText = (this.incompleteProtocolSearchQuery || '').trim() ? 'Axtarışa uyğun tamamlanmamış protokol tapılmadı.' : 'Tamamlanmamış protokol yoxdur.';
         const completedEl = document.getElementById('completedProtocolsList');
         const incompleteEl = document.getElementById('incompleteProtocolsList');
         if (completedEl) completedEl.innerHTML = render(visibleCompleted, completedEmptyText, 'fa-folder-open');
@@ -2819,7 +2819,7 @@ class ProfileApp {
         return `<div class="protocol-list-item" role="button" tabindex="0" data-open-protocol-detail="${this.escapeProtocolHtml(protocol.id)}">
             <div class="protocol-list-item-actions">
                 <span class="protocol-status-badge ${protocol.status}">${labels[protocol.status]}</span>
-                <button class="protocol-delete-btn" type="button" data-protocol-id="${this.escapeProtocolHtml(protocol.id)}" title="Pratakolu sil" aria-label="Pratakolu sil">
+                <button class="protocol-delete-btn" type="button" data-protocol-id="${this.escapeProtocolHtml(protocol.id)}" title="Protokolu sil" aria-label="Protokolu sil">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </div>
@@ -2942,10 +2942,10 @@ class ProfileApp {
 
     async createProtocolFromModal() {
         const title = (document.getElementById('protocolTitleInput')?.value || '').trim();
-        if (!title) { alert('Pratakolun başlığı boş ola bilməz.'); return; }
+        if (!title) { alert('Protokolun başlığı boş ola bilməz.'); return; }
         const checked = [...document.querySelectorAll('#protocolEmployeeSelectList input[type="checkbox"]:checked')].map(input => input.value);
         if (!checked.length) { alert('Ən azı bir əməkdaş seçilməlidir.'); return; }
-        if (!this.currentProtocolId) { alert('Pratakol draft ID tapılmadı. Yenidən cəhd edin.'); return; }
+        if (!this.currentProtocolId) { alert('Protokol draft ID tapılmadı. Yenidən cəhd edin.'); return; }
         const button = document.getElementById('submitCreateProtocolBtn');
         this.setProtocolButtonLoading(button, true, 'Yaradılır...');
         try {
@@ -3128,7 +3128,7 @@ class ProfileApp {
             if (participant && participant.status === 'pending' && String(protocol.createdBy?.id) !== String(currentUser.id)) { participant.status = status; participant.respondedAt = new Date().toISOString(); participant.note = document.getElementById('protocolDetailNoteText')?.value || participant.note || ''; }
             return protocol;
         });
-        if (updated) this.addProtocolNotification({ toUserId: updated.createdBy?.id, protocolId: updated.id, text: `${currentUser.name} pratakolu ${status === 'accepted' ? 'qəbul etdi' : 'pratakoldan imtina etdi'}: ${updated.title}` });
+        if (updated) this.addProtocolNotification({ toUserId: updated.createdBy?.id, protocolId: updated.id, text: `${currentUser.name} protokolu ${status === 'accepted' ? 'qəbul etdi' : 'protokoldan imtina etdi'}: ${updated.title}` });
         this.renderProtocolDetail();
     }
 
