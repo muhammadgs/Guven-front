@@ -8,6 +8,18 @@ class ApiService {
     constructor() {
         this.baseUrl = this.resolveBaseUrl();
         this.token = this.loadToken();
+        this.notes = {
+            create: (data) => this.post('/notes/', data),
+            list: (params = {}) => this.get(this.buildQueryEndpoint('/notes/', params)),
+            shared: () => this.get('/notes/shared'),
+            getById: (noteId) => this.get(`/notes/${noteId}`),
+            update: (noteId, data) => this.put(`/notes/${noteId}`, data),
+            delete: (noteId) => this.delete(`/notes/${noteId}`),
+            share: (noteId, data) => this.post(`/notes/${noteId}/share`, data),
+            removeShare: (noteId, userId) => this.delete(`/notes/${noteId}/share/${userId}`),
+            addComment: (noteId, data) => this.post(`/notes/${noteId}/comments`, data),
+            getComments: (noteId) => this.get(`/notes/${noteId}/comments`)
+        };
     }
 
     isLocalDevelopment() {
@@ -118,6 +130,16 @@ class ApiService {
         }
 
         return null;
+    }
+
+    buildQueryEndpoint(endpoint, params = {}) {
+        const query = new URLSearchParams();
+        Object.entries(params || {}).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') query.append(key, value);
+        });
+        const queryString = query.toString();
+        if (!queryString) return endpoint;
+        return `${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
     }
 
     // ==================== ÜMUMİ SORĞU (baza_id OLMADAN) ====================
