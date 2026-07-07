@@ -2758,3 +2758,107 @@ html body #activeTableSection .action-btn.edit {
     background: linear-gradient(135deg, #4388ff, #315ed6) !important;
     box-shadow: 0 10px 22px rgba(49,94,214,.24) !important;
 }
+
+/* =====================================================================
+   INTERNAL TASKS TABLE WIDTH FIX
+   Scope: only the "Daxili" active tasks table. Keep the table inside its
+   parent card without showing a horizontal scrollbar, while preserving all
+   columns and action buttons.
+   ===================================================================== */
+html body #activeTableSection.task-section-active > .table-wrapper,
+html body.task-page-selected #activeTableSection.task-section-active > .table-wrapper,
+html body.task-manager-section-active #activeTableSection.task-section-active > .table-wrapper,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active > .table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+html body #activeTableSection.task-section-active .excel-table,
+html body #activeTableSection.task-section-active .data-table,
+html body.task-page-selected #activeTableSection.task-section-active .excel-table,
+html body.task-page-selected #activeTableSection.task-section-active .data-table,
+html body.task-manager-section-active #activeTableSection.task-section-active .excel-table,
+html body.task-manager-section-active #activeTableSection.task-section-active .data-table,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active .excel-table,
+#profileContent.profile-content-task-active .task-manager-embedded-root > #activeTableSection.task-section-active .data-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+html body #activeTableSection.task-section-active .excel-table th,
+html body #activeTableSection.task-section-active .excel-table td,
+html body #activeTableSection.task-section-active .data-table th,
+html body #activeTableSection.task-section-active .data-table td {
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+}
+
+html body #activeTableSection.task-section-active .excel-table th:nth-child(1),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(1) { width: 4% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(2),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(2) { width: 8% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(3),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(3) { width: 8% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(4),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(4) { width: 9% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(5),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(5) { width: 9% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(6),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(6) { width: 12% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(7),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(7) { width: 8% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(8),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(8) { width: 12% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(9),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(9) { width: 7% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(10),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(10) { width: 7% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(11),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(11) { width: 7% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(12),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(12) { width: 7% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(13),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(13) { width: 5% !important; }
+html body #activeTableSection.task-section-active .excel-table th:nth-child(14),
+html body #activeTableSection.task-section-active .excel-table td:nth-child(14) { width: 7% !important; }
+
+html body #activeTableSection.task-section-active .table-header-cell,
+html body #activeTableSection.task-section-active .status-section,
+html body #activeTableSection.task-section-active .file-col > div,
+html body #activeTableSection.task-section-active [data-confirm-timer],
+html body #activeTableSection.task-section-active [data-work-timer-display] {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+}
+
+html body #activeTableSection.task-section-active td:nth-child(11) > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    flex-wrap: nowrap !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+}
+
+html body #activeTableSection.task-section-active td:nth-child(11) button,
+html body #activeTableSection.task-section-active .confirm-actions button,
+html body #activeTableSection.task-section-active .btn-edit-task {
+    flex: 0 0 auto !important;
+}
