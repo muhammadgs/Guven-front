@@ -1191,6 +1191,8 @@
 
     function openModal(taskType) {
         currentTaskType = taskType;
+        const modal = modalOverlay?.querySelector('.newtask-modal');
+        modal?.classList.toggle('internal-task-modal', taskType === 'internal');
         if (companyGroup) companyGroup.style.display = 'none';
         if (parentGroup) parentGroup.style.display = 'none';
         if (partnerGroup) partnerGroup.style.display = 'none';
