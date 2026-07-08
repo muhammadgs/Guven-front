@@ -2126,12 +2126,13 @@ taskEditStyles.textContent = `
 
     .task-edit-modal .task-edit-time-visibility-row {
         display: grid;
-        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
-        gap: 22px;
+        grid-template-columns: minmax(420px, 0.92fr) minmax(420px, 1fr);
+        gap: 24px;
         align-items: stretch;
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        margin: 18px 0 24px;
     }
 
     .task-edit-modal .task-edit-visibility-section {
@@ -2542,42 +2543,49 @@ taskEditStyles.textContent = `
 
     .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
         display: grid;
-        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
-        gap: 22px;
+        grid-template-columns: minmax(420px, 0.92fr) minmax(420px, 1fr);
+        gap: 24px;
         align-items: stretch;
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        margin: 18px 0 24px;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-manual-time-section,
-    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-section,
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-visibility-section {
         display: block;
+        grid-column: auto;
+        width: 100%;
         min-width: 0;
-        padding: 18px 22px;
-        border-radius: 22px;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 22px 24px;
+        border-radius: 26px;
         background: rgba(255,255,255,.58);
         border: 1px solid rgba(226, 234, 246, .92);
         box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-controls,
-    .task-edit-modal.task-edit-internal-glass .manual-time-input.task-edit-time-controls {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-controls,
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .manual-time-input.task-edit-time-controls {
         display: grid;
         grid-template-columns: 1fr;
         gap: 14px;
+        width: 100%;
         max-width: 430px;
         margin: 0;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-input-row {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-input-row {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
+        width: 100%;
         max-width: 430px;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-add-btn {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-add-btn {
         width: 100%;
         max-width: 430px;
     }
@@ -2595,6 +2603,7 @@ taskEditStyles.textContent = `
     .task-edit-modal.task-edit-internal-glass .manual-time-section .timer-section { padding: 12px; margin: 0; border-radius: 18px; background: rgba(255,255,255,.7); }
     .task-edit-modal.task-edit-internal-glass .timer-display { padding: 8px 10px; margin: 0; background: rgba(248,250,252,.82); }
     .task-edit-modal.task-edit-internal-glass .manual-time-input { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .manual-time-input.task-edit-time-controls { grid-template-columns: 1fr; align-items: stretch; }
     .task-edit-modal.task-edit-internal-glass .time-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
     .task-edit-modal.task-edit-internal-glass .modal-footer-sticky {
@@ -2622,6 +2631,10 @@ taskEditStyles.textContent = `
         .task-edit-modal.task-edit-internal-glass .manual-time-input,
         .task-edit-modal.task-edit-internal-glass .time-inputs {
             grid-template-columns: 1fr;
+        }
+
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-section {
+            grid-column: auto;
         }
     }
 
