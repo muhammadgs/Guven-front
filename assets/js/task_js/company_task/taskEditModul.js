@@ -776,19 +776,19 @@ const TaskEditModule = {
                                 </div>
 
                                 <!-- MANUAL SAAT + GÖRÜNMƏ AYARLARI -->
-                                <div class="task-edit-time-visibility-row">
+                                <div class="task-edit-time-visibility-grid">
                                     <div class="form-group manual-time-section task-edit-manual-time-section">
                                         <div class="task-edit-manual-time-header">
                                             <i class="fa-solid fa-plus-circle"></i>
                                             <span>Əl ilə Saat Əlavə Et</span>
                                         </div>
-                                        <div class="task-edit-total-time-compact" aria-live="polite">
+                                        <div class="task-edit-total-time-badge" aria-live="polite">
                                             <i class="fa-solid fa-clock"></i>
                                             <span>Toplam işlənmiş vaxt:</span>
                                             <strong id="currentTimeDisplay">${this.formatSeconds(totalSeconds)}</strong>
                                         </div>
                                         <div class="manual-time-input task-edit-time-controls">
-                                            <div class="task-edit-time-input-row">
+                                            <div class="task-edit-time-inputs">
                                                 <div class="time-input-group">
                                                     <label for="addHours">Saat</label>
                                                     <input type="number" id="addHours" class="form-control" min="0" max="23" value="0" placeholder="0">
@@ -824,7 +824,7 @@ const TaskEditModule = {
                                             <i class="fa-solid fa-info-circle"></i> 
                                             Task bu şirkətə görünəcək (Əsl sahib: <strong>${this.escapeHtml(realCompanyName)}</strong>)
                                         </small>
-                                        <div class="task-edit-visibility-options viewable-company-section">
+                                        <div class="task-edit-visibility-checkbox viewable-company-section">
                                             <input type="checkbox" id="editIsCompanyViewable" class="form-check-input" 
                                                    ${task.is_company_viewable ? 'checked' : ''}>
                                             <label for="editIsCompanyViewable">
@@ -2112,37 +2112,38 @@ taskEditStyles.textContent = `
         font-size: 13px;
     }
 
-    .task-edit-modal .manual-time-section,
-    .task-edit-modal .task-edit-manual-time-section {
-        padding: 18px 22px;
-        margin: 0;
-        border-radius: 22px;
-        border: 1px solid rgba(219, 234, 254, 0.85);
-        background: rgba(255, 255, 255, 0.72);
-        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
-        backdrop-filter: blur(14px);
-        overflow: hidden;
-    }
-
-    .task-edit-modal .task-edit-time-visibility-row {
+    .task-edit-modal .task-edit-time-visibility-grid {
         display: grid;
-        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
+        grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
         gap: 22px;
         align-items: stretch;
         width: 100%;
         max-width: 100%;
         min-width: 0;
+        margin: 20px 0 24px;
+        box-sizing: border-box;
     }
 
+    .task-edit-modal .task-edit-manual-time-section,
     .task-edit-modal .task-edit-visibility-section {
-        padding: 18px 22px;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        height: 100%;
+        padding: 22px 24px;
         margin: 0;
-        border-radius: 22px;
+        border-radius: 24px;
         border: 1px solid rgba(219, 234, 254, 0.85);
         background: rgba(255, 255, 255, 0.72);
-        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
         backdrop-filter: blur(14px);
-        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .task-edit-modal .task-edit-manual-time-section {
+        overflow: hidden;
     }
 
     .task-edit-modal .task-edit-manual-time-header {
@@ -2156,7 +2157,7 @@ taskEditStyles.textContent = `
         color: #f59e0b;
     }
 
-    .task-edit-modal .task-edit-total-time-compact {
+    .task-edit-modal .task-edit-total-time-badge {
         display: inline-flex;
         align-items: center;
         max-width: 100%;
@@ -2174,7 +2175,7 @@ taskEditStyles.textContent = `
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
-    .task-edit-modal .task-edit-total-time-compact strong,
+    .task-edit-modal .task-edit-total-time-badge strong,
     .task-edit-modal #currentTimeDisplay {
         color: #1d4ed8;
         font-size: 15px !important;
@@ -2189,16 +2190,15 @@ taskEditStyles.textContent = `
         align-items: end;
         gap: 14px;
         margin-top: 0;
-        max-width: 430px;
+        width: 100%;
     }
 
-    .task-edit-modal .task-edit-time-input-row {
+    .task-edit-modal .task-edit-time-inputs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
         align-items: end;
         width: 100%;
-        max-width: 430px;
     }
 
     .task-edit-modal .task-edit-time-controls .time-input-group {
@@ -2267,7 +2267,7 @@ taskEditStyles.textContent = `
         border-radius: 16px;
     }
 
-    .task-edit-modal .task-edit-visibility-options {
+    .task-edit-modal .task-edit-visibility-checkbox {
         display: flex;
         align-items: center;
         gap: 10px;
@@ -2279,14 +2279,14 @@ taskEditStyles.textContent = `
         border: 1px solid rgba(226, 232, 240, 0.86);
     }
 
-    .task-edit-modal .task-edit-visibility-options input[type="checkbox"] {
+    .task-edit-modal .task-edit-visibility-checkbox input[type="checkbox"] {
         width: 18px;
         height: 18px;
         min-height: 18px;
         flex: 0 0 auto;
     }
 
-    .task-edit-modal .task-edit-visibility-options label {
+    .task-edit-modal .task-edit-visibility-checkbox label {
         margin: 0;
         cursor: pointer;
     }
@@ -2331,16 +2331,16 @@ taskEditStyles.textContent = `
     }
 
     @media (max-width: 1100px) {
-        .task-edit-modal .task-edit-time-visibility-row,
-        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
+        .task-edit-modal .task-edit-time-visibility-grid,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-grid {
             grid-template-columns: 1fr;
         }
 
         .task-edit-modal .task-edit-time-controls,
-        .task-edit-modal .task-edit-time-input-row,
+        .task-edit-modal .task-edit-time-inputs,
         .task-edit-modal .task-edit-time-add-btn,
         .task-edit-modal.task-edit-internal-glass .task-edit-time-controls,
-        .task-edit-modal.task-edit-internal-glass .task-edit-time-input-row,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-inputs,
         .task-edit-modal.task-edit-internal-glass .task-edit-time-add-btn {
             max-width: 100%;
         }
@@ -2372,7 +2372,7 @@ taskEditStyles.textContent = `
             width: 100%;
         }
 
-        .task-edit-modal .task-edit-total-time-compact {
+        .task-edit-modal .task-edit-total-time-badge {
             width: 100%;
             justify-content: center;
             flex-wrap: wrap;
@@ -2476,7 +2476,7 @@ taskEditStyles.textContent = `
     .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
     .task-edit-modal.task-edit-internal-glass .task-edit-title-row,
     .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid > .form-group,
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row,
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-grid,
     .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
     .task-edit-modal.task-edit-internal-glass .manual-time-section,
     .task-edit-modal.task-edit-internal-glass .task-details-section {
@@ -2540,9 +2540,9 @@ taskEditStyles.textContent = `
         background: rgba(255,255,255,.58);
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-grid {
         display: grid;
-        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
+        grid-template-columns: minmax(420px, 1fr) minmax(420px, 1fr);
         gap: 22px;
         align-items: stretch;
         width: 100%;
@@ -2552,10 +2552,14 @@ taskEditStyles.textContent = `
 
     .task-edit-modal.task-edit-internal-glass .task-edit-manual-time-section,
     .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section {
-        display: block;
+        display: flex;
+        flex-direction: column;
         min-width: 0;
-        padding: 18px 22px;
-        border-radius: 22px;
+        width: 100%;
+        max-width: 100%;
+        height: 100%;
+        padding: 22px 24px;
+        border-radius: 24px;
         background: rgba(255,255,255,.58);
         border: 1px solid rgba(226, 234, 246, .92);
         box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
@@ -2566,27 +2570,26 @@ taskEditStyles.textContent = `
         display: grid;
         grid-template-columns: 1fr;
         gap: 14px;
-        max-width: 430px;
+        width: 100%;
         margin: 0;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-input-row {
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-inputs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
-        max-width: 430px;
+        width: 100%;
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-time-add-btn {
         width: 100%;
-        max-width: 430px;
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section select {
         width: 100%;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-options {
+    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-checkbox {
         margin-top: 14px;
     }
 
@@ -2616,7 +2619,7 @@ taskEditStyles.textContent = `
     @media (max-width: 768px) {
         .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid,
         .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
-        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-grid,
         .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
         .task-edit-modal.task-edit-internal-glass .manual-time-section,
         .task-edit-modal.task-edit-internal-glass .manual-time-input,
