@@ -775,66 +775,66 @@ const TaskEditModule = {
                                     </small>
                                 </div>
 
-                                <!-- MANUAL SAAT ƏLAVƏ ET -->
-                                <div class="form-group manual-time-section task-edit-manual-time-section">
-                                    <div class="task-edit-manual-time-header">
-                                        <i class="fa-solid fa-plus-circle"></i>
-                                        <span>Əl ilə Saat Əlavə Et</span>
-                                    </div>
-                                    <div class="task-edit-total-time-compact" aria-live="polite">
-                                        <i class="fa-solid fa-clock"></i>
-                                        <span>Toplam işlənmiş vaxt:</span>
-                                        <strong id="currentTimeDisplay">${this.formatSeconds(totalSeconds)}</strong>
-                                    </div>
-                                    <div class="manual-time-input task-edit-time-controls">
-                                        <div class="time-input-group">
-                                            <label for="addHours">Saat</label>
-                                            <input type="number" id="addHours" class="form-control" min="0" max="23" value="0" placeholder="0">
+                                <!-- MANUAL SAAT + GÖRÜNMƏ AYARLARI -->
+                                <div class="task-edit-time-visibility-row">
+                                    <div class="form-group manual-time-section task-edit-manual-time-section">
+                                        <div class="task-edit-manual-time-header">
+                                            <i class="fa-solid fa-plus-circle"></i>
+                                            <span>Əl ilə Saat Əlavə Et</span>
                                         </div>
-                                        <div class="time-input-group">
-                                            <label for="addMinutes">Dəqiqə</label>
-                                            <input type="number" id="addMinutes" class="form-control" min="0" max="59" value="0" placeholder="0">
+                                        <div class="task-edit-total-time-compact" aria-live="polite">
+                                            <i class="fa-solid fa-clock"></i>
+                                            <span>Toplam işlənmiş vaxt:</span>
+                                            <strong id="currentTimeDisplay">${this.formatSeconds(totalSeconds)}</strong>
                                         </div>
-                                        <button type="button" class="btn btn-add-time task-edit-time-add-btn" onclick="TaskEditModule.addManualTime()">
-                                            <i class="fa-solid fa-plus"></i> Əlavə Et
-                                        </button>
+                                        <div class="manual-time-input task-edit-time-controls">
+                                            <div class="task-edit-time-input-row">
+                                                <div class="time-input-group">
+                                                    <label for="addHours">Saat</label>
+                                                    <input type="number" id="addHours" class="form-control" min="0" max="23" value="0" placeholder="0">
+                                                </div>
+                                                <div class="time-input-group">
+                                                    <label for="addMinutes">Dəqiqə</label>
+                                                    <input type="number" id="addMinutes" class="form-control" min="0" max="59" value="0" placeholder="0">
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn btn-add-time task-edit-time-add-btn" onclick="TaskEditModule.addManualTime()">
+                                                <i class="fa-solid fa-plus"></i> Əlavə Et
+                                            </button>
+                                        </div>
+                                        <small class="task-edit-time-helper task-edit-helper-text">
+                                            <i class="fa-solid fa-info-circle"></i> Daxil etdiyiniz vaxt cari işlənmiş vaxtla toplanacaq
+                                        </small>
                                     </div>
-                                    <small class="task-edit-time-helper">
-                                        <i class="fa-solid fa-info-circle"></i> Daxil etdiyiniz vaxt cari işlənmiş vaxtla toplanacaq
-                                    </small>
-                                </div>
-                                
-                                <!-- GİZLİ SAHİB ŞİRKƏTİ (company_id) -->
-                                <input type="hidden" id="editRealCompanyId" value="${realCompanyId}">
-                                
-                                <div class="form-group">
-                                    <label for="editCompany">
-                                        <i class="fa-solid fa-building"></i> Görünən Şirkət:
-                                    </label>
-                                    <select id="editCompany" class="form-control">
-                                        ${companyOptions}
-                                    </select>
-                                    <small style="color:#6c757d;display:block;margin-top:5px;">
-                                        <i class="fa-solid fa-info-circle"></i> 
-                                        Task bu şirkətə görünəcək (Əsl sahib: <strong>${this.escapeHtml(realCompanyName)}</strong>)
-                                    </small>
-                                </div>
-                                
-                                <!-- Görünmə Ayarları -->
-                                <div class="form-group viewable-company-section" style="margin-top:15px;padding:15px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;">
-                                    <label style="font-weight:600;color:#2c3e50;margin-bottom:10px;display:block;">
-                                        <i class="fa-solid fa-eye"></i> Görünmə Ayarları
-                                    </label>
-                                    <div style="display:flex;align-items:center;gap:10px;">
-                                        <input type="checkbox" id="editIsCompanyViewable" class="form-check-input" 
-                                               ${task.is_company_viewable ? 'checked' : ''} style="width:18px;height:18px;">
-                                        <label for="editIsCompanyViewable" style="margin:0;cursor:pointer;">
-                                            Başqa şirkətlərə görünsün
+                                    
+                                    <!-- GİZLİ SAHİB ŞİRKƏTİ (company_id) -->
+                                    <input type="hidden" id="editRealCompanyId" value="${realCompanyId}">
+                                    
+                                    <div class="form-group task-edit-visibility-section">
+                                        <div class="task-edit-visibility-title">
+                                            <i class="fa-solid fa-eye"></i> Görünmə Ayarları
+                                        </div>
+                                        <label for="editCompany" class="task-edit-company-label">
+                                            <i class="fa-solid fa-building"></i> Görünən Şirkət
                                         </label>
-                                    </div>
-                                    <div id="viewableCompanyInfo" style="margin-top:10px;font-size:12px;color:#6c757d;">
-                                        <i class="fa-solid fa-info-circle"></i> 
-                                        Task yalnız seçilmiş şirkət tərəfindən görünəcək
+                                        <select id="editCompany" class="form-control">
+                                            ${companyOptions}
+                                        </select>
+                                        <small class="task-edit-helper-text">
+                                            <i class="fa-solid fa-info-circle"></i> 
+                                            Task bu şirkətə görünəcək (Əsl sahib: <strong>${this.escapeHtml(realCompanyName)}</strong>)
+                                        </small>
+                                        <div class="task-edit-visibility-options viewable-company-section">
+                                            <input type="checkbox" id="editIsCompanyViewable" class="form-check-input" 
+                                                   ${task.is_company_viewable ? 'checked' : ''}>
+                                            <label for="editIsCompanyViewable">
+                                                Başqa şirkətlərə görünsün
+                                            </label>
+                                        </div>
+                                        <div id="viewableCompanyInfo" class="task-edit-helper-text">
+                                            <i class="fa-solid fa-info-circle"></i> 
+                                            Task yalnız seçilmiş şirkət tərəfindən görünəcək
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -2124,6 +2124,27 @@ taskEditStyles.textContent = `
         overflow: hidden;
     }
 
+    .task-edit-modal .task-edit-time-visibility-row {
+        display: grid;
+        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
+        gap: 22px;
+        align-items: stretch;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .task-edit-modal .task-edit-visibility-section {
+        padding: 18px 22px;
+        margin: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(219, 234, 254, 0.85);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(14px);
+        min-width: 0;
+    }
+
     .task-edit-modal .task-edit-manual-time-header {
         display: flex;
         align-items: center;
@@ -2164,11 +2185,20 @@ taskEditStyles.textContent = `
     .task-edit-modal .manual-time-input.task-edit-time-controls,
     .task-edit-modal .task-edit-time-controls {
         display: grid;
-        grid-template-columns: minmax(120px, 180px) minmax(120px, 180px) auto;
+        grid-template-columns: 1fr;
         align-items: end;
         gap: 14px;
         margin-top: 0;
-        max-width: 100%;
+        max-width: 430px;
+    }
+
+    .task-edit-modal .task-edit-time-input-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        align-items: end;
+        width: 100%;
+        max-width: 430px;
     }
 
     .task-edit-modal .task-edit-time-controls .time-input-group {
@@ -2198,7 +2228,8 @@ taskEditStyles.textContent = `
     .task-edit-modal .btn-add-time.task-edit-time-add-btn {
         min-height: 48px;
         height: 48px;
-        padding: 0 24px;
+        width: 100%;
+        padding: 0 20px;
         border-radius: 16px;
         font-weight: 800;
         white-space: nowrap;
@@ -2208,6 +2239,62 @@ taskEditStyles.textContent = `
         display: block;
         margin-top: 10px !important;
         font-size: 13px !important;
+        line-height: 1.35;
+        color: #64748b;
+    }
+
+    .task-edit-modal .task-edit-visibility-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #2563eb;
+    }
+
+    .task-edit-modal .task-edit-company-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .task-edit-modal .task-edit-visibility-section select {
+        width: 100%;
+        min-height: 52px;
+        border-radius: 16px;
+    }
+
+    .task-edit-modal .task-edit-visibility-options {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(248, 250, 252, 0.82);
+        border: 1px solid rgba(226, 232, 240, 0.86);
+    }
+
+    .task-edit-modal .task-edit-visibility-options input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        min-height: 18px;
+        flex: 0 0 auto;
+    }
+
+    .task-edit-modal .task-edit-visibility-options label {
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .task-edit-modal .task-edit-helper-text {
+        display: block;
+        margin-top: 10px;
+        font-size: 13px;
         line-height: 1.35;
         color: #64748b;
     }
@@ -2240,6 +2327,22 @@ taskEditStyles.textContent = `
     @media (max-width: 1200px) {
         .task-edit-modal .task-edit-top-fields {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 1100px) {
+        .task-edit-modal .task-edit-time-visibility-row,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
+            grid-template-columns: 1fr;
+        }
+
+        .task-edit-modal .task-edit-time-controls,
+        .task-edit-modal .task-edit-time-input-row,
+        .task-edit-modal .task-edit-time-add-btn,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-controls,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-input-row,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-add-btn {
+            max-width: 100%;
         }
     }
 
@@ -2373,6 +2476,7 @@ taskEditStyles.textContent = `
     .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
     .task-edit-modal.task-edit-internal-glass .task-edit-title-row,
     .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid > .form-group,
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row,
     .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
     .task-edit-modal.task-edit-internal-glass .manual-time-section,
     .task-edit-modal.task-edit-internal-glass .task-details-section {
@@ -2436,6 +2540,56 @@ taskEditStyles.textContent = `
         background: rgba(255,255,255,.58);
     }
 
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
+        display: grid;
+        grid-template-columns: minmax(340px, .9fr) minmax(360px, 1.1fr);
+        gap: 22px;
+        align-items: stretch;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-manual-time-section,
+    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section {
+        display: block;
+        min-width: 0;
+        padding: 18px 22px;
+        border-radius: 22px;
+        background: rgba(255,255,255,.58);
+        border: 1px solid rgba(226, 234, 246, .92);
+        box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-controls,
+    .task-edit-modal.task-edit-internal-glass .manual-time-input.task-edit-time-controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        max-width: 430px;
+        margin: 0;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-input-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        max-width: 430px;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-add-btn {
+        width: 100%;
+        max-width: 430px;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section select {
+        width: 100%;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-visibility-options {
+        margin-top: 14px;
+    }
+
     .task-edit-modal.task-edit-internal-glass .manual-time-section > label,
     .task-edit-modal.task-edit-internal-glass .manual-time-section > small { grid-column: 1 / -1; }
     .task-edit-modal.task-edit-internal-glass .manual-time-section .timer-section { padding: 12px; margin: 0; border-radius: 18px; background: rgba(255,255,255,.7); }
@@ -2462,6 +2616,7 @@ taskEditStyles.textContent = `
     @media (max-width: 768px) {
         .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid,
         .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row,
         .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
         .task-edit-modal.task-edit-internal-glass .manual-time-section,
         .task-edit-modal.task-edit-internal-glass .manual-time-input,
