@@ -2017,6 +2017,243 @@ taskEditStyles.textContent = `
     .required-field textarea {
         border-color: #dc2626 !important;
     }
+
+    /* Compact professional layout for Task Redaktəsi modal */
+    .task-edit-modal {
+        width: min(94vw, 1080px);
+        max-width: 1080px;
+        border-radius: 24px;
+    }
+
+    .task-edit-modal .modal-header {
+        padding: 18px 28px;
+    }
+
+    .task-edit-modal .modal-body-scrollable {
+        padding: 22px 30px 28px;
+        gap: 0;
+        overflow-x: hidden;
+        scrollbar-gutter: stable;
+    }
+
+    .task-edit-modal #taskEditForm > .form-grid {
+        gap: 18px;
+        margin-bottom: 0;
+    }
+
+    .task-edit-modal .task-info-header {
+        margin-bottom: 18px;
+        padding-bottom: 12px;
+    }
+
+    .task-edit-modal .task-edit-top-fields {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 0;
+        margin-bottom: 2px;
+    }
+
+    .task-edit-modal .task-edit-top-fields .task-edit-card,
+    .task-edit-modal .task-edit-title-row,
+    .task-edit-modal #taskEditForm > .form-grid > .form-group:not(.manual-time-section),
+    .task-edit-modal .form-row.two-columns > .form-group {
+        padding: 18px 20px;
+        border: 1px solid rgba(226, 232, 240, 0.9);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .task-edit-modal .task-edit-top-fields .task-edit-card {
+        min-height: 112px;
+    }
+
+    .task-edit-modal .form-row.two-columns {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-bottom: 0;
+    }
+
+    .task-edit-modal .form-group {
+        margin-bottom: 0;
+    }
+
+    .task-edit-modal .form-group label,
+    .task-edit-modal .time-input-group label {
+        margin-bottom: 7px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    .task-edit-modal .form-control,
+    .task-edit-modal select,
+    .task-edit-modal input {
+        min-height: 46px;
+        padding: 10px 13px;
+        border-radius: 14px;
+        font-size: 14px;
+    }
+
+    .task-edit-modal .task-edit-title-row input {
+        min-height: 50px;
+        font-size: 15px;
+    }
+
+    .task-edit-modal textarea.form-control,
+    .task-edit-modal textarea {
+        min-height: 118px;
+        max-height: 168px;
+        resize: vertical;
+    }
+
+    .task-edit-modal .progress-container {
+        gap: 10px;
+        min-height: 46px;
+    }
+
+    .task-edit-modal .progress-value {
+        min-width: 42px;
+        font-size: 13px;
+    }
+
+    .task-edit-modal .manual-time-section {
+        padding: 16px 18px;
+        margin-top: 0;
+        margin-bottom: 0;
+        border-radius: 20px;
+        border: 1px solid rgba(251, 146, 60, 0.22);
+        background: linear-gradient(135deg, rgba(255, 247, 237, 0.96) 0%, rgba(255, 255, 255, 0.94) 58%, rgba(238, 242, 255, 0.78) 100%);
+        box-shadow: 0 12px 30px rgba(249, 115, 22, 0.08);
+    }
+
+    .task-edit-modal .manual-time-section > label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 16px;
+        color: #9a3412;
+    }
+
+    .task-edit-modal .manual-time-section .timer-section {
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(251, 146, 60, 0.18);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+    }
+
+    .task-edit-modal .manual-time-section .timer-section > label {
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+    .task-edit-modal .timer-display {
+        padding: 10px 12px;
+        margin-bottom: 6px;
+        border-radius: 14px;
+        background: rgba(248, 250, 252, 0.96);
+    }
+
+    .task-edit-modal .timer-item {
+        min-height: 0;
+        padding: 0;
+    }
+
+    .task-edit-modal .timer-value,
+    .task-edit-modal #currentTimeDisplay {
+        font-size: 17px !important;
+        line-height: 1.25;
+    }
+
+    .task-edit-modal .manual-time-input {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 14px;
+        align-items: end;
+        margin-top: 8px;
+    }
+
+    .task-edit-modal .time-inputs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        flex: none;
+    }
+
+    .task-edit-modal .manual-time-section input {
+        min-height: 44px;
+        height: 44px;
+        font-size: 14px;
+    }
+
+    .task-edit-modal .btn-add-time {
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 14px;
+        white-space: nowrap;
+    }
+
+    .task-edit-modal .manual-time-section small,
+    .task-edit-modal .form-row.two-columns small,
+    .task-edit-modal #notesHelpText {
+        margin-top: 6px !important;
+        font-size: 11px !important;
+        line-height: 1.35;
+    }
+
+    .task-edit-modal .modal-footer-sticky {
+        padding: 16px 30px;
+        justify-content: flex-end;
+        gap: 14px;
+        border-radius: 0 0 24px 24px;
+        flex-wrap: nowrap;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+    }
+
+    .task-edit-modal .modal-footer-sticky .btn {
+        min-width: 158px;
+        min-height: 50px;
+        border-radius: 16px;
+        padding: 0 22px;
+        font-weight: 700;
+    }
+
+    @media (max-width: 1200px) {
+        .task-edit-modal .task-edit-top-fields {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .task-edit-modal {
+            width: 96vw;
+            border-radius: 20px;
+        }
+
+        .task-edit-modal .modal-body-scrollable {
+            padding: 18px 16px 24px;
+        }
+
+        .task-edit-modal .task-edit-top-fields,
+        .task-edit-modal .form-row.two-columns,
+        .task-edit-modal .manual-time-input,
+        .task-edit-modal .time-inputs {
+            grid-template-columns: 1fr;
+        }
+
+        .task-edit-modal .modal-footer-sticky {
+            padding: 14px 16px;
+            flex-direction: column-reverse;
+        }
+
+        .task-edit-modal .modal-footer-sticky .btn {
+            width: 100%;
+        }
+    }
+
 `;
 
 document.head.appendChild(taskEditStyles);
