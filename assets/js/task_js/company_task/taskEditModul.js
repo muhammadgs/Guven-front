@@ -776,36 +776,31 @@ const TaskEditModule = {
                                 </div>
 
                                 <!-- MANUAL SAAT ƏLAVƏ ET -->
-                                <div class="form-group manual-time-section">
-                                    <label><i class="fa-solid fa-plus-circle"></i> Əl ilə Saat Əlavə Et</label>
-                                    <div class="form-group timer-section">
-                                        <label><i class="fa-solid fa-clock"></i> Toplam İşlənmiş Vaxt</label>
-                                        <div class="timer-display">
-                                            <div class="timer-item">
-                                                <span class="timer-value" id="currentTimeDisplay" style="font-size:18px; font-weight:bold;">${this.formatSeconds(totalSeconds)}</span>
-                                            </div>
-                                        </div>
-                                        <small style="color:#6c757d; margin-top:5px; display:block;">
-                                            <i class="fa-solid fa-info-circle"></i> Yalnız işlənmiş vaxt (saat/dəq)
-                                        </small>
+                                <div class="form-group manual-time-section task-edit-manual-time-section">
+                                    <div class="task-edit-manual-time-header">
+                                        <i class="fa-solid fa-plus-circle"></i>
+                                        <span>Əl ilə Saat Əlavə Et</span>
                                     </div>
-                                    <div class="manual-time-input">
-                                        <div class="time-inputs">
-                                            <div class="time-input-group">
-                                                <label for="addHours">Saat:</label>
-                                                <input type="number" id="addHours" class="form-control" min="0" max="23" value="0" placeholder="0">
-                                            </div>
-                                            <div class="time-input-group">
-                                                <label for="addMinutes">Dəqiqə:</label>
-                                                <input type="number" id="addMinutes" class="form-control" min="0" max="59" value="0" placeholder="0">
-                                            </div>
+                                    <div class="task-edit-total-time-compact" aria-live="polite">
+                                        <i class="fa-solid fa-clock"></i>
+                                        <span>Toplam işlənmiş vaxt:</span>
+                                        <strong id="currentTimeDisplay">${this.formatSeconds(totalSeconds)}</strong>
+                                    </div>
+                                    <div class="manual-time-input task-edit-time-controls">
+                                        <div class="time-input-group">
+                                            <label for="addHours">Saat</label>
+                                            <input type="number" id="addHours" class="form-control" min="0" max="23" value="0" placeholder="0">
                                         </div>
-                                        <button type="button" class="btn btn-add-time" onclick="TaskEditModule.addManualTime()">
+                                        <div class="time-input-group">
+                                            <label for="addMinutes">Dəqiqə</label>
+                                            <input type="number" id="addMinutes" class="form-control" min="0" max="59" value="0" placeholder="0">
+                                        </div>
+                                        <button type="button" class="btn btn-add-time task-edit-time-add-btn" onclick="TaskEditModule.addManualTime()">
                                             <i class="fa-solid fa-plus"></i> Əlavə Et
                                         </button>
                                     </div>
-                                    <small style="color:#6c757d;display:block;margin-top:8px;">
-                                        <i class="fa-solid fa-info-circle"></i> Daxil etdiyiniz vaxt cari vaxtla toplanacaq
+                                    <small class="task-edit-time-helper">
+                                        <i class="fa-solid fa-info-circle"></i> Daxil etdiyiniz vaxt cari işlənmiş vaxtla toplanacaq
                                     </small>
                                 </div>
                                 
@@ -2117,85 +2112,106 @@ taskEditStyles.textContent = `
         font-size: 13px;
     }
 
-    .task-edit-modal .manual-time-section {
-        padding: 16px 18px;
-        margin-top: 0;
-        margin-bottom: 0;
-        border-radius: 20px;
-        border: 1px solid rgba(251, 146, 60, 0.22);
-        background: linear-gradient(135deg, rgba(255, 247, 237, 0.96) 0%, rgba(255, 255, 255, 0.94) 58%, rgba(238, 242, 255, 0.78) 100%);
-        box-shadow: 0 12px 30px rgba(249, 115, 22, 0.08);
+    .task-edit-modal .manual-time-section,
+    .task-edit-modal .task-edit-manual-time-section {
+        padding: 18px 22px;
+        margin: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(219, 234, 254, 0.85);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(14px);
+        overflow: hidden;
     }
 
-    .task-edit-modal .manual-time-section > label {
+    .task-edit-modal .task-edit-manual-time-header {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 12px;
-        font-size: 16px;
-        color: #9a3412;
+        margin-bottom: 14px;
+        font-size: 18px;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #f59e0b;
     }
 
-    .task-edit-modal .manual-time-section .timer-section {
-        padding: 12px 14px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(251, 146, 60, 0.18);
+    .task-edit-modal .task-edit-total-time-compact {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        min-height: 44px;
+        gap: 10px;
+        padding: 10px 16px;
+        margin-bottom: 14px;
         border-radius: 16px;
-        background: rgba(255, 255, 255, 0.78);
-    }
-
-    .task-edit-modal .manual-time-section .timer-section > label {
-        margin-bottom: 8px;
-        font-size: 13px;
-    }
-
-    .task-edit-modal .timer-display {
-        padding: 10px 12px;
-        margin-bottom: 6px;
-        border-radius: 14px;
-        background: rgba(248, 250, 252, 0.96);
-    }
-
-    .task-edit-modal .timer-item {
-        min-height: 0;
-        padding: 0;
-    }
-
-    .task-edit-modal .timer-value,
-    .task-edit-modal #currentTimeDisplay {
-        font-size: 17px !important;
-        line-height: 1.25;
-    }
-
-    .task-edit-modal .manual-time-input {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 14px;
-        align-items: end;
-        margin-top: 8px;
-    }
-
-    .task-edit-modal .time-inputs {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        flex: none;
-    }
-
-    .task-edit-modal .manual-time-section input {
-        min-height: 44px;
-        height: 44px;
+        border: 1px solid rgba(191, 219, 254, 0.75);
+        background: rgba(239, 246, 255, 0.9);
+        color: #2563eb;
         font-size: 14px;
+        font-weight: 700;
+        line-height: 1.25;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
     }
 
-    .task-edit-modal .btn-add-time {
-        min-height: 44px;
-        padding: 0 18px;
-        border-radius: 14px;
+    .task-edit-modal .task-edit-total-time-compact strong,
+    .task-edit-modal #currentTimeDisplay {
+        color: #1d4ed8;
+        font-size: 15px !important;
+        font-weight: 800;
         white-space: nowrap;
     }
 
-    .task-edit-modal .manual-time-section small,
+    .task-edit-modal .manual-time-input.task-edit-time-controls,
+    .task-edit-modal .task-edit-time-controls {
+        display: grid;
+        grid-template-columns: minmax(120px, 180px) minmax(120px, 180px) auto;
+        align-items: end;
+        gap: 14px;
+        margin-top: 0;
+        max-width: 100%;
+    }
+
+    .task-edit-modal .task-edit-time-controls .time-input-group {
+        min-width: 0;
+    }
+
+    .task-edit-modal .task-edit-time-controls label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .task-edit-modal .task-edit-time-controls input {
+        width: 100%;
+        min-height: 48px;
+        height: 48px;
+        padding: 8px 12px;
+        border-radius: 16px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    .task-edit-modal .task-edit-time-add-btn,
+    .task-edit-modal .btn-add-time.task-edit-time-add-btn {
+        min-height: 48px;
+        height: 48px;
+        padding: 0 24px;
+        border-radius: 16px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .task-edit-modal .task-edit-time-helper {
+        display: block;
+        margin-top: 10px !important;
+        font-size: 13px !important;
+        line-height: 1.35;
+        color: #64748b;
+    }
+
     .task-edit-modal .form-row.two-columns small,
     .task-edit-modal #notesHelpText {
         margin-top: 6px !important;
@@ -2242,6 +2258,21 @@ taskEditStyles.textContent = `
         .task-edit-modal .manual-time-input,
         .task-edit-modal .time-inputs {
             grid-template-columns: 1fr;
+        }
+
+        .task-edit-modal .task-edit-time-controls {
+            grid-template-columns: 1fr;
+        }
+
+        .task-edit-modal .task-edit-time-add-btn,
+        .task-edit-modal .btn-add-time.task-edit-time-add-btn {
+            width: 100%;
+        }
+
+        .task-edit-modal .task-edit-total-time-compact {
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .task-edit-modal .modal-footer-sticky {
