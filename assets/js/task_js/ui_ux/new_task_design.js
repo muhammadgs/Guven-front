@@ -456,21 +456,21 @@
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group glass-field">
+                                <div class="newtask-form-group glass-field newtask-department-field">
                                     <label class="newtask-form-label" for="newtaskDepartmentSelect"><i class="fas fa-sitemap"></i> Şöbə</label>
                                     <select id="newtaskDepartmentSelect" class="newtask-select" required>
                                         <option value="">Şöbə seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group glass-field">
+                                <div class="newtask-form-group glass-field newtask-worktype-field">
                                     <label class="newtask-form-label" for="newtaskTaskTypeSelect"><i class="fas fa-list-check"></i> İşin növü</label>
                                     <select id="newtaskTaskTypeSelect" class="newtask-select" required>
                                         <option value="">İş növü seçin</option>
                                     </select>
                                 </div>
 
-                                <div class="newtask-form-group glass-field">
+                                <div class="newtask-form-group glass-field newtask-due-date-field">
                                     <label class="newtask-form-label" for="newtaskDueDate"><i class="fas fa-calendar-days"></i> Son müddət</label>
                                     <input type="date" id="newtaskDueDate" class="newtask-input" required />
                                 </div>
@@ -1192,7 +1192,10 @@
     function openModal(taskType) {
         currentTaskType = taskType;
         const modal = modalOverlay?.querySelector('.newtask-modal');
-        modal?.classList.toggle('internal-task-modal', taskType === 'internal');
+        if (modal) {
+            modal.classList.toggle('internal-task-modal', taskType === 'internal');
+            modal.dataset.taskType = taskType || '';
+        }
         if (companyGroup) companyGroup.style.display = 'none';
         if (parentGroup) parentGroup.style.display = 'none';
         if (partnerGroup) partnerGroup.style.display = 'none';
