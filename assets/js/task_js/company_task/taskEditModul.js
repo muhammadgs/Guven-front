@@ -688,13 +688,13 @@ const TaskEditModule = {
                         
                         <form id="taskEditForm">
                             <div class="form-grid">
-                                <div class="form-row edit-task-top-controls">
-                                    <div class="form-group">
+                                <div class="form-row edit-task-top-controls task-edit-top-fields">
+                                    <div class="form-group task-edit-card">
                                         <label for="editDueDate">Son Tarix:</label>
                                         <input type="date" id="editDueDate" class="form-control" 
                                                value="${task.due_date ? task.due_date.split('T')[0] : ''}">
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group task-edit-card">
                                         <label for="editPriority">Prioritet:</label>
                                         <select id="editPriority" class="form-control">
                                             <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Aşağı</option>
@@ -702,7 +702,7 @@ const TaskEditModule = {
                                             <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Yüksək</option> 
                                         </select>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group task-edit-card">
                                         <label for="editStatus">Status:</label>
                                         <select id="editStatus" class="form-control">
                                             <option value="defoult" ${task.status === 'defoult' ? 'selected' : ''}>Status seçin</option>
@@ -711,7 +711,7 @@ const TaskEditModule = {
                                             <option value="cancelled" ${task.status === 'cancelled' ? 'selected' : ''}>Ləğv edildi</option>
                                         </select>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group task-edit-card">
                                         <label for="editProgress">Proqress (%):</label>
                                         <div class="progress-container">
                                             <input type="range" id="editProgress" class="form-control-range" 
@@ -722,7 +722,7 @@ const TaskEditModule = {
                                     </div>
                                 </div>
 
-                                <div class="form-group">
+                                <div class="form-group task-edit-title-row">
                                     <label for="editTaskTitle">Task Başlığı:</label>
                                     <input type="text" id="editTaskTitle" class="form-control" 
                                            value="${this.escapeHtml(task.task_title || task.title || '')}" required>
@@ -1747,13 +1747,47 @@ taskEditStyles.textContent = `
         transform: translateY(-2px);
     }
     
+    /* Daxili task redaktə modalının əsas form axını */
+    .task-edit-modal #taskEditForm > .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        width: 100%;
+        margin-bottom: 20px;
+        align-items: stretch;
+    }
+
     /* Yuxarı redaktə kartları */
-    .form-row.edit-task-top-controls {
+    .task-edit-modal .task-edit-top-fields {
         display: grid;
-        grid-template-columns: repeat(4, minmax(160px, 1fr));
-        gap: 20px;
-        align-items: start;
-        margin-bottom: 15px;
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
+        gap: 24px;
+        width: 100%;
+        margin-top: 28px;
+        margin-bottom: 0;
+        align-items: stretch;
+        position: relative;
+        z-index: 1;
+    }
+
+    .task-edit-modal .task-edit-top-fields .task-edit-card {
+        min-height: 140px;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+        transform: none;
+    }
+
+    .task-edit-modal .task-edit-title-row {
+        width: 100%;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+        transform: none;
+    }
+
+    .task-edit-modal .task-edit-title-row input {
+        width: 100%;
     }
 
     /* İki sütunlu layout */
@@ -1764,11 +1798,17 @@ taskEditStyles.textContent = `
         margin-bottom: 15px;
     }
     
+    @media (max-width: 1200px) {
+        .task-edit-modal .task-edit-top-fields {
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+        }
+    }
+
     @media (max-width: 768px) {
-        .form-row.edit-task-top-controls,
+        .task-edit-modal .task-edit-top-fields,
         .form-row.two-columns {
             grid-template-columns: 1fr;
-            gap: 10px;
+            gap: 16px;
         }
     }
     
