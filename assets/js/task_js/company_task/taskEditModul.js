@@ -775,9 +775,12 @@ const TaskEditModule = {
                                     </small>
                                 </div>
 
+                                <!-- GİZLİ SAHİB ŞİRKƏTİ (company_id) -->
+                                <input type="hidden" id="editRealCompanyId" value="${realCompanyId}">
+
                                 <!-- MANUAL SAAT + GÖRÜNMƏ AYARLARI -->
                                 <div class="task-edit-time-visibility-row">
-                                    <div class="form-group manual-time-section task-edit-manual-time-section">
+                                    <section class="form-group manual-time-section task-edit-manual-time-section task-edit-manual-time-card">
                                         <div class="task-edit-manual-time-header">
                                             <i class="fa-solid fa-plus-circle"></i>
                                             <span>Əl ilə Saat Əlavə Et</span>
@@ -805,12 +808,9 @@ const TaskEditModule = {
                                         <small class="task-edit-time-helper task-edit-helper-text">
                                             <i class="fa-solid fa-info-circle"></i> Daxil etdiyiniz vaxt cari işlənmiş vaxtla toplanacaq
                                         </small>
-                                    </div>
+                                    </section>
                                     
-                                    <!-- GİZLİ SAHİB ŞİRKƏTİ (company_id) -->
-                                    <input type="hidden" id="editRealCompanyId" value="${realCompanyId}">
-                                    
-                                    <div class="form-group task-edit-visibility-section">
+                                    <section class="form-group task-edit-visibility-section task-edit-visibility-card">
                                         <div class="task-edit-visibility-title">
                                             <i class="fa-solid fa-eye"></i> Görünmə Ayarları
                                         </div>
@@ -824,7 +824,7 @@ const TaskEditModule = {
                                             <i class="fa-solid fa-info-circle"></i> 
                                             Task bu şirkətə görünəcək (Əsl sahib: <strong>${this.escapeHtml(realCompanyName)}</strong>)
                                         </small>
-                                        <div class="task-edit-visibility-options viewable-company-section">
+                                        <div class="task-edit-visibility-options task-edit-visibility-checkbox viewable-company-section">
                                             <input type="checkbox" id="editIsCompanyViewable" class="form-check-input" 
                                                    ${task.is_company_viewable ? 'checked' : ''}>
                                             <label for="editIsCompanyViewable">
@@ -835,7 +835,7 @@ const TaskEditModule = {
                                             <i class="fa-solid fa-info-circle"></i> 
                                             Task yalnız seçilmiş şirkət tərəfindən görünəcək
                                         </div>
-                                    </div>
+                                    </section>
                                 </div>
                                 
                                 <div class="task-details-section">
@@ -2542,29 +2542,33 @@ taskEditStyles.textContent = `
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
-        display: grid;
-        grid-template-columns: minmax(420px, 0.92fr) minmax(420px, 1fr);
-        gap: 24px;
-        align-items: stretch;
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-        margin: 18px 0 24px;
+        display: grid !important;
+        grid-template-columns: minmax(360px, 0.85fr) minmax(420px, 1fr) !important;
+        gap: 24px !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 18px 0 24px !important;
     }
 
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-section,
-    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-visibility-section {
-        display: block;
-        grid-column: auto;
-        width: 100%;
-        min-width: 0;
-        max-width: 100%;
-        box-sizing: border-box;
-        padding: 22px 24px;
-        border-radius: 26px;
-        background: rgba(255,255,255,.58);
-        border: 1px solid rgba(226, 234, 246, .92);
-        box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-card,
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-visibility-card {
+        display: block !important;
+        grid-column: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 22px 24px !important;
+        border-radius: 26px !important;
+        background: rgba(255, 255, 255, 0.74) !important;
+        border: 1px solid rgba(219, 234, 254, 0.9) !important;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-card {
+        max-width: 520px !important;
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-controls,
@@ -2578,24 +2582,45 @@ taskEditStyles.textContent = `
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-input-row {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 14px !important;
+        width: 100% !important;
         max-width: 430px;
     }
 
+    .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-input-row input {
+        width: 100% !important;
+        height: 52px !important;
+        border-radius: 18px !important;
+        text-align: center !important;
+        font-weight: 700 !important;
+    }
+
     .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row .task-edit-time-add-btn {
-        width: 100%;
+        width: 100% !important;
+        height: 54px !important;
+        margin-top: 16px !important;
+        border-radius: 18px !important;
+        font-weight: 800 !important;
         max-width: 430px;
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-visibility-section select {
-        width: 100%;
+        width: 100% !important;
+        height: 54px !important;
+        border-radius: 18px !important;
     }
 
     .task-edit-modal.task-edit-internal-glass .task-edit-visibility-options {
-        margin-top: 14px;
+        margin-top: 16px !important;
+        padding: 16px 18px !important;
+        border-radius: 20px !important;
+        background: rgba(255, 255, 255, 0.78) !important;
+        border: 1px solid rgba(219, 234, 254, 0.9) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
     }
 
     .task-edit-modal.task-edit-internal-glass .manual-time-section > label,
@@ -2635,6 +2660,16 @@ taskEditStyles.textContent = `
 
         .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-section {
             grid-column: auto;
+        }
+    }
+
+    @media (max-width: 1100px) {
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row {
+            grid-template-columns: 1fr !important;
+        }
+
+        .task-edit-modal.task-edit-internal-glass .task-edit-time-visibility-row > .task-edit-manual-time-card {
+            max-width: 100% !important;
         }
     }
 
