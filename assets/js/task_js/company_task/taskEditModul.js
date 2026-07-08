@@ -688,6 +688,40 @@ const TaskEditModule = {
                         
                         <form id="taskEditForm">
                             <div class="form-grid">
+                                <div class="form-row edit-task-top-controls">
+                                    <div class="form-group">
+                                        <label for="editDueDate">Son Tarix:</label>
+                                        <input type="date" id="editDueDate" class="form-control" 
+                                               value="${task.due_date ? task.due_date.split('T')[0] : ''}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editPriority">Prioritet:</label>
+                                        <select id="editPriority" class="form-control">
+                                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Aşağı</option>
+                                            <option value="medium" ${(!task.priority || task.priority === 'medium') ? 'selected' : ''}>Orta</option>
+                                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Yüksək</option> 
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editStatus">Status:</label>
+                                        <select id="editStatus" class="form-control">
+                                            <option value="defoult" ${task.status === 'defoult' ? 'selected' : ''}>Status seçin</option>
+                                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Tamamlandı</option>
+                                            <option value="rejected" ${task.status === 'rejected' ? 'selected' : ''}>İmtina edildi</option>
+                                            <option value="cancelled" ${task.status === 'cancelled' ? 'selected' : ''}>Ləğv edildi</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editProgress">Proqress (%):</label>
+                                        <div class="progress-container">
+                                            <input type="range" id="editProgress" class="form-control-range" 
+                                                   min="0" max="100" step="5"
+                                                   value="${task.progress_percentage || 0}">
+                                            <span id="progressValue" class="progress-value">${task.progress_percentage || 0}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label for="editTaskTitle">Task Başlığı:</label>
                                     <input type="text" id="editTaskTitle" class="form-control" 
@@ -806,43 +840,6 @@ const TaskEditModule = {
                                     <div id="viewableCompanyInfo" style="margin-top:10px;font-size:12px;color:#6c757d;">
                                         <i class="fa-solid fa-info-circle"></i> 
                                         Task yalnız seçilmiş şirkət tərəfindən görünəcək
-                                    </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="editDueDate">Son Tarix:</label>
-                                        <input type="date" id="editDueDate" class="form-control" 
-                                               value="${task.due_date ? task.due_date.split('T')[0] : ''}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="editPriority">Prioritet:</label>
-                                        <select id="editPriority" class="form-control">
-                                            <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Aşağı</option>
-                                            <option value="medium" ${(!task.priority || task.priority === 'medium') ? 'selected' : ''}>Orta</option>
-                                            <option value="high" ${task.priority === 'high' ? 'selected' : ''}>Yüksək</option> 
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="editStatus">Status:</label>
-                                        <select id="editStatus" class="form-control">
-                                            <option value="defoult" ${task.status === 'defoult' ? 'selected' : ''}>Status seçin</option>
-                                            <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Tamamlandı</option>
-                                            <option value="rejected" ${task.status === 'rejected' ? 'selected' : ''}>İmtina edildi</option>
-                                            <option value="cancelled" ${task.status === 'cancelled' ? 'selected' : ''}>Ləğv edildi</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="editProgress">Proqress (%):</label>
-                                        <div class="progress-container">
-                                            <input type="range" id="editProgress" class="form-control-range" 
-                                                   min="0" max="100" step="5"
-                                                   value="${task.progress_percentage || 0}">
-                                            <span id="progressValue" class="progress-value">${task.progress_percentage || 0}%</span>
-                                        </div>
                                     </div>
                                 </div>
                                 
@@ -1750,6 +1747,15 @@ taskEditStyles.textContent = `
         transform: translateY(-2px);
     }
     
+    /* Yuxarı redaktə kartları */
+    .form-row.edit-task-top-controls {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 20px;
+        align-items: start;
+        margin-bottom: 15px;
+    }
+
     /* İki sütunlu layout */
     .form-row.two-columns {
         display: grid;
@@ -1759,6 +1765,7 @@ taskEditStyles.textContent = `
     }
     
     @media (max-width: 768px) {
+        .form-row.edit-task-top-controls,
         .form-row.two-columns {
             grid-template-columns: 1fr;
             gap: 10px;
