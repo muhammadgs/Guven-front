@@ -1623,8 +1623,14 @@ taskEditStyles.textContent = `
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        box-sizing: border-box;
         box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         animation: modalSlideIn 0.3s ease;
+    }
+
+    .task-edit-modal,
+    .task-edit-modal * {
+        box-sizing: border-box;
     }
     
     @keyframes modalSlideIn {
@@ -1676,11 +1682,15 @@ taskEditStyles.textContent = `
     }
     
     /* 🔥 SCROLLABLE BODY - əsas içindəkiler burada scroll olacaq */
-    .modal-body-scrollable {
+    .task-edit-modal .modal-body-scrollable {
         flex: 1;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 24px;
         max-height: calc(90vh - 130px);
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
     }
     
     /* Scrollbar stilləri */
@@ -1703,17 +1713,22 @@ taskEditStyles.textContent = `
     }
     
     /* 🔥 STICKY FOOTER - düymələr həmişə görünəcək */
-    .modal-footer-sticky {
+    .task-edit-modal .modal-footer-sticky {
         padding: 16px 24px;
         background: white;
         border-top: 1px solid #e9ecef;
         display: flex;
         justify-content: flex-end;
         gap: 12px;
+        flex-wrap: wrap;
         flex-shrink: 0;
         position: sticky;
         bottom: 0;
         z-index: 10;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: hidden;
     }
     
     /* Düymə stilləri */
@@ -1753,25 +1768,33 @@ taskEditStyles.textContent = `
         flex-direction: column;
         gap: 28px;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         margin-bottom: 20px;
         align-items: stretch;
+        overflow-x: hidden;
     }
 
     /* Yuxarı redaktə kartları */
     .task-edit-modal .task-edit-top-fields {
         display: grid;
-        grid-template-columns: repeat(4, minmax(180px, 1fr));
-        gap: 24px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         margin-top: 28px;
         margin-bottom: 0;
         align-items: stretch;
         position: relative;
         z-index: 1;
+        overflow-x: hidden;
     }
 
     .task-edit-modal .task-edit-top-fields .task-edit-card {
         min-height: 140px;
+        min-width: 0;
+        max-width: 100%;
         margin-bottom: 0;
         position: relative;
         z-index: 1;
@@ -1780,14 +1803,37 @@ taskEditStyles.textContent = `
 
     .task-edit-modal .task-edit-title-row {
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
         margin-bottom: 0;
         position: relative;
         z-index: 1;
         transform: none;
     }
 
-    .task-edit-modal .task-edit-title-row input {
+    .task-edit-modal .task-edit-title-row input,
+    .task-edit-modal .form-control,
+    .task-edit-modal textarea,
+    .task-edit-modal select,
+    .task-edit-modal input {
         width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .task-edit-modal .form-row,
+    .task-edit-modal .form-group,
+    .task-edit-modal .task-info-header,
+    .task-edit-modal .task-details-section,
+    .task-edit-modal .manual-time-section,
+    .task-edit-modal .timer-section,
+    .task-edit-modal .viewable-company-section,
+    .task-edit-modal .progress-container,
+    .task-edit-modal .manual-time-input,
+    .task-edit-modal .time-inputs,
+    .task-edit-modal .time-input-group {
+        max-width: 100%;
+        min-width: 0;
     }
 
     /* İki sütunlu layout */
@@ -1800,7 +1846,7 @@ taskEditStyles.textContent = `
     
     @media (max-width: 1200px) {
         .task-edit-modal .task-edit-top-fields {
-            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
@@ -1872,14 +1918,16 @@ taskEditStyles.textContent = `
     }
     
     /* Progress container */
-    .progress-container {
+    .task-edit-modal .progress-container {
         display: flex;
         align-items: center;
         gap: 12px;
+        overflow-x: hidden;
     }
     
-    .form-control-range {
-        flex: 1;
+    .task-edit-modal .form-control-range {
+        flex: 1 1 auto;
+        min-width: 0;
     }
     
     .progress-value {
@@ -1889,17 +1937,18 @@ taskEditStyles.textContent = `
     }
     
     /* Manual time input */
-    .manual-time-input {
+    .task-edit-modal .manual-time-input {
         display: flex;
         gap: 15px;
         align-items: flex-end;
         margin-top: 10px;
+        flex-wrap: wrap;
     }
     
-    .time-inputs {
+    .task-edit-modal .time-inputs {
         display: flex;
         gap: 10px;
-        flex: 1;
+        flex: 1 1 260px;
     }
     
     .time-input-group {
