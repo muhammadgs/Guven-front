@@ -1763,7 +1763,7 @@ class ProfileApp {
                                             <i class="fas fa-check-circle"></i>
                                         </div>
                                         <div>
-                                            <h3>Tamamlanan protokollar</h3>
+                                            <h3>Tamamlanmış protokollar</h3>
                                         </div>
                                     </div>
                                     <div class="protocol-list-search">
