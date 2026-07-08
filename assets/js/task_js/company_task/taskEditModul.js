@@ -671,10 +671,10 @@ const TaskEditModule = {
         // 🔥 Modal HTML - STICKY DÜYMƏLƏR İLƏ
         const modalHTML = `
             <div class="task-edit-modal-overlay" id="taskEditModalOverlay">
-                <div class="task-edit-modal">
+                <div class="task-edit-modal ${taskType === 'external' ? '' : 'task-edit-internal-glass'}">
                     <div class="modal-header">
-                        <h3><i class="fa-solid fa-edit"></i> Task Redaktəsi</h3>
-                        <button class="close-btn" onclick="TaskEditModule.closeEditModal()">&times;</button>
+                        <h3><span class="task-edit-title-icon"><i class="fa-solid fa-pen-to-square"></i></span> Task Redaktəsi</h3>
+                        <button class="close-btn" onclick="TaskEditModule.closeEditModal()" aria-label="Modalı bağla"><i class="fa-solid fa-times"></i></button>
                     </div>
                     
                     <!-- SCROLLABLE BODY -->
@@ -690,12 +690,12 @@ const TaskEditModule = {
                             <div class="form-grid">
                                 <div class="form-row edit-task-top-controls task-edit-top-fields">
                                     <div class="form-group task-edit-card">
-                                        <label for="editDueDate">Son Tarix:</label>
+                                        <label for="editDueDate"><i class="fa-solid fa-calendar-days"></i> Son Tarix</label>
                                         <input type="date" id="editDueDate" class="form-control" 
                                                value="${task.due_date ? task.due_date.split('T')[0] : ''}">
                                     </div>
                                     <div class="form-group task-edit-card">
-                                        <label for="editPriority">Prioritet:</label>
+                                        <label for="editPriority"><i class="fa-solid fa-flag"></i> Prioritet</label>
                                         <select id="editPriority" class="form-control">
                                             <option value="low" ${task.priority === 'low' ? 'selected' : ''}>Aşağı</option>
                                             <option value="medium" ${(!task.priority || task.priority === 'medium') ? 'selected' : ''}>Orta</option>
@@ -703,7 +703,7 @@ const TaskEditModule = {
                                         </select>
                                     </div>
                                     <div class="form-group task-edit-card">
-                                        <label for="editStatus">Status:</label>
+                                        <label for="editStatus"><i class="fa-solid fa-circle-check"></i> Status</label>
                                         <select id="editStatus" class="form-control">
                                             <option value="defoult" ${task.status === 'defoult' ? 'selected' : ''}>Status seçin</option>
                                             <option value="completed" ${task.status === 'completed' ? 'selected' : ''}>Tamamlandı</option>
@@ -712,7 +712,7 @@ const TaskEditModule = {
                                         </select>
                                     </div>
                                     <div class="form-group task-edit-card">
-                                        <label for="editProgress">Proqress (%):</label>
+                                        <label for="editProgress"><i class="fa-solid fa-chart-line"></i> Proqress</label>
                                         <div class="progress-container">
                                             <input type="range" id="editProgress" class="form-control-range" 
                                                    min="0" max="100" step="5"
@@ -723,13 +723,13 @@ const TaskEditModule = {
                                 </div>
 
                                 <div class="form-group task-edit-title-row">
-                                    <label for="editTaskTitle">Task Başlığı:</label>
+                                    <label for="editTaskTitle"><i class="fa-solid fa-heading"></i> Task Başlığı</label>
                                     <input type="text" id="editTaskTitle" class="form-control" 
                                            value="${this.escapeHtml(task.task_title || task.title || '')}" required>
                                 </div>
                                 
                                 <div class="form-group">
-                                    <label for="editTaskDescription">Açıqlama:</label>
+                                    <label for="editTaskDescription"><i class="fa-solid fa-align-left"></i> Açıqlama</label>
                                     <textarea id="editTaskDescription" class="form-control" rows="3">${this.escapeHtml(task.task_description || task.description || '')}</textarea>
                                 </div>
                                 
@@ -2251,6 +2251,191 @@ taskEditStyles.textContent = `
 
         .task-edit-modal .modal-footer-sticky .btn {
             width: 100%;
+        }
+    }
+
+
+    /* Internal Task Redaktəsi: align with Yeni Tapşırıq → Daxili Tapşırıq glass modal */
+    .task-edit-modal-overlay:has(.task-edit-internal-glass) {
+        padding: 20px 24px;
+        background: rgba(15, 23, 42, 0.38);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        overflow: hidden;
+    }
+
+    .task-edit-modal.task-edit-internal-glass {
+        width: min(1120px, calc(100vw - 48px));
+        max-width: 1120px;
+        max-height: calc(100vh - 40px);
+        border-radius: clamp(28px, 3.6vw, 44px);
+        background: linear-gradient(145deg, rgba(248, 251, 255, .96), rgba(231, 238, 248, .88));
+        border: 1px solid rgba(255, 255, 255, .78);
+        box-shadow: 0 32px 90px rgba(15, 23, 42, .28), inset 0 1px 0 rgba(255,255,255,.85);
+        backdrop-filter: blur(22px);
+        -webkit-backdrop-filter: blur(22px);
+        overflow: hidden;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-header {
+        margin: 14px 14px 0;
+        padding: clamp(16px, 2.4vw, 24px) clamp(22px, 4vw, 42px);
+        border-radius: clamp(22px, 3vw, 34px);
+        color: #0f172a;
+        background: rgba(255,255,255,.62);
+        border: 1px solid rgba(226, 234, 246, .92);
+        box-shadow: 0 14px 34px rgba(29, 54, 93, .08), inset 0 1px 0 rgba(255,255,255,.82);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-header h3 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #0f172a;
+        font-size: clamp(1.35rem, 2vw, 1.72rem);
+        font-weight: 800;
+        letter-spacing: -.03em;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-title-icon {
+        width: 48px;
+        height: 48px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 18px;
+        color: #2563eb;
+        background: rgba(255,255,255,.72);
+        border: 1px solid rgba(226, 234, 246, .92);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px rgba(35, 62, 104, .06);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-header .close-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        background: #111827;
+        color: #fff;
+        border: 1px solid rgba(17, 24, 39, .18);
+        font-size: 16px;
+        box-shadow: 0 14px 28px rgba(15, 23, 42, .22);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-header .close-btn:hover {
+        background: #ef4444;
+        transform: scale(1.06);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-body-scrollable {
+        padding: 22px clamp(22px, 4vw, 42px) 18px;
+        max-height: calc(100vh - 190px);
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 18px;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-info-header,
+    .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
+    .task-edit-modal.task-edit-internal-glass .task-edit-title-row,
+    .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid > .form-group,
+    .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
+    .task-edit-modal.task-edit-internal-glass .manual-time-section,
+    .task-edit-modal.task-edit-internal-glass .task-details-section {
+        grid-column: 1 / -1;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
+    .task-edit-modal.task-edit-internal-glass .form-row.two-columns {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px 18px;
+        margin: 0;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .task-edit-top-fields .task-edit-card,
+    .task-edit-modal.task-edit-internal-glass .task-edit-title-row,
+    .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid > .form-group:not(.manual-time-section),
+    .task-edit-modal.task-edit-internal-glass .form-row.two-columns > .form-group,
+    .task-edit-modal.task-edit-internal-glass .manual-time-section {
+        padding: 16px;
+        border-radius: 24px;
+        background: rgba(255,255,255,.56);
+        border: 1px solid rgba(226, 234, 246, .92);
+        box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .form-group label,
+    .task-edit-modal.task-edit-internal-glass .time-input-group label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: auto;
+        margin-bottom: 8px;
+        color: #23395d;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .form-group label i { width: 18px; color: #4169e1; }
+
+    .task-edit-modal.task-edit-internal-glass .form-control,
+    .task-edit-modal.task-edit-internal-glass select,
+    .task-edit-modal.task-edit-internal-glass input {
+        min-height: 50px;
+        border-radius: 16px !important;
+        border: 1px solid rgba(204, 216, 234, .95) !important;
+        background: rgba(255,255,255,.96) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 18px rgba(35, 62, 104, .06) !important;
+    }
+
+    .task-edit-modal.task-edit-internal-glass textarea.form-control {
+        min-height: 96px;
+        max-height: 140px;
+        resize: vertical;
+    }
+
+    .task-edit-modal.task-edit-internal-glass .manual-time-section {
+        display: grid;
+        grid-template-columns: 1fr 1.4fr;
+        gap: 12px 16px;
+        background: rgba(255,255,255,.58);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .manual-time-section > label,
+    .task-edit-modal.task-edit-internal-glass .manual-time-section > small { grid-column: 1 / -1; }
+    .task-edit-modal.task-edit-internal-glass .manual-time-section .timer-section { padding: 12px; margin: 0; border-radius: 18px; background: rgba(255,255,255,.7); }
+    .task-edit-modal.task-edit-internal-glass .timer-display { padding: 8px 10px; margin: 0; background: rgba(248,250,252,.82); }
+    .task-edit-modal.task-edit-internal-glass .manual-time-input { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+    .task-edit-modal.task-edit-internal-glass .time-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+    .task-edit-modal.task-edit-internal-glass .modal-footer-sticky {
+        margin: 0 14px 14px;
+        padding: 16px clamp(22px, 4vw, 42px);
+        border-radius: 24px;
+        background: rgba(255,255,255,.68);
+        border: 1px solid rgba(226,234,246,.92);
+        box-shadow: 0 12px 30px rgba(29, 54, 93, .07), inset 0 1px 0 rgba(255,255,255,.82);
+    }
+
+    .task-edit-modal.task-edit-internal-glass .modal-footer-sticky .btn {
+        border-radius: 16px;
+        min-height: 50px;
+        min-width: 150px;
+        box-shadow: 0 10px 22px rgba(35, 62, 104, .10);
+    }
+
+    @media (max-width: 768px) {
+        .task-edit-modal.task-edit-internal-glass #taskEditForm > .form-grid,
+        .task-edit-modal.task-edit-internal-glass .task-edit-top-fields,
+        .task-edit-modal.task-edit-internal-glass .form-row.two-columns,
+        .task-edit-modal.task-edit-internal-glass .manual-time-section,
+        .task-edit-modal.task-edit-internal-glass .manual-time-input,
+        .task-edit-modal.task-edit-internal-glass .time-inputs {
+            grid-template-columns: 1fr;
         }
     }
 
