@@ -1561,10 +1561,12 @@
 /* Restore legacy glass styling only for Yeni → Daxili Tapşırıq modal. */
 .newtask-modal.liquid-task-modal.internal-task-modal,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] {
-  width: min(92vw, 1040px) !important;
+  width: min(90vw, 960px) !important;
   max-width: calc(100vw - 28px);
-  max-height: min(92vh, 1060px);
-  overflow: hidden;
+  height: auto !important;
+  min-height: auto !important;
+  max-height: calc(100vh - 28px) !important;
+  overflow: visible;
   border-radius: clamp(38px, 5vw, 60px) !important;
   border: 1px solid rgba(255,255,255,.55) !important;
   background:
@@ -1581,7 +1583,7 @@
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-modal-header,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-modal-header {
   margin: 0 !important;
-  padding: clamp(16px, 2.5vw, 30px) clamp(24px, 4.4vw, 54px) 6px !important;
+  padding: clamp(14px, 2vh, 20px) clamp(28px, 4vw, 44px) 4px !important;
   border-radius: 0 !important;
   color: var(--nt-text-strong) !important;
   background: transparent !important;
@@ -1623,17 +1625,16 @@
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-modal-body,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-modal-body {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 12px clamp(24px, 4.4vw, 54px) 14px !important;
+  flex: 0 0 auto;
+  overflow: visible !important;
+  padding: 10px clamp(28px, 4vw, 44px) 10px !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-form-grid,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-form-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  column-gap: clamp(22px, 4vw, 46px) !important;
-  row-gap: clamp(16px, 2.8vw, 26px) !important;
+  column-gap: clamp(22px, 3.2vw, 36px) !important;
+  row-gap: clamp(10px, 1.65vh, 14px) !important;
   justify-content: initial;
   align-items: start;
 }
@@ -1676,20 +1677,20 @@
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-form-label,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-form-label {
-  min-height: 44px !important;
-  margin-bottom: 14px !important;
+  min-height: auto !important;
+  margin-bottom: 8px !important;
   gap: 10px;
   color: #050505 !important;
-  font-size: clamp(1.12rem, 1.8vw, 1.55rem) !important;
+  font-size: clamp(1rem, 1.35vw, 1.18rem) !important;
   line-height: 1.05;
   letter-spacing: -.03em;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-form-label i,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-form-label i {
-  width: 28px;
+  width: 24px;
   color: var(--newtask-blue) !important;
-  font-size: clamp(1.3rem, 1.8vw, 1.7rem) !important;
+  font-size: clamp(1.08rem, 1.45vw, 1.28rem) !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-select,
@@ -1704,12 +1705,15 @@
   border: 1px solid rgba(255,255,255,.58) !important;
   background: rgba(255,255,255,.42) !important;
   box-shadow: inset 0 1px 1px rgba(255,255,255,.85), 0 10px 26px rgba(15,23,42,.08) !important;
+  min-height: 44px !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-textarea,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-textarea {
-  min-height: 118px;
-  border-radius: 34px !important;
+  min-height: 88px !important;
+  height: 88px !important;
+  border-radius: 28px !important;
+  resize: none !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-file-zone,
@@ -1720,15 +1724,31 @@
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-file-zone,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .file-upload-zone,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .nt-voice-shell {
-  border-radius: 34px !important;
+  min-height: 104px !important;
+  height: 104px !important;
+  border-radius: 30px !important;
   border: 1px dashed rgba(255,255,255,.65) !important;
   background: rgba(255,255,255,.36) !important;
+}
+
+
+.newtask-modal.liquid-task-modal.internal-task-modal .newtask-checkbox-group,
+.newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-checkbox-group {
+  min-height: 44px !important;
+}
+
+.newtask-modal.liquid-task-modal.internal-task-modal .newtask-audio-container,
+.newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-audio-container {
+  min-height: 104px !important;
+  height: 104px !important;
+  padding: 10px 16px !important;
+  overflow: visible !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-modal-footer,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-modal-footer {
   margin: 0 !important;
-  padding: 14px clamp(24px, 4.4vw, 54px) clamp(18px, 2.8vw, 30px) !important;
+  padding: 10px clamp(28px, 4vw, 44px) clamp(14px, 2vh, 20px) !important;
   border-radius: 0 !important;
   background: transparent !important;
   border: 0 !important;
@@ -1751,8 +1771,10 @@
 
   .newtask-modal.liquid-task-modal.internal-task-modal,
   .newtask-modal.liquid-task-modal[data-task-type="internal"] {
-    width: min(92vw, 1040px) !important;
-    max-height: min(92vh, 1060px);
+    width: min(90vw, 960px) !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: calc(100vh - 28px) !important;
   }
 }
 
