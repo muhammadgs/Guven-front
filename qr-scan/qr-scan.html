@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Güvən Finans — Bizə Yazın</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B141A;
+    --bg-soft:#111B21;
+    --surface:#1F2C34;
+    --surface-2:#243640;
+    --line:#2A3942;
+    --green:#00A884;
+    --green-bright:#06CF9C;
+    --text:#F0F2F1;
+    --text-dim:#8696A0;
+    --text-faint:#5B6B73;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 50% -10%, rgba(0,168,132,0.18), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .wrap{ width:100%; max-width:420px; }
+
+  /* ============ LOADING ============ */
+  .state{ display:none; }
+  .state.active{ display:block; }
+
+  .loading-card{
+    text-align:center;
+    padding:48px 24px;
+  }
+  .spinner{
+    width:42px; height:42px;
+    margin:0 auto 20px;
+    border-radius:50%;
+    border:3px solid var(--surface);
+    border-top-color:var(--green-bright);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .loading-text{ color:var(--text-dim); font-size:14px; letter-spacing:0.2px; }
+  .loading-uuid{ color:var(--text-faint); font-size:11px; margin-top:8px; font-family:monospace; }
+
+  /* ============ CARD ============ */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:24px;
+    overflow:hidden;
+  }
+
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:24px 24px 20px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand-mark{
+    width:40px; height:40px;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--green-bright), var(--green));
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:16px; color:#06141A;
+    flex-shrink:0;
+  }
+  .brand-name{ font-weight:700; font-size:15px; letter-spacing:0.2px; }
+  .brand-sub{ font-size:12px; color:var(--text-dim); margin-top:1px; }
+
+  /* ============ PERSON ============ */
+  .person{
+    padding:28px 24px 8px;
+    text-align:center;
+  }
+  .avatar{
+    width:72px; height:72px;
+    border-radius:50%;
+    margin:0 auto 16px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+    color:var(--text-dim);
+  }
+  .person-name{ font-size:19px; font-weight:700; letter-spacing:0.1px; }
+  .person-title{ font-size:13px; color:var(--green-bright); margin-top:4px; font-weight:500; }
+  .person-company{ font-size:13px; color:var(--text-dim); margin-top:2px; }
+
+  /* ============ WHATSAPP CTA — hero element ============ */
+  .cta-zone{
+    padding:28px 24px 8px;
+    text-align:center;
+  }
+  .cta-label{
+    font-size:12px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    margin-bottom:16px;
+    font-weight:600;
+  }
+
+  .wa-button{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:104px; height:104px;
+    border-radius:50%;
+    text-decoration:none;
+    margin-bottom:18px;
+  }
+  .wa-pulse{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:var(--green);
+    opacity:0.55;
+    animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(1); opacity:0.5; }
+    70%{ transform:scale(1.55); opacity:0; }
+    100%{ transform:scale(1.55); opacity:0; }
+  }
+  .wa-circle{
+    position:relative;
+    width:96px; height:96px;
+    border-radius:50%;
+    background:linear-gradient(160deg, var(--green-bright), var(--green) 70%);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 28px rgba(0,168,132,0.35);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .wa-button:hover .wa-circle{
+    transform:scale(1.04);
+    box-shadow:0 10px 34px rgba(0,168,132,0.5);
+  }
+  .wa-button:active .wa-circle{ transform:scale(0.97); }
+  .wa-circle svg{ width:44px; height:44px; }
+
+  .wa-cta-text{
+    font-size:17px;
+    font-weight:700;
+    color:var(--text);
+    margin:0 0 4px;
+  }
+  .wa-cta-sub{
+    font-size:13px;
+    color:var(--text-dim);
+    margin:0 0 4px;
+  }
+  .wa-number{
+    display:inline-block;
+    font-family:monospace;
+    font-size:13px;
+    color:var(--green-bright);
+    letter-spacing:0.4px;
+    margin-top:2px;
+  }
+
+  /* ============ DIVIDER ============ */
+  .divider{
+    display:flex; align-items:center; gap:12px;
+    padding:24px 24px 4px;
+    color:var(--text-faint);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
+  .divider::before, .divider::after{
+    content:''; flex:1; height:1px; background:var(--line);
+  }
+
+  /* ============ CONTACT ROWS ============ */
+  .rows{ padding:8px 12px 16px; }
+  .row{
+    display:flex; align-items:center; gap:14px;
+    padding:13px 12px;
+    border-radius:14px;
+    text-decoration:none;
+    color:var(--text);
+    transition:background 0.15s ease;
+  }
+  .row:hover{ background:var(--surface-2); }
+  .row-icon{
+    width:38px; height:38px;
+    border-radius:10px;
+    background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    color:var(--text-dim);
+  }
+  .row-icon svg{ width:18px; height:18px; }
+  .row-label{ font-size:11px; color:var(--text-faint); }
+  .row-value{ font-size:14px; font-weight:500; margin-top:1px; word-break:break-word; }
+
+  /* ============ ACTIONS ============ */
+  .actions{
+    display:flex; gap:10px;
+    padding:8px 24px 24px;
+  }
+  .btn{
+    flex:1;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--text);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:13px 10px;
+    border-radius:14px;
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .btn:hover{ border-color:var(--green); background:var(--surface); }
+  .btn svg{ width:15px; height:15px; }
+
+  /* ============ SCAN STAT ============ */
+  .stat{
+    padding:14px 24px 26px;
+    text-align:center;
+    color:var(--text-faint);
+    font-size:12px;
+  }
+  .stat b{ color:var(--text-dim); font-weight:700; }
+
+  /* ============ ERROR ============ */
+  .error-card{ text-align:center; padding:44px 28px; }
+  .error-icon{
+    width:56px; height:56px; margin:0 auto 18px;
+    border-radius:50%;
+    background:rgba(220,80,80,0.12);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .error-icon svg{ width:26px; height:26px; color:#E27272; }
+  .error-title{ font-size:17px; font-weight:700; margin-bottom:6px; }
+  .error-msg{ font-size:13px; color:var(--text-dim); margin-bottom:24px; }
+  .error-back{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--green); color:#06141A;
+    font-weight:700; font-size:13px;
+    padding:12px 22px; border-radius:14px;
+    text-decoration:none; border:none; cursor:pointer; font-family:inherit;
+  }
+
+  :focus-visible{ outline:2px solid var(--green-bright); outline-offset:2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .wa-pulse{ animation:none; opacity:0; }
+    .spinner{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============ LOADING ============ -->
+  <div id="state-loading" class="state active">
+    <div class="card loading-card">
+      <div class="spinner"></div>
+      <p class="loading-text">QR kod yoxlanılır...</p>
+      <p class="loading-uuid" id="scanUuidDisplay">-</p>
+    </div>
+  </div>
+
+  <!-- ============ NO UUID ============ -->
+  <div id="state-nouuid" class="state">
+    <div class="card error-card">
+      <div class="error-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></svg>
+      </div>
+      <h3 class="error-title">QR kod identifikatoru tapılmadı</h3>
+      <p class="error-msg">Linkdə düzgün parametr yoxdur.</p>
+      <a href="/profile" class="error-back">Profilə qayıt</a>
+    </div>
+  </div>
+
+  <!-- ============ ERROR ============ -->
+  <div id="state-error" class="state">
+    <div class="card error-card">
+      <div class="error-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+      </div>
+      <h3 class="error-title">Skan edilə bilmədi</h3>
+      <p class="error-msg" id="errorMessage">QR kod tapılmadı və ya aktiv deyil.</p>
+      <a href="/profile" class="error-back">Profilə qayıt</a>
+    </div>
+  </div>
+
+  <!-- ============ RESULT ============ -->
+  <div id="state-result" class="state">
+    <div class="card">
+
+      <div class="brand-row">
+        <div class="brand-mark">GF</div>
+        <div>
+          <div class="brand-name">Güvən Finans MMC</div>
+          <div class="brand-sub">Rəsmi əlaqə kartı</div>
+        </div>
+      </div>
+
+      <div class="person">
+        <div class="avatar">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        </div>
+        <div class="person-name" id="vcardFullName">Kontakt</div>
+        <div class="person-title" id="vcardTitleDisplay" style="display:none;">-</div>
+        <div class="person-company" id="vcardCompanyDisplay">-</div>
+      </div>
+
+      <div class="cta-zone">
+        <div class="cta-label">Bizimlə birbaşa əlaqə</div>
+        <a id="waButton" href="#" target="_blank" rel="noopener" class="wa-button" aria-label="WhatsApp ilə yazın">
+          <span class="wa-pulse"></span>
+          <span class="wa-circle">
+            <svg viewBox="0 0 32 32" fill="#06141A"><path d="M16.001 3C9.099 3 3.5 8.6 3.5 15.5c0 2.385.66 4.613 1.81 6.518L3 29l7.197-2.257A12.43 12.43 0 0 0 16 28c6.902 0 12.5-5.6 12.5-12.5S22.902 3 16 3Zm0 22.7c-1.97 0-3.86-.55-5.5-1.59l-.395-.246-4.27 1.34 1.36-4.16-.258-.406A10.18 10.18 0 0 1 5.3 15.5C5.3 9.65 10.15 4.8 16 4.8c5.85 0 10.7 4.85 10.7 10.7 0 5.85-4.85 10.7-10.7 10.7Zm5.86-7.99c-.32-.16-1.9-.94-2.2-1.04-.29-.11-.5-.16-.72.16-.21.32-.81 1.04-1 1.25-.18.21-.37.23-.68.08-1.84-.92-3.04-1.64-4.25-3.72-.32-.55.32-.51.92-1.7.1-.21.05-.39-.05-.55-.1-.16-.72-1.73-.99-2.37-.26-.62-.53-.54-.72-.55-.18-.01-.39-.01-.6-.01-.21 0-.55.08-.84.39-.29.32-1.1 1.08-1.1 2.62 0 1.55 1.13 3.05 1.29 3.26.16.21 2.21 3.39 5.36 4.62 2.66 1.05 3.2.85 3.78.79.58-.06 1.9-.78 2.17-1.53.26-.74.26-1.38.18-1.53-.08-.13-.29-.21-.61-.37Z"/></svg>
+          </span>
+        </a>
+        <p class="wa-cta-text">Bizə WhatsApp-da yazın</p>
+        <p class="wa-cta-sub">Suallarınız üçün bilavasitə dəstək xətti</p>
+        <span class="wa-number" id="waNumberDisplay">-</span>
+      </div>
+
+      <div class="divider">Digər əlaqə üsulları</div>
+
+      <div class="rows">
+        <a class="row" id="rowPhone" href="#">
+          <div class="row-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg></div>
+          <div>
+            <div class="row-label">Telefon</div>
+            <div class="row-value" id="vcardPhoneDisplay">-</div>
+          </div>
+        </a>
+        <a class="row" id="rowEmail" href="#">
+          <div class="row-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg></div>
+          <div>
+            <div class="row-label">Email</div>
+            <div class="row-value" id="vcardEmailDisplay">-</div>
+          </div>
+        </a>
+        <div class="row" id="rowAddress">
+          <div class="row-icon"><svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg></div>
+          <div>
+            <div class="row-label">Ünvan</div>
+            <div class="row-value" id="vcardAddressDisplay">-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="downloadVCard()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          VCard yüklə
+        </button>
+        <button class="btn" onclick="addToContacts()">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/></svg>
+          Kontakta əlavə et
+        </button>
+      </div>
+
+      <div class="stat">
+        Bu kart <b id="scanCountDisplay">0</b> dəfə skan edilib · <span id="lastScanDisplay">-</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ==================== AYARLAR ====================
+  // WhatsApp nömrəsi backend-dən (metadata.phone / ceo_phone) avtomatik götürülür.
+  // Heç bir nömrə tapılmasa, bu nömrəyə geri dönür (ehtiyat/fallback):
+  const WHATSAPP_FALLBACK_NUMBER = "994501234567";
+
+  function showState(id){
+    document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // Telefon nömrəsini wa.me üçün formatlayır: yalnız rəqəmlər qalır,
+  // yerli format (0XX...) görünsə '994' prefiksi əlavə edilir.
+  function formatPhoneForWhatsApp(rawPhone){
+    if (!rawPhone) return null;
+    let digits = rawPhone.replace(/\D/g, '');
+    if (!digits) return null;
+
+    if (digits.startsWith('00')) digits = digits.slice(2);      // 00994... -> 994...
+    if (digits.startsWith('0') && !digits.startsWith('994')) {
+      digits = '994' + digits.slice(1);                          // 0501234567 -> 994501234567
+    }
+    if (!digits.startsWith('994')) {
+      digits = '994' + digits;                                   // 501234567 -> 994501234567
+    }
+    return digits;
+  }
+
+  function buildWaLink(rawPhone, personName){
+    const number = formatPhoneForWhatsApp(rawPhone) || WHATSAPP_FALLBACK_NUMBER;
+    const greeting = personName
+      ? `Salam ${personName}, sizin QR kartınız vasitəsilə yazıram.`
+      : `Salam, QR kart vasitəsilə yazıram.`;
+    const text = encodeURIComponent(greeting);
+    return `https://wa.me/${number}?text=${text}`;
+  }
+
+  // ==================== URL-dən UUID ====================
+  const urlParams = new URLSearchParams(window.location.search);
+  const qrUuid = urlParams.get('qr') || urlParams.get('uuid') || urlParams.get('qrcode');
+
+  let qrData = null;
+
+  if (qrUuid) {
+    document.getElementById('scanUuidDisplay').textContent = `UUID: ${qrUuid}`;
+    scanQrCode(qrUuid);
+  } else {
+    showState('state-nouuid');
+  }
+
+  // ==================== SKAN FUNKSİYALARI ====================
+  async function scanQrCode(uuid) {
+    try {
+      const baseUrl = 'https://guvenfinans.az/proxy.php';
+      const url = `${baseUrl}/api/v1/qr-codes/scan/${uuid}`;
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      await getQrCodeDetails(uuid, result);
+
+    } catch (error) {
+      console.error('Skan xətası:', error);
+      document.getElementById('errorMessage').textContent = error.message || 'Skan zamanı xəta baş verdi';
+      showState('state-error');
+    }
+  }
+
+  async function getQrCodeDetails(uuid, scanResult) {
+    try {
+      const baseUrl = 'https://guvenfinans.az/proxy.php';
+      const url = `${baseUrl}/api/v1/qr-codes/public/uuid/${uuid}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      qrData = data;
+      showVCardData(data, scanResult);
+
+    } catch (error) {
+      console.error('QR kod məlumat xətası:', error);
+      document.getElementById('errorMessage').textContent = error.message || 'QR kod məlumatları tapılmadı';
+      showState('state-error');
+    }
+  }
+
+  function showVCardData(data, scanResult) {
+    const metadata = data.metadata || {};
+
+    const fullName = `${metadata.first_name || ''} ${metadata.last_name || ''}`.trim() || 'Kontakt';
+    document.getElementById('vcardFullName').textContent = fullName;
+    document.getElementById('vcardCompanyDisplay').textContent = metadata.company || '-';
+
+    if (metadata.title) {
+      const titleEl = document.getElementById('vcardTitleDisplay');
+      titleEl.textContent = metadata.title;
+      titleEl.style.display = 'block';
+    }
+
+    document.getElementById('vcardPhoneDisplay').textContent = metadata.phone || '-';
+    document.getElementById('vcardEmailDisplay').textContent = metadata.email || '-';
+    document.getElementById('vcardAddressDisplay').textContent = metadata.address || '-';
+
+    if (metadata.phone) {
+      document.getElementById('rowPhone').href = 'tel:' + metadata.phone;
+    }
+    if (metadata.email) {
+      document.getElementById('rowEmail').href = 'mailto:' + metadata.email;
+    }
+
+    // WhatsApp düyməsi — kontaktın öz nömrəsinə (metadata.phone), tapılmasa
+    // backend-in user_info.ceo_phone sahəsinə yönəlir
+    const userInfo = metadata.user_info || {};
+    const contactPhone = metadata.phone || userInfo.ceo_phone;
+    document.getElementById('waButton').href = buildWaLink(contactPhone, fullName);
+
+    const formattedNumber = formatPhoneForWhatsApp(contactPhone);
+    document.getElementById('waNumberDisplay').textContent = formattedNumber
+      ? '+' + formattedNumber.replace(/(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5')
+      : (contactPhone || '-');
+
+    document.getElementById('scanCountDisplay').textContent = scanResult?.scan_count || data.scan_count || 0;
+
+    const lastScanRaw = scanResult?.last_scanned_at || data.last_scanned_at;
+    if (lastScanRaw) {
+      const lastScan = new Date(lastScanRaw).toLocaleString('az-AZ');
+      document.getElementById('lastScanDisplay').textContent = `Son skan: ${lastScan}`;
+    }
+
+    showState('state-result');
+  }
+
+  // ==================== VCARD ====================
+  function downloadVCard() {
+    if (!qrData) {
+      alert('QR kod məlumatları tapılmadı');
+      return;
+    }
+
+    const vcard = qrData.qr_content || qrData.metadata?.vcard;
+    if (!vcard) {
+      alert('VCard məlumatları tapılmadı');
+      return;
+    }
+
+    const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${qrData.qr_code_name || 'contact'}.vcf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function addToContacts() {
+    downloadVCard();
+  }
+
+  window.downloadVCard = downloadVCard;
+  window.addToContacts = addToContacts;
+</script>
+</body>
+</html>
