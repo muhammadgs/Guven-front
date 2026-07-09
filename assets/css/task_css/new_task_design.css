@@ -1561,12 +1561,15 @@
 /* Restore legacy glass styling only for Yeni → Daxili Tapşırıq modal. */
 .newtask-modal.liquid-task-modal.internal-task-modal,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] {
-  width: min(90vw, 960px) !important;
-  max-width: calc(100vw - 28px);
+  width: min(1120px, calc(100vw - 48px)) !important;
+  max-width: calc(100vw - 48px);
   height: auto !important;
   min-height: auto !important;
-  max-height: calc(100vh - 28px) !important;
-  overflow: visible;
+  max-height: calc(100vh - 40px) !important;
+  overflow: hidden;
+  --nt-field-height: 54px;
+  --nt-media-zone-height: 102px;
+  --nt-control-max-width: 448px;
   border-radius: clamp(38px, 5vw, 60px) !important;
   border: 1px solid rgba(255,255,255,.55) !important;
   background:
@@ -1627,15 +1630,15 @@
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-modal-body {
   flex: 0 0 auto;
   overflow: visible !important;
-  padding: 10px clamp(28px, 4vw, 44px) 10px !important;
+  padding: 8px clamp(30px, 4vw, 48px) 8px !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-form-grid,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-form-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  column-gap: clamp(22px, 3.2vw, 36px) !important;
-  row-gap: clamp(10px, 1.65vh, 14px) !important;
-  justify-content: initial;
+  grid-template-columns: repeat(2, minmax(0, var(--nt-control-max-width))) !important;
+  column-gap: clamp(28px, 4vw, 58px) !important;
+  row-gap: 10px !important;
+  justify-content: center;
   align-items: start;
 }
 
@@ -1660,9 +1663,13 @@
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-visibility-field,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-visibility-field { order: 7; grid-column: 1 / 2; }
 .newtask-modal.liquid-task-modal.internal-task-modal .glass-description-field,
-.newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-description-field { order: 8; grid-column: 1 / -1; }
+.newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-description-field { order: 8; grid-column: 1 / 2; }
 .newtask-modal.liquid-task-modal.internal-task-modal .glass-media-field,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-media-field { order: 9; }
+.newtask-modal.liquid-task-modal.internal-task-modal .glass-media-field:has(#newtaskFileInput),
+.newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-media-field:has(#newtaskFileInput) { grid-column: 1 / 2; }
+.newtask-modal.liquid-task-modal.internal-task-modal .glass-media-field:has(#newtaskVoiceRecorder),
+.newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-media-field:has(#newtaskVoiceRecorder) { grid-column: 2 / 3; }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .glass-field,
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-form-group.full-width,
@@ -1705,13 +1712,13 @@
   border: 1px solid rgba(255,255,255,.58) !important;
   background: rgba(255,255,255,.42) !important;
   box-shadow: inset 0 1px 1px rgba(255,255,255,.85), 0 10px 26px rgba(15,23,42,.08) !important;
-  min-height: 44px !important;
+  min-height: var(--nt-field-height) !important;
 }
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-textarea,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-textarea {
-  min-height: 88px !important;
-  height: 88px !important;
+  min-height: 92px !important;
+  height: 92px !important;
   border-radius: 28px !important;
   resize: none !important;
 }
@@ -1724,8 +1731,8 @@
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .glass-file-zone,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .file-upload-zone,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .nt-voice-shell {
-  min-height: 104px !important;
-  height: 104px !important;
+  min-height: var(--nt-media-zone-height) !important;
+  height: var(--nt-media-zone-height) !important;
   border-radius: 30px !important;
   border: 1px dashed rgba(255,255,255,.65) !important;
   background: rgba(255,255,255,.36) !important;
@@ -1739,8 +1746,8 @@
 
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-audio-container,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-audio-container {
-  min-height: 104px !important;
-  height: 104px !important;
+  min-height: var(--nt-media-zone-height) !important;
+  height: var(--nt-media-zone-height) !important;
   padding: 10px 16px !important;
   overflow: visible !important;
 }
@@ -1748,7 +1755,7 @@
 .newtask-modal.liquid-task-modal.internal-task-modal .newtask-modal-footer,
 .newtask-modal.liquid-task-modal[data-task-type="internal"] .newtask-modal-footer {
   margin: 0 !important;
-  padding: 10px clamp(28px, 4vw, 44px) clamp(14px, 2vh, 20px) !important;
+  padding: 6px clamp(30px, 4vw, 48px) 16px !important;
   border-radius: 0 !important;
   background: transparent !important;
   border: 0 !important;
@@ -1771,10 +1778,10 @@
 
   .newtask-modal.liquid-task-modal.internal-task-modal,
   .newtask-modal.liquid-task-modal[data-task-type="internal"] {
-    width: min(90vw, 960px) !important;
+    width: min(1120px, calc(100vw - 48px)) !important;
     height: auto !important;
     min-height: auto !important;
-    max-height: calc(100vh - 28px) !important;
+    max-height: calc(100vh - 40px) !important;
   }
 }
 
