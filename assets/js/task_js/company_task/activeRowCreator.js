@@ -1184,12 +1184,15 @@ const ActiveRowCreator = {
             }
 
             if (uuids.length > 0) {
+                // Fayl tipi bu mərhələdə məlum deyil — real metadata aşağıda
+                // FileUploadManager.getFileInfo ilə asinxron yüklənib chip-ə yazılır
                 attachments = uuids.map(uuid => ({
                     file_id: uuid, uuid: uuid, id: uuid,
-                    filename: `recording_${uuid.substring(0, 8)}.webm`,
+                    filename: `Fayl ${uuid.substring(0, 8)}`,
                     original_filename: `Fayl ${uuid.substring(0, 8)}`,
-                    mime_type: 'audio/webm',
-                    is_audio_recording: true
+                    mime_type: '',
+                    is_audio_recording: false,
+                    needsInfo: true
                 }));
             }
         }
@@ -1202,40 +1205,69 @@ const ActiveRowCreator = {
         }
 
         if (attachments.length > 0) {
-            const getIcon = f => {
-                const mt = f.mime_type || '';
-                const fn = (f.filename || f.original_filename || '').toLowerCase();
-                if (f.is_audio_recording || mt.startsWith('audio/') || fn.includes('recording') || fn.includes('webm') || fn.includes('səs'))
-                    return '<i class="fas fa-microphone" style="color:#3b82f6;"></i>';
-                if (mt.startsWith('image/') || fn.match(/\.(jpg|jpeg|png|gif|webp)$/))
-                    return '<i class="fas fa-image" style="color:#3b82f6;"></i>';
-                if (mt.includes('pdf') || fn.endsWith('.pdf'))
-                    return '<i class="fas fa-file-pdf" style="color:#ef4444;"></i>';
-                if (mt.includes('excel') || fn.endsWith('.xlsx') || fn.endsWith('.xls'))
-                    return '<i class="fas fa-file-excel" style="color:#10b981;"></i>';
-                if (mt.includes('word') || fn.endsWith('.docx'))
-                    return '<i class="fas fa-file-word" style="color:#3b82f6;"></i>';
-                return '<i class="fas fa-file" style="color:#64748b;"></i>';
+            // Vahid fayl tipi deteksiyası — fileUpload.js-dəki mərkəzi mənbə
+            const detectType = f => {
+                if (typeof FileUploadManager !== 'undefined' && FileUploadManager.detectFileType) {
+                    return FileUploadManager.detectFileType(f);
+                }
+                return { key: 'other', label: 'Fayl', icon: 'fa-solid fa-file', color: '#64748b' };
             };
+            const buildChipInner = t =>
+                `<i class="${t.icon}" aria-hidden="true"></i><span>${t.label}</span>`;
 
             if (attachments.length === 1) {
                 const f = attachments[0];
                 const fid = f.file_id || f.uuid || f.id;
                 const fn = f.original_filename || f.filename || 'Fayl';
-                const sn = fn.length > 15 ? fn.substring(0, 12) + '...' : fn;
 
                 if (fid) {
-                    fileColumnHTML = `<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:4px;background:#eef2ff;border:1px solid #cbd5e1;cursor:pointer;"
-                        onclick="TableManager.previewFile('${fid}','${fn}','${f.mime_type||''}',${f.is_audio_recording||false})" title="${fn}">
-                        ${getIcon(f)}<span style="font-size:12px;color:#1e293b;">${this.escapeHtml(sn)}</span>
+                    const ftype = detectType(f);
+                    const safeName = this.escapeHtml(fn.replace(/'/g, "\\'"));
+
+                    fileColumnHTML = `<div id="file-chip-${task.id}" class="file-type-chip file-type-chip--${ftype.key}"
+                        onclick="TableManager.previewFile('${fid}','${safeName}','${f.mime_type||''}',${f.is_audio_recording||false})"
+                        title="${this.escapeHtml(fn)}" role="button" tabindex="0">
+                        ${buildChipInner(ftype)}
                     </div>`;
+
+                    // file_uuids-dən gələn faylların tipi məlum deyil —
+                    // real metadata API-dən yüklənib chip-ə (ikon + tip etiketi) yazılır.
+                    // Chip DOM-a hələ daxil edilməyibsə, tapılana qədər yenidən cəhd edilir.
+                    if (f.needsInfo && typeof FileUploadManager !== 'undefined' && FileUploadManager.getFileInfo) {
+                        const applyRealType = (info, attempt) => {
+                            const chip = document.getElementById(`file-chip-${task.id}`);
+                            if (!chip) {
+                                if (attempt < 10) setTimeout(() => applyRealType(info, attempt + 1), 400);
+                                return;
+                            }
+
+                            const realName = info.original_filename || info.filename || fn;
+                            const mime = info.mime_type || '';
+                            const realType = detectType({
+                                mime_type: mime,
+                                filename: realName,
+                                category: info.category
+                            });
+                            const isAudio = realType.key === 'audio';
+
+                            chip.title = realName;
+                            chip.className = `file-type-chip file-type-chip--${realType.key}`;
+                            chip.innerHTML = buildChipInner(realType);
+                            chip.onclick = () => TableManager.previewFile(fid, realName, mime, isAudio);
+                        };
+
+                        FileUploadManager.getFileInfo(fid)
+                            .then(info => { if (info) applyRealType(info, 0); })
+                            .catch(() => {});
+                    }
                 }
             } else {
-                fileColumnHTML = `<div style="display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:4px;background:#f1f5f9;border:1px solid #cbd5e1;cursor:pointer;"
-                    onclick="TableManager.showTaskFiles(${task.id})">
-                    <i class="fas fa-paperclip" style="color:#475569;"></i>
-                    <span style="font-size:12px;font-weight:600;color:#334155;">${attachments.length} fayl</span>
-                    <i class="fas fa-chevron-down" style="font-size:10px;color:#94a3b8;"></i>
+                fileColumnHTML = `<div class="file-type-chip file-type-chip--multi"
+                    onclick="TableManager.showTaskFiles(${task.id})" role="button" tabindex="0"
+                    title="${attachments.length} fayl">
+                    <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                    <span>${attachments.length} fayl</span>
+                    <i class="fa-solid fa-chevron-down file-type-chip-caret" aria-hidden="true"></i>
                 </div>`;
             }
         }
@@ -1263,7 +1295,7 @@ const ActiveRowCreator = {
                     <div id="full-desc-${task.id}" style="display:none;">${this.escapeHtml(description)}</div>
                 </div>
             </td>
-            <td class="file-col" style="min-width:100px;">${fileColumnHTML}</td>
+            <td class="file-col" style="min-width:190px;text-align:center;">${fileColumnHTML}</td>
             <td class="${dueDateClass}" title="${dueDateTitle}">${this.formatDate(task.due_date || task.due_at)}${dueDateIcon}</td>
             <td style="text-align:center;"><div style="display:flex;gap:5px;justify-content:center;">${commentsBtn}${detailsBtn}</div></td>
             <td style="color:#64748b;">${this.formatDate(task.completed_date || task.completed_at)}</td>

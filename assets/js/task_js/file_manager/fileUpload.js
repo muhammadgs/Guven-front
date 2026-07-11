@@ -14,8 +14,12 @@ const FileUploadManager = {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-excel',
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'audio/webm', 'audio/mp3', 'audio/wav', 'audio/ogg',
-        'video/mp4', 'video/webm',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/csv',
+        'audio/webm', 'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/ogg',
+        'audio/mp4', 'audio/x-m4a', 'audio/aac',
+        'video/mp4', 'video/webm', 'video/quicktime',
         'application/zip', 'application/x-zip-compressed',
         'text/plain'
     ],
@@ -145,14 +149,23 @@ const FileUploadManager = {
                 console.log(`📎 file_uuids-dən ${uuids.length} UUID tapıldı`);
 
                 if (uuids.length > 0) {
-                    attachments = uuids.map(uuid => ({
-                        file_id: uuid,
-                        uuid: uuid,
-                        id: uuid,
-                        filename: `fayl_${uuid.substring(0, 8)}`,
-                        original_filename: `Fayl ${uuid.substring(0, 8)}`,
-                        mime_type: ''
-                    }));
+                    // Hər UUID üçün real fayl metadatasını al (mime type, ad, ölçü)
+                    const infos = await Promise.all(uuids.map(uuid => this.getFileInfo(uuid)));
+
+                    attachments = uuids.map((uuid, i) => {
+                        const info = infos[i] || {};
+                        const fallbackName = `Fayl ${uuid.substring(0, 8)}`;
+                        return {
+                            file_id: uuid,
+                            uuid: uuid,
+                            id: uuid,
+                            filename: info.filename || fallbackName,
+                            original_filename: info.original_filename || info.filename || fallbackName,
+                            mime_type: info.mime_type || '',
+                            size: info.file_size || info.size || 0,
+                            is_audio_recording: info.category === 'audio_recording'
+                        };
+                    });
                 }
             }
 
@@ -184,28 +197,17 @@ const FileUploadManager = {
             const fileId = file.file_id || file.uuid || file.id;
             const fileName = file.original_filename || file.filename || `Fayl ${index + 1}`;
 
-            // Fayl ikonasını təyin et
-            let icon = '<i class="fas fa-file" style="color:#64748b; font-size:20px;"></i>';
+            // Fayl ikonasını təyin et — mime type prioritetdir
             const fileNameLower = fileName.toLowerCase();
-
-            if (fileNameLower.includes('.mp3') || fileNameLower.includes('.wav') ||
-                fileNameLower.includes('audio') || fileNameLower.includes('səs') ||
-                file.is_audio_recording) {
-                icon = '<i class="fas fa-microphone" style="color:#3b82f6; font-size:20px;"></i>';
-            } else if (fileNameLower.includes('.xlsx') || fileNameLower.includes('.xls')) {
-                icon = '<i class="fas fa-file-excel" style="color:#10b981; font-size:20px;"></i>';
-            } else if (fileNameLower.includes('.pdf')) {
-                icon = '<i class="fas fa-file-pdf" style="color:#ef4444; font-size:20px;"></i>';
-            } else if (fileNameLower.includes('.jpg') || fileNameLower.includes('.jpeg') ||
-                       fileNameLower.includes('.png') || fileNameLower.includes('.gif')) {
-                icon = '<i class="fas fa-image" style="color:#3b82f6; font-size:20px;"></i>';
-            } else if (fileNameLower.includes('.mp4') || fileNameLower.includes('.webm')) {
-                icon = '<i class="fas fa-video" style="color:#ef4444; font-size:20px;"></i>';
-            }
+            const iconDef = this.getIconByType(
+                file.is_audio_recording ? (file.mime_type || 'audio/webm') : (file.mime_type || ''),
+                fileName
+            );
+            const icon = `<i class="${iconDef.icon}" style="color:${iconDef.color}; font-size:20px;"></i>`;
 
             const isAudio = file.is_audio_recording ||
                            (file.mime_type && file.mime_type.startsWith('audio/')) ||
-                           fileNameLower.includes('.mp3') || fileNameLower.includes('.wav');
+                           !!fileNameLower.match(/\.(mp3|wav|ogg|m4a)$/);
 
             filesHtml += `
                 <div class="file-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #e2e8f0;">
@@ -333,7 +335,9 @@ const FileUploadManager = {
     isAllowedExtension: function(filename) {
         const ext = filename.split('.').pop().toLowerCase();
         const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx',
-                            'xls', 'xlsx', 'mp3', 'wav', 'ogg', 'mp4', 'webm', 'zip', 'txt'];
+                            'xls', 'xlsx', 'csv', 'ppt', 'pptx',
+                            'mp3', 'wav', 'ogg', 'm4a', 'aac',
+                            'mp4', 'webm', 'mov', 'zip', 'txt'];
         return allowedExts.includes(ext);
     },
 
@@ -403,29 +407,203 @@ const FileUploadManager = {
         fileList.innerHTML = html;
     },
 
+    // ==================== FAYL TİPİ DETEKSİYASI ====================
+    /**
+     * Bütün sistem üçün vahid fayl tipi kataloqu.
+     * key → { label (chip yazısı), icon (Font Awesome), color }
+     */
+    fileTypes: {
+        audio:      { label: 'Səs qeydi',        icon: 'fa-solid fa-microphone',      color: '#3b82f6' },
+        image:      { label: 'Şəkil',            icon: 'fa-solid fa-image',           color: '#3b82f6' },
+        video:      { label: 'Video',            icon: 'fa-solid fa-video',           color: '#ef4444' },
+        pdf:        { label: 'PDF faylı',        icon: 'fa-solid fa-file-pdf',        color: '#ef4444' },
+        word:       { label: 'WORD faylı',       icon: 'fa-solid fa-file-word',       color: '#2563eb' },
+        excel:      { label: 'EXCEL faylı',      icon: 'fa-solid fa-file-excel',      color: '#10b981' },
+        powerpoint: { label: 'PPT faylı',        icon: 'fa-solid fa-file-powerpoint', color: '#f97316' },
+        other:      { label: 'Fayl',             icon: 'fa-solid fa-file',            color: '#64748b' }
+    },
+
+    /** Uzantı → tip xəritəsi (mime type məlum olmayanda ehtiyat yol) */
+    _extensionMap: {
+        audio:      ['mp3', 'wav', 'ogg', 'oga', 'm4a', 'aac', 'flac', 'wma', 'opus', 'weba'],
+        image:      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tif', 'tiff', 'heic', 'heif', 'avif'],
+        video:      ['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'm4v', 'mpg', 'mpeg', '3gp'],
+        pdf:        ['pdf'],
+        word:       ['doc', 'docx', 'docm', 'dot', 'dotx', 'odt', 'rtf'],
+        excel:      ['xls', 'xlsx', 'xlsm', 'xlsb', 'csv', 'ods'],
+        powerpoint: ['ppt', 'pptx', 'pptm', 'pps', 'ppsx', 'pot', 'potx', 'odp']
+    },
+
+    /**
+     * Fayl tipini təyin edir — sistemin yeganə mənbəyi.
+     * Prioritet: audio-qeyd bayraqları → mime type → fayl uzantısı.
+     *
+     * @param {Object} file - { mime_type, filename, original_filename, is_audio_recording, category }
+     *                        və ya native File ({ type, name })
+     * @returns {{ key: string, label: string, icon: string, color: string }}
+     */
+    detectFileType: function(file) {
+        const f = file || {};
+        const key = this.detectFileTypeKey(
+            f.mime_type || f.type || '',
+            f.original_filename || f.filename || f.name || '',
+            !!(f.is_audio_recording || f.category === 'audio_recording')
+        );
+        return Object.assign({ key: key }, this.fileTypes[key]);
+    },
+
+    /** @returns {string} fileTypes açarlarından biri */
+    detectFileTypeKey: function(mimeType, filename, isAudioRecording) {
+        // Mime parametrlərini at ("audio/webm; codecs=opus" → "audio/webm")
+        const mt = String(mimeType || '').toLowerCase().split(';')[0].trim();
+        const fn = String(filename || '').toLowerCase();
+
+        // 1) Açıq audio-qeyd bayraqları — mikrofon qeydləri hər zaman "Səs qeydi"
+        if (isAudioRecording || fn.includes('səs-qeydi') || fn.includes('ses-qeydi') || fn.includes('recording')) {
+            return 'audio';
+        }
+
+        // 2) Mime type — ən etibarlı mənbə
+        if (mt && mt !== 'application/octet-stream') {
+            if (mt.startsWith('audio/')) return 'audio';
+            if (mt.startsWith('image/')) return 'image';
+            if (mt.startsWith('video/')) return 'video';
+            if (mt === 'application/pdf' || mt.includes('pdf')) return 'pdf';
+            if (mt === 'application/msword' || mt.includes('wordprocessingml') ||
+                mt.includes('ms-word') || mt === 'application/rtf') return 'word';
+            if (mt.includes('ms-excel') || mt.includes('spreadsheetml') ||
+                mt === 'text/csv' || mt.includes('spreadsheet')) return 'excel';
+            if (mt.includes('ms-powerpoint') || mt.includes('presentationml') ||
+                mt.includes('presentation')) return 'powerpoint';
+        }
+
+        // 3) Fayl uzantısı — query/hash hissəsini nəzərə almadan son nöqtədən sonrası
+        const extMatch = fn.split(/[?#]/)[0].match(/\.([a-z0-9]+)$/);
+        if (extMatch) {
+            const ext = extMatch[1];
+            for (const typeKey in this._extensionMap) {
+                if (this._extensionMap[typeKey].includes(ext)) return typeKey;
+            }
+        }
+
+        return 'other';
+    },
+
+    /** Lokal File obyekti üçün ikon (geriyə uyğunluq üçün saxlanılıb) */
     getFileIcon: function(file) {
-        if (file.type.startsWith('audio/') || file.name.includes('səs-qeydi') || file.name.includes('recording')) {
-            return { icon: 'fas fa-microphone', color: '#3b82f6' };
+        const t = this.detectFileType(file);
+        return { icon: t.icon, color: t.color };
+    },
+
+    /**
+     * Mime type və fayl adına görə ikon qaytarır (geriyə uyğunluq üçün saxlanılıb)
+     */
+    getIconByType: function(mimeType, filename) {
+        const t = this.detectFileType({ mime_type: mimeType, filename: filename });
+        return { icon: t.icon, color: t.color };
+    },
+
+    _fileInfoCache: {},
+
+    /**
+     * Faylın tipini və adını /download endpointinin HTTP header-larından
+     * (Content-Type, Content-Disposition) çıxarır. Əvvəl HEAD (body yoxdur),
+     * dəstəklənməsə 1 baytlıq Range GET istifadə olunur ki, bütün fayl
+     * endirilməsin.
+     */
+    _getFileInfoFromHeaders: async function(fileId) {
+        const base = (window.apiService && window.apiService.baseUrl) || '/proxy.php';
+        const token = localStorage.getItem('guven_token') || '';
+        const url = `${base}/api/v1/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+
+        let resp = null;
+        try {
+            resp = await fetch(url, { method: 'HEAD', credentials: 'include' });
+        } catch (e) { resp = null; }
+
+        if (!resp || !resp.ok) {
+            try {
+                resp = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Range': 'bytes=0-0' },
+                    credentials: 'include'
+                });
+                try { if (resp.body && resp.body.cancel) resp.body.cancel(); } catch (e) {}
+            } catch (e) { return null; }
         }
-        if (file.type.startsWith('image/')) {
-            return { icon: 'fas fa-image', color: '#3b82f6' };
+
+        if (!resp || (!resp.ok && resp.status !== 206)) return null;
+
+        const mime = (resp.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+
+        // Content-Disposition-dan orijinal fayl adı (RFC 5987 filename* prioritetdir)
+        const cd = resp.headers.get('content-disposition') || '';
+        let filename = '';
+        const encoded = cd.match(/filename\*\s*=\s*(?:UTF-8'')?([^;]+)/i);
+        const plain = cd.match(/filename\s*=\s*"?([^";]+)"?/i);
+        if (encoded) {
+            try { filename = decodeURIComponent(encoded[1].replace(/["']/g, '').trim()); }
+            catch (e) { filename = encoded[1].trim(); }
+        } else if (plain) {
+            filename = plain[1].trim();
         }
-        if (file.type.startsWith('video/')) {
-            return { icon: 'fas fa-video', color: '#ef4444' };
+
+        if (!mime && !filename) return null;
+
+        return {
+            mime_type: mime === 'application/octet-stream' ? '' : mime,
+            original_filename: filename,
+            filename: filename,
+            file_size: parseInt(resp.headers.get('content-length'), 10) || 0,
+            _source: 'headers'
+        };
+    },
+
+    _fileInfoPending: {},
+
+    /**
+     * Fayl metadatasını alır (keşlənmiş) — mime_type, original_filename və s.
+     * Tip birbaşa /download endpointinin HTTP başlıqlarından götürülür
+     * (Content-Type + Content-Disposition), çünki /files/{id} metadata
+     * endpointi backend-də 500 verir. Eyni fayl üçün paralel sorğular
+     * birləşdirilir, nəticə (uğursuz da olsa) keşlənir ki, endpoint hər
+     * cədvəl yenilənməsində təkrar döyülməsin.
+     */
+    getFileInfo: function(fileId) {
+        if (!fileId) return Promise.resolve(null);
+        if (fileId in this._fileInfoCache) return Promise.resolve(this._fileInfoCache[fileId]);
+        if (this._fileInfoPending[fileId]) return this._fileInfoPending[fileId];
+
+        const promise = this._fetchFileInfo(fileId)
+            .then(info => {
+                this._fileInfoCache[fileId] = info;
+                delete this._fileInfoPending[fileId];
+                return info;
+            })
+            .catch(e => {
+                delete this._fileInfoPending[fileId];
+                console.warn(`⚠️ Fayl info sorğusu xəta verdi: ${fileId}`, e);
+                return null;
+            });
+
+        this._fileInfoPending[fileId] = promise;
+        return promise;
+    },
+
+    _fetchFileInfo: async function(fileId) {
+        // Tip birbaşa /download header-larından — /files/{id} metadata çağırışı yoxdur
+        try {
+            const headerInfo = await this._getFileInfoFromHeaders(fileId);
+            if (headerInfo) {
+                console.log(`ℹ️ Fayl tipi header-lardan alındı: ${fileId} → ${headerInfo.mime_type || headerInfo.original_filename}`);
+                return headerInfo;
+            }
+        } catch (e) {
+            console.warn(`⚠️ Fayl header sorğusu alınmadı: ${fileId}`, e);
         }
-        if (file.type.includes('pdf') || file.name.endsWith('.pdf')) {
-            return { icon: 'fas fa-file-pdf', color: '#ef4444' };
-        }
-        if (file.type.includes('excel') || file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-            return { icon: 'fas fa-file-excel', color: '#10b981' };
-        }
-        if (file.type.includes('word') || file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
-            return { icon: 'fas fa-file-word', color: '#3b82f6' };
-        }
-        if (file.type.includes('zip') || file.name.endsWith('.zip') || file.name.endsWith('.rar')) {
-            return { icon: 'fas fa-file-archive', color: '#f59e0b' };
-        }
-        return { icon: 'fas fa-file', color: '#64748b' };
+
+        console.warn(`⚠️ Fayl info alınmadı: ${fileId}`);
+        return null;
     },
 
     // ==================== UPLOAD FUNCTIONS ====================
@@ -508,16 +686,17 @@ const FileUploadManager = {
                                      file.name.includes('recording') ||
                                      file.type.startsWith('audio/');
 
-            // Kateqoriya təyin et
+            // Kateqoriya təyin et — vahid tip deteksiyasından istifadə olunur
+            const typeKey = this.detectFileTypeKey(file.type, file.name, isAudioRecording);
             let category = 'project_image';
-            if (isAudioRecording) {
+            if (typeKey === 'audio') {
                 category = 'audio_recording';
-            } else if (file.type.startsWith('image/')) {
+            } else if (typeKey === 'image') {
                 category = 'project_image';
-            } else if (file.type.includes('pdf')) {
-                category = 'document';
-            } else if (file.type.includes('video/')) {
+            } else if (typeKey === 'video') {
                 category = 'company_video';
+            } else if (['pdf', 'word', 'excel', 'powerpoint'].includes(typeKey)) {
+                category = 'document';
             }
 
             formData.append('category', category);
@@ -634,26 +813,13 @@ const FileUploadManager = {
                 const fileId = file.file_id || file.uuid || file.id;
                 const fileName = file.filename || file.original_filename || `Fayl ${index + 1}`;
 
-                const isAudio = file.is_audio_recording ||
-                               (file.mime_type && file.mime_type.startsWith('audio/')) ||
-                               fileName.includes('səs-qeydi') ||
-                               fileName.includes('recording');
-
-                const fileIcon = isAudio ? 'fa-microphone' :
-                                file.mime_type?.startsWith('image/') ? 'fa-image' :
-                                file.mime_type?.startsWith('video/') ? 'fa-video' :
-                                file.mime_type?.includes('pdf') ? 'fa-file-pdf' :
-                                file.mime_type?.includes('excel') ? 'fa-file-excel' :
-                                file.mime_type?.includes('word') ? 'fa-file-word' :
-                                'fa-file';
-
-                const iconColor = isAudio ? '#3b82f6' :
-                                 file.mime_type?.startsWith('image/') ? '#3b82f6' :
-                                 file.mime_type?.startsWith('video/') ? '#ef4444' :
-                                 file.mime_type?.includes('pdf') ? '#ef4444' :
-                                 file.mime_type?.includes('excel') ? '#10b981' :
-                                 file.mime_type?.includes('word') ? '#3b82f6' :
-                                 '#64748b';
+                const fileType = this.detectFileType({
+                    mime_type: file.mime_type,
+                    filename: fileName,
+                    is_audio_recording: file.is_audio_recording,
+                    category: file.category
+                });
+                const isAudio = fileType.key === 'audio';
 
                 filesHTML += `
                     <div class="file-list-item" style="
@@ -669,7 +835,7 @@ const FileUploadManager = {
                         background: white;
                     " onclick="TableManager.previewFile('${fileId}', '${fileName}', '${file.mime_type || ''}', ${isAudio})">
                         <div style="font-size: 24px; width: 40px; text-align: center;">
-                            <i class="fas ${fileIcon}" style="color: ${iconColor};"></i>
+                            <i class="${fileType.icon}" style="color: ${fileType.color};"></i>
                         </div>
                         <div style="flex: 1;">
                             <div style="font-weight: 500; color: #334155;">${this.escapeHtml(fileName)}</div>
@@ -1372,10 +1538,9 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
 
         const token = localStorage.getItem('guven_token') || '';
 
-        // Əvvəlcə fayl məlumatlarını al
+        // Əvvəlcə fayl məlumatlarını al (keşlənmiş)
         try {
-            const info = await makeApiRequest(`/files/${fileId}`, 'GET');
-            const fileData = info?.data || info;
+            const fileData = await this.getFileInfo(fileId);
             if (fileData?.mime_type) mimeType = fileData.mime_type;
             if (fileData?.original_filename || fileData?.filename) {
                 filename = fileData.original_filename || fileData.filename || filename;
@@ -1391,10 +1556,13 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
         const fn = (filename || '').toLowerCase();
         const fileUrl = `/proxy.php/api/v1/files/${fileId}/download?token=${encodeURIComponent(token)}`;
 
-        // Tip təyin et
-        const isAudio = isAudioRecording ||
-            (mimeType && mimeType.startsWith('audio/')) ||
-            fn.match(/\.(webm|mp3|wav|ogg|m4a)$/);
+        // Tip təyin et — serverdən gələn real mime type prioritetdir.
+        // isAudioRecording bayrağına yalnız mime type məlum olmayanda etibar edilir,
+        // çünki cədvəl file_uuids-dən gələn fayllar üçün bu bayrağı səhv ötürə bilər.
+        const mimeKnown = !!(mimeType && mimeType !== 'unknown' && mimeType !== 'application/octet-stream');
+        const isAudio = mimeKnown
+            ? mimeType.startsWith('audio/')
+            : (isAudioRecording || !!fn.match(/\.(webm|mp3|wav|ogg|m4a)$/));
 
         const isImage = (mimeType && mimeType.startsWith('image/')) ||
             fn.match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
@@ -1404,8 +1572,12 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
 
         const isPdf = (mimeType && mimeType.includes('pdf')) || fn.endsWith('.pdf');
 
-        const isWord = fn.match(/\.(doc|docx)$/);
-        const isExcel = fn.match(/\.(xls|xlsx)$/);
+        const isWord = (mimeType && (mimeType.includes('msword') || mimeType.includes('wordprocessingml') || mimeType.includes('ms-word'))) ||
+            fn.match(/\.(doc|docx)$/);
+        const isExcel = (mimeType && (mimeType.includes('ms-excel') || mimeType.includes('spreadsheetml'))) ||
+            fn.match(/\.(xls|xlsx)$/);
+        const isPowerPoint = (mimeType && (mimeType.includes('ms-powerpoint') || mimeType.includes('presentationml'))) ||
+            fn.match(/\.(ppt|pptx)$/);
 
         if (isAudio) {
             this._openUniversalModal('audio', fileId, filename, fileUrl, mimeType);
@@ -1415,7 +1587,7 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
             this._openUniversalModal('video', fileId, filename, fileUrl, mimeType);
         } else if (isPdf) {
             this._openUniversalModal('pdf', fileId, filename, fileUrl, mimeType);
-        } else if (isWord || isExcel) {
+        } else if (isWord || isExcel || isPowerPoint) {
             // Google Docs viewer ilə aç
             this._openUniversalModal('office', fileId, filename, fileUrl, mimeType);
         } else {

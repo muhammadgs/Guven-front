@@ -1743,6 +1743,14 @@
 
         fileList.innerHTML = html;
         console.log(`📊 File list yeniləndi: ${window.modalSelectedFiles.length} fayl`);
+
+        // Fayl siyahısı görsənsin deyə modal body-ni aşağıya scroll et
+        requestAnimationFrame(() => {
+            const modalBody = document.querySelector('.newtask-modal .newtask-modal-body');
+            if (modalBody) {
+                modalBody.scrollTo({ top: modalBody.scrollHeight, behavior: 'smooth' });
+            }
+        });
     }
 
     function formatFileSize(bytes) {
