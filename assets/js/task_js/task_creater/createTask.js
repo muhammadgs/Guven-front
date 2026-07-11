@@ -655,15 +655,20 @@ async function uploadFilesAndUpdateTask(taskId, taskType, files) {
             const formData = new FormData();
             formData.append('file', file);
 
-            // Audio faylını yoxla
-            const isAudio = file.type.startsWith('audio/') ||
-                           file.name.toLowerCase().includes('recording') ||
-                           file.name.toLowerCase().includes('səs');
+            // Mikrofon qeydini yoxla — YALNIZ ad markerinə görə.
+            // Localdan yüklənən audio (musiqi və s.) qeyd deyil, adi fayldır.
+            const fnLower = file.name.toLowerCase();
+            const isVoiceRecording = fnLower.includes('ses-qeydi') ||
+                                     fnLower.includes('səs-qeydi') ||
+                                     fnLower.includes('recording');
 
-            if (isAudio) {
+            if (isVoiceRecording) {
                 formData.append('category', 'audio_recording');
                 formData.append('is_audio_recording', 'true');
-                console.log(`🎤 Audio fayl yüklənir: ${file.name}`);
+                console.log(`🎤 Səs qeydi yüklənir: ${file.name}`);
+            } else if (file.type.startsWith('audio/')) {
+                formData.append('category', 'audio_file');
+                console.log(`🎵 Audio fayl yüklənir: ${file.name}`);
             } else {
                 formData.append('category', 'company_file');
             }

@@ -205,9 +205,12 @@ const FileUploadManager = {
             );
             const icon = `<i class="${iconDef.icon}" style="color:${iconDef.color}; font-size:20px;"></i>`;
 
+            // Yalnız mikrofon qeydləri üçün true — adi audio fayllar deyil
             const isAudio = file.is_audio_recording ||
-                           (file.mime_type && file.mime_type.startsWith('audio/')) ||
-                           !!fileNameLower.match(/\.(mp3|wav|ogg|m4a)$/);
+                           file.category === 'audio_recording' ||
+                           fileNameLower.includes('ses-qeydi') ||
+                           fileNameLower.includes('səs-qeydi') ||
+                           fileNameLower.includes('recording');
 
             filesHtml += `
                 <div class="file-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #e2e8f0;">
@@ -414,6 +417,7 @@ const FileUploadManager = {
      */
     fileTypes: {
         audio:      { label: 'Səs qeydi',        icon: 'fa-solid fa-microphone',      color: '#3b82f6' },
+        music:      { label: 'Audio faylı',      icon: 'fa-solid fa-music',           color: '#8b5cf6' },
         image:      { label: 'Şəkil',            icon: 'fa-solid fa-image',           color: '#3b82f6' },
         video:      { label: 'Video',            icon: 'fa-solid fa-video',           color: '#ef4444' },
         pdf:        { label: 'PDF faylı',        icon: 'fa-solid fa-file-pdf',        color: '#ef4444' },
@@ -425,7 +429,7 @@ const FileUploadManager = {
 
     /** Uzantı → tip xəritəsi (mime type məlum olmayanda ehtiyat yol) */
     _extensionMap: {
-        audio:      ['mp3', 'wav', 'ogg', 'oga', 'm4a', 'aac', 'flac', 'wma', 'opus', 'weba'],
+        music:      ['mp3', 'wav', 'ogg', 'oga', 'm4a', 'aac', 'flac', 'wma', 'opus', 'weba'],
         image:      ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tif', 'tiff', 'heic', 'heif', 'avif'],
         video:      ['mp4', 'mov', 'avi', 'mkv', 'webm', 'wmv', 'flv', 'm4v', 'mpg', 'mpeg', '3gp'],
         pdf:        ['pdf'],
@@ -463,9 +467,10 @@ const FileUploadManager = {
             return 'audio';
         }
 
-        // 2) Mime type — ən etibarlı mənbə
+        // 2) Mime type — ən etibarlı mənbə.
+        // Qeyd markeri olmayan audio = adi audio faylı (musiqi və s.)
         if (mt && mt !== 'application/octet-stream') {
-            if (mt.startsWith('audio/')) return 'audio';
+            if (mt.startsWith('audio/')) return 'music';
             if (mt.startsWith('image/')) return 'image';
             if (mt.startsWith('video/')) return 'video';
             if (mt === 'application/pdf' || mt.includes('pdf')) return 'pdf';
@@ -681,16 +686,21 @@ const FileUploadManager = {
             const formData = new FormData();
             formData.append('file', file);
 
-            // Audio qeydi olub-olmadığını yoxla
-            const isAudioRecording = file.name.includes('səs-qeydi') ||
-                                     file.name.includes('recording') ||
-                                     file.type.startsWith('audio/');
+            // Audio qeydi olub-olmadığını yoxla — YALNIZ ad markerinə görə.
+            // file.type audio/* olması kifayət deyil: localdan yüklənən musiqi
+            // faylı qeyd deyil, adi audio fayldır.
+            const fnLower = (file.name || '').toLowerCase();
+            const isAudioRecording = fnLower.includes('səs-qeydi') ||
+                                     fnLower.includes('ses-qeydi') ||
+                                     fnLower.includes('recording');
 
             // Kateqoriya təyin et — vahid tip deteksiyasından istifadə olunur
             const typeKey = this.detectFileTypeKey(file.type, file.name, isAudioRecording);
             let category = 'project_image';
             if (typeKey === 'audio') {
                 category = 'audio_recording';
+            } else if (typeKey === 'music') {
+                category = 'audio_file';
             } else if (typeKey === 'image') {
                 category = 'project_image';
             } else if (typeKey === 'video') {
@@ -1525,6 +1535,203 @@ FileUploadManager.removeModalFile = function(index) {
 };
 
 // ==================== PREVIEW FUNCTIONS ====================
+
+// Sənəd önizləməsi üçün CDN kitabxanaları (lazy yüklənir, yalnız lazım olanda)
+FileUploadManager.PREVIEW_LIBS = {
+    jszip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    docx:  'https://cdn.jsdelivr.net/npm/docx-preview@0.3.2/dist/docx-preview.min.js',
+    xlsx:  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+    pptx:  'https://cdn.jsdelivr.net/npm/pptx-preview@1.0.7/dist/pptx-preview.umd.js'
+};
+
+// Bundan böyük fayllar brauzerdə render edilmir — yükləmə təklif olunur
+FileUploadManager.MAX_PREVIEW_SIZE = 30 * 1024 * 1024;
+
+// Modal bağlananda azad ediləcək blob URL-ləri
+FileUploadManager._activeBlobUrls = [];
+
+/** Script-i bir dəfə yükləyir, təkrar çağırışlar eyni promise-i alır */
+FileUploadManager._scriptCache = {};
+FileUploadManager._loadScript = function(url) {
+    if (!this._scriptCache[url]) {
+        this._scriptCache[url] = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = url;
+            s.onload = () => resolve();
+            s.onerror = () => {
+                delete this._scriptCache[url];
+                reject(new Error('Kitabxana yüklənmədi: ' + url));
+            };
+            document.head.appendChild(s);
+        });
+    }
+    return this._scriptCache[url];
+};
+
+/** Faylı download endpointindən Blob kimi çəkir (token ilə) */
+FileUploadManager._fetchFileBlob = async function(fileId) {
+    const base = (window.apiService && window.apiService.baseUrl) || '/proxy.php';
+    const token = localStorage.getItem('guven_token') || '';
+    const url = `${base}/api/v1/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const resp = await fetch(url, { credentials: 'include', headers: headers });
+    if (!resp.ok) throw new Error(`Fayl alına bilmədi (HTTP ${resp.status})`);
+    return await resp.blob();
+};
+
+/**
+ * PDF / WORD / EXCEL / PPT fayllarını brauzerdə render edir.
+ * Fayl Blob kimi çəkilir, tipinə uyğun görüntüləyici ilə #uniDocViewer-ə yazılır.
+ * Hər hansı xəta halında istifadəçiyə mesaj + "Yüklə" düyməsi göstərilir.
+ */
+FileUploadManager._renderDocPreview = async function(type, fileId, filename, fileUrl) {
+    const container = document.getElementById('uniDocViewer');
+    if (!container) return;
+
+    const fail = (msg) => {
+        const c = document.getElementById('uniDocViewer');
+        if (!c) return;
+        c.style.display = 'flex';
+        c.innerHTML = `
+            <div style="text-align:center;padding:30px;color:#64748b;">
+                <i class="fas fa-exclamation-triangle" style="font-size:40px;color:#f59e0b;display:block;margin-bottom:14px;"></i>
+                <div style="font-size:14px;margin-bottom:20px;max-width:420px;">${FileUploadManager.escapeHtml(msg)}</div>
+                <a href="${fileUrl}" download="${FileUploadManager.escapeHtml(filename || 'fayl')}"
+                   style="background:#3b82f6;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:600;">
+                    <i class="fas fa-download"></i> Yüklə
+                </a>
+            </div>`;
+    };
+
+    try {
+        const ext = (filename || '').toLowerCase().split(/[?#]/)[0].split('.').pop();
+
+        // Köhnə binar formatlar brauzerdə render olunmur
+        if (type === 'word' && ext === 'doc') {
+            return fail('Köhnə .doc formatı brauzerdə göstərilə bilmir — faylı yükləyib Word-də açın.');
+        }
+        if (type === 'ppt' && ext === 'ppt') {
+            return fail('Köhnə .ppt formatı brauzerdə göstərilə bilmir — faylı yükləyib PowerPoint-də açın.');
+        }
+
+        const blob = await this._fetchFileBlob(fileId);
+
+        if (blob.size > this.MAX_PREVIEW_SIZE) {
+            return fail(`Fayl önizləmə üçün çox böyükdür (${this.formatFileSize(blob.size)}) — yükləyib baxın.`);
+        }
+
+        // İstifadəçi render bitməmiş modalı bağlaya bilər
+        if (!document.getElementById('uniDocViewer')) return;
+
+        if (type === 'pdf') {
+            const pdfBlob = blob.type === 'application/pdf'
+                ? blob
+                : new Blob([blob], { type: 'application/pdf' });
+            const blobUrl = URL.createObjectURL(pdfBlob);
+            this._activeBlobUrls.push(blobUrl);
+
+            container.style.display = 'block';
+            container.style.overflow = 'hidden';
+            container.innerHTML = `<iframe src="${blobUrl}" style="width:100%;height:100%;border:none;"></iframe>`;
+
+        } else if (type === 'word') {
+            await this._loadScript(this.PREVIEW_LIBS.jszip);
+            await this._loadScript(this.PREVIEW_LIBS.docx);
+
+            container.style.display = 'block';
+            container.style.background = '#e2e8f0';
+            container.innerHTML = '';
+            await window.docx.renderAsync(blob, container, null, {
+                inWrapper: true,
+                ignoreLastRenderedPageBreak: false
+            });
+
+        } else if (type === 'excel') {
+            await this._loadScript(this.PREVIEW_LIBS.xlsx);
+            const buf = await blob.arrayBuffer();
+            const wb = XLSX.read(buf, { type: 'array' });
+            this._renderWorkbook(wb, container);
+
+        } else if (type === 'ppt') {
+            await this._loadScript(this.PREVIEW_LIBS.pptx);
+            const buf = await blob.arrayBuffer();
+
+            container.style.display = 'block';
+            container.style.background = '#e2e8f0';
+            container.innerHTML = '';
+
+            const width = Math.min(container.clientWidth || 880, 920) - 24;
+            const previewer = window.pptxPreview.init(container, {
+                width: width,
+                height: Math.round(width * 0.5625)
+            });
+            await previewer.preview(buf);
+        }
+
+        console.log(`✅ ${type.toUpperCase()} önizləməsi hazırdır: ${filename}`);
+
+    } catch (e) {
+        console.error(`❌ ${type} önizləmə xətası:`, e);
+        fail('Önizləmə hazırlana bilmədi: ' + (e.message || 'naməlum xəta'));
+    }
+};
+
+/** Excel workbook-u vərəq tabları ilə HTML cədvəl kimi göstərir */
+FileUploadManager._renderWorkbook = function(wb, container) {
+    const MAX_ROWS = 1000;
+    const names = wb.SheetNames || [];
+
+    if (!names.length) {
+        container.style.display = 'flex';
+        container.innerHTML = '<div style="padding:30px;color:#64748b;">Cədvəl boşdur</div>';
+        return;
+    }
+
+    let truncated = false;
+    const sheetHtmls = names.map(name => {
+        const ws = wb.Sheets[name];
+        if (ws && ws['!ref']) {
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            if (range.e.r > MAX_ROWS) {
+                range.e.r = MAX_ROWS;
+                ws['!ref'] = XLSX.utils.encode_range(range);
+                truncated = true;
+            }
+        }
+        return XLSX.utils.sheet_to_html(ws || {}, { editable: false });
+    });
+
+    const tabsHtml = names.map((n, i) =>
+        `<button class="uni-sheet-tab${i === 0 ? ' active' : ''}" data-sheet="${i}">${this.escapeHtml(n)}</button>`
+    ).join('');
+
+    container.style.display = 'block';
+    container.innerHTML = `
+        <style>
+            #uniDocViewer table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 13px; }
+            #uniDocViewer td, #uniDocViewer th { border: 1px solid #e2e8f0; padding: 5px 10px; color: #1e293b; background: #fff; white-space: nowrap; }
+            #uniDocViewer tr:first-child td { background: #f1f5f9; font-weight: 600; }
+            #uniDocViewer .uni-sheet-tab { border: none; background: #e2e8f0; color: #334155; padding: 7px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 13px; font-weight: 600; margin-right: 4px; }
+            #uniDocViewer .uni-sheet-tab.active { background: #3b82f6; color: #fff; }
+        </style>
+        ${names.length > 1 ? `<div style="padding:10px 10px 0;position:sticky;top:0;background:#f8fafc;z-index:2;">${tabsHtml}</div>` : ''}
+        ${truncated ? `<div style="padding:6px 12px;font-size:12px;color:#b45309;background:#fef3c7;">Böyük cədvəl — hər vərəqdə ilk ${MAX_ROWS} sətir göstərilir</div>` : ''}
+        ${sheetHtmls.map((h, i) => `<div class="uni-sheet" data-sheet="${i}" style="padding:10px;overflow:auto;${i === 0 ? '' : 'display:none;'}">${h}</div>`).join('')}
+    `;
+
+    container.querySelectorAll('.uni-sheet-tab').forEach(btn => {
+        btn.onclick = () => {
+            container.querySelectorAll('.uni-sheet-tab').forEach(b => b.classList.toggle('active', b === btn));
+            container.querySelectorAll('.uni-sheet').forEach(d => {
+                d.style.display = d.dataset.sheet === btn.dataset.sheet ? 'block' : 'none';
+            });
+        };
+    });
+};
+
 FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAudioRecording = false) {
     try {
         console.log(`👁️ Fayl preview: ${fileId}`);
@@ -1580,16 +1787,22 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
             fn.match(/\.(ppt|pptx)$/);
 
         if (isAudio) {
-            this._openUniversalModal('audio', fileId, filename, fileUrl, mimeType);
+            // Mikrofon qeydi ilə adi audio faylını (musiqi və s.) ayır
+            const isRecording = isAudioRecording ||
+                fn.includes('ses-qeydi') || fn.includes('səs-qeydi') || fn.includes('recording');
+            this._openUniversalModal(isRecording ? 'audio' : 'music', fileId, filename, fileUrl, mimeType);
         } else if (isImage) {
             this._openUniversalModal('image', fileId, filename, fileUrl, mimeType);
         } else if (isVideo) {
             this._openUniversalModal('video', fileId, filename, fileUrl, mimeType);
         } else if (isPdf) {
             this._openUniversalModal('pdf', fileId, filename, fileUrl, mimeType);
-        } else if (isWord || isExcel || isPowerPoint) {
-            // Google Docs viewer ilə aç
-            this._openUniversalModal('office', fileId, filename, fileUrl, mimeType);
+        } else if (isWord) {
+            this._openUniversalModal('word', fileId, filename, fileUrl, mimeType);
+        } else if (isExcel) {
+            this._openUniversalModal('excel', fileId, filename, fileUrl, mimeType);
+        } else if (isPowerPoint) {
+            this._openUniversalModal('ppt', fileId, filename, fileUrl, mimeType);
         } else {
             // Naməlum — yenə də göstər, yükləmə linki ilə
             this._openUniversalModal('unknown', fileId, filename, fileUrl, mimeType);
@@ -1614,9 +1827,12 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
     let iconHtml = '';
     let titleText = '';
 
-    if (type === 'audio') {
-        titleText = 'Səs Qeydi';
-        iconHtml = '<i class="fas fa-microphone" style="color:#3b82f6;"></i>';
+    if (type === 'audio' || type === 'music') {
+        const isRec = type === 'audio';
+        titleText = isRec ? 'Səs Qeydi' : 'Audio faylı';
+        const audioIcon = isRec ? 'fa-microphone' : 'fa-music';
+        const audioColor = isRec ? '#3b82f6' : '#8b5cf6';
+        iconHtml = `<i class="fa-solid ${audioIcon}" style="color:${audioColor};"></i>`;
 
         // Mime type
         let audioMime = mimeType || 'audio/webm';
@@ -1628,10 +1844,10 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
         contentHtml = `
             <div style="text-align:center;padding:20px;">
                 <div style="margin-bottom:20px;">
-                    <i class="fas fa-microphone" style="font-size:56px;color:#3b82f6;"></i>
+                    <i class="fa-solid ${audioIcon}" style="font-size:56px;color:${audioColor};"></i>
                 </div>
                 <div style="font-weight:600;color:#334155;margin-bottom:20px;font-size:15px;">
-                    ${FileUploadManager.escapeHtml(filename || 'Səs qeydi')}
+                    ${FileUploadManager.escapeHtml(filename || (isRec ? 'Səs qeydi' : 'Audio faylı'))}
                 </div>
                 <audio controls style="width:100%;border-radius:12px;outline:none;" id="uniAudioPlayer">
                     <source src="${fileUrl}" type="${audioMime}">
@@ -1672,35 +1888,24 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
                 </video>
             </div>
         `;
-    } else if (type === 'pdf') {
-        titleText = 'PDF Sənəd';
-        iconHtml = '<i class="fas fa-file-pdf" style="color:#ef4444;"></i>';
+    } else if (type === 'pdf' || type === 'word' || type === 'excel' || type === 'ppt') {
+        // Sənəd önizləməsi — fayl Blob kimi çəkilir və brauzerdə render olunur.
+        // Backend "Content-Disposition: attachment" göndərdiyi üçün birbaşa iframe
+        // yükləməyə keçirdi; Google viewer isə private fayla girə bilmirdi.
+        const docMeta = {
+            pdf:   { title: 'PDF Sənəd',      icon: 'fa-file-pdf',        color: '#ef4444' },
+            word:  { title: 'WORD Sənədi',    icon: 'fa-file-word',       color: '#2563eb' },
+            excel: { title: 'EXCEL Cədvəli',  icon: 'fa-file-excel',      color: '#10b981' },
+            ppt:   { title: 'Təqdimat',       icon: 'fa-file-powerpoint', color: '#f97316' }
+        }[type];
+
+        titleText = docMeta.title;
+        iconHtml = `<i class="fas ${docMeta.icon}" style="color:${docMeta.color};"></i>`;
         contentHtml = `
-            <div style="height:65vh;">
-                <iframe src="${fileUrl}" 
-                        style="width:100%;height:100%;border:none;border-radius:4px;"
-                        id="uniPdfFrame">
-                </iframe>
-                <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:center;">
-                    PDF yüklənmirsə — 
-                    <a href="${fileUrl}" target="_blank" style="color:#3b82f6;">yeni pəncərədə aç</a>
-                </div>
-            </div>
-        `;
-    } else if (type === 'office') {
-        titleText = 'Sənəd';
-        iconHtml = '<i class="fas fa-file-word" style="color:#3b82f6;"></i>';
-        // Tam URL lazımdır Google Docs viewer üçün
-        const fullUrl = `${window.location.origin}${fileUrl}`;
-        const googleViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fullUrl)}&embedded=true`;
-        contentHtml = `
-            <div style="height:65vh;">
-                <iframe src="${googleViewerUrl}" 
-                        style="width:100%;height:100%;border:none;border-radius:4px;">
-                </iframe>
-                <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:center;">
-                    Sənəd yüklənmirsə — 
-                    <a href="${fileUrl}" download="${FileUploadManager.escapeHtml(filename || 'fayl')}" style="color:#3b82f6;">yüklə</a>
+            <div id="uniDocViewer" style="height:70vh;overflow:auto;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
+                <div style="text-align:center;color:#64748b;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:32px;color:#3b82f6;"></i>
+                    <div style="margin-top:12px;font-size:14px;">Önizləmə hazırlanır...</div>
                 </div>
             </div>
         `;
@@ -1736,7 +1941,7 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
                 background:white;
                 border-radius:16px;
                 width:100%;
-                max-width:${type === 'pdf' || type === 'office' ? '900px' : type === 'image' ? '800px' : '550px'};
+                max-width:${['pdf', 'word', 'excel', 'ppt'].includes(type) ? '960px' : type === 'image' ? '800px' : '550px'};
                 max-height:92vh;
                 display:flex;
                 flex-direction:column;
@@ -1792,8 +1997,13 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+    // Sənəd tipləri üçün asinxron render başlat
+    if (['pdf', 'word', 'excel', 'ppt'].includes(type)) {
+        FileUploadManager._renderDocPreview(type, fileId, filename, fileUrl);
+    }
+
     // Audio status yoxla
-    if (type === 'audio') {
+    if (type === 'audio' || type === 'music') {
         setTimeout(() => {
             const player = document.getElementById('uniAudioPlayer');
             const status = document.getElementById('uniAudioStatus');
@@ -2107,6 +2317,14 @@ FileUploadManager.closeModal = function(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.remove();
+    }
+
+    // Önizləmə modalı bağlananda blob URL-lərini azad et (yaddaş sızmasın)
+    if (modalId === 'universalPreviewModal' && this._activeBlobUrls && this._activeBlobUrls.length) {
+        this._activeBlobUrls.forEach(u => {
+            try { URL.revokeObjectURL(u); } catch (e) {}
+        });
+        this._activeBlobUrls = [];
     }
 };
 
