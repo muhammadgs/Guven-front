@@ -268,6 +268,7 @@ class UserReportModal {
             const d = this._withSelectedDateRange(
               this._buildUserData(employee, userTasks, performance, allEmployees, allTasks)
             );
+            d.taskTypes = fullData?.work_types || fullData?.task_types || [];
             this.currentUserData = d;
             this.allUsersData = allEmployees;
 

@@ -43,7 +43,7 @@
                     t.status === 'pending_approval' || t.status === 'approval_overdue'
                 ).length,
                 active_employees: new Set(tasks.map(t => t.assigned_to).filter(Boolean)).size,
-                active_companies: new Set(tasks.map(t => t.company_id).filter(Boolean)).size,
+                active_companies: new Set(tasks.map(t => t.target_company_id || t.company_id).filter(Boolean)).size,
             };
         };
 

@@ -238,12 +238,23 @@ class DashboardManager {
 
     async loadEmployees(forceRefresh = false) {
         try {
-            // Cache-dən yoxla
+            // Əgər məcburi yeniləmə yoxdursa, cache-dən yoxla
             if (!forceRefresh) {
                 const cached = this.getCache('employees');
                 if (cached) {
                     console.log('📦 İşçilər cache-dən yükləndi');
-                    this.employees = cached;
+                    // ✅ Cache-dən gələn məlumatları FILTR ET (təhlükəsizlik üçün)
+                    this.employees = cached.filter(emp => {
+                        // Aktivlik yoxlaması
+                        if (emp.is_active !== undefined) {
+                            return emp.is_active === true || emp.is_active === 1;
+                        }
+                        if (emp.status !== undefined) {
+                            return emp.status === 'active' || emp.status === 'approved';
+                        }
+                        // Heç bir aktivlik sahəsi yoxdursa, burax
+                        return true;
+                    });
                     localStorage.setItem('employeesCount', this.employees.length);
                     return;
                 }
@@ -253,9 +264,59 @@ class DashboardManager {
             console.log(`🌐 API: /users/company/${this.userCompanyCode}`);
 
             const employees = await this.apiService.get(`/users/company/${this.userCompanyCode}`);
-            this.employees = Array.isArray(employees) ? employees : [];
+            let allEmployees = Array.isArray(employees) ? employees : [];
 
-            // Hər bir işçi üçün created_at tarixini yoxla və adı düzgün formatla
+            // ========== ƏSAS FİLTR ==========
+            // YALNIZ aktiv işçiləri saxla
+            this.employees = allEmployees.filter(employee => {
+                // Bütün mümkün aktivlik sahələrini yoxla
+                const isActive =
+                    // is_active sahəsi
+                    (employee.is_active === true || employee.is_active === 1 || employee.is_active === '1') ||
+                    // status sahəsi
+                    (employee.status === 'active' || employee.status === 'approved' || employee.status === 'activated') ||
+                    // active sahəsi
+                    (employee.active === true || employee.active === 1) ||
+                    // is_deleted yoxlanışı (əgər varsa, aktiv olanlar)
+                    (employee.is_deleted === false || employee.is_deleted === 0 || employee.is_deleted === null) ||
+                    // deleted_at yoxlanışı
+                    (employee.deleted_at === null || employee.deleted_at === undefined || employee.deleted_at === '') ||
+                    // is_archived yoxlanışı
+                    (employee.is_archived === false || employee.is_archived === 0 || employee.is_archived === null);
+
+                // Aktivlik sahəsi yoxdursa, DEFAULT olaraq burax
+                const hasActiveField =
+                    employee.is_active !== undefined ||
+                    employee.status !== undefined ||
+                    employee.active !== undefined ||
+                    employee.is_deleted !== undefined ||
+                    employee.deleted_at !== undefined ||
+                    employee.is_archived !== undefined;
+
+                // Əgər aktivlik sahəsi yoxdursa, true qaytar (burax)
+                if (!hasActiveField) {
+                    console.warn('⚠️ Aktivlik sahəsi tapılmadı, işçi buraxılır:', employee.id || employee.email);
+                    return true;
+                }
+
+                return isActive;
+            });
+
+            console.log(`📊 Ümumi: ${allEmployees.length}, Aktiv: ${this.employees.length}, Deaktiv: ${allEmployees.length - this.employees.length}`);
+
+            // Deaktiv işçiləri göstər (debug üçün)
+            const inactiveEmployees = allEmployees.filter(emp => !this.employees.includes(emp));
+            if (inactiveEmployees.length > 0) {
+                console.log('🚫 Deaktiv işçilər:', inactiveEmployees.map(e => ({
+                    id: e.id,
+                    name: `${e.first_name || ''} ${e.last_name || ''}`.trim(),
+                    is_active: e.is_active,
+                    status: e.status,
+                    deleted_at: e.deleted_at
+                })));
+            }
+
+            // Adları formatla
             this.employees = this.employees.map(employee => {
                 const firstName = employee.first_name || employee.ceo_name || employee.name || '';
                 const lastName = employee.last_name || employee.ceo_lastname || employee.surname || '';
@@ -268,15 +329,7 @@ class DashboardManager {
                 };
             });
 
-            console.log(`👤 ${this.employees.length} işçi tapıldı`);
-            if (this.employees.length > 0) {
-                console.log('📝 Nümunə işçi:', {
-                    name: this.employees[0].full_name,
-                    created_at: this.employees[0].created_at
-                });
-            }
-
-            // Cache-lə
+            // Cache-lə (filtrlənmiş məlumatları)
             this.setCache('employees', this.employees, this.cacheTTL.employees);
             localStorage.setItem('employeesCount', this.employees.length);
 

@@ -223,7 +223,7 @@ class FilesUI {
                     <div class="p-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
                         <div class="relative mb-2">
                             <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-                            <input type="text" id="companySearch" placeholder="Şirkət və ya partnyor axtar..." 
+                            <input type="text" id="fileManagerCompanySearch" placeholder="Şirkət və ya partnyor axtar..." 
                                    class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all">
                         </div>
                         <select id="companyTypeFilter" class="w-full px-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all appearance-none cursor-pointer">
@@ -592,7 +592,7 @@ class FilesUI {
             this.closeCompanyPanel();
         });
 
-        document.getElementById('companySearch')?.addEventListener('input', (e) => {
+        document.getElementById('fileManagerCompanySearch')?.addEventListener('input', (e) => {
             this.companySearchTerm = e.target.value;
             this.renderCompaniesList();
         });

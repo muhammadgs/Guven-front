@@ -386,7 +386,7 @@ class CompaniesService {
                         <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Şirkətlər</span>
                         <p class="text-slate-500 mt-2">Bağlı şirkətlərinizin siyahısı</p>
                     </div>
-                    <button id="addCompanyByCodeBtn" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-medium flex items-center shadow-lg border-2 border-green-300" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <button id="addCompanyByCodeBtn" class="mr-20 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl transition font-medium flex items-center shadow-lg border-2 border-green-300" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <i class="fa-solid fa-plus-circle text-white text-lg mr-2"></i>
                         <span class="font-semibold">Yeni Şirkət Əlavə Et</span>
                     </button>

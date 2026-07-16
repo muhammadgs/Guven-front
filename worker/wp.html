@@ -190,7 +190,14 @@
 
 
             <!-- Sağ content - ID dəyişmir -->
-            <main class="h-full flex-1 rounded-3xl bg-white shadow-soft overflow-hidden">
+            <main class="h-full flex-1 rounded-3xl bg-white shadow-soft overflow-hidden relative">
+                
+                <!-- Bildiriş (Zınqrov) Düyməsi -->
+                <button class="absolute top-6 right-8 z-50 h-12 w-12 rounded-full bg-white shadow-md flex items-center justify-center text-brand-ink hover:text-brand-blue hover:bg-brand-soft transition-all duration-300 group hover:shadow-lg" id="notificationBellBtn" title="Bildirişlər">
+                    <i class="fa-regular fa-bell text-2xl transition-transform group-hover:scale-110"></i>
+                    <span class="absolute top-2.5 right-2.5 h-3 w-3 rounded-full bg-red-500 border-2 border-white"></span>
+                </button>
+
                 <div class="h-full overflow-y-auto p-8" id="profileContent">
 
                     <!-- GİRİŞ BÖLMƏSİ (Dashboard) -->

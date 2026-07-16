@@ -15,7 +15,7 @@ class FilesUI {
         this.viewMode = 'grid';
         this.companyViewMode = 'grid'; // Company panel üçün view mode
         this.activePanel = null;
-        this.companyCode = 'AZE26003';
+
         this.currentFolder = null;
         this.employees = [];
         this.departments = [];
@@ -34,6 +34,7 @@ class FilesUI {
         this.companySearchTerm = '';
         this.companyFilter = 'all';
         this.userCompanyCode = null;
+        this.userCompanyName = null;
 
         // Cache for folders
         this.foldersCache = new Map();
@@ -216,14 +217,14 @@ class FilesUI {
                                 <i class="fa-solid fa-rotate-right text-sm"></i>
                             </button>
                         </div>
-                        <p class="text-xs text-white/70 mt-1">Cari şirkət: ${this.userCompanyCode || 'AZE26003'}</p>
+                        
                     </div>
 
                     <!-- Axtarış və Filter -->
                     <div class="p-3 border-b border-gray-200 bg-white/50 backdrop-blur-sm">
                         <div class="relative mb-2">
                             <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-xs"></i>
-                            <input type="text" id="companySearch" placeholder="Şirkət və ya partnyor axtar..." 
+                            <input type="text" id="fileManagerCompanySearch" placeholder="Şirkət və ya partnyor axtar..." 
                                    class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all">
                         </div>
                         <select id="companyTypeFilter" class="w-full px-3 py-2 text-xs bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500 transition-all appearance-none cursor-pointer">
@@ -592,7 +593,7 @@ class FilesUI {
             this.closeCompanyPanel();
         });
 
-        document.getElementById('companySearch')?.addEventListener('input', (e) => {
+        document.getElementById('fileManagerCompanySearch')?.addEventListener('input', (e) => {
             this.companySearchTerm = e.target.value;
             this.renderCompaniesList();
         });
@@ -723,18 +724,63 @@ class FilesUI {
     }
 
     async loadUserCompanyCode() {
-        if (this.fileService?.getUserCompanyCode) {
-            this.userCompanyCode = this.fileService.getUserCompanyCode();
-        } else {
+        try {
             const userData = localStorage.getItem('userData');
             if (userData) {
                 const parsed = JSON.parse(userData);
-                this.userCompanyCode = parsed.user?.company_code || parsed.company_code || 'AZE26003';
+
+                // Şirkət kodunu təyin et
+                this.userCompanyCode = parsed.user?.company_code ||
+                                      parsed.company_code ||
+                                      parsed.user?.CompanyCode ||
+                                      null;
+
+                // Şirkət adını təyin et
+                this.userCompanyName = parsed.user?.company_name ||
+                                      parsed.company_name ||
+                                      parsed.user?.CompanyName ||
+                                      'Öz Şirkətim';
             } else {
-                this.userCompanyCode = 'AZE26003';
+                const tokenData = localStorage.getItem('guven_token_data');
+                if (tokenData) {
+                    const parsed = JSON.parse(tokenData);
+                    this.userCompanyCode = parsed.company_code || null;
+                    this.userCompanyName = parsed.company_name || 'Öz Şirkətim';
+                }
             }
+        } catch (error) {
+            console.warn('loadUserCompanyCode xətası:', error);
+            this.userCompanyCode = null;
+            this.userCompanyName = 'Öz Şirkətim';
         }
+
         console.log('🏢 User company code:', this.userCompanyCode);
+        console.log('🏢 User company name:', this.userCompanyName);
+
+        // 🔧 DÜZƏLDİ - class selector istifadə edin və ya id ilə
+        try {
+            // Metod 1: Class ilə
+            const headerElement = document.querySelector('.text-xs.text-white-70.mt-1');
+            if (headerElement) {
+                headerElement.textContent = `Cari şirkət: ${this.userCompanyName || this.userCompanyCode || 'Məlumat yoxdur'}`;
+            }
+
+            // Metod 2: İd ilə (əgər varsa)
+            const headerById = document.getElementById('companyPanelHeader');
+            if (headerById) {
+                headerById.textContent = `Cari şirkət: ${this.userCompanyName || this.userCompanyCode || 'Məlumat yoxdur'}`;
+            }
+
+            // Metod 3: Attribute selector ilə (daha təhlükəsiz)
+            const headerByAttr = document.querySelector('[data-company-header]');
+            if (headerByAttr) {
+                headerByAttr.textContent = `Cari şirkət: ${this.userCompanyName || this.userCompanyCode || 'Məlumat yoxdur'}`;
+            }
+        } catch (e) {
+            console.warn('Header yenilənə bilmədi:', e);
+        }
+
+        return this.userCompanyCode;
     }
 
     async loadCompaniesAndPartners() {
@@ -751,7 +797,8 @@ class FilesUI {
         `;
 
         try {
-            const companyCode = this.userCompanyCode || 'AZE26003';
+            const companyCode = this.userCompanyCode;
+            const companyName = this.userCompanyName;
             console.log('🏢 User company code:', companyCode);
 
             const token = localStorage.getItem('guven_token');
@@ -759,7 +806,7 @@ class FilesUI {
             const ownCompany = {
                 id: 'own_' + companyCode,
                 uuid: companyCode,
-                name: '🏢 Öz Şirkətim',
+                name: companyName ||'🏢 Öz Şirkətim',
                 code: companyCode,
                 type: 'company',
                 is_active: true,
@@ -834,7 +881,7 @@ class FilesUI {
                 .map(p => ({
                     id: p.parent_company?.uuid || p.parent_company_id || `partner_${Math.random()}`,
                     uuid: p.parent_company?.uuid || p.parent_company_id,
-                    name: p.parent_company?.company_name || p.parent_company_name || 'Adsız Partnyor',
+                    name: p.parent_company?.company_name || p.parent_company_name ,
                     code: p.parent_company_code || '',
                     type: 'partner',
                     is_active: p.status !== 'deactivated'
@@ -848,10 +895,10 @@ class FilesUI {
         } catch (error) {
             console.error('❌ loadCompaniesAndPartners xətası:', error);
             this.companies = [{
-                id: 'own_' + (this.userCompanyCode || 'AZE26003'),
-                uuid: this.userCompanyCode || 'AZE26003',
-                name: '🏢 Öz Şirkətim',
-                code: this.userCompanyCode || 'AZE26003',
+                id: 'own_' + (this.userCompanyCode),
+                uuid: this.userCompanyCode,
+                name: this.userCompanyName || '🏢 Öz Şirkətim',
+                code: this.userCompanyCode,
                 type: 'company',
                 is_own: true
             }];

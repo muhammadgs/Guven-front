@@ -277,7 +277,7 @@ class PermissionsService {
                         <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Departament və İş Növləri</span>
                         <p class="text-slate-500 mt-2">Departamentlər üzrə iş növlərinin idarə edilməsi</p>
                     </div>
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 mr-20">
                         <button id="addDepartmentBtn" class="px-4 py-2 bg-brand-blue text-white rounded-xl hover:bg-blue-600 transition flex items-center gap-2">
                             <i class="fa-solid fa-plus"></i> Yeni Departament
                         </button>

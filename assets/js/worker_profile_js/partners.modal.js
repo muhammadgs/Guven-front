@@ -277,7 +277,7 @@ class PartnersService {
                         <span class="text-sm font-semibold uppercase tracking-widest text-brand-blue">Partnyorlar</span>
                         <p class="text-slate-500 mt-2">Partnyor şirkətlərinin siyahısı</p>
                     </div>
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 mr-20">
                         <button id="addPartnerBtn" class="px-4 py-2 bg-brand-blue text-white rounded-xl hover:bg-blue-600 transition flex items-center gap-2">
                             <i class="fa-solid fa-plus"></i> Yeni Partnyor
                         </button>

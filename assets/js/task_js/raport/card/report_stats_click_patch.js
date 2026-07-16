@@ -494,66 +494,84 @@
         if (!rm) return;
 
         /* ── Company ── */
-        const origCompany = rm.updateCompanyStats.bind(rm);
         rm.updateCompanyStats = function () {
-            origCompany();
+            const companies = this.data.companies || [];
+            const tasks = this.data.tasks || [];
             const listEl = this.elements.companyStats;
             if (!listEl) return;
 
-            const companies = this.data.companies || [];
-            // Metadata-nı parse et — hər updateStats çağrısında
-            enrichTasksWithMetadata(this.data.tasks || []);
+            enrichTasksWithMetadata(tasks);
+
+            // Unique companies
+            const uniqueCompanies = [];
+            const seenIds = new Set();
+            companies.forEach(c => {
+                if (!seenIds.has(c.id)) { seenIds.add(c.id); uniqueCompanies.push(c); }
+            });
+
+            // Correct task counts: use target_company_id || company_id
+            const totalTasks = tasks.length;
+            const counts = {};
+            const completedCounts = {};
+            tasks.forEach(t => {
+                const eid = t.target_company_id || t.company_id;
+                if (eid) {
+                    counts[eid] = (counts[eid] || 0) + 1;
+                    if (t.status === 'completed') completedCounts[eid] = (completedCounts[eid] || 0) + 1;
+                }
+            });
+
+            let html = '';
+            uniqueCompanies.forEach(c => {
+                const cid = c.id;
+                const cname = c.company_name || c.name || '';
+                const ccode = c.company_code || c.code || '';
+                const taskCount = counts[cid] || 0;
+                const completedCount = completedCounts[cid] || 0;
+                const pct = totalTasks ? Math.round((taskCount / totalTasks) * 100) : 0;
+                const complPct = taskCount ? Math.round((completedCount / taskCount) * 100) : 0;
+                let avatarColor = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+                if (c.relationship_type === 'parent') avatarColor = 'linear-gradient(135deg, #8b5cf6, #6366f1)';
+                else if (c.relationship_type === 'child') avatarColor = 'linear-gradient(135deg, #10b981, #059669)';
+                html += `<div class="stat-item" onclick="reportManager.showCompanyDetails(${cid})">
+                    <div class="stat-avatar" style="background:${avatarColor};">${cname.charAt(0).toUpperCase()}</div>
+                    <div class="stat-info">
+                        <span class="stat-name">${esc(cname)}</span>
+                        <span class="stat-code">${esc(ccode)}</span>
+                        <div class="stat-progress">
+                            <div class="progress-sm">
+                                <div class="progress-sm-fill" style="width:${pct}%"></div>
+                            </div>
+                            <span class="stat-count">${taskCount} task</span>
+                            <span class="stat-percent">${complPct}% tamam</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            listEl.innerHTML = html;
 
             listEl.querySelectorAll('.stat-item').forEach(item => {
                 addHoverStyle(item);
                 item.addEventListener('click', () => {
                     const name = (item.querySelector('.stat-name') || {}).textContent?.trim() || '';
-
-                    // onclick attr-dan id-ni oxu
                     const onclickAttr = item.getAttribute('onclick') || '';
                     const idMatch = onclickAttr.match(/showCompanyDetails\((\d+)\)/);
                     const companyId = idMatch ? idMatch[1] : null;
-
                     const company = companyId
                         ? companies.find(c => String(c.id) === companyId)
                         : companies.find(c => (c.company_name || c.name || '') === name);
-
-                    const cname = company
-                        ? (company.company_name || company.name || name)
-                        : name;
+                    const cname = company ? (company.company_name || company.name || name) : name;
                     const cid = company ? String(company.id) : companyId;
 
-                    const tasks = this.data.tasks || [];
-
                     const filteredTasks = tasks.filter(t => {
-                        // 1) metadata-dan parse edilmiş target_company_name ilə müqayisə
-                        //    (Socarrr-ın Azersud adına yaratdığı task burda tapılır)
-                        if (t.target_company_name && t.target_company_name === cname)
-                            return true;
-                        // 2) birbaşa company_name ilə
-                        if (t.company_name && t.company_name === cname)
-                            return true;
-                        // 3) id ilə (hər iki case)
+                        if (t.target_company_name && t.target_company_name === cname) return true;
+                        if (t.company_name && t.company_name === cname) return true;
                         if (cid) {
-                            if (t.target_company_id && String(t.target_company_id) === cid)
-                                return true;
-                            if (t.company_id && String(t.company_id) === cid)
-                                return true;
+                            if (t.target_company_id && String(t.target_company_id) === cid) return true;
+                            if (t.company_id && String(t.company_id) === cid) return true;
                         }
                         return false;
                     });
-
-                    console.log(`[StatClick] Şirkət: "${cname}" id=${cid} → ${filteredTasks.length} task`);
-                    if (!filteredTasks.length && tasks.length) {
-                        console.log('[StatClick] task[0] fields:', Object.keys(tasks[0]));
-                        console.log('[StatClick] task[0].metadata:', tasks[0].metadata);
-                        console.log('[StatClick] task[0] after enrich:', {
-                            company_name: tasks[0].company_name,
-                            target_company_name: tasks[0].target_company_name,
-                            company_id: tasks[0].company_id,
-                            target_company_id: tasks[0].target_company_id
-                        });
-                    }
 
                     openStatTasks(filteredTasks, `${cname} — Tasklar`, 'blue');
                 });

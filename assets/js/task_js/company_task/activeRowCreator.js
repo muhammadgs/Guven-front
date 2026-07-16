@@ -676,7 +676,7 @@ function _buildEditButton(taskId, canEdit, isFlex = false) {
     return `
         <button class="btn-edit-task" data-edit-btn="${taskId}"
                 onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə"
-                ${isFlex ? 'style="flex:1; justify-content:center;"' : ''}>
+                ${isFlex ? 'style="flex:1; justify-content:center;"' : 'style="flex:0.35 1 auto; justify-content:center;"'}>
             <i class="fa-solid fa-pen"></i>
         </button>
     `;
@@ -705,7 +705,7 @@ function buildApprovalOverdueHTML(taskId, delayHours, isAssignedToMe, isCreatedB
                     <button class="btn-reject-approval" data-reject-btn="${taskId}" onclick="handleTaskRejectApproval(${taskId})" style="flex:1; justify-content:center;">
                         <i class="fas fa-times"></i> İmtina
                     </button>
-                    ${_buildEditButton(taskId, canEdit, true)}
+                    ${_buildEditButton(taskId, canEdit)}
                 </div>
             </div>`;
     }

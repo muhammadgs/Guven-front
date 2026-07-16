@@ -1571,46 +1571,44 @@ class ReportManager {
 
     updateMonthlyChart() {
         const ctx = document.getElementById('monthlyTrendChart')?.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+            console.warn('monthlyTrendChart elementi tapılmadı');
+            return;
+        }
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js yüklənməyib — CDN linkini yoxlayın');
+            return;
+        }
 
         const monthlyData = this.data.monthlyTrend || [];
         const months = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'İyn', 'İyl', 'Avq', 'Sen', 'Okt', 'Noy', 'Dek'];
-
-        const completedData = months.map((_, index) => {
-            const monthData = monthlyData.find(m => m.month === index + 1);
-            return monthData ? monthData.completed_tasks : 0;
+        const getData = field => months.map((_, i) => {
+            const m = monthlyData.find(d => d.month === i + 1);
+            return m ? (m[field] || 0) : 0;
         });
 
-        const pendingData = months.map((_, index) => {
-            const monthData = monthlyData.find(m => m.month === index + 1);
-            return monthData ? monthData.pending_tasks : 0;
-        });
+        if (this.charts.monthly) this.charts.monthly.destroy();
 
-        const overdueData = months.map((_, index) => {
-            const monthData = monthlyData.find(m => m.month === index + 1);
-            return monthData ? monthData.overdue_tasks : 0;
-        });
-
-        if (this.charts.monthly) {
-            this.charts.monthly.destroy();
+        try {
+            this.charts.monthly = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'Tamamlanan', data: getData('completed_tasks'), borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 3, tension: 0.4, fill: true },
+                        { label: 'Gözləmədə', data: getData('pending_tasks'), borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderWidth: 3, tension: 0.4, fill: true },
+                        { label: 'Müddəti keçən', data: getData('overdue_tasks'), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 3, tension: 0.4, fill: true }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        } catch (error) {
+            console.error('Qrafik yaradılarkən xəta:', error);
         }
-
-        this.charts.monthly = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [
-                    { label: 'Tamamlanan', data: completedData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', borderWidth: 3, tension: 0.4, fill: true },
-                    { label: 'Gözləmədə', data: pendingData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', borderWidth: 3, tension: 0.4, fill: true },
-                    { label: 'Müddəti keçən', data: overdueData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 3, tension: 0.4, fill: true }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } }
-            }
-        });
     }
 
     updatePieChart() {

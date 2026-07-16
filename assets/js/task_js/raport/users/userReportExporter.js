@@ -41,7 +41,8 @@ const UserReportExporter = (() => {
             rejected: 'İmtina',
             cancelled: 'Ləğv edildi',
             canceled: 'Ləğv edildi',
-            waiting_approval: 'Təsdiq gözləyir'
+            waiting_approval: 'Təsdiq gözləyir',
+            waiting: 'Gözləmədə'
         };
 
         return map[status] || status || '-';
@@ -518,6 +519,23 @@ const UserReportExporter = (() => {
         const companyCode = emp.company_code || '';
         const period = getReportPeriod(d);
 
+        const pad0 = n => n.toString().padStart(2, '0');
+        const now = new Date();
+        const currentDateStr = `${pad0(now.getDate())}-${pad0(now.getMonth()+1)}-${now.getFullYear()}`;
+        
+        let dateStr = currentDateStr;
+        if (period.start !== '-' && period.end !== '-') {
+            dateStr = period.start === period.end ? period.start : `${period.start}_${period.end}`;
+        } else if (period.start !== '-') {
+            dateStr = period.start;
+        } else if (period.end !== '-') {
+            dateStr = period.end;
+        }
+        dateStr = dateStr.replace(/[\/\\:]/g, '-');
+
+        const printFileName = `${name} ${dateStr} Hesabat`.replace(/["']/g, '');
+
+
         const months = ['Yan','Fev','Mar','Apr','May','İyn','İyl','Avq','Sen','Okt','Noy','Dek'];
 
         const monthlyRows = Object.entries(d.monthlyMap)
@@ -527,10 +545,10 @@ const UserReportExporter = (() => {
                 const rate   = v.total ? Math.round(v.completed/v.total*100) : 0;
                 return `
                 <tr>
-                    <td>${months[parseInt(m)-1]} ${y}</td>
-                    <td class="num">${v.total}</td>
-                    <td class="num">${v.completed}</td>
-                    <td class="num">${rate}%</td>
+                    <td style="text-align: left;">${months[parseInt(m)-1]} ${y}</td>
+                    <td style="text-align: center;">${v.total}</td>
+                    <td style="text-align: center;">${v.completed}</td>
+                    <td style="text-align: center;">${rate}%</td>
                 </tr>`;
             }).join('');
 
@@ -552,7 +570,7 @@ const UserReportExporter = (() => {
                     t.description,
                     t.details,
                     t.content
-                ), 70)}</td>
+                ), 300)}</td>
                 <td class="text-cell">${shortText(firstValue(
                     t.notes,
                     t.note,
@@ -566,7 +584,7 @@ const UserReportExporter = (() => {
                     t.completion_note,
                     t.rejection_reason,
                     t.cancel_reason
-                ), 70)}</td>
+                ), 150)}</td>
                 <td>${statusLabelAz(t.status)}</td>
                 <td>${fmtDate(firstValue(
                     t.assigned_at,
@@ -593,21 +611,21 @@ const UserReportExporter = (() => {
             </tr>`;
         }).join('');
 
-        const comparisonRows = d.peersData.slice(0, 15).map((p, i) => `
+        const comparisonRows = d.peersData.slice(0, 10).map((p, i) => `
             <tr ${p.isCurrent ? 'class="highlight"' : ''}>
-                <td class="num">${i+1}</td>
-                <td>${p.name}${p.isCurrent ? ' <strong>(Siz)</strong>' : ''}</td>
-                <td>${p.department}</td>
-                <td class="num">${p.total}</td>
-                <td class="num">${p.completed}</td>
-                <td class="num">${p.rate}%</td>
+                <td style="text-align: center;">${i+1}</td>
+                <td style="text-align: left;">${p.name}${p.isCurrent ? ' <strong>(Siz)</strong>' : ''}</td>
+                <td style="text-align: left;">${p.department}</td>
+                <td style="text-align: center;">${p.total}</td>
+                <td style="text-align: center;">${p.completed}</td>
+                <td style="text-align: center;">${p.rate}%</td>
             </tr>`).join('');
 
         const html = `<!DOCTYPE html>
 <html lang="az">
 <head>
 <meta charset="UTF-8">
-<title> </title>
+<title>${printFileName}</title>
 <style>
     @page {
         size: A4 landscape;
@@ -677,11 +695,20 @@ const UserReportExporter = (() => {
         margin-bottom: 20px;
         overflow: hidden;
     }
-    .pdf-header-title {
+    .pdf-header-title-container {
         position: absolute;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .pdf-header-title {
         color: #ffffff;
         font-size: 24px;
         font-weight: 800;
@@ -689,8 +716,12 @@ const UserReportExporter = (() => {
         text-align: center;
         white-space: nowrap;
         line-height: 1.1;
-        pointer-events: none;
-        z-index: 1;
+    }
+    .report-period-center {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 11px;
+        margin-top: 4px;
+        font-weight: normal;
     }
     .profile-area {
         position: relative;
@@ -725,29 +756,55 @@ const UserReportExporter = (() => {
     /* KPI GRID */
     .kpi-grid {
         display: grid; grid-template-columns: repeat(5,1fr);
-        gap: 10px; margin-bottom: 20px;
+        gap: 6px; margin-bottom: 12px;
     }
     .kpi-card {
         background: #f8fafc; border: 1px solid #e2e8f0;
-        border-radius: 8px; padding: 12px; text-align: center;
+        border-radius: 6px; padding: 6px 4px; text-align: center;
     }
-    .kpi-val  { font-size: 22px; font-weight: 700; color: #0f172a; }
-    .kpi-lbl  { font-size: 10px; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .kpi-sub  { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .kpi-val  { font-size: 16px; font-weight: 700; color: #0f172a; }
+    .kpi-lbl  { font-size: 8.5px; color: #64748b; margin-top: 1px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .kpi-sub  { font-size: 9px; color: #94a3b8; margin-top: 1px; }
 
     /* SECTION */
-    .section { margin-bottom: 24px; }
+    .section { margin-bottom: 12px; }
     .section-title {
-        font-size: 13px; font-weight: 700; color: #1d4ed8;
-        border-bottom: 2px solid #3b82f6; padding-bottom: 5px;
-        margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+        font-size: 11.5px; font-weight: 700; color: #1d4ed8;
+        border-bottom: 2.5px solid #3b82f6; padding-bottom: 3px;
+        margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
     }
 
     /* TABLE */
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: #1e40af; color: #fff; padding: 7px 8px; text-align: left;
-         font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
-    td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    th { background: #1e40af; color: #fff; padding: 5px 8px; text-align: left;
+         font-weight: 700; font-size: 10px; letter-spacing: 0.3px; }
+    td { padding: 4px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .report-grid-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 11px;
+    }
+    .report-grid-table th,
+    .report-grid-table td {
+        border-right: 1px solid rgba(0, 0, 0, 0.45);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+        padding: 5px 8px;
+        vertical-align: middle;
+    }
+    .report-grid-table th:first-child,
+    .report-grid-table td:first-child {
+        border-left: 1px solid rgba(0, 0, 0, 0.45);
+    }
+    .report-grid-table thead th {
+        border-top: 1px solid rgba(0, 0, 0, 0.45);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.55);
+        background: #1e40af;
+        color: #fff;
+        font-weight: 700;
+    }
+    .report-grid-table tbody tr:last-child td {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+    }
     .task-table {
         width: 100%;
         table-layout: fixed;
@@ -777,17 +834,17 @@ const UserReportExporter = (() => {
     .task-table tbody tr:last-child td {
         border-bottom: 1px solid rgba(0, 0, 0, 0.45);
     }
-    .task-table .col-num { width: 3%; text-align: center; }
-    .task-table .col-task { width: 15%; }
+    .task-table .col-num { width: 2.5%; text-align: center; }
+    .task-table .col-task { width: 11.5%; }
     .task-table .col-type { width: 9%; }
-    .task-table .col-desc { width: 13%; }
-    .task-table .col-notes { width: 11%; }
-    .task-table .col-status { width: 8%; }
-    .task-table .col-assigned { width: 8%; }
-    .task-table .col-due { width: 8%; }
-    .task-table .col-duration { width: 8%; }
-    .task-table .col-salary { width: 8%; }
-    .task-table .col-result { width: 9%; }
+    .task-table .col-desc { width: 40%; }
+    .task-table .col-notes { width: 8%; }
+    .task-table .col-status { width: 5.5%; }
+    .task-table .col-assigned { width: 5.5%; }
+    .task-table .col-due { width: 5.5%; }
+    .task-table .col-duration { width: 4%; }
+    .task-table .col-salary { width: 4.5%; }
+    .task-table .col-result { width: 4%; }
     .task-table .num { text-align: center; }
     .task-table .text-cell {
         line-height: 1.35;
@@ -895,12 +952,16 @@ const UserReportExporter = (() => {
         .pdf-print-root,
         .report-print-root {
             margin: 0 !important;
-            padding: 12mm !important;
+            padding: 12mm 12mm 0 12mm !important;
             transform: none !important;
             width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
             overflow: visible !important;
+        }
+
+        .pdf-footer {
+            display: none !important;
         }
 
         .report-header,
@@ -972,10 +1033,6 @@ const UserReportExporter = (() => {
             border-bottom-color: #3b82f6 !important;
         }
 
-        .employee-comparison-section {
-            border-bottom: none !important;
-        }
-
         .employee-comparison-section::after {
             display: none !important;
             content: none !important;
@@ -987,14 +1044,6 @@ const UserReportExporter = (() => {
             height: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
-        }
-
-        .employee-comparison-section table {
-            border-bottom: none !important;
-        }
-
-        .employee-comparison-section table tbody tr:last-child td {
-            border-bottom: none !important;
         }
 
         .employee-comparison-section + .task-list-section,
@@ -1013,12 +1062,10 @@ const UserReportExporter = (() => {
         .print-task-list-section,
         .report-task-list-section,
         .pdf-task-list-section {
-            break-before: page !important;
-            page-break-before: always !important;
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
+            break-inside: auto !important;
+            page-break-inside: auto !important;
             border-top: 0 !important;
-            margin-top: 0 !important;
+            margin-top: 20px !important;
         }
 
         .task-list-section .section-title,
@@ -1097,14 +1144,15 @@ const UserReportExporter = (() => {
         <div class="user-info">
             <h1>${name}</h1>
             <p>${position} &nbsp;|&nbsp; ${department} &nbsp;|&nbsp; ${companyCode}</p>
-            <p class="report-period" style="margin-top:4px;">Hesabat dövrü: <strong>${period.start} — ${period.end}</strong></p>
         </div>
     </div>
-    <div class="pdf-header-title">Tapşırıqların hesabatı</div>
+    <div class="pdf-header-title-container">
+        <div class="pdf-header-title">Tapşırıqların hesabatı</div>
+        <div class="report-period-center">Hesabat dövrü: <strong>${period.start} — ${period.end}</strong></div>
+    </div>
     <div class="logo-area report-logo pdf-logo gf44-logo gf44-report-logo">
         <div class="gf44-icon">
             GF44
-            <small>Professional Report</small>
         </div>
     </div>
 </div>
@@ -1130,8 +1178,15 @@ const UserReportExporter = (() => {
 ${monthlyRows ? `
 <div class="section">
     <div class="section-title">📅 Aylıq performans</div>
-    <table>
-        <thead><tr><th>Ay</th><th>Ümumi</th><th>Tamamlanan</th><th>Tamamlanma %</th></tr></thead>
+    <table class="report-grid-table">
+        <thead>
+            <tr>
+                <th style="width: 25%; text-align: left;">Ay</th>
+                <th style="width: 25%; text-align: center;">Ümumi</th>
+                <th style="width: 25%; text-align: center;">Tamamlanan</th>
+                <th style="width: 25%; text-align: center;">Tamamlanma %</th>
+            </tr>
+        </thead>
         <tbody>${monthlyRows}</tbody>
     </table>
 </div>` : ''}
@@ -1139,9 +1194,18 @@ ${monthlyRows ? `
 <!-- MÜQAYİSƏ -->
 ${comparisonRows ? `
 <div class="section employee-comparison-section">
-    <div class="section-title">🏆 Əməkdaşlar arasında müqayisə (İlk 15)</div>
-    <table>
-        <thead><tr><th>Yer</th><th>Əməkdaş</th><th>Şöbə</th><th>Ümumi</th><th>Tamamlanan</th><th>%</th></tr></thead>
+    <div class="section-title">🏆 Əməkdaşlar arasında müqayisə (İlk 10)</div>
+    <table class="report-grid-table">
+        <thead>
+            <tr>
+                <th style="width: 8%; text-align: center;">Yer</th>
+                <th style="width: 32%; text-align: left;">Əməkdaş</th>
+                <th style="width: 24%; text-align: left;">Şöbə</th>
+                <th style="width: 12%; text-align: center;">Ümumi</th>
+                <th style="width: 12%; text-align: center;">Tamamlanan</th>
+                <th style="width: 12%; text-align: center;">%</th>
+            </tr>
+        </thead>
         <tbody>${comparisonRows}</tbody>
     </table>
     <p class="employee-comparison-note" style="font-size:11px; color:#64748b; margin-top:8px; text-align:center;">Mavi sətir bu əməkdaşı göstərir. Reytinq tamamlanan tapşırıq sayına görədir.</p>
@@ -1177,42 +1241,57 @@ ${comparisonRows ? `
 </div>
 
 <script>
-    document.title = ' ';
+    const reportFileName = '${printFileName}';
+    document.title = reportFileName;
+    window.addEventListener('DOMContentLoaded', function() {
+        document.title = reportFileName;
+    });
+    window.addEventListener('load', function() {
+        document.title = reportFileName;
+    });
     function printTaskReport() {
-        const openerDocument = window.opener && window.opener.document ? window.opener.document : null;
-        const previousTitle = openerDocument ? openerDocument.title : '';
+        document.title = reportFileName;
 
-        document.title = ' ';
-        if (openerDocument) {
-            openerDocument.title = ' ';
-        }
+        setTimeout(function() {
+            document.title = reportFileName;
+            window.focus();
+            window.print();
 
-        window.focus();
-        window.print();
-
-        setTimeout(() => {
-            document.title = ' ';
-            if (openerDocument) {
-                openerDocument.title = previousTitle;
-            }
-        }, 800);
+            setTimeout(function() {
+                document.title = reportFileName;
+            }, 500);
+        }, 200);
     }
 </script>
 </body>
 </html>`;
 
         const previousTitle = document.title;
-        document.title = ' ';
+        document.title = printFileName;
 
         const win = window.open('', '_blank');
         win.document.open();
         win.document.write(html);
         win.document.close();
-        win.document.title = ' ';
+        win.document.title = printFileName;
 
+        // Ensure title sticks after browser finishes processing
         setTimeout(() => {
+            if (win && !win.closed) {
+                win.document.title = printFileName;
+            }
+        }, 300);
+        setTimeout(() => {
+            if (win && !win.closed) {
+                win.document.title = printFileName;
+            }
+        }, 600);
+        setTimeout(() => {
+            if (win && !win.closed) {
+                win.document.title = printFileName;
+            }
             document.title = previousTitle;
-        }, 800);
+        }, 1000);
     }
 
     /* ==========================================
