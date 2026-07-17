@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guven Board</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto:wght@400;700&family=Montserrat:wght@400;700&family=Lora:ital,wght@0,400;0,700&family=Caveat:wght@400;700&family=Permanent+Marker&display=swap">
+    <link rel="stylesheet" href="../assets/css/board_css/board.css?v=2">
+</head>
+<body>
+
+    <header class="board-header">
+        <div class="header-left">
+            <a href="../dashboard.html" class="back-btn" title="Panelə qayıt">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <input type="text" id="boardName" value="Adsız board" maxlength="120" spellcheck="false">
+            <span class="save-status" id="saveStatus"></span>
+        </div>
+        <div class="header-right">
+            <button class="hdr-btn" id="myBoardsBtn">
+                <i class="fas fa-folder-open"></i>
+                <span>Boardlarım</span>
+            </button>
+            <button class="hdr-btn" id="newBoardBtn">
+                <i class="fas fa-plus"></i>
+                <span>Yeni</span>
+            </button>
+            <button class="hdr-btn primary" id="saveBtn">
+                <i class="fas fa-save"></i>
+                <span>Saxla</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="board-shell">
+        <div id="boardStage" class="board-stage"></div>
+
+        <!-- Alət paneli -->
+        <aside class="tool-sidebar" id="toolSidebar">
+            <button class="tool-btn active" data-tool="select" title="Seçim / Gəzinmə (V)">
+                <i class="fas fa-mouse-pointer"></i>
+            </button>
+            <button class="tool-btn" data-tool="sticky" title="Sticky note (N)">
+                <i class="fas fa-sticky-note"></i>
+            </button>
+            <div class="tool-divider"></div>
+            <button class="tool-btn" data-tool="text" title="Mətn (T)">
+                <i class="fas fa-font"></i>
+            </button>
+            <button class="tool-btn" data-tool="pen" title="Qələm (P)">
+                <i class="fas fa-pen"></i>
+            </button>
+            <button class="tool-btn" data-tool="shapes" title="Fiqurlar (S)">
+                <i class="fas fa-shapes"></i>
+            </button>
+        </aside>
+
+        <!-- Sticky rəng paleti -->
+        <div class="sticky-palette hidden" id="stickyPalette"></div>
+
+        <!-- Fiqur menyusu -->
+        <div class="shapes-menu hidden" id="shapesMenu"></div>
+
+        <!-- Qələm rəng / qalınlıq paneli -->
+        <div class="pen-panel hidden" id="penPanel"></div>
+
+        <!-- Zoom paneli -->
+        <div class="zoom-bar">
+            <button id="zoomOut" title="Uzaqlaşdır">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button id="zoomLabel" title="100%-ə qaytar">100%</button>
+            <button id="zoomIn" title="Yaxınlaşdır">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button id="zoomFit" title="Hamısını göstər">
+                <i class="fas fa-expand"></i>
+            </button>
+        </div>
+
+        <!-- Undo / Redo -->
+        <div class="history-bar">
+            <button id="undoBtn" title="Geri al (Ctrl+Z)" disabled>
+                <i class="fas fa-undo"></i>
+            </button>
+            <button id="redoBtn" title="İrəli (Ctrl+Y)" disabled>
+                <i class="fas fa-redo"></i>
+            </button>
+        </div>
+
+        <!-- Kontekst toolbar (seçilmiş element üzərində) -->
+        <div id="contextToolbar" class="context-toolbar hidden"></div>
+
+        <!-- Mətn redaktəsi üçün overlay -->
+        <div id="textEditOverlay"></div>
+
+        <!-- Toast -->
+        <div class="toast hidden" id="toast"></div>
+    </div>
+
+    <!-- Boardlarım modalı -->
+    <div class="board-modal hidden" id="boardsModal">
+        <div class="board-modal-content">
+            <div class="board-modal-header">
+                <h3>Boardlarım</h3>
+                <button class="board-modal-close" id="closeBoardsModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="boards-list" id="boardsList"></div>
+        </div>
+    </div>
+
+    <!-- Konva -->
+    <script src="https://unpkg.com/konva@9.3.14/konva.min.js"></script>
+
+    <!-- Board modulları -->
+    <script src="../assets/js/board_js/board-config.js?v=2"></script>
+    <script src="../assets/js/board_js/board-shapes.js?v=2"></script>
+    <script src="../assets/js/board_js/board-state.js?v=2"></script>
+    <script src="../assets/js/board_js/board-history.js?v=2"></script>
+    <script src="../assets/js/board_js/board-api.js?v=2"></script>
+    <script src="../assets/js/board_js/board-elements.js?v=2"></script>
+    <script src="../assets/js/board_js/board-text-editor.js?v=2"></script>
+    <script src="../assets/js/board_js/board-context-toolbar.js?v=2"></script>
+    <script src="../assets/js/board_js/board-selection.js?v=2"></script>
+    <script src="../assets/js/board_js/board-pen.js?v=2"></script>
+    <script src="../assets/js/board_js/board-shape-menu.js?v=2"></script>
+    <script src="../assets/js/board_js/board-tools.js?v=2"></script>
+    <script src="../assets/js/board_js/board-viewport.js?v=2"></script>
+    <script src="../assets/js/board_js/board-main.js?v=2"></script>
+
+</body>
+</html>
