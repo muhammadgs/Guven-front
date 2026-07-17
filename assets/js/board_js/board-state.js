@@ -24,6 +24,10 @@
         }
 
         setDoc(doc) {
+            const version = Number(doc && doc.schema_version) || 1;
+            if (version < BoardConfig.SCHEMA_VERSION) {
+                doc.schema_version = BoardConfig.SCHEMA_VERSION;
+            }
             this.doc = doc;
             this.selection = [];
         }

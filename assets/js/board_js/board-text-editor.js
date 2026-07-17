@@ -148,6 +148,9 @@
             const textNode = node.findOne('.text');
             if (textNode) textNode.show();
             BoardElements.updateNode(node, el, this.app);
+            if (el.connectorAttachment && this.app.connectors) {
+                this.app.connectors.syncAttachment(el, true);
+            }
             this.app.mainLayer.batchDraw();
             this.app.selection.transformer.forceUpdate();
 

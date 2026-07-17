@@ -4,7 +4,7 @@
         `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" ` +
         `stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
 
-    // Connector növləri - Faza 5.2-də aktivləşəcək
+    // Connector quick-create preset-ləri
     const CONNECTOR_ICONS = {
         line: cicon('<path d="M4 20 L20 4"/>'),
         arrow: cicon('<path d="M4 20 L19 5 M12 5 L19 5 L19 12"/>'),
@@ -28,7 +28,7 @@
 
         build() {
             const connectors = ['line', 'arrow', 'elbow', 'curve'].map(k =>
-                `<button class="sm-item sm-conn" data-conn="${k}" title="Connector — növbəti hissədə">${CONNECTOR_ICONS[k]}</button>`
+                `<button class="sm-item sm-conn" data-conn="${k}" title="Connector stili">${CONNECTOR_ICONS[k]}</button>`
             ).join('');
 
             const mainGrid = BoardShapes.MAIN.map(t =>
@@ -57,8 +57,10 @@
                 b.addEventListener('click', () => this.pick(b.dataset.shapetype)));
 
             this.rootEl.querySelectorAll('[data-conn]').forEach(b =>
-                b.addEventListener('click', () =>
-                    this.app.showToast('Connector-lar bu fazanın növbəti hissəsində əlavə olunacaq')));
+                b.addEventListener('click', () => {
+                    this.close();
+                    if (this.app.connectors) this.app.connectors.setQuickPreset(b.dataset.conn);
+                }));
 
             this.rootEl.querySelector('#smMoreBtn')
                 .addEventListener('click', () => this.showView('more'));

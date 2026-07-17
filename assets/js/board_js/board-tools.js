@@ -71,7 +71,8 @@
             app.mainLayer.listening(interactive);
             app.overlayLayer.listening(interactive);
             for (const node of app.mainLayer.getChildren()) {
-                node.draggable(interactive);
+                const el = app.state.getElement(node.id());
+                node.draggable(interactive && !!el && el.type !== 'connector' && !el.locked);
             }
             this.updateCursor();
         }

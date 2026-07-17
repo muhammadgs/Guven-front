@@ -58,15 +58,12 @@
 
         // State-dəki seçimi transformer-ə tətbiq et
         refresh() {
-            const nodes = this.app.state.selection
-                .map(id => this.getNode(id))
-                .filter(Boolean);
-
             // Yalnız text seçiləndə: künclər fontu böyüdür (nisbət saxlanır),
             // yan tutacaqlar isə eni dəyişir
             const els = this.app.state.selection
                 .map(id => this.app.state.getElement(id))
-                .filter(Boolean);
+                .filter(el => el && el.type !== 'connector' && !el.locked);
+            const nodes = els.map(el => this.getNode(el.id)).filter(Boolean);
             const allText = els.length > 0 && els.every(el => el.type === 'text');
 
             this.transformer.keepRatio(allText);
@@ -110,11 +107,15 @@
 
                 this.dragStartPositions = new Map();
                 for (const id of app.state.selection) {
+                    const el = app.state.getElement(id);
+                    if (!el || el.type === 'connector' || el.locked) continue;
                     const node = this.getNode(id);
                     if (node) this.dragStartPositions.set(id, node.position());
                 }
 
                 if (app.contextToolbar) app.contextToolbar.hide();
+                if (app.connectorToolbar) app.connectorToolbar.hide();
+                if (app.connectors) app.connectors.destroyHandleGroups();
             });
 
             layer.on('dragmove', (e) => {
@@ -131,6 +132,9 @@
                     const node = this.getNode(id);
                     if (node) node.position({ x: pos.x + dx, y: pos.y + dy });
                 }
+                if (app.connectors) {
+                    app.connectors.refreshAll(false, new Set(this.dragStartPositions.keys()), false);
+                }
             });
 
             layer.on('dragend', (e) => {
@@ -138,15 +142,21 @@
                 if (!group.hasName('element')) return;
 
                 for (const id of app.state.selection) {
+                    const el = app.state.getElement(id);
+                    if (!el || el.type === 'connector' || el.locked) continue;
                     const node = this.getNode(id);
                     if (node) {
                         app.state.updateElement(id, {
                             x: Math.round(node.x()),
                             y: Math.round(node.y())
                         });
+                        if (app.connectors && el.connectorAttachment) {
+                            app.connectors.captureAttachment(el);
+                        }
                     }
                 }
                 this.dragStartPositions = null;
+                if (app.connectors) app.connectors.refreshAll(true);
                 app.commit();
                 app.updateSelectionUI();
             });
@@ -154,6 +164,18 @@
             // Transform zamanı toolbar gizlənsin
             this.transformer.on('transformstart', () => {
                 if (app.contextToolbar) app.contextToolbar.hide();
+                if (app.connectorToolbar) app.connectorToolbar.hide();
+                if (app.connectors) app.connectors.destroyHandleGroups();
+            });
+
+            this.transformer.on('transform', () => {
+                if (app.connectors) {
+                    app.connectors.refreshAll(
+                        false,
+                        new Set(this.transformer.nodes().map(node => node.id())),
+                        false
+                    );
+                }
             });
 
             // Transform (resize/rotate) bitəndə scale-i ölçüyə çevir
@@ -197,8 +219,12 @@
                         });
                     }
                     BoardElements.updateNode(node, app.state.getElement(node.id()), app);
+                    if (app.connectors && el.connectorAttachment) {
+                        app.connectors.captureAttachment(el);
+                    }
                 }
                 this.transformer.forceUpdate();
+                if (app.connectors) app.connectors.refreshAll(true);
                 app.commit();
                 app.updateSelectionUI();
             });
@@ -272,8 +298,19 @@
 
         // ==================== Clipboard və digər əməliyyatlar ====================
         deleteSelected() {
-            const ids = [...this.app.state.selection];
-            if (!ids.length) return;
+            let ids = [...this.app.state.selection].filter(id => {
+                const el = this.app.state.getElement(id);
+                return el && !(el.type === 'connector' && el.locked);
+            });
+            if (!ids.length) {
+                if (this.app.state.selection.length) this.app.showToast('Connector kilidlidir');
+                return;
+            }
+            if (this.app.connectors && this.app.connectors.lockedDependency(ids)) {
+                this.app.showToast('Fiqura bağlı connector kilidlidir — əvvəl kilidi açın');
+                return;
+            }
+            if (this.app.connectors) ids = this.app.connectors.deletionIds(ids);
 
             for (const id of ids) {
                 const node = this.getNode(id);
@@ -287,32 +324,79 @@
         }
 
         copySelected() {
-            const els = this.app.state.selection
+            const selected = new Set(this.app.state.selection);
+            if (!selected.size) return;
+
+            const directlySelected = [...selected]
                 .map(id => this.app.state.getElement(id))
                 .filter(Boolean);
+            if (directlySelected.length && directlySelected.every(el => el.type === 'connector')) {
+                // Tək xəttin surəti eyni endpoint-lərdə görünməz qalardı;
+                // bağlı fiqurları da daxil edib görünən qraf parçası kimi kopyala.
+                for (const connector of directlySelected) {
+                    if (connector.source) selected.add(connector.source.elementId);
+                    if (connector.target) selected.add(connector.target.elementId);
+                }
+            }
+
+            // İki ucu birlikdə kopyalanan əlaqələri və onların xəttüstü item-lərini də saxla.
+            for (const el of this.app.state.elements) {
+                if (el.type !== 'connector') continue;
+                if (selected.has(el.source.elementId) && selected.has(el.target.elementId)) {
+                    selected.add(el.id);
+                }
+            }
+            for (const el of this.app.state.elements) {
+                if (el.connectorAttachment && selected.has(el.connectorAttachment.connectorId)) {
+                    selected.add(el.id);
+                }
+            }
+            const els = this.app.state.elements.filter(el => selected.has(el.id));
             if (!els.length) return;
             this.clipboard = JSON.parse(JSON.stringify(els));
         }
 
         paste() {
             if (!this.clipboard.length) return;
+            const idMap = new Map();
+            for (const src of this.clipboard) idMap.set(src.id, BoardState.generateId());
             const newIds = [];
 
             for (const src of this.clipboard) {
                 const el = JSON.parse(JSON.stringify(src));
-                el.id = BoardState.generateId();
-                el.x += 24;
-                el.y += 24;
+                el.id = idMap.get(src.id);
+                if (el.type === 'connector') {
+                    if (idMap.has(el.source.elementId)) el.source.elementId = idMap.get(el.source.elementId);
+                    if (idMap.has(el.target.elementId)) el.target.elementId = idMap.get(el.target.elementId);
+                } else {
+                    el.x += 24;
+                    el.y += 24;
+                    if (el.connectorAttachment) {
+                        if (idMap.has(el.connectorAttachment.connectorId)) {
+                            el.connectorAttachment.connectorId = idMap.get(el.connectorAttachment.connectorId);
+                        } else if (this.app.connectors) {
+                            // Xəttüstü item tək kopyalananda +24px ofseti yeni t/offset kimi saxla.
+                            // Əks halda render onu original item-in tam üstünə geri qaytarır.
+                            this.app.state.addElement(el);
+                            this.app.connectors.captureAttachment(el);
+                            newIds.push(el.id);
+                            continue;
+                        }
+                    }
+                }
                 this.app.state.addElement(el);
-
-                const node = BoardElements.buildNode(el, this.app);
-                if (node) this.app.mainLayer.add(node);
                 newIds.push(el.id);
             }
 
             // Növbəti paste daha da sürüşsün
-            this.clipboard.forEach(src => { src.x += 24; src.y += 24; });
+            this.clipboard.forEach(src => {
+                if (src.type !== 'connector') {
+                    src.x += 24;
+                    src.y += 24;
+                }
+            });
 
+            this.app.render();
             this.select(newIds);
             this.app.commit();
         }
@@ -326,15 +410,22 @@
             const ids = this.app.state.selection;
             if (!ids.length) return;
 
+            let moved = false;
             for (const id of ids) {
                 const el = this.app.state.getElement(id);
                 const node = this.getNode(id);
-                if (el && node) {
+                if (el && node && el.type !== 'connector' && !el.locked) {
                     el.x += dx;
                     el.y += dy;
                     node.position({ x: el.x, y: el.y });
+                    moved = true;
+                    if (this.app.connectors && el.connectorAttachment) {
+                        this.app.connectors.captureAttachment(el);
+                    }
                 }
             }
+            if (!moved) return;
+            if (this.app.connectors) this.app.connectors.refreshAll(true);
             this.app.mainLayer.batchDraw();
             this.app.overlayLayer.batchDraw();
             this.app.commit();

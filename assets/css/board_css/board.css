@@ -356,7 +356,7 @@ body {
 }
 
 .sm-conn {
-    opacity: 0.4;
+    opacity: 1;
 }
 
 .sm-sep {
@@ -919,6 +919,259 @@ body {
     margin-left: auto;
     font-size: 11px;
     color: #9a9aa4;
+}
+
+/* ==================== Connector toolbar ==================== */
+.connector-toolbar .ct-main {
+    border-radius: 12px;
+    padding: 5px 6px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.context-toolbar.connector-toolbar .ct-pop {
+    top: calc(100% + 8px);
+    bottom: auto;
+    overflow-y: auto;
+}
+
+.context-toolbar.connector-toolbar .ct-pop.pop-above {
+    top: auto;
+    bottom: calc(100% + 8px);
+}
+
+.connector-toolbar .ct-btn:disabled,
+.connector-toolbar .ct-pop-menu button:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    background: transparent;
+}
+
+.conn-end-btn {
+    min-width: 82px;
+    justify-content: flex-start;
+    padding: 0 8px;
+}
+
+.conn-end-btn svg {
+    flex: none;
+}
+
+.conn-end-btn span {
+    max-width: 46px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
+}
+
+.conn-swap-btn {
+    min-width: 30px;
+    padding: 0 5px;
+}
+
+.conn-route-btn {
+    flex-direction: column;
+    gap: 0;
+    min-width: 46px;
+    height: 40px;
+}
+
+.conn-route-btn svg {
+    display: block;
+    height: 21px;
+}
+
+.conn-route-btn small {
+    font-size: 10px;
+    line-height: 1;
+}
+
+.conn-color-dot {
+    width: 21px;
+    height: 21px;
+    display: block;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.16);
+}
+
+.conn-marker-pop {
+    display: flex;
+    flex-direction: column;
+    min-width: 154px;
+    gap: 2px;
+}
+
+.conn-marker-item {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #2b2b3a;
+    padding: 0 9px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.conn-marker-item:hover,
+.conn-marker-item.active {
+    background: #f0f0f4;
+}
+
+.conn-marker-item.active {
+    color: #4262FF;
+}
+
+.conn-line-pop {
+    width: 238px;
+}
+
+.conn-pop-label {
+    margin: 1px 4px 7px;
+    color: #777785;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.conn-route-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.conn-route-grid button {
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #2b2b3a;
+    cursor: pointer;
+}
+
+.conn-route-grid button span {
+    font-size: 10px;
+}
+
+.conn-route-grid button:hover,
+.conn-route-grid button.active,
+.conn-stroke-grid button:hover,
+.conn-stroke-grid button.active {
+    background: #ECECFE;
+    color: #4262FF;
+}
+
+.conn-stroke-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.conn-stroke-grid button {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.conn-stroke {
+    width: 44px;
+    height: 2px;
+    display: block;
+    background: #2b2b3a;
+}
+
+.conn-stroke.dashed {
+    background: repeating-linear-gradient(90deg, #2b2b3a 0 9px, transparent 9px 14px);
+}
+
+.conn-stroke.dotted {
+    background: repeating-linear-gradient(90deg, #2b2b3a 0 2px, transparent 2px 7px);
+}
+
+.conn-attach-pop {
+    width: 228px;
+}
+
+.conn-attach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 46px);
+    justify-content: center;
+    gap: 6px;
+}
+
+.conn-attach-grid button {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #2b2b3a;
+    cursor: pointer;
+    font-size: 24px;
+}
+
+.conn-attach-grid button:hover {
+    background: #f0f0f4;
+    color: #4262FF;
+}
+
+.conn-text-icon {
+    font: 32px Georgia, serif;
+}
+
+.conn-attach-caption {
+    border-top: 1px solid #e8e8ee;
+    margin-top: 8px;
+    padding: 9px 5px 2px;
+    text-align: center;
+    color: #8a8a96;
+    font-size: 12px;
+}
+
+.ct-text-position-btn {
+    position: relative;
+    width: 44px;
+    flex-direction: column;
+    gap: 0;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.ct-text-position-btn svg {
+    width: 25px;
+    height: 10px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-dasharray: 2 2;
+}
+
+.ct-text-position-pop button {
+    width: 74px;
+    font-size: 12px;
+}
+
+.ct-tp-flat,
+.ct-tp-path {
+    font-weight: 700;
 }
 
 /* ==================== Mətn redaktə overlay ==================== */

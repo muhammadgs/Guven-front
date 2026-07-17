@@ -4,7 +4,7 @@
         API_URL: 'http://vps.guvenfinans.az:8008',
 
         FORMAT: 'guven-board',
-        SCHEMA_VERSION: 2,
+        SCHEMA_VERSION: 3,
 
         // Sticky note rəng paleti (2 sütun x 8 sıra)
         STICKY_COLORS: [
@@ -52,6 +52,16 @@
         DEFAULT_SHAPE_FILL: 'transparent',
         DEFAULT_SHAPE_TEXT_COLOR: '#1A1A2E',
         SHAPE_STROKE_WIDTHS: [1, 2, 4, 8],
+
+        // Fiqurlar arasında bağlı connector-lar
+        DEFAULT_CONNECTOR_COLOR: '#1A1A2E',
+        DEFAULT_CONNECTOR_WIDTH: 2,
+        DEFAULT_CONNECTOR_ROUTING: 'elbow',
+        CONNECTOR_WIDTHS: [1, 2, 4, 8],
+        CONNECTOR_QUICK_GAP: 220,
+        CONNECTOR_QUICK_SPACING: 76,
+        CONNECTOR_CORNER_RADIUS: 14,
+        CONNECTOR_HIT_WIDTH: 22,
 
         // Mətn highlight rəngləri (shape toolbar)
         HIGHLIGHT_COLORS: [

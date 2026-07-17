@@ -27,8 +27,10 @@
             this.textEditor = new BoardTextEditor(this);
             this.selection = new BoardSelection(this);
             this.tools = new BoardTools(this);
+            this.connectors = new BoardConnectors(this);
             this.viewport = new BoardViewport(this);
             this.contextToolbar = new BoardContextToolbar(this);
+            this.connectorToolbar = new BoardConnectorToolbar(this);
             this.pen = new BoardPen(this);
         }
 
@@ -113,11 +115,16 @@
             if (this.textEditor.isEditing()) this.textEditor.commit();
 
             this.mainLayer.destroyChildren();
-            for (const el of this.state.elements) {
+            if (this.connectors) this.connectors.prepareDocument();
+            const ordered = this.state.elements
+                .filter(el => el.type === 'connector')
+                .concat(this.state.elements.filter(el => el.type !== 'connector'));
+            for (const el of ordered) {
                 const node = BoardElements.buildNode(el, this);
                 if (node) this.mainLayer.add(node);
             }
             this.mainLayer.batchDraw();
+            if (this.connectors) this.connectors.refreshAll(true);
             this.selection.refresh();
         }
 
@@ -266,6 +273,8 @@
         // ==================== UI ====================
         updateSelectionUI() {
             if (this.contextToolbar) this.contextToolbar.update();
+            if (this.connectorToolbar) this.connectorToolbar.update();
+            if (this.connectors) this.connectors.refreshHandles();
         }
 
         updateHistoryUI() {
@@ -346,8 +355,10 @@
                     e.preventDefault();
                     this.saveNow();
                 } else if (ctrl && e.key.toLowerCase() === 'c') {
+                    e.preventDefault();
                     this.selection.copySelected();
                 } else if (ctrl && e.key.toLowerCase() === 'v') {
+                    e.preventDefault();
                     this.selection.paste();
                 } else if (ctrl && e.key.toLowerCase() === 'd') {
                     e.preventDefault();
@@ -367,6 +378,7 @@
                 } else if (e.key === 'Delete' || e.key === 'Backspace') {
                     this.selection.deleteSelected();
                 } else if (e.key === 'Escape') {
+                    if (this.connectorToolbar && this.connectorToolbar.closeOpenPops()) return;
                     if (this.contextToolbar.closeOpenPops()) return;
                     if (this.tools.shapeMenu.isOpen() && this.tools.current !== 'shape') {
                         this.tools.shapeMenu.close();

@@ -50,6 +50,12 @@
             return this.selectedEditables().filter(el => el.type === 'shape');
         }
 
+        selectedAttachedText() {
+            const els = this.selectedEditables();
+            return els.length === 1 && els[0].type === 'text' && els[0].connectorAttachment
+                ? els[0] : null;
+        }
+
         resync(el) {
             const node = this.app.stage.findOne('#' + el.id);
             if (node) BoardElements.updateNode(node, el, this.app);
@@ -57,6 +63,7 @@
 
         resyncAll() {
             for (const el of this.selectedEditables()) this.resync(el);
+            if (this.app.connectors) this.app.connectors.syncAttachments(true);
             this.app.mainLayer.batchDraw();
             this.app.selection.transformer.forceUpdate();
             if (this.app.textEditor.isEditing()) this.app.textEditor.layout();
@@ -150,10 +157,22 @@
             this.setSize(target);
         }
 
+        setTextPosition(orientation) {
+            const el = this.selectedAttachedText();
+            if (!el || !this.app.connectors) return;
+            this.app.connectors.setAttachmentOrientation(el, orientation);
+            this.app.commit();
+            this.syncState(el);
+            this.syncPop('textposition');
+            this.position();
+        }
+
         // ==================== Görünüş / mövqe ====================
         update() {
             const els = this.selectedEditables();
-            const visible = this.app.tools.isSelectMode() && els.length > 0;
+            const visible = this.app.tools.isSelectMode() &&
+                els.length > 0 &&
+                els.length === this.app.state.selection.length;
 
             if (!visible) {
                 this.hide();
@@ -240,6 +259,16 @@
 
             this.root.querySelector('[data-role="link"]')
                 .classList.toggle('active', !!el.text.link);
+
+            const attachedText = this.selectedAttachedText();
+            const textPositionBtn = this.root.querySelector('[data-role="textposition"]');
+            const textPositionDivider = this.root.querySelector('.ct-divider-textposition');
+            textPositionBtn.style.display = attachedText ? '' : 'none';
+            textPositionDivider.style.display = attachedText ? '' : 'none';
+            textPositionBtn.classList.toggle('active',
+                !!attachedText && attachedText.connectorAttachment.orientation === 'path');
+            textPositionBtn.title = attachedText && attachedText.connectorAttachment.orientation === 'path'
+                ? 'Mətn xətt üzrə hizalanır' : 'Mətn düz saxlanılır';
 
             // Rəng düyməsi sticky/text üçündür; shape-in ayrıca düymələri var
             const shapes = this.selectedShapes();
@@ -373,6 +402,12 @@
                 const s = this.selectedShapes()[0];
                 pop.querySelectorAll('[data-fill]').forEach(b =>
                     b.classList.toggle('active', !!s && b.dataset.fill === (s.fill || 'transparent')));
+            } else if (name === 'textposition') {
+                const text = this.selectedAttachedText();
+                const current = text && text.connectorAttachment.orientation === 'path'
+                    ? 'path' : 'horizontal';
+                pop.querySelectorAll('[data-textposition]').forEach(b =>
+                    b.classList.toggle('active', b.dataset.textposition === current));
             }
         }
 
@@ -452,6 +487,10 @@
                     <button class="ct-btn" data-role="link" title="Link əlavə et">
                         <i class="fas fa-link"></i>
                     </button>
+                    <span class="ct-divider ct-divider-textposition"></span>
+                    <button class="ct-btn ct-text-position-btn" data-role="textposition" title="Mətn mövqeyi">
+                        <span>ABC</span><svg viewBox="0 0 26 12" aria-hidden="true"><path d="M2 10 C8 1 17 1 24 8"/></svg>
+                    </button>
                     <span class="ct-divider ct-divider-color"></span>
                     <button class="ct-btn" data-role="color" title="Rəng">
                         <span class="ct-color-dot" id="ctColorDot"></span>
@@ -507,6 +546,10 @@
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
+                <div class="ct-pop ct-pop-row ct-text-position-pop hidden" data-pop="textposition">
+                    <button data-textposition="horizontal" title="Həmişə düz"><span class="ct-tp-flat">ABC</span></button>
+                    <button data-textposition="path" title="Xətt üzrə"><span class="ct-tp-path">ABC⌁</span></button>
+                </div>
                 <div class="ct-pop ct-pop-colors hidden" data-pop="color">${colorsHtml}</div>
                 <div class="ct-pop ct-pop-swap hidden" data-pop="shapeswap">${BoardShapes.sectionsHtml('swap')}</div>
                 <div class="ct-pop ct-pop-colors hidden" data-pop="textcolor">${textColorsHtml}</div>
@@ -533,7 +576,7 @@
 
             // Əsas düymələr -> popover aç
             for (const name of ['shape', 'font', 'size', 'style', 'align', 'link', 'color',
-                                'shapeswap', 'textcolor', 'highlight', 'border', 'fill', 'menu']) {
+                                'textposition', 'shapeswap', 'textcolor', 'highlight', 'border', 'fill', 'menu']) {
                 root.querySelector(`[data-role="${name}"]`)
                     .addEventListener('click', () => this.openPop(name));
             }
@@ -579,6 +622,9 @@
                     this.applyText({ valign: b.dataset.valign });
                     this.syncPop('align');
                 }));
+
+            root.querySelectorAll('[data-textposition]').forEach(b =>
+                b.addEventListener('click', () => this.setTextPosition(b.dataset.textposition)));
 
             // Link
             const linkInput = root.querySelector('#ctLinkInput');

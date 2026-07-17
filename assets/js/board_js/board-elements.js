@@ -305,6 +305,8 @@
                 return buildPenNode(el, app);
             case 'shape':
                 return buildShapeNode(el, app);
+            case 'connector':
+                return app.connectors ? app.connectors.buildNode(el) : null;
             default:
                 console.warn('Naməlum element tipi:', el.type);
                 return null;
@@ -645,6 +647,8 @@
             syncPen(group, el);
         } else if (el.type === 'shape') {
             syncShape(group, el, app);
+        } else if (el.type === 'connector' && app.connectors) {
+            app.connectors.updateNode(group, el);
         } else {
             group.setAttrs({ x: el.x, y: el.y, rotation: el.rotation || 0 });
         }

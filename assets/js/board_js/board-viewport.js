@@ -23,6 +23,8 @@
             this.updateGrid();
             this.updateZoomLabel();
             if (this.app.contextToolbar) this.app.contextToolbar.position();
+            if (this.app.connectorToolbar) this.app.connectorToolbar.position();
+            if (this.app.connectors) this.app.connectors.refreshHandles();
         }
 
         updateGrid() {
