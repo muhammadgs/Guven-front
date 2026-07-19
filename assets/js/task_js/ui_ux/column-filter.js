@@ -33,6 +33,48 @@
     // filterValues[tableName][columnName] = Set of selected values (multi-select)
     const filterValues = {};
     const tableInstances = new Map();
+    const ALLOWED_ROW_LIMITS = [20, 50, 100];
+
+    function getTableRowLimit(tableName) {
+        const select = document.querySelector(`.task-limit-select[data-table="${tableName}"]`);
+        const selectedValue = Number.parseInt(select?.value, 10);
+        if (ALLOWED_ROW_LIMITS.includes(selectedValue)) return selectedValue;
+
+        try {
+            const savedValue = Number.parseInt(localStorage.getItem(`task_limit_${tableName}`), 10);
+            if (ALLOWED_ROW_LIMITS.includes(savedValue)) return savedValue;
+        } catch (e) {}
+
+        return 20;
+    }
+
+    function normalizeDateFilterValue(value) {
+        const text = String(value ?? '').trim().replace(/\s+/g, ' ');
+        if (!text) return '';
+
+        // Tarix hüceyrəsi saatı ayrı sətirdə və ya ISO "T" ilə
+        // göstərə bilər. Filtr üçün yalnız tarix hissəsi saxlanılır.
+        const dateMatch = text.match(/^(\d{4}[-/.]\d{1,2}[-/.]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{4})(?=[,\sT]|$)/);
+        return dateMatch ? dateMatch[1] : text;
+    }
+
+    function normalizeFilterValue(columnName, value) {
+        const text = String(value ?? '').trim();
+        return columnName === 'Tarix' ? normalizeDateFilterValue(text) : text;
+    }
+
+    // Dinamik timer/düymə mətni olan hüceyrələr sabit data-filter-value
+    // təqdim edə bilər; qalan sütunlarda görünən mətn fallback olaraq qalır.
+    function getCellFilterValue(cell, columnName = null) {
+        if (!cell) return '';
+        const stableValue = cell.dataset?.filterValue;
+        const value = stableValue !== undefined ? stableValue : cell.innerText;
+        return normalizeFilterValue(columnName, value);
+    }
+
+    function hasActiveColumnFilters(storageKey) {
+        return Object.values(filterValues[storageKey] || {}).some(set => set && set.size > 0);
+    }
 
     // ==================== CSS ƏLAVƏ ET ====================
     const style = document.createElement('style');
@@ -370,7 +412,7 @@
                 if (colIdx === -1) continue;
                 const cell = row.cells[colIdx];
                 if (!cell) { matchesOtherFilters = false; break; }
-                const cellText = cell.innerText.trim();
+                const cellText = getCellFilterValue(cell, col);
                 if (!selectedSet.has(cellText)) {
                     matchesOtherFilters = false;
                     break;
@@ -381,7 +423,7 @@
             if (matchesOtherFilters) {
                 const cell = row.cells[colIndex];
                 if (cell) {
-                    const val = cell.innerText.trim();
+                    const val = getCellFilterValue(cell, currentColumn);
                     if (val && val !== '-' && val !== '—') valueSet.add(val);
                 }
             }
@@ -597,10 +639,12 @@
         if (!rows.length) return;
 
         const activeFilters = filterValues[storageKey] || {};
+        const hasFilters = hasActiveColumnFilters(storageKey);
+        const rowLimit = getTableRowLimit(storageKey);
         let visibleCount = 0;
 
-        rows.forEach(row => {
-            let showRow = true;
+        rows.forEach((row, rowIndex) => {
+            let matchesFilters = true;
 
             for (const [column, selectedSet] of Object.entries(activeFilters)) {
                 if (!selectedSet || selectedSet.size === 0) continue;
@@ -609,18 +653,21 @@
                 if (colIndex === -1) continue;
 
                 const cell = row.cells[colIndex];
-                if (!cell) { showRow = false; break; }
+                if (!cell) { matchesFilters = false; break; }
 
-                const cellText = cell.innerText.trim();
-                if (!selectedSet.has(cellText)) { showRow = false; break; }
+                const cellText = getCellFilterValue(cell, column);
+                if (!selectedSet.has(cellText)) { matchesFilters = false; break; }
             }
 
+            // Filtersiz görünüş seçilmiş 20/50/100 ilə məhdudlaşır.
+            // Hər hansı sütun filtri aktivdirsə, bütün master datasetdəki
+            // uyğun sətirlər limitdən asılı olmadan göstərilir.
+            const showRow = matchesFilters && (hasFilters || rowIndex < rowLimit);
             row.style.display = showRow ? '' : 'none';
             if (showRow) visibleCount++;
         });
 
         // Nəticə yoxdursa mesaj
-        const hasFilters = Object.values(activeFilters).some(s => s && s.size > 0);
         if (visibleCount === 0 && rows.length > 0 && hasFilters) {
             showNoResultsMessage(tbody, table);
         } else {
@@ -794,7 +841,9 @@
             if (!all[tableName]) return;
             for (const [col, arr] of Object.entries(all[tableName])) {
                 if (!filterValues[tableName]) filterValues[tableName] = {};
-                filterValues[tableName][col] = new Set(arr);
+                filterValues[tableName][col] = new Set(
+                    arr.map(value => normalizeFilterValue(col, value)).filter(Boolean)
+                );
             }
         } catch(e) {}
     }
@@ -826,6 +875,44 @@
         });
         obs.observe(document.body, { childList: true, subtree: true });
     }
+
+    function refreshTable(tableName) {
+        const instance = tableInstances.get(tableName);
+        if (!instance) return false;
+
+        applyFilters(instance.table, instance.section, tableName);
+        updateAllButtonsInSection(instance.section, tableName);
+        updateActiveFiltersBar(instance.section, tableName, instance.table);
+        return true;
+    }
+
+    function clearTableFilters(tableName) {
+        filterValues[tableName] = {};
+        saveFilterValues();
+        return refreshTable(tableName);
+    }
+
+    function clearAllTableFilters() {
+        CONFIG.tables.forEach(tableConfig => {
+            filterValues[tableConfig.name] = {};
+        });
+        saveFilterValues();
+        CONFIG.tables.forEach(tableConfig => refreshTable(tableConfig.name));
+    }
+
+    // Sətir sayı yalnız görünüş state-idir; dataset yenidən fetch edilmədən
+    // cari master sətirlərə tətbiq oluna bilər.
+    window.addEventListener('taskRowLimitChanged', event => {
+        const tableName = event.detail?.tableType;
+        if (tableName) refreshTable(tableName);
+    });
+
+    window.TaskColumnFilters = {
+        refresh: refreshTable,
+        hasActiveFilters: hasActiveColumnFilters,
+        clear: clearTableFilters,
+        clearAll: clearAllTableFilters
+    };
 
     // ==================== İŞƏ SAL ========================
     if (document.readyState === 'loading') {

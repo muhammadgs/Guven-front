@@ -519,9 +519,14 @@ class ButtonManager {
                 this.setButtonLoading(refreshBtn, true);
             }
 
-            // Reload all data
+            // İstifadəçi refresh düyməsinə basanda cache yox, serverdəki tam
+            // master dataset yenidən alınmalıdır.
             if (this.taskManager) {
-                await this.taskManager.loadInitialData();
+                if (typeof this.taskManager.refreshAllTaskLists === 'function') {
+                    await this.taskManager.refreshAllTaskLists();
+                } else {
+                    await this.taskManager.loadActiveTasks?.(1, true);
+                }
             }
 
         } catch (error) {
@@ -1948,8 +1953,7 @@ class ButtonManager {
 
             this.showNotification('İş tamamlandı olaraq qeyd edildi', 'success');
 
-            // Refresh tasks
-            await this.taskManager.loadActiveTasks();
+            // changeTaskStatus aktiv master siyahını force-refresh edir.
             await this.taskManager.loadArchiveTasks();
         } catch (error) {
             console.error('❌ Complete task error:', error);
@@ -1972,7 +1976,7 @@ class ButtonManager {
             this.showNotification('İş uğurla silindi', 'success');
 
             // Refresh tasks
-            await this.taskManager.loadActiveTasks();
+            await this.taskManager.loadActiveTasks(1, true);
         } catch (error) {
             console.error('❌ Delete task error:', error);
             this.showNotification('İş silinərkən xəta', 'error');
@@ -1994,7 +1998,7 @@ class ButtonManager {
             this.showNotification('İş uğurla arxivə köçürüldü', 'success');
 
             // Refresh tasks
-            await this.taskManager.loadActiveTasks();
+            await this.taskManager.loadActiveTasks(1, true);
             await this.taskManager.loadArchiveTasks();
         } catch (error) {
             console.error('❌ Archive task error:', error);

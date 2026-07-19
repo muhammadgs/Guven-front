@@ -658,6 +658,12 @@ window.handlePauseToggle = async function(taskId) {
             if (stEl) stEl.textContent = 'Fasilə';
             window.TaskTimerSystem.togglePauseUI(taskId, 'pause');
         }
+
+        // Status filteri və tam master dataset pause/resume-dan sonra da
+        // eyni state ilə yenidən hesablanmalıdır.
+        if (window.taskManager?.loadActiveTasks) {
+            await window.taskManager.loadActiveTasks(1, true);
+        }
     } catch (error) {
         showTimerNotification('❌ ' + (error.message || 'Xəta baş verdi'), '#ef4444');
     } finally {
@@ -1055,7 +1061,10 @@ const ActiveRowCreator = {
         if (displayCompanyName.startsWith('Şirkət ID:') || displayCompanyName === 'Şirkət məlumatı yoxdur') {
             this._resolveCompanyName(task).then(name => {
                 const cell = document.querySelector(`tr[data-task-id="${task.id}"] .company-name-cell`);
-                if (cell) cell.textContent = name;
+                if (cell) {
+                    cell.textContent = name;
+                    cell.dataset.filterValue = name;
+                }
             });
         }
 
@@ -1069,6 +1078,24 @@ const ActiveRowCreator = {
             isOverdue = d0 < n0;
             isYesterday = daysOverdue === 1;
         }
+
+        const statusFilterLabels = {
+            approval_overdue: 'Təsdiq gecikib',
+            pending_approval: 'Təsdiq gözləyir',
+            waiting: 'Gözləyir',
+            in_progress: 'İşlənir',
+            paused: 'Fasilə',
+            completed: 'Tamamlandı',
+            rejected: 'İmtina edildi'
+        };
+        let statusFilterValue = statusFilterLabels[task.status] || task.status || '-';
+        if (task.status === 'pending' || task.status === 'overdue') {
+            statusFilterValue = isOverdue ? 'Gecikmə' : 'Gözləyir';
+        }
+
+        // Cədvəldə saat görünür, amma Tarix filtri yalnız günə görə işləyir.
+        const createdAtFilterValue = this.formatDate(task.created_at);
+        const dueDateFilterValue = this.formatDate(task.due_date || task.due_at);
 
         const currentUserId = window.taskManager?.userData?.userId;
 
@@ -1280,15 +1307,15 @@ const ActiveRowCreator = {
 
         return `<tr data-task-id="${task.id}" style="transition:all 0.2s;">
             <td style="text-align:center;font-weight:500;color:#64748b;">${serialNumber}</td>
-            <td style="color:#334155;">${this.formatDateTime(task.created_at)}</td>
-            <td class="company-name-cell" style="font-weight:500;color:#0f172a;">${this.escapeHtml(displayCompanyName)}</td>
-            <td style="color:#475569;">${this.escapeHtml(creatorName)}</td>
-            <td style="color:#475569;">${this.escapeHtml(executorName)}</td>
-            <td><div class="status-section" style="display:flex;flex-direction:column;gap:5px;">
+            <td data-filter-value="${this.escapeAttribute(createdAtFilterValue)}" style="color:#334155;">${this.formatDateTime(task.created_at)}</td>
+            <td class="company-name-cell" data-filter-value="${this.escapeAttribute(displayCompanyName)}" style="font-weight:500;color:#0f172a;">${this.escapeHtml(displayCompanyName)}</td>
+            <td data-filter-value="${this.escapeAttribute(creatorName)}" style="color:#475569;">${this.escapeHtml(creatorName)}</td>
+            <td data-filter-value="${this.escapeAttribute(executorName)}" style="color:#475569;">${this.escapeHtml(executorName)}</td>
+            <td data-filter-value="${this.escapeAttribute(statusFilterValue)}"><div class="status-section" style="display:flex;flex-direction:column;gap:5px;">
                 ${statusBadgeHTML}
                 <div style="display:flex;gap:3px;flex-wrap:wrap;">${statusButtonHTML}</div>
             </div></td>
-            <td style="color:#334155;">${this.escapeHtml(workTypeName)}</td>
+            <td data-filter-value="${this.escapeAttribute(workTypeName)}" style="color:#334155;">${this.escapeHtml(workTypeName)}</td>
             <td class="description-col" style="max-width:200px; cursor:help;">
                 <div style="position:relative;">
                     <div id="desc-${task.id}" style="display:block; color:#475569; font-size:13px;">${this.truncateText(description, 50)}</div>
@@ -1296,11 +1323,11 @@ const ActiveRowCreator = {
                 </div>
             </td>
             <td class="file-col" style="min-width:190px;text-align:center;">${fileColumnHTML}</td>
-            <td class="${dueDateClass}" title="${dueDateTitle}">${this.formatDate(task.due_date || task.due_at)}${dueDateIcon}</td>
+            <td data-filter-value="${this.escapeAttribute(dueDateFilterValue)}" class="${dueDateClass}" title="${dueDateTitle}">${this.formatDate(task.due_date || task.due_at)}${dueDateIcon}</td>
             <td style="text-align:center;"><div style="display:flex;gap:5px;justify-content:center;">${commentsBtn}${detailsBtn}</div></td>
             <td style="color:#64748b;">${this.formatDate(task.completed_date || task.completed_at)}</td>
             <td style="color:#334155;font-weight:500;">${durationMinutes}</td>
-            <td style="color:#475569;">${this.escapeHtml(departmentName)}</td>
+            <td data-filter-value="${this.escapeAttribute(departmentName)}" style="color:#475569;">${this.escapeHtml(departmentName)}</td>
         </tr>`;
     },
 
@@ -1327,6 +1354,14 @@ const ActiveRowCreator = {
         const div = document.createElement('div');
         div.textContent = t;
         return div.innerHTML;
+    },
+
+    escapeAttribute: function(t) {
+        return String(t ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     },
 
     truncateText: function(t, l) {

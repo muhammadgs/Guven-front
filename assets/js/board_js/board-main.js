@@ -378,6 +378,7 @@
                 } else if (e.key === 'Delete' || e.key === 'Backspace') {
                     this.selection.deleteSelected();
                 } else if (e.key === 'Escape') {
+                    if (this.connectors && this.connectors.hideEndpointMenu()) return;
                     if (this.connectorToolbar && this.connectorToolbar.closeOpenPops()) return;
                     if (this.contextToolbar.closeOpenPops()) return;
                     if (this.tools.shapeMenu.isOpen() && this.tools.current !== 'shape') {

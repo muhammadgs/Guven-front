@@ -337,6 +337,7 @@ body {
     border: none;
     background: transparent;
     border-radius: 9px;
+    font-size: 16px;
     color: #2b2b3a;
     cursor: pointer;
 }
@@ -1103,46 +1104,24 @@ body {
 }
 
 .conn-attach-pop {
-    width: 228px;
+    width: 296px;
 }
 
-.conn-attach-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 46px);
-    justify-content: center;
-    gap: 6px;
+/* Xəttin ucuna dblclick ilə açılan item menyusu */
+.endpoint-attach-menu {
+    position: absolute;
+    z-index: 20;
 }
 
-.conn-attach-grid button {
-    width: 46px;
-    height: 46px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: #2b2b3a;
-    cursor: pointer;
-    font-size: 24px;
+.conn-attach-pop .sm-sections {
+    width: auto;
+    max-height: min(320px, 50vh);
+    margin-top: 2px;
+    padding-right: 2px;
 }
 
-.conn-attach-grid button:hover {
-    background: #f0f0f4;
-    color: #4262FF;
-}
-
-.conn-text-icon {
-    font: 32px Georgia, serif;
-}
-
-.conn-attach-caption {
-    border-top: 1px solid #e8e8ee;
-    margin-top: 8px;
-    padding: 9px 5px 2px;
-    text-align: center;
-    color: #8a8a96;
-    font-size: 12px;
+.conn-attach-pop .sm-sec-title:first-child {
+    margin-top: 0;
 }
 
 .ct-text-position-btn {

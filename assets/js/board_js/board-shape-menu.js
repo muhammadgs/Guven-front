@@ -103,6 +103,11 @@
             const active = this.tools.current === 'shape' ? this.tools.shapeType : null;
             this.rootEl.querySelectorAll('[data-shapetype]').forEach(b =>
                 b.classList.toggle('active', b.dataset.shapetype === active));
+            const conn = this.app.connectors;
+            const activeConn = this.tools.current === 'connector' && conn
+                ? conn.quickPresetKind : null;
+            this.rootEl.querySelectorAll('[data-conn]').forEach(b =>
+                b.classList.toggle('active', b.dataset.conn === activeConn));
         }
 
         bindOutsideClose() {

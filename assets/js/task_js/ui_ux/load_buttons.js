@@ -72,6 +72,26 @@ function getRealCompanyIdFromToken() {
         return ACCEPTED_LIMIT_VALUES.includes(value) ? value : DEFAULT_LIMIT_VALUE;
     }
 
+    function syncTaskManagerRowLimit(tableType, value) {
+        const normalized = Number.parseInt(normalizeLimitValue(String(value)), 10);
+        const pagination = window.taskManager?.pagination?.[tableType];
+        if (pagination) {
+            pagination.pageSize = normalized;
+            pagination.page = 1;
+            pagination.totalPages = tableType === 'active'
+                ? 1
+                : (Math.ceil((pagination.total || 0) / normalized) || 1);
+            if (tableType === 'active') pagination.hasMore = false;
+        }
+        return normalized;
+    }
+
+    function notifyRowLimitChanged(tableType, value) {
+        window.dispatchEvent(new CustomEvent('taskRowLimitChanged', {
+            detail: { tableType, limit: Number.parseInt(value, 10) }
+        }));
+    }
+
     // ==================== DÜYMƏLƏRİ HAZIRLA ====================
     function setupLoadButtons() {
         // ========== SELECT ELEMENTLƏRİ ==========
@@ -86,6 +106,7 @@ function getRealCompanyIdFromToken() {
             // LocalStorage-dan əvvəlki seçimi yüklə
             const savedValue = localStorage.getItem(`task_limit_${tableType}`);
             newSelect.value = normalizeLimitValue(savedValue);
+            syncTaskManagerRowLimit(tableType, newSelect.value);
 
             newSelect.addEventListener('change', async (e) => {
                 e.preventDefault();
@@ -98,8 +119,17 @@ function getRealCompanyIdFromToken() {
 
                 // Seçimi yadda saxla
                 localStorage.setItem(`task_limit_${finalTableType}`, limit);
+                syncTaskManagerRowLimit(finalTableType, limit);
+                notifyRowLimitChanged(finalTableType, limit);
 
-                console.log(`📦 ${finalTableType} cədvəli üçün ${limit} task yüklənir...`);
+                // Active master dataset artıq DOM-dadır; sətir sayı yalnız
+                // görünüş state-i kimi dəyişir və gedən action sorğusunu pozmur.
+                if (finalTableType === 'active' && window.TaskColumnFilters?.refresh?.(finalTableType)) {
+                    console.log(`✅ ${finalTableType} cədvəli üçün ${limit} sətir görünüşü tətbiq edildi`);
+                    return;
+                }
+
+                console.log(`📦 ${finalTableType} cədvəli üçün filter datası yüklənir...`);
                 await loadTasksToTable(finalTableType, limit);
             });
         });
@@ -280,7 +310,20 @@ function getRealCompanyIdFromToken() {
                 throw new Error('İstifadəçi məlumatı tapılmadı');
             }
 
-            const tasks = await fetchTasksByTableType(tableType, userInfo, limit, config);
+            // Active cədvəl üçün yalnız TaskManager master-loader-i istifadə olunur.
+            // Beləliklə select, cache və action refresh eyni source-of-truth-a bağlanır.
+            if (tableType === 'active' && window.taskManager?.loadActiveTasks) {
+                const tasks = await window.taskManager.loadActiveTasks(1, false);
+                notifyRowLimitChanged(tableType, limit);
+                console.log(`✅ ${tableType} cədvəli master datasetdən yeniləndi (${tasks.length} task)`);
+                showNotification(`${getTableName(tableType)} üçün ${limit} sətir görünüşü tətbiq edildi`, 'success');
+                return;
+            }
+
+            // Sətir seçimi API/filter datasını məhdudlaşdırmır. Digər cədvəllər
+            // üçün mövcud maksimum dataset yüklənir, görünüş limiti renderdən
+            // sonra column-filter.js tərəfindən tətbiq olunur.
+            const tasks = await fetchTasksByTableType(tableType, userInfo, 100, config);
 
             console.log(`✅ ${tableType} cədvəli üçün ${tasks.length} task yükləndi`);
 
@@ -501,6 +544,10 @@ function getRealCompanyIdFromToken() {
 
         tbody.innerHTML = html;
 
+        window.dispatchEvent(new CustomEvent('tableRendered', {
+            detail: { tableType, taskCount: tasks.length, page: 1 }
+        }));
+
         const section = document.getElementById(config.sectionId);
         if (section && section.style.display === 'none') {
             showTaskManagerSection(section);
@@ -516,6 +563,10 @@ function getRealCompanyIdFromToken() {
             window.taskManager.pagination[tableType].hasMore = totalTasks >= (limit === 'Bütün' ? totalTasks : parseInt(limit));
             window.taskManager.pagination[tableType].page = 1;
             window.taskManager.pagination[tableType].total = totalTasks;
+            if (limit !== 'Bütün') {
+                window.taskManager.pagination[tableType].pageSize = Number.parseInt(limit, 10) || 20;
+                window.taskManager.pagination[tableType].totalPages = Math.ceil(totalTasks / window.taskManager.pagination[tableType].pageSize) || 1;
+            }
 
             if (typeof window.taskManager.updatePaginationUI === 'function') {
                 window.taskManager.updatePaginationUI(tableType);

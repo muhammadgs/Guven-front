@@ -334,15 +334,18 @@
                 // Tək xəttin surəti eyni endpoint-lərdə görünməz qalardı;
                 // bağlı fiqurları da daxil edib görünən qraf parçası kimi kopyala.
                 for (const connector of directlySelected) {
-                    if (connector.source) selected.add(connector.source.elementId);
-                    if (connector.target) selected.add(connector.target.elementId);
+                    if (connector.source && connector.source.elementId) selected.add(connector.source.elementId);
+                    if (connector.target && connector.target.elementId) selected.add(connector.target.elementId);
                 }
             }
 
             // İki ucu birlikdə kopyalanan əlaqələri və onların xəttüstü item-lərini də saxla.
             for (const el of this.app.state.elements) {
                 if (el.type !== 'connector') continue;
-                if (selected.has(el.source.elementId) && selected.has(el.target.elementId)) {
+                const endpointCovered = endpoint => endpoint &&
+                    (endpoint.elementId ? selected.has(endpoint.elementId) : !!endpoint.point);
+                if (endpointCovered(el.source) && endpointCovered(el.target) &&
+                    (el.source.elementId || el.target.elementId)) {
                     selected.add(el.id);
                 }
             }
@@ -368,6 +371,12 @@
                 if (el.type === 'connector') {
                     if (idMap.has(el.source.elementId)) el.source.elementId = idMap.get(el.source.elementId);
                     if (idMap.has(el.target.elementId)) el.target.elementId = idMap.get(el.target.elementId);
+                    for (const endpoint of [el.source, el.target]) {
+                        if (endpoint && endpoint.point && !endpoint.elementId) {
+                            endpoint.point.x += 24;
+                            endpoint.point.y += 24;
+                        }
+                    }
                 } else {
                     el.x += 24;
                     el.y += 24;
@@ -393,6 +402,13 @@
                 if (src.type !== 'connector') {
                     src.x += 24;
                     src.y += 24;
+                } else {
+                    for (const endpoint of [src.source, src.target]) {
+                        if (endpoint && endpoint.point && !endpoint.elementId) {
+                            endpoint.point.x += 24;
+                            endpoint.point.y += 24;
+                        }
+                    }
                 }
             });
 
@@ -422,6 +438,13 @@
                     if (this.app.connectors && el.connectorAttachment) {
                         this.app.connectors.captureAttachment(el);
                     }
+                } else if (el && el.type === 'connector' && !el.locked &&
+                           this.app.connectors && this.app.connectors.isFreeConnector(el)) {
+                    el.source.point.x += dx;
+                    el.source.point.y += dy;
+                    el.target.point.x += dx;
+                    el.target.point.y += dy;
+                    moved = true;
                 }
             }
             if (!moved) return;

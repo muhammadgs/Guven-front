@@ -232,10 +232,6 @@
                 `<button class="ct-color-swatch round" data-linecolor="${color}" ` +
                 `style="background:${color}" title="${color}"></button>`
             ).join('');
-            const shapeItems = BoardShapes.MAIN.map(type =>
-                `<button data-attach-shape="${type}" title="${BoardShapes.label(type)}">` +
-                `${BoardShapes.icon(type, 27)}</button>`
-            ).join('');
 
             this.root.innerHTML = `
                 <div class="ct-main connector-ct-main">
@@ -278,12 +274,12 @@
                 </div>
                 <div class="ct-pop ct-pop-colors hidden" data-pop="linecolor">${colorItems}</div>
                 <div class="ct-pop conn-attach-pop hidden" data-pop="attach">
-                    <div class="conn-attach-grid">
-                        <button data-attach-kind="text" title="Mətn"><span class="conn-text-icon">T</span></button>
-                        <button data-attach-kind="sticky" title="Stiker / sticky note"><i class="far fa-sticky-note"></i></button>
-                        ${shapeItems}
+                    <div class="sm-grid sm-grid-6">
+                        <button class="sm-item" data-attach-kind="text" title="Mətn"><i class="fas fa-font"></i></button>
+                        <button class="sm-item" data-attach-kind="sticky" title="Stiker / sticky note"><i class="far fa-sticky-note"></i></button>
                     </div>
-                    <div class="conn-attach-caption">Mətn, stiker və fiqur</div>
+                    <div class="sm-sep"></div>
+                    <div class="sm-sections">${BoardShapes.sectionsHtml('attachshape')}</div>
                 </div>
                 <div class="ct-pop ct-pop-menu hidden" data-pop="menu">
                     <button data-action="copy"><i class="fas fa-copy"></i> Kopyala <span class="ct-kbd">Ctrl+C</span></button>
@@ -341,11 +337,11 @@
                     this.closePops();
                     this.app.connectors.addAttachment(connector, button.dataset.attachKind);
                 }));
-            this.root.querySelectorAll('[data-attach-shape]').forEach(button =>
+            this.root.querySelectorAll('[data-attachshape]').forEach(button =>
                 button.addEventListener('click', () => {
                     const connector = this.selectedConnector();
                     this.closePops();
-                    this.app.connectors.addAttachment(connector, 'shape', button.dataset.attachShape);
+                    this.app.connectors.addAttachment(connector, 'shape', button.dataset.attachshape);
                 }));
 
             this.root.querySelector('[data-action="copy"]').addEventListener('click', () => {

@@ -17,8 +17,30 @@ function _waitForGlobals() {
     });
 }
 
+const TASK_ROW_LIMITS = [20, 50, 100];
+const ACTIVE_TASK_FETCH_BATCH_SIZE = 100;
+const ACTIVE_TASK_STATUSES = [
+    'pending_approval',
+    'approval_overdue',
+    'pending',
+    'in_progress',
+    'overdue',
+    'waiting',
+    'paused'
+];
+
+function getSavedTaskRowLimit(tableName, fallback = 20) {
+    try {
+        const saved = Number.parseInt(localStorage.getItem(`task_limit_${tableName}`), 10);
+        return TASK_ROW_LIMITS.includes(saved) ? saved : fallback;
+    } catch (e) {
+        return fallback;
+    }
+}
+
 const TaskCache = {
-    prefix: 'tc_',
+    // v2 cache yalnız tam (pagination-dan əvvəlki) task datasetlərini saxlayır.
+    prefix: 'tc_v2_',
     ttl: 5 * 60 * 1000,
 
     // ✅ YENİ: Cari user ID-ni al
@@ -133,6 +155,16 @@ const TaskCache = {
             });
 
         console.log(`✅ Bütün cache-lər təmizləndi (user: ${currentUserId})`);
+
+        // Köhnə action modulları cache-i silib loadActiveTasks()-i force
+        // parametrsiz çağırır. Cache invalidasiyası gedən köhnə GET-i də
+        // etibarsızlaşdırır ki növbəti load mutation-dan sonra yeni GET başlatsın.
+        window.taskManager?.invalidateActiveTasksFetch?.();
+    },
+
+    // Köhnə modulların istifadə etdiyi ad üçün uyğunluq alias-ı.
+    clearTasks() {
+        this.clear();
     },
 
     // ✅ YENİ: Bütün user-lərin cache-lərini təmizlə (logout zamanı)
@@ -144,6 +176,12 @@ const TaskCache = {
                 console.log(`🗑️ Bütün user cache-i silindi: ${k}`);
             });
     }
+};
+
+// Digər task modulları cache-i təhlükəsiz şəkildə invalidasiya edə bilsin.
+window.TaskCache = TaskCache;
+window.refreshTaskCache = async function() {
+    TaskCache.clear();
 };
 
 // ============================================================
@@ -159,11 +197,15 @@ class TaskManager {
         this.companyCache = {};
 
         this.pagination = {
-            active: {page: 1, hasMore: true, pageSize: 20, total: 0, totalPages: 1},
-            archive: {page: 1, hasMore: true, pageSize: 20, total: 0, totalPages: 1},
-            external: {page: 1, hasMore: true, pageSize: 20, total: 0, totalPages: 1},
-            partner: {page: 1, hasMore: true, pageSize: 20, total: 0, totalPages: 1}
+            active: {page: 1, hasMore: true, pageSize: getSavedTaskRowLimit('active'), total: 0, totalPages: 1},
+            archive: {page: 1, hasMore: true, pageSize: getSavedTaskRowLimit('archive'), total: 0, totalPages: 1},
+            external: {page: 1, hasMore: true, pageSize: getSavedTaskRowLimit('external'), total: 0, totalPages: 1},
+            partner: {page: 1, hasMore: true, pageSize: getSavedTaskRowLimit('partner'), total: 0, totalPages: 1}
         };
+
+        // Gecikmiş API cavabının daha yeni render-i üstələməsinin qarşısını alır.
+        this.activeTasksRequestSequence = 0;
+        this.activeTasksFetchPromise = null;
 
         this.currentFilters = {};
         this.currentFilterTable = 'active';
@@ -659,58 +701,279 @@ class TaskManager {
     }
 
 
+    _extractTaskItems(response) {
+        const candidates = [
+            response,
+            response?.data,
+            response?.raw,
+            response?.data?.data,
+            response?.raw?.data
+        ];
+
+        for (const candidate of candidates) {
+            if (Array.isArray(candidate)) return candidate;
+            if (Array.isArray(candidate?.items)) return candidate.items;
+            if (Array.isArray(candidate?.data)) return candidate.data;
+            if (Array.isArray(candidate?.tasks)) return candidate.tasks;
+        }
+
+        return [];
+    }
+
+    _extractTaskPagination(response) {
+        const paginationCandidates = [
+            response?.pagination,
+            response?.data?.pagination,
+            response?.raw?.pagination,
+            response?.data?.raw?.pagination
+        ].filter(Boolean);
+
+        const readNumber = (keys, rootKeys = keys) => {
+            for (const pagination of paginationCandidates) {
+                for (const key of keys) {
+                    const rawValue = pagination?.[key];
+                    if (rawValue === null || rawValue === undefined || rawValue === '') continue;
+                    const value = Number(rawValue);
+                    if (Number.isFinite(value) && value >= 0) return value;
+                }
+            }
+            for (const key of rootKeys) {
+                const rawValue = response?.[key] ?? response?.raw?.[key] ?? response?.data?.[key];
+                if (rawValue === null || rawValue === undefined || rawValue === '') continue;
+                const value = Number(rawValue);
+                if (Number.isFinite(value) && value >= 0) return value;
+            }
+            return null;
+        };
+
+        const readBoolean = (keys) => {
+            for (const pagination of paginationCandidates) {
+                for (const key of keys) {
+                    if (typeof pagination?.[key] === 'boolean') return pagination[key];
+                }
+            }
+            for (const key of keys) {
+                const value = response?.[key] ?? response?.raw?.[key] ?? response?.data?.[key];
+                if (typeof value === 'boolean') return value;
+            }
+            return null;
+        };
+
+        return {
+            total: readNumber(['total', 'total_items', 'totalItems']),
+            totalPages: readNumber(['total_pages', 'totalPages', 'pages']),
+            hasNext: readBoolean(['has_next', 'hasNext', 'has_more', 'hasMore'])
+        };
+    }
+
+    async _fetchAllActiveTasksFromApi() {
+        const collected = [];
+        const seenTaskIds = new Set();
+        let reportedTotal = null;
+        let reportedTotalPages = null;
+        let lastHasNext = null;
+        let stoppedOnDuplicatePage = false;
+        let currentPage = 1;
+
+        // no-progress yoxlaması sonsuz pagination dövrünü dayandırır;
+        // guard isə nasaz metadata halında şəbəkəni qoruyur.
+        const maxPages = 1000;
+
+        while (currentPage <= maxPages) {
+            const endpoint = `/tasks/detailed?page=${currentPage}&limit=${ACTIVE_TASK_FETCH_BATCH_SIZE}&status=${ACTIVE_TASK_STATUSES.join(',')}`;
+            const response = await this.apiRequest(endpoint, 'GET');
+
+            if (response?.error || response?.status === 401 || response?.status === 403) {
+                if (currentPage === 1) {
+                    return { tasks: [], total: 0, error: response };
+                }
+                console.warn(`⚠️ Aktiv taskların ${currentPage}-ci səhifəsi yüklənmədi; natamam dataset cache-lənməyəcək.`);
+                return { tasks: collected, total: reportedTotal ?? collected.length, error: response, incomplete: true };
+            }
+
+            const pageTasks = this._extractTaskItems(response);
+            const pagination = this._extractTaskPagination(response);
+            if (pagination.total !== null) reportedTotal = pagination.total;
+            if (pagination.totalPages !== null) reportedTotalPages = pagination.totalPages;
+            lastHasNext = pagination.hasNext;
+
+            let addedCount = 0;
+            pageTasks.forEach((task, index) => {
+                const rawTaskId = task?.id ?? task?.task_id;
+                const taskKey = rawTaskId !== null && rawTaskId !== undefined
+                    ? String(rawTaskId)
+                    : `page-${currentPage}-row-${index}`;
+                if (seenTaskIds.has(taskKey)) return;
+                seenTaskIds.add(taskKey);
+                collected.push(task);
+                addedCount++;
+            });
+
+            const reachedReportedTotal = reportedTotal !== null && collected.length >= reportedTotal;
+            const reachedLastPage = pagination.totalPages !== null && currentPage >= pagination.totalPages;
+            const metadataIndicatesMore =
+                (reportedTotal !== null && collected.length < reportedTotal) ||
+                (pagination.totalPages !== null && currentPage < pagination.totalPages) ||
+                pagination.hasNext === true;
+            const shortPageWithoutMoreMetadata =
+                pageTasks.length < ACTIVE_TASK_FETCH_BATCH_SIZE && !metadataIndicatesMore;
+
+            if (pageTasks.length > 0 && addedCount === 0) {
+                stoppedOnDuplicatePage = true;
+            }
+
+            if (
+                pageTasks.length === 0 ||
+                addedCount === 0 ||
+                reachedReportedTotal ||
+                reachedLastPage ||
+                pagination.hasNext === false ||
+                shortPageWithoutMoreMetadata
+            ) {
+                break;
+            }
+
+            currentPage++;
+        }
+
+        if (currentPage > maxPages) {
+            console.warn(`⚠️ Aktiv task pagination təhlükəsizlik limitinə çatdı (${maxPages} səhifə).`);
+        }
+
+        const incompleteByTotal = reportedTotal !== null && collected.length < reportedTotal;
+        const incompleteByPages = reportedTotalPages !== null && currentPage < reportedTotalPages;
+        const incompleteByHasNext = lastHasNext === true;
+        const incompleteByGuard = currentPage > maxPages;
+
+        if (
+            incompleteByTotal ||
+            incompleteByPages ||
+            incompleteByHasNext ||
+            incompleteByGuard ||
+            stoppedOnDuplicatePage
+        ) {
+            const incompleteError = {
+                error: 'INCOMPLETE_ACTIVE_TASK_DATASET',
+                received: collected.length,
+                expected: reportedTotal,
+                currentPage,
+                totalPages: reportedTotalPages
+            };
+            console.warn('⚠️ Aktiv task dataset-i natamam qaldı; cache-lənməyəcək.', incompleteError);
+            return {
+                tasks: collected,
+                total: reportedTotal ?? collected.length,
+                error: incompleteError,
+                incomplete: true
+            };
+        }
+
+        return {
+            tasks: collected,
+            total: reportedTotal ?? collected.length,
+            error: null
+        };
+    }
+
+    invalidateActiveTasksFetch() {
+        this.activeTasksRequestSequence++;
+        this.activeTasksFetchPromise = null;
+    }
+
+    async _getActiveTasksFetch(forceRefresh = false) {
+        // Adi paralel yükləmələr eyni sorğunu paylaşa bilər. Ancaq mutation-dan
+        // sonra edilən force refresh mütləq həmin mutation-dan sonra yeni GET
+        // başlatmalıdır; əvvəldən işləyən promise köhnə status qaytara bilər.
+        if (this.activeTasksFetchPromise && !forceRefresh) {
+            return this.activeTasksFetchPromise;
+        }
+
+        const requestSequence = ++this.activeTasksRequestSequence;
+        const pendingFetch = this._fetchAllActiveTasksFromApi().then(result => ({
+            ...result,
+            requestSequence
+        }));
+        this.activeTasksFetchPromise = pendingFetch;
+
+        try {
+            return await pendingFetch;
+        } finally {
+            if (this.activeTasksFetchPromise === pendingFetch) {
+                this.activeTasksFetchPromise = null;
+            }
+        }
+    }
+
     async loadActiveTasks(page = 1, forceRefresh = false) {
         try {
             console.log(`📋 Aktiv tasklar yüklənir... (page: ${page}, forceRefresh: ${forceRefresh})`);
 
-            let allTasks = null;
-
-            if (!forceRefresh) {
-                allTasks = TaskCache.get('active_tasks');
-                if (allTasks && !Array.isArray(allTasks)) {
-                    if (allTasks.data && Array.isArray(allTasks.data)) allTasks = allTasks.data;
-                    else if (allTasks.items && Array.isArray(allTasks.items)) allTasks = allTasks.items;
-                    else allTasks = [];
-                }
+            let cachedTasks = TaskCache.get('active_tasks');
+            if (cachedTasks && !Array.isArray(cachedTasks)) {
+                if (cachedTasks.data && Array.isArray(cachedTasks.data)) cachedTasks = cachedTasks.data;
+                else if (cachedTasks.items && Array.isArray(cachedTasks.items)) cachedTasks = cachedTasks.items;
+                else if (cachedTasks.tasks && Array.isArray(cachedTasks.tasks)) cachedTasks = cachedTasks.tasks;
+                else cachedTasks = [];
             }
 
+            let allTasks = forceRefresh ? null : cachedTasks;
+            let fetchedFromApi = false;
+            let requestSequence = null;
+
             if (!allTasks) {
-                console.log('🔄 API-dən aktiv tasklar yüklənir...');
+                console.log('🔄 API-dən filtr üçün tam aktiv task siyahısı yüklənir...');
 
-                const endpoint = `/tasks/detailed?page=${page}&limit=${this.pagination.active.pageSize}&status=pending,in_progress,waiting,overdue,pending_approval,paused,approval_overdue`;
-                const response = await this.apiRequest(endpoint, 'GET');
+                const result = await this._getActiveTasksFetch(forceRefresh);
+                fetchedFromApi = true;
+                requestSequence = result.requestSequence;
 
-                if (response?.error || response?.status === 401 || response?.status === 403) {
-                    console.warn('⚠️ /tasks/detailed yüklənmədi, cədvəl boş göstərilir:', response.error || response.status);
-                    TableManager?.renderTasksTable?.('active', [], false, page);
-                    this.pagination.active.total = 0;
-                    this.pagination.active.page = page;
-                    this.pagination.active.totalPages = 1;
-                    this.updatePaginationUI('active');
+                if (requestSequence !== this.activeTasksRequestSequence) {
+                    console.log('ℹ️ Köhnə aktiv task sorğusunun cavabı render edilmədi.');
                     return [];
                 }
 
-                if (Array.isArray(response)) allTasks = response;
-                else if (response?.data && Array.isArray(response.data)) allTasks = response.data;
-                else if (response?.items && Array.isArray(response.items)) allTasks = response.items;
-                else allTasks = [];
+                if (result.error) {
+                    if (Array.isArray(cachedTasks)) {
+                        console.warn('⚠️ Tam aktiv task refresh-i alınmadı; son tam cache saxlanılır:', result.error.error || result.error.status);
+                        allTasks = cachedTasks;
+                    } else {
+                        console.warn('⚠️ /tasks/detailed yüklənmədi, cədvəl boş göstərilir:', result.error.error || result.error.status);
+                        TableManager?.renderTasksTable?.('active', [], false, 1);
+                        this.pagination.active.total = 0;
+                        this.pagination.active.page = 1;
+                        this.pagination.active.totalPages = 1;
+                        this.updatePaginationUI('active');
+                        return [];
+                    }
+                } else {
+                    allTasks = result.tasks;
 
-                // 🔥 COMMENT SAYLARINI BURADA YÜKLƏMƏ - CommentTracker özü yükləyəcək
-                // Sadəcə cache-ə yaz
-                TaskCache.set('active_tasks', allTasks);
-                console.log(`✅ API-dən ${allTasks.length} task yükləndi`);
+                    // 🔥 COMMENT SAYLARINI BURADA YÜKLƏMƏ - CommentTracker özü yükləyəcək
+                    // Cache həmişə limitlənmiş səhifəni deyil, tam master siyahını saxlayır.
+                    TaskCache.set('active_tasks', allTasks);
+                    console.log(`✅ API-dən filtr üçün ${allTasks.length} task yükləndi`);
+                }
             }
 
-            const validStatuses = ['pending_approval', 'approval_overdue', 'pending', 'in_progress', 'overdue', 'waiting', 'paused'];
-            const activeTasks = allTasks.filter(t => validStatuses.includes(t.status));
+            if (fetchedFromApi && requestSequence !== this.activeTasksRequestSequence) {
+                console.log('ℹ️ Köhnə aktiv task render-i ləğv edildi.');
+                return [];
+            }
+
+            const activeTasks = allTasks.filter(t => ACTIVE_TASK_STATUSES.includes(t.status));
 
             if (TableManager?.renderTasksTable) {
-                TableManager.renderTasksTable('active', activeTasks, false, page);
+                // Bütün master sətirlər render olunur; görünən 20/50/100 və aktiv
+                // filter nəticəsi column-filter.js tərəfindən idarə edilir.
+                TableManager.renderTasksTable('active', activeTasks, false, 1);
             }
 
             this.pagination.active.total = activeTasks.length;
-            this.pagination.active.page = page;
-            this.pagination.active.totalPages = Math.ceil(activeTasks.length / this.pagination.active.pageSize) || 1;
+            this.pagination.active.page = 1;
+            // Active master dataset artıq səhifələr üzrə deyil, seçilmiş sətir
+            // limiti + column filter görünüşü ilə idarə olunur.
+            this.pagination.active.totalPages = 1;
+            this.pagination.active.hasMore = false;
             this.updatePaginationUI('active');
 
             // 🔥 CommentTracker cədvəl render OLDUQDAN SONRA başlasın
@@ -1334,7 +1597,8 @@ class TaskManager {
             if (res && (res.success === true || res.data?.success === true || res.status === newStatus)) {
                 // Cache təmizlə
                 if (window.refreshTaskCache) await window.refreshTaskCache();
-                setTimeout(() => this.loadActiveTasks(), 100);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                await this.loadActiveTasks(1, true);
                 return res.data || res;
             } else {
                 throw new Error(res?.detail || res?.message || 'Status dəyişdirilə bilmədi');

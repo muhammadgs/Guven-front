@@ -52,6 +52,9 @@
             if (name !== 'select' && this.app.selection) {
                 this.app.selection.clear();
             }
+            if (name !== 'connector' && this.app.connectors) {
+                this.app.connectors.cancelDraw();
+            }
 
             this.applyMode();
             this.updateSidebarUI();
@@ -72,7 +75,11 @@
             app.overlayLayer.listening(interactive);
             for (const node of app.mainLayer.getChildren()) {
                 const el = app.state.getElement(node.id());
-                node.draggable(interactive && !!el && el.type !== 'connector' && !el.locked);
+                let draggable = interactive && !!el && !el.locked;
+                if (el && el.type === 'connector') {
+                    draggable = draggable && app.connectors && app.connectors.isFreeConnector(el);
+                }
+                node.draggable(draggable);
             }
             this.updateCursor();
         }
@@ -86,6 +93,8 @@
             } else if (this.current === 'text' && !this.tempPan) {
                 container.style.cursor = 'text';
             } else if (this.current === 'pen' && !this.tempPan) {
+                container.style.cursor = 'crosshair';
+            } else if (this.current === 'connector' && !this.tempPan) {
                 container.style.cursor = 'crosshair';
             } else if (this.current === 'shape' && !this.tempPan) {
                 container.style.cursor = plusCursorSvg();
@@ -101,7 +110,8 @@
             const shapesBtn = document.querySelector('#toolSidebar [data-tool="shapes"]');
             if (shapesBtn) {
                 shapesBtn.classList.toggle('active',
-                    this.current === 'shape' || (this.shapeMenu && this.shapeMenu.isOpen()));
+                    this.current === 'shape' || this.current === 'connector' ||
+                    (this.shapeMenu && this.shapeMenu.isOpen()));
             }
         }
 

@@ -82,6 +82,8 @@ const TableManager = {
         // ========== 2. BÜTÜN SƏTİRLƏRİ YARAT ==========
         Promise.all(tasksWithAttachments).then(async (processedTasks) => {
             const rows = [];
+            const savedRowLimit = Number.parseInt(localStorage.getItem(`task_limit_${tableType}`), 10);
+            const initialRowLimit = [20, 50, 100].includes(savedRowLimit) ? savedRowLimit : 20;
 
             for (let i = 0; i < processedTasks.length; i++) {
                 const task = processedTasks[i];
@@ -129,6 +131,10 @@ const TableManager = {
                     const row = document.createElement('tr');
                     row.innerHTML = html;
                     row.setAttribute('data-task-id', task.id);
+                    // Column filter hazır olanadək bütün master datasetin qısa
+                    // müddətə görünməsinin qarşısını alır. Aktiv filter varsa
+                    // tableRendered hadisəsi düzgün uyğun sətirləri açacaq.
+                    if (i >= initialRowLimit) row.style.display = 'none';
                     rows.push(row);
 
                 } catch (error) {
@@ -1395,7 +1401,7 @@ const TableManager = {
                             case 'active-tab':
                             case 'nav-active':
                                 if (window.taskManager?.loadActiveTasks) {
-                                    window.taskManager.loadActiveTasks();
+                                    window.taskManager.loadActiveTasks(1, true);
                                     console.log('🔄 Aktiv cədvəl yeniləndi (WebSocket)');
                                 }
                                 break;

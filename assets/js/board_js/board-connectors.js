@@ -258,6 +258,15 @@
             this.selectionGroup = null;
             this.previewGroup = null;
             this.previewKey = null;
+            this.quickPresetKind = null;
+            this.drawStart = null;
+            this.drawSource = null;
+            this.drawMoved = false;
+            this.drawGroup = null;
+            this.drawLine = null;
+            this.drawConnector = null;
+            this.endpointMenuEl = null;
+            this.endpointMenuCtx = null;
             this.quickDefaults = {
                 routing: BoardConfig.DEFAULT_CONNECTOR_ROUTING,
                 stroke: BoardConfig.DEFAULT_CONNECTOR_COLOR,
@@ -266,6 +275,7 @@
                 startMarker: 'none',
                 endMarker: 'arrow'
             };
+            this.bindDrawTool();
         }
 
         normalizeConnector(connector) {
@@ -283,10 +293,29 @@
                 ? connector.startMarker : 'none';
             connector.endMarker = MARKER_TYPES.includes(connector.endMarker)
                 ? connector.endMarker : 'none';
-            if (connector.source && !SIDES.includes(connector.source.side)) connector.source.side = 'right';
-            if (connector.target && !SIDES.includes(connector.target.side)) connector.target.side = 'left';
+            // Uc ya fiqura bağlıdır (elementId+side), ya da sərbəst nöqtədir (point)
+            const fixEndpoint = (endpoint, fallbackSide) => {
+                if (!endpoint) return endpoint;
+                if (endpoint.elementId) {
+                    if (!SIDES.includes(endpoint.side)) endpoint.side = fallbackSide;
+                    delete endpoint.point;
+                } else if (endpoint.point) {
+                    endpoint.point.x = Number(endpoint.point.x) || 0;
+                    endpoint.point.y = Number(endpoint.point.y) || 0;
+                    delete endpoint.side;
+                }
+                return endpoint;
+            };
+            connector.source = fixEndpoint(connector.source, 'right');
+            connector.target = fixEndpoint(connector.target, 'left');
             connector.locked = !!connector.locked;
             return connector;
+        }
+
+        isFreeConnector(connector) {
+            return !!(connector && connector.type === 'connector' &&
+                connector.source && connector.source.point && !connector.source.elementId &&
+                connector.target && connector.target.point && !connector.target.elementId);
         }
 
         createConnector(sourceId, sourceSide, targetId, targetSide, patch) {
@@ -309,12 +338,12 @@
             const elements = this.app.state.elements;
             const nodes = new Set(elements.filter(el => el.type !== 'connector').map(el => el.id));
             const removed = new Set();
+            const endpointOk = endpoint => endpoint &&
+                (endpoint.elementId ? nodes.has(endpoint.elementId) : !!endpoint.point);
             for (const el of elements) {
                 if (el.type !== 'connector') continue;
                 this.normalizeConnector(el);
-                const sourceId = el.source && el.source.elementId;
-                const targetId = el.target && el.target.elementId;
-                if (!nodes.has(sourceId) || !nodes.has(targetId)) removed.add(el.id);
+                if (!endpointOk(el.source) || !endpointOk(el.target)) removed.add(el.id);
             }
             if (removed.size) {
                 this.detachAttachments(removed);
@@ -325,6 +354,15 @@
 
         endpoint(endpoint, overrides) {
             if (!endpoint) return null;
+            if (!endpoint.elementId) {
+                if (!endpoint.point) return null;
+                // Sərbəst uc: normal geometry() içində qarşı uca görə hesablanır
+                return {
+                    point: { x: endpoint.point.x, y: endpoint.point.y },
+                    normal: null,
+                    free: true
+                };
+            }
             const el = overrides && overrides.get(endpoint.elementId)
                 ? overrides.get(endpoint.elementId)
                 : this.app.state.getElement(endpoint.elementId);
@@ -350,6 +388,16 @@
             const source = this.endpoint(connector.source, overrides);
             const target = this.endpoint(connector.target, overrides);
             if (!source || !target) return null;
+
+            // Sərbəst ucların normalı: qarşı uca doğru dominant ox istiqaməti
+            const axisNormal = (from, to) => {
+                const dx = to.x - from.x, dy = to.y - from.y;
+                return Math.abs(dx) >= Math.abs(dy)
+                    ? { x: dx >= 0 ? 1 : -1, y: 0 }
+                    : { x: 0, y: dy >= 0 ? 1 : -1 };
+            };
+            if (!source.normal) source.normal = axisNormal(source.point, target.point);
+            if (!target.normal) target.normal = axisNormal(target.point, source.point);
 
             const start = source.point;
             const end = target.point;
@@ -439,6 +487,21 @@
                 lineCap: 'round',
                 lineJoin: 'round'
             }));
+            // Tam sərbəst xətt bütöv sürüklənə bilir: delta iki uca da tətbiq olunur
+            group.on('dragend.connectormove', e => {
+                e.cancelBubble = true;
+                const delta = group.position();
+                group.position({ x: 0, y: 0 });
+                if (this.isFreeConnector(connector) && (delta.x || delta.y)) {
+                    connector.source.point.x = round(connector.source.point.x + delta.x);
+                    connector.source.point.y = round(connector.source.point.y + delta.y);
+                    connector.target.point.x = round(connector.target.point.x + delta.x);
+                    connector.target.point.y = round(connector.target.point.y + delta.y);
+                    this.refreshAll(true);
+                    this.app.commit();
+                    this.app.updateSelectionUI();
+                }
+            });
             this.updateNode(group, connector);
             return group;
         }
@@ -453,7 +516,9 @@
             group.position({ x: 0, y: 0 });
             group.rotation(0);
             group.scale({ x: 1, y: 1 });
-            group.draggable(false);
+            group.draggable(!preview && !connector.locked &&
+                this.isFreeConnector(connector) &&
+                this.app.tools && this.app.tools.isSelectMode());
 
             let line = group.findOne('.connector-line');
             if (!line) {
@@ -845,13 +910,272 @@
                 curve: { routing: 'curve', endMarker: 'arrow' }
             };
             Object.assign(this.quickDefaults, presets[kind] || presets.elbow);
-            if (this.app.tools.current !== 'select') this.app.tools.setTool('select');
-            this.app.showToast('Connector stili seçildi — fiqurun yan nöqtəsindən əlavə edin');
-            this.refreshHandles();
+            this.quickPresetKind = presets[kind] ? kind : 'elbow';
+            this.app.tools.setTool('connector');
+            this.app.showToast('Xətt çəkin: boş sahəyə klikləyin/sürükləyin və ya fiqurdan başlayın');
+        }
+
+        // ==================== Sərbəst xətt çəkmə aləti ====================
+        elementAtPoint(pos) {
+            const elements = this.app.state.elements;
+            for (let i = elements.length - 1; i >= 0; i--) {
+                const el = elements[i];
+                if (el.type === 'connector' || el.type === 'pen') continue;
+                const box = aabbForElement(el);
+                if (pos.x >= box.x - 6 && pos.x <= box.x + box.width + 6 &&
+                    pos.y >= box.y - 6 && pos.y <= box.y + box.height + 6) {
+                    return el;
+                }
+            }
+            return null;
+        }
+
+        nearestSide(el, pos) {
+            let best = 'right', bestDistance = Infinity;
+            for (const side of SIDES) {
+                const d = distance(modelSidePoint(el, side).point, pos);
+                if (d < bestDistance) {
+                    bestDistance = d;
+                    best = side;
+                }
+            }
+            return best;
+        }
+
+        // Kətan nöqtəsi üçün endpoint spesifikasiyası: fiqur üstündədirsə bağla, deyilsə sərbəst
+        endpointFor(pos) {
+            const el = this.elementAtPoint(pos);
+            if (el) return { elementId: el.id, side: this.nearestSide(el, pos) };
+            return { point: { x: round(pos.x), y: round(pos.y) } };
+        }
+
+        bindDrawTool() {
+            const stage = this.app.stage;
+
+            stage.on('mousedown.connectordraw touchstart.connectordraw', e => {
+                if (this.app.tools.current !== 'connector' || this.app.tools.tempPan) return;
+                if (e.evt.button !== undefined && e.evt.button !== 0) return;
+                const pos = stage.getRelativePointerPosition();
+                this.drawStart = { x: pos.x, y: pos.y };
+                this.drawSource = this.endpointFor(pos);
+                this.drawMoved = false;
+            });
+
+            stage.on('mousemove.connectordraw touchmove.connectordraw', () => {
+                if (!this.drawStart) return;
+                const pos = stage.getRelativePointerPosition();
+                const zoom = this.app.state.viewport.zoom || 1;
+                if (!this.drawMoved && distance(pos, this.drawStart) * zoom < 4) return;
+                this.drawMoved = true;
+                let target = this.endpointFor(pos);
+                if (target.elementId && target.elementId === this.drawSource.elementId) {
+                    target = { point: { x: round(pos.x), y: round(pos.y) } };
+                }
+                this.updateDrawPreview(this.drawSource, target);
+            });
+
+            stage.on('mouseup.connectordraw touchend.connectordraw', () => {
+                if (!this.drawStart) return;
+                const pos = stage.getRelativePointerPosition();
+                const source = this.drawSource;
+                let target;
+                if (!this.drawMoved) {
+                    // Sadə klik: standart uzunluqda xətt yerləşdir
+                    const sourceEndpoint = this.endpoint(source);
+                    const direction = (sourceEndpoint && sourceEndpoint.normal) || { x: 1, y: 0 };
+                    const base = sourceEndpoint ? sourceEndpoint.point : pos;
+                    target = {
+                        point: {
+                            x: round(base.x + direction.x * 180),
+                            y: round(base.y + direction.y * 180)
+                        }
+                    };
+                } else {
+                    target = this.endpointFor(pos);
+                    if (target.elementId && target.elementId === source.elementId) {
+                        target = { point: { x: round(pos.x), y: round(pos.y) } };
+                    }
+                }
+                this.finishDraw(source, target);
+            });
+        }
+
+        updateDrawPreview(sourceSpec, targetSpec) {
+            if (!this.drawGroup) {
+                this.drawConnector = this.createConnector(null, null, null, null, {
+                    id: 'connector_draw_preview'
+                });
+                this.drawGroup = new Konva.Group({ name: 'connector-draw-preview', listening: false });
+                this.drawLine = this.buildNode(this.drawConnector);
+                this.drawLine.id('');
+                this.drawLine.listening(false);
+                this.drawGroup.add(this.drawLine);
+                this.app.overlayLayer.add(this.drawGroup);
+            }
+            this.drawConnector.source = sourceSpec;
+            this.drawConnector.target = targetSpec;
+            this.updateNode(this.drawLine, this.drawConnector, null, true);
+            this.app.overlayLayer.batchDraw();
+        }
+
+        // Elementin verilmiş nöqtəyə baxan tərəfi (dominant ox üzrə)
+        sideTowards(el, point) {
+            const center = elementCenter(el);
+            const dx = point.x - center.x, dy = point.y - center.y;
+            if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? 'right' : 'left';
+            return dy >= 0 ? 'bottom' : 'top';
+        }
+
+        finishDraw(sourceSpec, targetSpec) {
+            this.cancelDraw();
+            if (!sourceSpec || !targetSpec) return;
+            // Bağlı ucları qarşı uca baxan tərəfə yönəlt
+            for (const [spec, other] of [[sourceSpec, targetSpec], [targetSpec, sourceSpec]]) {
+                if (!spec.elementId) continue;
+                const el = this.app.state.getElement(spec.elementId);
+                const otherEl = other.elementId ? this.app.state.getElement(other.elementId) : null;
+                const otherPoint = otherEl ? elementCenter(otherEl) : (other.point || null);
+                if (el && otherPoint) spec.side = this.sideTowards(el, otherPoint);
+            }
+            const connector = this.createConnector(null, null, null, null, {});
+            connector.source = sourceSpec;
+            connector.target = targetSpec;
+            this.normalizeConnector(connector);
+
+            this.app.state.addElement(connector);
+            const node = this.buildNode(connector);
+            this.app.mainLayer.add(node);
+            node.moveToBottom();
+            this.app.mainLayer.batchDraw();
+
+            this.app.tools.setTool('select');
+            this.app.selection.select([connector.id]);
+            this.app.commit();
+        }
+
+        cancelDraw() {
+            this.drawStart = null;
+            this.drawSource = null;
+            this.drawMoved = false;
+            if (this.drawGroup) {
+                this.drawGroup.destroy();
+                this.drawGroup = null;
+                this.drawLine = null;
+                this.drawConnector = null;
+                this.app.overlayLayer.batchDraw();
+            }
+        }
+
+        // ==================== Uc nöqtəyə item əlavə etmə menyusu ====================
+        ensureEndpointMenu() {
+            if (this.endpointMenuEl) return;
+            const menu = document.createElement('div');
+            menu.id = 'connectorEndpointMenu';
+            menu.className = 'ct-pop conn-attach-pop endpoint-attach-menu hidden';
+            menu.innerHTML = `
+                <div class="sm-grid sm-grid-6">
+                    <button class="sm-item" data-endkind="text" title="Mətn"><i class="fas fa-font"></i></button>
+                    <button class="sm-item" data-endkind="sticky" title="Stiker / sticky note"><i class="far fa-sticky-note"></i></button>
+                </div>
+                <div class="sm-sep"></div>
+                <div class="sm-sections">${BoardShapes.sectionsHtml('endshape')}</div>
+            `;
+            this.app.container.parentElement.appendChild(menu);
+
+            const pick = (kind, shapeType) => {
+                const ctx = this.endpointMenuCtx;
+                this.hideEndpointMenu();
+                if (!ctx) return;
+                const connector = this.app.state.getElement(ctx.connectorId);
+                if (connector) this.addEndpointItem(connector, ctx.which, kind, shapeType);
+            };
+            menu.querySelectorAll('[data-endkind]').forEach(button =>
+                button.addEventListener('click', () => pick(button.dataset.endkind)));
+            menu.querySelectorAll('[data-endshape]').forEach(button =>
+                button.addEventListener('click', () => pick('shape', button.dataset.endshape)));
+
+            document.addEventListener('mousedown', e => {
+                if (!menu.classList.contains('hidden') && !menu.contains(e.target)) {
+                    this.hideEndpointMenu();
+                }
+            });
+            this.endpointMenuEl = menu;
+        }
+
+        openEndpointMenu(connector, which) {
+            const geometry = this.geometry(connector);
+            if (!geometry) return;
+            this.ensureEndpointMenu();
+            this.endpointMenuCtx = { connectorId: connector.id, which };
+
+            const menu = this.endpointMenuEl;
+            menu.classList.remove('hidden');
+            const point = which === 'source' ? geometry.start : geometry.end;
+            const screen = this.app.stage.getAbsoluteTransform().point(point);
+            const cw = this.app.container.clientWidth;
+            const ch = this.app.container.clientHeight;
+            menu.style.left = clamp(screen.x + 14, 8, Math.max(8, cw - menu.offsetWidth - 8)) + 'px';
+            menu.style.top = clamp(screen.y + 14, 8, Math.max(8, ch - menu.offsetHeight - 8)) + 'px';
+        }
+
+        hideEndpointMenu() {
+            this.endpointMenuCtx = null;
+            if (!this.endpointMenuEl || this.endpointMenuEl.classList.contains('hidden')) return false;
+            this.endpointMenuEl.classList.add('hidden');
+            return true;
+        }
+
+        // Sərbəst uca yeni element yaradıb connector-u ona bağlayır
+        addEndpointItem(connector, which, kind, shapeType) {
+            if (connector.locked) {
+                this.app.showToast('Connector kilidlidir');
+                return;
+            }
+            const geometry = this.geometry(connector);
+            if (!geometry) return;
+            const isStart = which === 'source';
+            const point = isStart ? geometry.start : geometry.end;
+            const tangent = geometry.tangentAt(isStart ? 0.001 : 0.999);
+            const outward = isStart ? { x: -tangent.x, y: -tangent.y } : tangent;
+            const axis = Math.abs(outward.x) >= Math.abs(outward.y)
+                ? { x: outward.x >= 0 ? 1 : -1, y: 0 }
+                : { x: 0, y: outward.y >= 0 ? 1 : -1 };
+
+            let el;
+            if (kind === 'text') {
+                el = BoardElements.createText(point.x, point.y);
+                el.width = 120;
+                el.text.content = '';
+                el.text.align = 'center';
+            } else if (kind === 'sticky') {
+                el = BoardElements.createStickyNote(point.x, point.y, BoardConfig.DEFAULT_STICKY_COLOR);
+                el.width = 112;
+                el.height = 112;
+            } else {
+                el = BoardElements.createShape(point.x, point.y, shapeType || 'rectangle');
+            }
+
+            // Elementin xəttə baxan tərəfi tam uc nöqtəyə otursun
+            const half = axis.x !== 0 ? el.width / 2 : el.height / 2;
+            const center = { x: point.x + axis.x * half, y: point.y + axis.y * half };
+            el.x = round(center.x - el.width / 2);
+            el.y = round(center.y - el.height / 2);
+            const side = axis.x > 0 ? 'left' : axis.x < 0 ? 'right' : axis.y > 0 ? 'top' : 'bottom';
+
+            this.app.state.addElement(el);
+            const node = BoardElements.buildNode(el, this.app);
+            if (node) this.app.mainLayer.add(node);
+            connector[which] = { elementId: el.id, side };
+            this.normalizeConnector(connector);
+            this.refreshAll(true);
+            this.app.selection.select([el.id]);
+            this.app.commit();
+            if (kind === 'text') setTimeout(() => this.app.textEditor.openFor(el.id), 0);
         }
 
         destroyHandleGroups() {
             this.clearPreview();
+            this.hideEndpointMenu();
             if (this.anchorGroup) this.anchorGroup.destroy();
             if (this.selectionGroup) this.selectionGroup.destroy();
             this.anchorGroup = null;
@@ -927,8 +1251,8 @@
         buildConnectorSelection(connector, zoom) {
             const geometry = this.geometry(connector);
             if (!geometry) return null;
-            const group = new Konva.Group({ name: 'connector-selection', listening: false });
-            group.add(new Konva.Path({
+            const group = new Konva.Group({ name: 'connector-selection' });
+            const outline = new Konva.Path({
                 data: geometry.pathData,
                 stroke: BoardConfig.SELECTION_COLOR,
                 strokeWidth: 1.4 / zoom,
@@ -936,17 +1260,97 @@
                 lineCap: 'round',
                 lineJoin: 'round',
                 listening: false
-            }));
-            const points = [geometry.start, geometry.pointAt(0.5), geometry.end];
-            points.forEach((point, index) => group.add(new Konva.Circle({
-                x: point.x,
-                y: point.y,
-                radius: (index === 1 ? 5 : 6) / zoom,
-                fill: index === 1 ? BoardConfig.SELECTION_COLOR : '#FFFFFF',
+            });
+            group.add(outline);
+            const midPoint = geometry.pointAt(0.5);
+            const mid = new Konva.Circle({
+                x: midPoint.x,
+                y: midPoint.y,
+                radius: 5 / zoom,
+                fill: BoardConfig.SELECTION_COLOR,
                 stroke: BoardConfig.SELECTION_COLOR,
                 strokeWidth: 2 / zoom,
                 listening: false
-            })));
+            });
+            group.add(mid);
+
+            // Uc tutacaqları: sürükləyib yenidən bağlamaq / dblclick ilə item əlavə etmək
+            for (const [which, point] of [['source', geometry.start], ['target', geometry.end]]) {
+                const handle = new Konva.Circle({
+                    name: 'connector-endpoint-handle',
+                    x: point.x,
+                    y: point.y,
+                    radius: 6 / zoom,
+                    fill: '#FFFFFF',
+                    stroke: BoardConfig.SELECTION_COLOR,
+                    strokeWidth: 2 / zoom,
+                    hitStrokeWidth: 12 / zoom,
+                    draggable: !connector.locked
+                });
+                handle.on('mouseenter', () => {
+                    this.app.container.style.cursor = 'crosshair';
+                });
+                handle.on('mouseleave', () => this.app.tools.updateCursor());
+                handle.on('mousedown touchstart', e => {
+                    e.cancelBubble = true;
+                });
+                handle.on('dragstart', e => {
+                    e.cancelBubble = true;
+                    this.hideEndpointMenu();
+                    if (this.app.connectorToolbar) this.app.connectorToolbar.hide();
+                });
+                handle.on('dragmove', e => {
+                    e.cancelBubble = true;
+                    const pos = handle.position();
+                    let spec = this.endpointFor(pos);
+                    const other = which === 'source' ? connector.target : connector.source;
+                    if (spec.elementId && other && other.elementId === spec.elementId) {
+                        spec = { point: { x: round(pos.x), y: round(pos.y) } };
+                    }
+                    connector[which] = spec;
+                    this.normalizeConnector(connector);
+                    const node = this.app.stage.findOne('#' + connector.id);
+                    if (node) this.updateNode(node, connector);
+                    this.syncAttachments(false);
+                    const live = this.geometry(connector);
+                    if (live) {
+                        outline.data(live.pathData);
+                        mid.position(live.pointAt(0.5));
+                    }
+                    this.app.mainLayer.batchDraw();
+                    this.app.overlayLayer.batchDraw();
+                });
+                handle.on('dragend', e => {
+                    e.cancelBubble = true;
+                    // Yeni bağlanan ucu qarşı uca baxan tərəfə yönəlt
+                    const spec = connector[which];
+                    if (spec && spec.elementId) {
+                        const el = this.app.state.getElement(spec.elementId);
+                        const otherResolved = this.endpoint(
+                            which === 'source' ? connector.target : connector.source);
+                        if (el && otherResolved) {
+                            spec.side = this.sideTowards(el, otherResolved.point);
+                        }
+                    }
+                    // Konva drag mexanizmi bitsin, sonra overlay yenidən qurulsun
+                    setTimeout(() => {
+                        this.refreshAll(true);
+                        this.app.commit();
+                        this.app.updateSelectionUI();
+                    }, 0);
+                });
+                handle.on('dblclick dbltap', e => {
+                    e.cancelBubble = true;
+                    const spec = connector[which];
+                    if (spec && spec.elementId) return;
+                    if (connector.locked) {
+                        this.app.showToast('Connector kilidlidir');
+                        return;
+                    }
+                    this.openEndpointMenu(connector, which);
+                });
+                group.add(handle);
+            }
             return group;
         }
 
