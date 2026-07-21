@@ -223,81 +223,357 @@ body {
     outline-offset: 2px;
 }
 
-/* ==================== Qələm paneli ==================== */
-.pen-panel {
+/* ==================== Çəkim paneli (qələm/marker/silgi/lasso) ==================== */
+.draw-bar {
     position: absolute;
     left: 78px;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 4px;
     background: #fff;
     border-radius: 12px;
-    padding: 12px;
+    padding: 8px 6px;
     box-shadow: 0 4px 18px rgba(30, 30, 60, 0.14);
     z-index: 10;
+    max-height: calc(100% - 32px);
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 
-.pen-colors {
-    display: grid;
-    grid-template-columns: repeat(3, 30px);
-    gap: 8px;
+.draw-bar::-webkit-scrollbar {
+    display: none;
 }
 
-.pen-swatch {
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
-}
-
-.pen-swatch:hover {
-    transform: scale(1.08);
-}
-
-.pen-swatch.active {
-    outline: 2px solid #4262FF;
-    outline-offset: 2px;
-}
-
-.pen-divider {
-    height: 1px;
-    background: #e8e8ee;
-}
-
-.pen-widths {
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
-}
-
-.pen-width-btn {
-    width: 30px;
-    height: 30px;
+.draw-tool {
+    position: relative;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    border-radius: 7px;
+    border-radius: 9px;
+    font-size: 16px;
+    color: #2b2b3a;
     cursor: pointer;
+    flex: 0 0 auto;
 }
 
-.pen-width-btn:hover {
+.draw-tool:hover {
     background: #f0f0f4;
 }
 
-.pen-width-btn.active {
+.draw-tool.active {
     background: #ECECFE;
+    color: #4262FF;
 }
 
-.pen-width-dot {
+.draw-tool-disabled {
+    opacity: 0.4;
+}
+
+.draw-tool-disabled:hover {
+    background: transparent;
+}
+
+/* Qismən silgi ikonundakı kiçik nöqtə fərqləndiricisi */
+.draw-tool-partial .partial-dot {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    background: #2b2b3a;
+    background: currentColor;
+    opacity: 0.85;
+}
+
+.draw-sep {
+    width: 30px;
+    height: 1px;
+    background: #e8e8ee;
+    margin: 4px 0;
+    flex: 0 0 auto;
+}
+
+.draw-swatches {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+}
+
+/* Swatch: çevrə + içində rəngli nöqtə (ölçüsü = qalınlıq) */
+.draw-swatch {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #d6d6de;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    flex: 0 0 auto;
+}
+
+.draw-swatch:hover {
+    border-color: #a9a9b8;
+}
+
+.draw-swatch.active {
+    border: 2.5px solid #4262FF;
+}
+
+.draw-swatch-dot {
+    border-radius: 50%;
     display: inline-block;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.draw-swatch-plus {
+    border-style: dashed;
+    color: #7a7a88;
+    font-size: 12px;
+}
+
+.draw-swatch-plus:hover {
+    color: #4262FF;
+    border-color: #4262FF;
+}
+
+/* ==================== Çəkim popup-ı (slider + palet) ==================== */
+.draw-popup {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 6px 24px rgba(30, 30, 60, 0.18);
+    z-index: 30;
+    /* 4 sütun x 32px + 3 x 10px boşluq + sürüşdürücü yeri = 174px daxili en */
+    width: 202px;
+}
+
+.draw-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(to right, #4262FF 0%, #4262FF 50%, #c9cede 50%, #c9cede 100%);
+    outline: none;
+    cursor: pointer;
+}
+
+.draw-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid #4262FF;
+    cursor: grab;
+}
+
+.draw-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2.5px solid #4262FF;
+    cursor: grab;
+}
+
+.draw-palette-title {
+    font-size: 13px;
+    color: #8a8a96;
+    margin-bottom: 8px;
+}
+
+.draw-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 32px);
+    gap: 10px;
+    max-height: 194px;          /* ~5 sıra: qalanı üçün yalnız şaquli sürüşdürmə */
+    overflow-y: auto;
+    overflow-x: hidden;         /* üfüqi sürüşdürücü heç vaxt görünmür */
+    scrollbar-width: thin;
+    scrollbar-color: #c9cede transparent;
+    scrollbar-gutter: stable;
+}
+
+.draw-palette-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.draw-palette-grid::-webkit-scrollbar-thumb {
+    background: #c9cede;
+    border-radius: 3px;
+}
+
+.draw-palette-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.draw-palette-color {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    padding: 0;
+    transition: transform .12s ease;
+}
+
+.draw-palette-color.is-white {
+    box-shadow: inset 0 0 0 1.5px #d6d6de;
+    color: #2b2b3a;
+}
+
+.draw-palette-color:hover {
+    transform: scale(1.12);
+}
+
+/* Palitranın sonundakı "öz rəngin" düyməsi */
+.draw-palette-custom {
+    background: conic-gradient(#ff4d4d, #ffd93d, #6bd968, #4dd2ff, #7a6bff, #ff6bd2, #ff4d4d);
+    position: relative;
+}
+
+.draw-palette-custom i {
+    font-size: 11px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
+}
+
+.draw-palette-custom.active {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4262FF;
+}
+
+/* ==================== Öz rəngin: SV kvadratı + çalar + hex ==================== */
+.draw-custom {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #ecedf3;
+}
+
+.draw-custom.hidden {
+    display: none;
+}
+
+.draw-sv {
+    position: relative;
+    width: 100%;
+    height: 104px;
+    border-radius: 8px;
+    cursor: crosshair;
+    touch-action: none;
+    /* Fon rəngi JS-dən: çaların tam doymuş tonu */
+    background-image:
+        linear-gradient(to top, #000, rgba(0, 0, 0, 0)),
+        linear-gradient(to right, #fff, rgba(255, 255, 255, 0));
+}
+
+.draw-sv-knob,
+.draw-hue-knob {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .28), 0 1px 3px rgba(0, 0, 0, .3);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.draw-hue {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: none;
+    background: linear-gradient(to right,
+        #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+}
+
+.draw-hue-knob {
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+}
+
+.draw-hex-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.draw-hex {
+    flex: 1;
+    min-width: 0;
+    height: 30px;
+    border: 1px solid #e2e3ec;
+    border-radius: 7px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #2b2b3a;
+    text-transform: uppercase;
+    outline: none;
+}
+
+.draw-hex:focus {
+    border-color: #4262FF;
+}
+
+.draw-hex.is-invalid {
+    border-color: #F03E3E;
+}
+
+.draw-eyedropper {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border: 1px solid #e2e3ec;
+    border-radius: 7px;
+    background: #fff;
+    color: #5b5b6b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.draw-eyedropper:hover {
+    background: #f2f3f8;
+    color: #2b2b3a;
+}
+
+.draw-eyedropper.active {
+    background: #4262FF;
+    border-color: #4262FF;
+    color: #fff;
 }
 
 /* ==================== Fiqur menyusu ==================== */

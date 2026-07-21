@@ -358,6 +358,13 @@ if (!document.getElementById('task-timer-styles')) {
         @keyframes blink        { 0%,100%{opacity:1} 50%{opacity:0.5} }
         @keyframes slideInRight { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
         .confirm-actions { display:flex;gap:4px;margin-top:-1px;flex-wrap:wrap; }
+        .confirm-actions > .btn-approve,
+        .confirm-actions > .btn-reject-approval,
+        .confirm-actions > .btn-edit-task {
+            flex:1 1 0 !important;
+            min-width:0;
+            justify-content:center;
+        }
         .btn-approve {
             background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
             padding:5px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;
@@ -682,7 +689,7 @@ function _buildEditButton(taskId, canEdit, isFlex = false) {
     return `
         <button class="btn-edit-task" data-edit-btn="${taskId}"
                 onclick="TableManager.openEditModal(${taskId},'active')" title="Redaktə"
-                ${isFlex ? 'style="flex:1; justify-content:center;"' : 'style="flex:0.35 1 auto; justify-content:center;"'}>
+                ${isFlex ? 'style="flex:1; justify-content:center;"' : 'style="flex:1 1 0; min-width:0; justify-content:center;"'}>
             <i class="fa-solid fa-pen"></i>
         </button>
     `;

@@ -429,6 +429,61 @@
         return fontSize;
     }
 
+    // Cizgini künc yumşaltmalı xətt kimi çəkir: hər təpənin ətrafında ən çoxu
+    // `radius` məsafədə kvadratik Bézier ilə dönür, aralar düz qalır.
+    //
+    // İki mühüm xüsusiyyət:
+    //  1) Konva-nın `tension` (Catmull-Rom) rejimindən fərqli olaraq əyri heç vaxt
+    //     nöqtələrin xaricinə çıxmır — overshoot, ilgək və şişmə yoxdur.
+    //  2) Forma nöqtə SIXLIĞINDAN asılı deyil: xətt üzərinə əlavə nöqtə qoymaq
+    //     görünüşü dəyişmir. Qismən silgi kəsik yerlərinə nöqtə əlavə etdiyi üçün
+    //     bu, cizginin silinməyən hissəsinin toxunulmaz qalmasını təmin edir.
+    // Nöqtələr sıx olanda (əl ilə çəkilmiş cizgi) hər addım radiusdan qısa olur və
+    // əyri tam hamar orta-nöqtə splayınına çevrilir.
+    function penPath(ctx, pts, radius) {
+        const n = pts ? pts.length >> 1 : 0;
+        if (!n) return;
+
+        ctx.beginPath();
+        ctx.moveTo(pts[0], pts[1]);
+        if (n === 1) {
+            // Tək klik: yuvarlaq başlıq sayəsində nöqtə kimi görünür
+            ctx.lineTo(pts[0] + 0.01, pts[1] + 0.01);
+            return;
+        }
+        if (n === 2) {
+            ctx.lineTo(pts[2], pts[3]);
+            return;
+        }
+
+        const r = Math.max(0.01, radius || 0);
+        for (let i = 1; i < n - 1; i++) {
+            const px = pts[i * 2 - 2], py = pts[i * 2 - 1];
+            const vx = pts[i * 2], vy = pts[i * 2 + 1];
+            const nx = pts[i * 2 + 2], ny = pts[i * 2 + 3];
+
+            const d1 = Math.hypot(vx - px, vy - py);
+            const d2 = Math.hypot(nx - vx, ny - vy);
+            if (!d1 || !d2) continue;
+
+            const r1 = Math.min(r, d1 / 2);
+            const r2 = Math.min(r, d2 / 2);
+            ctx.lineTo(vx - (vx - px) / d1 * r1, vy - (vy - py) / d1 * r1);
+            ctx.quadraticCurveTo(vx, vy, vx + (nx - vx) / d2 * r2, vy + (ny - vy) / d2 * r2);
+        }
+        ctx.lineTo(pts[(n - 1) * 2], pts[(n - 1) * 2 + 1]);
+    }
+
+    // Künc radiusu qələmin qalınlığı ilə mütənasibdir — qalın qələm daha yumşaq dönür
+    function penCornerRadius(strokeWidth) {
+        return Math.max(BoardConfig.PEN_CORNER_MIN, (strokeWidth || 2) * BoardConfig.PEN_CORNER_RATIO);
+    }
+
+    function penSceneFunc(ctx, shape) {
+        penPath(ctx, shape.points(), penCornerRadius(shape.strokeWidth()));
+        ctx.strokeShape(shape);
+    }
+
     function buildPenNode(el, app) {
         const group = new Konva.Group({
             id: el.id,
@@ -442,9 +497,11 @@
 
         const line = new Konva.Line({
             name: 'stroke',
+            sceneFunc: penSceneFunc,
             lineCap: 'round',
             lineJoin: 'round',
-            tension: 0.35
+            perfectDrawEnabled: false,
+            shadowForStrokeEnabled: false
         });
         group.add(line);
         syncPen(group, el);
@@ -460,7 +517,9 @@
             points: el.points,
             stroke: el.stroke,
             strokeWidth: el.strokeWidth,
-            hitStrokeWidth: Math.max(el.strokeWidth + 14, 20)
+            hitStrokeWidth: Math.max(el.strokeWidth + 14, 20),
+            // Marker: şəffaf cizgi — ayrı-ayrı gedişlər üst-üstə düşəndə tündləşir
+            opacity: el.variant === 'marker' ? BoardConfig.MARKER_OPACITY : 1
         });
     }
 
@@ -661,6 +720,9 @@
         syncShape,
         syncTextElement,
         syncPen,
+        penPath,
+        penCornerRadius,
+        penSceneFunc,
         buildNode,
         updateNode,
         syncSticky,

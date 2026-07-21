@@ -12,6 +12,13 @@
         return Math.hypot(b.x - a.x, b.y - a.y);
     }
 
+    function distanceToSegment(p, a, b) {
+        const abx = b.x - a.x, aby = b.y - a.y;
+        const len2 = abx * abx + aby * aby;
+        const t = len2 ? clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / len2, 0, 1) : 0;
+        return Math.hypot(p.x - (a.x + abx * t), p.y - (a.y + aby * t));
+    }
+
     function normalize(v) {
         const length = Math.hypot(v.x, v.y) || 1;
         return { x: v.x / length, y: v.y / length };
@@ -308,6 +315,20 @@
             };
             connector.source = fixEndpoint(connector.source, 'right');
             connector.target = fixEndpoint(connector.target, 'left');
+            // Qırılma (bend) nöqtələri: mütləq board koordinatlarında, source→target sırası ilə.
+            // Obyekt istinadları qorunur — canlı drag zamanı handler-lər eyni obyekti mutasiya edir.
+            const waypoints = Array.isArray(connector.waypoints) ? connector.waypoints : [];
+            const cleaned = [];
+            for (const p of waypoints) {
+                if (!p) continue;
+                const x = Number(p.x), y = Number(p.y);
+                if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+                p.x = x;
+                p.y = y;
+                cleaned.push(p);
+                if (cleaned.length >= 64) break;
+            }
+            connector.waypoints = cleaned;
             connector.locked = !!connector.locked;
             return connector;
         }
@@ -402,66 +423,180 @@
             const start = source.point;
             const end = target.point;
             const directDistance = distance(start, end);
+            // Anchors: start + qırılma nöqtələri + end (hər qonşu cütü bir "seqment"dir)
+            const waypoints = connector.waypoints || [];
+            const anchors = [start, ...waypoints.map(p => ({ x: p.x, y: p.y })), end];
 
             if (connector.routing === 'curve') {
-                const handle = clamp(directDistance * 0.42, 55, 220);
-                const c1 = {
-                    x: start.x + source.normal.x * handle,
-                    y: start.y + source.normal.y * handle
-                };
-                const c2 = {
-                    x: end.x + target.normal.x * handle,
-                    y: end.y + target.normal.y * handle
-                };
+                if (!waypoints.length) {
+                    const handle = clamp(directDistance * 0.42, 55, 220);
+                    const c1 = {
+                        x: start.x + source.normal.x * handle,
+                        y: start.y + source.normal.y * handle
+                    };
+                    const c2 = {
+                        x: end.x + target.normal.x * handle,
+                        y: end.y + target.normal.y * handle
+                    };
+                    return {
+                        start, end, anchors,
+                        segmentMidpoints: [cubicPoint(start, c1, c2, end, 0.5)],
+                        pathData: `M ${round(start.x)} ${round(start.y)} C ${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(end.x)} ${round(end.y)}`,
+                        pointAt: t => cubicPoint(start, c1, c2, end, clamp(t, 0, 1)),
+                        tangentAt: t => cubicTangent(start, c1, c2, end, clamp(t, 0, 1))
+                    };
+                }
+                // Catmull-Rom-vari spline: bütün anchor-lardan hamar keçir,
+                // uclarda fiqurun normalı istiqamətində çıxır
+                const handleFor = (a, b) => clamp(distance(a, b) * 0.42, 30, 200);
+                const tangents = anchors.map((p, i) => {
+                    if (i === 0) {
+                        const h = 3 * handleFor(anchors[0], anchors[1]);
+                        return { x: source.normal.x * h, y: source.normal.y * h };
+                    }
+                    if (i === anchors.length - 1) {
+                        const h = 3 * handleFor(anchors[i - 1], anchors[i]);
+                        return { x: -target.normal.x * h, y: -target.normal.y * h };
+                    }
+                    return {
+                        x: (anchors[i + 1].x - anchors[i - 1].x) / 2,
+                        y: (anchors[i + 1].y - anchors[i - 1].y) / 2
+                    };
+                });
+                let pathData = `M ${round(start.x)} ${round(start.y)}`;
+                const sampled = [anchors[0]];
+                const segmentMidpoints = [];
+                for (let i = 0; i < anchors.length - 1; i++) {
+                    const p0 = anchors[i], p1 = anchors[i + 1];
+                    const c1 = { x: p0.x + tangents[i].x / 3, y: p0.y + tangents[i].y / 3 };
+                    const c2 = { x: p1.x - tangents[i + 1].x / 3, y: p1.y - tangents[i + 1].y / 3 };
+                    pathData += ` C ${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(p1.x)} ${round(p1.y)}`;
+                    for (let step = 1; step <= 16; step++) {
+                        sampled.push(cubicPoint(p0, c1, c2, p1, step / 16));
+                    }
+                    segmentMidpoints.push(cubicPoint(p0, c1, c2, p1, 0.5));
+                }
+                const sampler = polylineSampler(sampled);
                 return {
-                    start, end,
-                    pathData: `M ${round(start.x)} ${round(start.y)} C ${round(c1.x)} ${round(c1.y)} ${round(c2.x)} ${round(c2.y)} ${round(end.x)} ${round(end.y)}`,
-                    pointAt: t => cubicPoint(start, c1, c2, end, clamp(t, 0, 1)),
-                    tangentAt: t => cubicTangent(start, c1, c2, end, clamp(t, 0, 1))
-                };
-            }
-
-            if (connector.routing === 'straight') {
-                const sampler = polylineSampler([start, end]);
-                return {
-                    start, end,
-                    pathData: `M ${round(start.x)} ${round(start.y)} L ${round(end.x)} ${round(end.y)}`,
+                    start, end, anchors, segmentMidpoints, pathData,
                     pointAt: sampler.pointAt,
                     tangentAt: sampler.tangentAt
                 };
             }
 
-            const stub = clamp(directDistance * 0.22, 34, 72);
-            const afterStart = {
-                x: start.x + source.normal.x * stub,
-                y: start.y + source.normal.y * stub
-            };
-            const beforeEnd = {
-                x: end.x + target.normal.x * stub,
-                y: end.y + target.normal.y * stub
-            };
-            let points;
-            if (Math.abs(source.normal.x) >= Math.abs(source.normal.y)) {
-                points = [
-                    start,
-                    afterStart,
-                    { x: afterStart.x, y: beforeEnd.y },
-                    beforeEnd,
-                    end
-                ];
-            } else {
-                points = [
-                    start,
-                    afterStart,
-                    { x: beforeEnd.x, y: afterStart.y },
-                    beforeEnd,
-                    end
-                ];
+            if (connector.routing === 'straight') {
+                const sampler = polylineSampler(anchors);
+                let pathData = `M ${round(anchors[0].x)} ${round(anchors[0].y)}`;
+                for (let i = 1; i < anchors.length; i++) {
+                    pathData += ` L ${round(anchors[i].x)} ${round(anchors[i].y)}`;
+                }
+                const segmentMidpoints = [];
+                for (let i = 0; i < anchors.length - 1; i++) {
+                    segmentMidpoints.push({
+                        x: (anchors[i].x + anchors[i + 1].x) / 2,
+                        y: (anchors[i].y + anchors[i + 1].y) / 2
+                    });
+                }
+                return {
+                    start, end, anchors, segmentMidpoints, pathData,
+                    pointAt: sampler.pointAt,
+                    tangentAt: sampler.tangentAt
+                };
             }
-            points = cleanPolyline(points);
+
+            if (!waypoints.length) {
+                const stub = clamp(directDistance * 0.22, 34, 72);
+                const afterStart = {
+                    x: start.x + source.normal.x * stub,
+                    y: start.y + source.normal.y * stub
+                };
+                const beforeEnd = {
+                    x: end.x + target.normal.x * stub,
+                    y: end.y + target.normal.y * stub
+                };
+                let points;
+                if (Math.abs(source.normal.x) >= Math.abs(source.normal.y)) {
+                    points = [
+                        start,
+                        afterStart,
+                        { x: afterStart.x, y: beforeEnd.y },
+                        beforeEnd,
+                        end
+                    ];
+                } else {
+                    points = [
+                        start,
+                        afterStart,
+                        { x: beforeEnd.x, y: afterStart.y },
+                        beforeEnd,
+                        end
+                    ];
+                }
+                points = cleanPolyline(points);
+                const sampler = roundedPolylineSampler(points, BoardConfig.CONNECTOR_CORNER_RADIUS);
+                return {
+                    start, end, points, anchors,
+                    segmentMidpoints: [sampler.pointAt(0.5)],
+                    pathData: roundedPolylinePath(points, BoardConfig.CONNECTOR_CORNER_RADIUS),
+                    pointAt: sampler.pointAt,
+                    tangentAt: sampler.tangentAt
+                };
+            }
+
+            // Elbow + waypoints: hər anchor cütü arasında ortoqonal gediş.
+            // Çıxış oxu mənbə normalından gəlir, hər döngədə ox dəyişir;
+            // son ayaqda hədəfə onun normal oxu istiqamətində çatılır (lazımsa Z-formalı iki künc).
+            const axisOf = normal => Math.abs(normal.x) >= Math.abs(normal.y) ? 'h' : 'v';
+            let axis = axisOf(source.normal);
+            const endAxis = axisOf(target.normal);
+            const legs = [];
+            let current = start;
+            for (let k = 1; k < anchors.length - 1; k++) {
+                const wp = anchors[k];
+                const leg = [current];
+                const dxs = Math.abs(wp.x - current.x) > 0.01;
+                const dys = Math.abs(wp.y - current.y) > 0.01;
+                if (axis === 'h') {
+                    if (dxs && dys) leg.push({ x: wp.x, y: current.y });
+                    if (dys) axis = 'v';
+                } else {
+                    if (dxs && dys) leg.push({ x: current.x, y: wp.y });
+                    if (dxs) axis = 'h';
+                }
+                leg.push(wp);
+                legs.push(cleanPolyline(leg));
+                current = wp;
+            }
+            {
+                const leg = [current];
+                const dxs = Math.abs(end.x - current.x) > 0.01;
+                const dys = Math.abs(end.y - current.y) > 0.01;
+                if (axis === 'h') {
+                    if (endAxis === 'v') {
+                        if (dxs && dys) leg.push({ x: end.x, y: current.y });
+                    } else if (dys) {
+                        const midX = (current.x + end.x) / 2;
+                        leg.push({ x: midX, y: current.y });
+                        leg.push({ x: midX, y: end.y });
+                    }
+                } else {
+                    if (endAxis === 'h') {
+                        if (dxs && dys) leg.push({ x: current.x, y: end.y });
+                    } else if (dxs) {
+                        const midY = (current.y + end.y) / 2;
+                        leg.push({ x: current.x, y: midY });
+                        leg.push({ x: end.x, y: midY });
+                    }
+                }
+                leg.push(end);
+                legs.push(cleanPolyline(leg));
+            }
+            const points = cleanPolyline(legs.flat());
             const sampler = roundedPolylineSampler(points, BoardConfig.CONNECTOR_CORNER_RADIUS);
             return {
-                start, end, points,
+                start, end, points, anchors,
+                segmentMidpoints: legs.map(leg =>
+                    leg.length > 1 ? polylineSampler(leg).pointAt(0.5) : { ...leg[0] }),
                 pathData: roundedPolylinePath(points, BoardConfig.CONNECTOR_CORNER_RADIUS),
                 pointAt: sampler.pointAt,
                 tangentAt: sampler.tangentAt
@@ -497,6 +632,10 @@
                     connector.source.point.y = round(connector.source.point.y + delta.y);
                     connector.target.point.x = round(connector.target.point.x + delta.x);
                     connector.target.point.y = round(connector.target.point.y + delta.y);
+                    for (const wp of connector.waypoints || []) {
+                        wp.x = round(wp.x + delta.x);
+                        wp.y = round(wp.y + delta.y);
+                    }
                     this.refreshAll(true);
                     this.app.commit();
                     this.app.updateSelectionUI();
@@ -1262,17 +1401,168 @@
                 listening: false
             });
             group.add(outline);
-            const midPoint = geometry.pointAt(0.5);
-            const mid = new Konva.Circle({
-                x: midPoint.x,
-                y: midPoint.y,
-                radius: 5 / zoom,
-                fill: BoardConfig.SELECTION_COLOR,
-                stroke: BoardConfig.SELECTION_COLOR,
-                strokeWidth: 2 / zoom,
-                listening: false
+
+            const midDots = [];
+            const syncMainNode = () => {
+                const node = this.app.stage.findOne('#' + connector.id);
+                if (node) this.updateNode(node, connector);
+                this.syncAttachments(false);
+                this.app.mainLayer.batchDraw();
+            };
+            // Canlı drag zamanı outline + mavi midpoint-ləri təzə geometriyaya otuzdur.
+            // skipMidDots: midpoint drag-ında seqment sayı dəyişdiyi üçün indekslər sürüşür —
+            // o halda qalan dot-lar onsuz da gizlədilib, yerlərini yeniləmirik.
+            const refreshOverlay = skipMidDots => {
+                const live = this.geometry(connector);
+                if (!live) return;
+                outline.data(live.pathData);
+                if (!skipMidDots) {
+                    (live.segmentMidpoints || []).forEach((p, i) => {
+                        if (midDots[i]) midDots[i].position(p);
+                    });
+                }
+                this.app.overlayLayer.batchDraw();
+                return live;
+            };
+            const commitAfterDrag = () => {
+                // Konva drag mexanizmi bitsin, sonra overlay yenidən qurulsun
+                setTimeout(() => {
+                    this.refreshAll(true);
+                    this.app.commit();
+                    this.app.updateSelectionUI();
+                }, 0);
+            };
+            // Nöqtə qonşu anchor-ların düz xətti üzərinə qayıdıbsa qırılma ləğv olunur
+            const dropIfFlat = index => {
+                const wp = connector.waypoints[index];
+                const live = this.geometry(connector);
+                if (!wp || !live || !live.anchors) return;
+                const prev = live.anchors[index];
+                const next = live.anchors[index + 2];
+                if (prev && next && distanceToSegment(wp, prev, next) < 5 / zoom) {
+                    connector.waypoints.splice(index, 1);
+                }
+            };
+            const handleDragStart = () => {
+                this.hideEndpointMenu();
+                if (this.app.connectorToolbar) this.app.connectorToolbar.hide();
+            };
+
+            // Ağ anchor-lar: artıq qırılmış nöqtələr — sürüklə=yerini dəyiş, dblclick=sil
+            (connector.waypoints || []).forEach((wp, index) => {
+                const handle = new Konva.Circle({
+                    name: 'connector-bend-handle',
+                    x: wp.x,
+                    y: wp.y,
+                    radius: 6 / zoom,
+                    fill: '#FFFFFF',
+                    stroke: BoardConfig.SELECTION_COLOR,
+                    strokeWidth: 2 / zoom,
+                    hitStrokeWidth: 12 / zoom,
+                    draggable: !connector.locked
+                });
+                handle.on('mouseenter', () => {
+                    this.app.container.style.cursor = 'move';
+                });
+                handle.on('mouseleave', () => this.app.tools.updateCursor());
+                handle.on('mousedown touchstart', e => {
+                    e.cancelBubble = true;
+                });
+                handle.on('dragstart', e => {
+                    e.cancelBubble = true;
+                    handleDragStart();
+                });
+                handle.on('dragmove', e => {
+                    e.cancelBubble = true;
+                    const pos = handle.position();
+                    const live = connector.waypoints[index];
+                    if (!live) return;
+                    live.x = pos.x;
+                    live.y = pos.y;
+                    syncMainNode();
+                    refreshOverlay();
+                });
+                handle.on('dragend', e => {
+                    e.cancelBubble = true;
+                    const live = connector.waypoints[index];
+                    if (live) {
+                        live.x = round(live.x);
+                        live.y = round(live.y);
+                    }
+                    dropIfFlat(index);
+                    commitAfterDrag();
+                });
+                handle.on('dblclick dbltap', e => {
+                    e.cancelBubble = true;
+                    if (connector.locked) {
+                        this.app.showToast('Connector kilidlidir');
+                        return;
+                    }
+                    connector.waypoints.splice(index, 1);
+                    syncMainNode();
+                    this.refreshAll(true);
+                    this.app.commit();
+                    this.app.updateSelectionUI();
+                });
+                group.add(handle);
             });
-            group.add(mid);
+
+            // Mavi midpoint-lər: hələ qırılmamış seqment ortaları —
+            // dartanda həmin yerdə yeni waypoint yaranır (ağ anchor-a çevrilir)
+            (geometry.segmentMidpoints || []).forEach((point, index) => {
+                const dot = new Konva.Circle({
+                    name: 'connector-midpoint-handle',
+                    x: point.x,
+                    y: point.y,
+                    radius: 4.5 / zoom,
+                    fill: BoardConfig.SELECTION_COLOR,
+                    stroke: '#FFFFFF',
+                    strokeWidth: 1.5 / zoom,
+                    hitStrokeWidth: 14 / zoom,
+                    draggable: !connector.locked
+                });
+                let inserted = false;
+                dot.on('mouseenter', () => {
+                    this.app.container.style.cursor = 'move';
+                });
+                dot.on('mouseleave', () => this.app.tools.updateCursor());
+                dot.on('mousedown touchstart', e => {
+                    e.cancelBubble = true;
+                });
+                dot.on('dragstart', e => {
+                    e.cancelBubble = true;
+                    handleDragStart();
+                    const pos = dot.position();
+                    connector.waypoints.splice(index, 0, { x: pos.x, y: pos.y });
+                    inserted = true;
+                    // Yeni bölgü dragend-dən sonra qurulacaq; köhnə dot-lar drag boyu gizlənir
+                    midDots.forEach(other => {
+                        if (other !== dot) other.visible(false);
+                    });
+                });
+                dot.on('dragmove', e => {
+                    e.cancelBubble = true;
+                    if (!inserted) return;
+                    const pos = dot.position();
+                    const wp = connector.waypoints[index];
+                    wp.x = pos.x;
+                    wp.y = pos.y;
+                    syncMainNode();
+                    refreshOverlay(true);
+                });
+                dot.on('dragend', e => {
+                    e.cancelBubble = true;
+                    if (!inserted) return;
+                    inserted = false;
+                    const wp = connector.waypoints[index];
+                    wp.x = round(wp.x);
+                    wp.y = round(wp.y);
+                    dropIfFlat(index);
+                    commitAfterDrag();
+                });
+                midDots.push(dot);
+                group.add(dot);
+            });
 
             // Uc tutacaqları: sürükləyib yenidən bağlamaq / dblclick ilə item əlavə etmək
             for (const [which, point] of [['source', geometry.start], ['target', geometry.end]]) {
@@ -1309,16 +1599,8 @@
                     }
                     connector[which] = spec;
                     this.normalizeConnector(connector);
-                    const node = this.app.stage.findOne('#' + connector.id);
-                    if (node) this.updateNode(node, connector);
-                    this.syncAttachments(false);
-                    const live = this.geometry(connector);
-                    if (live) {
-                        outline.data(live.pathData);
-                        mid.position(live.pointAt(0.5));
-                    }
-                    this.app.mainLayer.batchDraw();
-                    this.app.overlayLayer.batchDraw();
+                    syncMainNode();
+                    refreshOverlay();
                 });
                 handle.on('dragend', e => {
                     e.cancelBubble = true;

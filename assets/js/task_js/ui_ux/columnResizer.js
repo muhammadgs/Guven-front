@@ -191,7 +191,8 @@ function setupResizeEvents(resizer, header, colIndex, table) {
         let newWidth = startWidth + dx;
 
         // Limitlər
-        if (newWidth < SUPER_CONFIG.limits.minWidth) newWidth = SUPER_CONFIG.limits.minWidth;
+        const columnMinWidth = getColumnMinWidth(table, colIndex);
+        if (newWidth < columnMinWidth) newWidth = columnMinWidth;
         if (newWidth > SUPER_CONFIG.limits.maxWidth) newWidth = SUPER_CONFIG.limits.maxWidth;
 
         // Sütun genişliyini tətbiq et
@@ -221,8 +222,20 @@ function setupResizeEvents(resizer, header, colIndex, table) {
     };
 }
 
+// Sütuna ayrıca minimum en vermək üçün data-resize-min-width istifadə olunur.
+function getColumnMinWidth(table, colIndex) {
+    const header = table.querySelectorAll('th')[colIndex];
+    const customMinWidth = Number.parseFloat(header?.dataset.resizeMinWidth);
+
+    return Number.isFinite(customMinWidth)
+        ? Math.max(SUPER_CONFIG.limits.minWidth, customMinWidth)
+        : SUPER_CONFIG.limits.minWidth;
+}
+
 // Sütun genişliyini tətbiq et
 function applyWidthToColumn(table, colIndex, width) {
+    const minWidth = getColumnMinWidth(table, colIndex);
+    width = Math.max(minWidth, Math.min(width, SUPER_CONFIG.limits.maxWidth));
     const allRows = table.querySelectorAll('thead tr, tbody tr, tfoot tr');
 
     allRows.forEach(row => {

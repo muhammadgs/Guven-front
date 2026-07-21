@@ -93,7 +93,7 @@
             } else if (this.current === 'text' && !this.tempPan) {
                 container.style.cursor = 'text';
             } else if (this.current === 'pen' && !this.tempPan) {
-                container.style.cursor = 'crosshair';
+                container.style.cursor = this.app.pen ? this.app.pen.cursorFor() : 'crosshair';
             } else if (this.current === 'connector' && !this.tempPan) {
                 container.style.cursor = 'crosshair';
             } else if (this.current === 'shape' && !this.tempPan) {

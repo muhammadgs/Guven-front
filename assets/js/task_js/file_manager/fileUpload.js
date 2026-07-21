@@ -1815,6 +1815,20 @@ FileUploadManager.previewFile = async function(fileId, filename, mimeType, isAud
     }
 };
 
+// Şəkil və videonu öz ölçüsündə göstərir, yalnız ekranın görünən sahəsinə sığmadıqda kiçildir.
+FileUploadManager._fitPreviewMedia = function(media) {
+    const naturalWidth = media.naturalWidth || media.videoWidth;
+    const naturalHeight = media.naturalHeight || media.videoHeight;
+    if (!naturalWidth || !naturalHeight) return;
+
+    const maxWidth = Math.max(280, window.innerWidth - 72);
+    const maxHeight = Math.max(220, window.innerHeight * 0.66);
+    const scale = Math.min(1, maxWidth / naturalWidth, maxHeight / naturalHeight);
+
+    media.style.width = `${Math.round(naturalWidth * scale)}px`;
+    media.style.height = `${Math.round(naturalHeight * scale)}px`;
+};
+
 FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl, mimeType) {
     // Köhnə modalları sil
     document.querySelectorAll('[id$="PreviewModal"]').forEach(m => m.remove());
@@ -1864,11 +1878,12 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
         titleText = 'Şəkil';
         iconHtml = '<i class="fas fa-image" style="color:#10b981;"></i>';
         contentHtml = `
-            <div style="text-align:center;padding:20px;max-height:65vh;overflow-y:auto;">
+            <div style="text-align:center;padding:20px;max-height:70vh;overflow:auto;">
                 <img src="${fileUrl}" 
-                     style="max-width:100%;max-height:60vh;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"
+                     style="display:block;width:auto;height:auto;max-width:calc(100vw - 72px);max-height:66vh;margin:0 auto;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);"
                      alt="${FileUploadManager.escapeHtml(filename || 'Şəkil')}"
                      id="uniImgEl"
+                     onload="FileUploadManager._fitPreviewMedia(this)"
                      onerror="document.getElementById('uniImgError').style.display='block';this.style.display='none'">
                 <div id="uniImgError" style="display:none;padding:20px;color:#ef4444;">
                     <i class="fas fa-exclamation-triangle"></i> Şəkil yüklənmədi.
@@ -1880,8 +1895,8 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
         titleText = 'Video';
         iconHtml = '<i class="fas fa-video" style="color:#ef4444;"></i>';
         contentHtml = `
-            <div style="text-align:center;padding:20px;">
-                <video controls style="max-width:100%;max-height:55vh;border-radius:8px;" id="uniVideoPlayer">
+            <div style="text-align:center;padding:20px;overflow:auto;">
+                <video controls style="display:block;width:auto;height:auto;max-width:calc(100vw - 72px);max-height:66vh;margin:0 auto;border-radius:8px;" id="uniVideoPlayer" onloadedmetadata="FileUploadManager._fitPreviewMedia(this)">
                     <source src="${fileUrl}" type="${mimeType || 'video/mp4'}">
                     <source src="${fileUrl}" type="video/webm">
                     Brauzeriniz video dəstəkləmir.
@@ -1902,7 +1917,7 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
         titleText = docMeta.title;
         iconHtml = `<i class="fas ${docMeta.icon}" style="color:${docMeta.color};"></i>`;
         contentHtml = `
-            <div id="uniDocViewer" style="height:70vh;overflow:auto;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
+            <div id="uniDocViewer" style="height:78vh;overflow:auto;background:#f8fafc;display:flex;align-items:center;justify-content:center;">
                 <div style="text-align:center;color:#64748b;">
                     <i class="fas fa-spinner fa-spin" style="font-size:32px;color:#3b82f6;"></i>
                     <div style="margin-top:12px;font-size:14px;">Önizləmə hazırlanır...</div>
@@ -1940,9 +1955,9 @@ FileUploadManager._openUniversalModal = function(type, fileId, filename, fileUrl
             <div style="
                 background:white;
                 border-radius:16px;
-                width:100%;
-                max-width:${['pdf', 'word', 'excel', 'ppt'].includes(type) ? '960px' : type === 'image' ? '800px' : '550px'};
-                max-height:92vh;
+                width:${['pdf', 'word', 'excel', 'ppt'].includes(type) ? 'min(1180px, calc(100vw - 32px))' : ['image', 'video'].includes(type) ? 'fit-content' : '100%'};
+                max-width:${['pdf', 'word', 'excel', 'ppt'].includes(type) ? '1180px' : ['image', 'video'].includes(type) ? 'calc(100vw - 32px)' : '550px'};
+                max-height:94vh;
                 display:flex;
                 flex-direction:column;
                 box-shadow:0 25px 50px rgba(0,0,0,0.25);

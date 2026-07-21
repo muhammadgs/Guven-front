@@ -5,6 +5,7 @@
             this.app = app;
             this.clipboard = [];
             this.dragStartPositions = null;
+            this.dragStartWaypoints = null;
 
             this.rubberBand = null;
             this.rubberStart = null;
@@ -113,6 +114,20 @@
                     if (node) this.dragStartPositions.set(id, node.position());
                 }
 
+                // Hər iki ucu sürüklənən elementlərə bağlı xətlərin qırılma
+                // nöqtələri də xətlə birlikdə getsin
+                this.dragStartWaypoints = new Map();
+                for (const el of app.state.elements) {
+                    if (el.type !== 'connector' || el.locked) continue;
+                    if (!Array.isArray(el.waypoints) || !el.waypoints.length) continue;
+                    const covered = endpoint => endpoint && endpoint.elementId &&
+                        this.dragStartPositions.has(endpoint.elementId);
+                    if (covered(el.source) && covered(el.target)) {
+                        this.dragStartWaypoints.set(el.id,
+                            el.waypoints.map(p => ({ x: p.x, y: p.y })));
+                    }
+                }
+
                 if (app.contextToolbar) app.contextToolbar.hide();
                 if (app.connectorToolbar) app.connectorToolbar.hide();
                 if (app.connectors) app.connectors.destroyHandleGroups();
@@ -131,6 +146,12 @@
                     if (id === group.id()) continue;
                     const node = this.getNode(id);
                     if (node) node.position({ x: pos.x + dx, y: pos.y + dy });
+                }
+                if (this.dragStartWaypoints) {
+                    for (const [id, base] of this.dragStartWaypoints) {
+                        const el = app.state.getElement(id);
+                        if (el) el.waypoints = base.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                    }
                 }
                 if (app.connectors) {
                     app.connectors.refreshAll(false, new Set(this.dragStartPositions.keys()), false);
@@ -155,7 +176,19 @@
                         }
                     }
                 }
+                if (this.dragStartWaypoints) {
+                    for (const id of this.dragStartWaypoints.keys()) {
+                        const el = app.state.getElement(id);
+                        if (el && Array.isArray(el.waypoints)) {
+                            el.waypoints.forEach(p => {
+                                p.x = Math.round(p.x);
+                                p.y = Math.round(p.y);
+                            });
+                        }
+                    }
+                }
                 this.dragStartPositions = null;
+                this.dragStartWaypoints = null;
                 if (app.connectors) app.connectors.refreshAll(true);
                 app.commit();
                 app.updateSelectionUI();
@@ -377,6 +410,10 @@
                             endpoint.point.y += 24;
                         }
                     }
+                    for (const wp of el.waypoints || []) {
+                        wp.x += 24;
+                        wp.y += 24;
+                    }
                 } else {
                     el.x += 24;
                     el.y += 24;
@@ -409,6 +446,10 @@
                             endpoint.point.y += 24;
                         }
                     }
+                    for (const wp of src.waypoints || []) {
+                        wp.x += 24;
+                        wp.y += 24;
+                    }
                 }
             });
 
@@ -427,6 +468,13 @@
             if (!ids.length) return;
 
             let moved = false;
+            const movedIds = new Set();
+            const shiftWaypoints = el => {
+                for (const wp of el.waypoints || []) {
+                    wp.x += dx;
+                    wp.y += dy;
+                }
+            };
             for (const id of ids) {
                 const el = this.app.state.getElement(id);
                 const node = this.getNode(id);
@@ -435,6 +483,7 @@
                     el.y += dy;
                     node.position({ x: el.x, y: el.y });
                     moved = true;
+                    movedIds.add(id);
                     if (this.app.connectors && el.connectorAttachment) {
                         this.app.connectors.captureAttachment(el);
                     }
@@ -444,7 +493,18 @@
                     el.source.point.y += dy;
                     el.target.point.x += dx;
                     el.target.point.y += dy;
+                    shiftWaypoints(el);
                     moved = true;
+                }
+            }
+            // Hər iki ucu nudge olunan elementlərə bağlı xətlərin qırılmaları da sürüşsün
+            if (movedIds.size) {
+                for (const el of this.app.state.elements) {
+                    if (el.type !== 'connector' || el.locked) continue;
+                    if (!Array.isArray(el.waypoints) || !el.waypoints.length) continue;
+                    const covered = endpoint => endpoint && endpoint.elementId &&
+                        movedIds.has(endpoint.elementId);
+                    if (covered(el.source) && covered(el.target)) shiftWaypoints(el);
                 }
             }
             if (!moved) return;

@@ -69,19 +69,62 @@
             '#CE93D8', '#90CAF9', '#A5D6A7', '#E6EE9C'
         ],
 
-        // Qələm aləti
+        // Ümumi 9-luq rəng siyahısı (connector toolbar + mətn rəngi seçimləri bunu işlədir)
         PEN_COLORS: [
             '#1A1A1A', '#F03E3E', '#F76707',
             '#F5B800', '#2F9E44', '#1971C2',
             '#7048E8', '#E64980', '#FFFFFF'
         ],
-        DEFAULT_PEN_COLOR: '#1A1A1A',
-        PEN_WIDTHS: [2, 4, 8, 16],
-        DEFAULT_PEN_WIDTH: 4,
-        PEN_MIN_DIST: 3,
-        PEN_SIMPLIFY_TOLERANCE: 1.2,
-        PEN_COLOR_KEY: 'guven_board_pen_color',
-        PEN_WIDTH_KEY: 'guven_board_pen_width',
+
+        // Qələm aləti — bütün ölçülər EKRAN pikselidir, zoom-a görə düzəlir
+        PEN_MIN_DIST: 1.6,             // iki nöqtə arasındakı minimum məsafə
+        PEN_SIMPLIFY_TOLERANCE: 0.9,   // gedişin sonunda bir dəfə tətbiq olunan RDP dözümü
+        PEN_SMOOTHING: 0.45,           // 0 = xam giriş, 1 = tam gecikmə (əl titrəməsi süzgəci)
+        PEN_CORNER_RATIO: 2,           // künc yumşaltma radiusu = qalınlıq * bu
+        PEN_CORNER_MIN: 3,             // minimum künc radiusu (dünya vahidi)
+        OBJECT_ERASER_SIZE: 28,        // obyekt silgisi dairəsinin diametri
+        ERASER_SAMPLE_RATIO: 0.35,     // kəsik axtarışı addımı = radius * bu
+
+        // Çəkim paneli (qələm / marker / silgilər / lasso)
+        // Hər swatch = {color, width}; qalınlıq swatch-ın içindəki dairənin ölçüsündə görünür
+        DRAW_PEN_DEFAULTS: [
+            { color: '#1A1A1A', width: 4 },
+            { color: '#1971C2', width: 4 },
+            { color: '#C92A2A', width: 4 }
+        ],
+        DRAW_MARKER_DEFAULTS: [
+            { color: '#FFF9B1', width: 14 },
+            { color: '#FF9E9E', width: 14 },
+            { color: '#8CE8A8', width: 14 }
+        ],
+        MAX_DRAW_SWATCHES: 10,
+        MARKER_OPACITY: 0.42,
+        PEN_WIDTH_RANGE: [1, 20],
+        MARKER_WIDTH_RANGE: [4, 40],
+        ERASER_SIZE_RANGE: [8, 80],
+        DEFAULT_ERASER_SIZE: 28,
+        DRAW_STORE_KEY: 'guven_board_draw_v1',
+
+        // Qələm paleti (4 sütun x 7 sıra, doymuş rənglər)
+        PEN_PALETTE: [
+            '#FFF176', '#FFD43B', '#F59F00', '#FFFFFF',
+            '#FFA94D', '#FF922B', '#E8590C', '#E9ECEF',
+            '#FF8787', '#FA5252', '#C92A2A', '#ADB5BD',
+            '#69DB7C', '#40C057', '#2B8A3E', '#495057',
+            '#74C0FC', '#339AF0', '#1864AB', '#212529',
+            '#B197FC', '#845EF7', '#6741D9', '#A87C7C',
+            '#000000', '#1971C2', '#E03131', '#7F1D1D'
+        ],
+        // Marker paleti (daha soft / pastel tonlar)
+        MARKER_PALETTE: [
+            '#FFF9B1', '#FFE066', '#D9A600', '#FFFFFF',
+            '#FFD8A8', '#FFB366', '#C77729', '#F1F3F5',
+            '#FFC9C9', '#FF9E9E', '#E05252', '#CED4DA',
+            '#C3F5D0', '#8CE8A8', '#4CAF6E', '#868E96',
+            '#C5DFFF', '#8FBFFF', '#4D82D9', '#343A40',
+            '#E5DBFF', '#C0A9FF', '#9775FA', '#BE9B9B',
+            '#212529', '#3B5BDB', '#FF6B6B', '#A61E1E'
+        ],
 
         ZOOM_MIN: 0.05,
         ZOOM_MAX: 4,
