@@ -4672,7 +4672,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 10000);
 })();
 
-// main.js faylında, CompaniesService yaradıldıqdan sonra əlavə edin
 
 // companiesService yaradıldıqdan sonra
 if (window.companiesService) {
@@ -4684,3 +4683,45 @@ if (window.companiesService) {
         }
     }, 1000);
 }
+(function() {
+    console.log('🔧 QRCodeService avtomatik init başlayır...');
+
+    // Əgər artıq qlobal instance varsa, onu istifadə et
+    if (window.qrService && window.qrService._initialized) {
+        console.log('✅ QRCodeService artıq init olunub');
+        return;
+    }
+
+    // ApiService yoxlanışı
+    if (typeof window.apiService === 'undefined' && typeof ApiService !== 'undefined') {
+        window.apiService = new ApiService();
+        console.log('✅ ApiService yaradıldı');
+    }
+
+    // QRCodeService yarat
+    if (typeof window.qrService === 'undefined' || !window.qrService._initialized) {
+        if (window.apiService) {
+            window.qrService = new QRCodeService(window.apiService);
+            console.log('✅ QRCodeService instance yaradıldı');
+        } else {
+            console.error('❌ ApiService tapılmadı!');
+        }
+    }
+
+    // DOM hazır olduqda init et
+    function initQR() {
+        if (window.qrService && !window.qrService._initialized) {
+            window.qrService.initQrCodeModal();
+            console.log('✅ QRCodeService init edildi (DOM-ready)');
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQR);
+    } else {
+        // DOM artıq hazırdırsa, bir az gecikmə ilə çağır
+        setTimeout(initQR, 300);
+    }
+
+    console.log('✅ QRCodeService avtomatik init tamamlandı');
+})();

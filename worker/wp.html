@@ -55,6 +55,9 @@
 <body class="h-screen bg-brand-soft font-sans text-brand-ink overflow-hidden loading">
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- QR Kod Generator üçün CDN -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
 
 <div id="pageLoader" class="fixed inset-0 bg-white z-[9999] flex items-center justify-center transition-opacity duration-500">
     <div class="text-center" style="transform: translate(0, 0);">
@@ -173,12 +176,7 @@
                             <i class="fa-solid fa-clipboard-list w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Protokol/Qeydlər</span>
                         </a>
-                        <!-- Departament və İş Növləri -->
-                        <a href="#" id="openPermissionsModalBtn" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
-                            <i class="fa-solid fa-diagram-project w-5 text-center"></i>
-                            <span class="sidebar-text whitespace-nowrap">Departament və İş Növləri</span>
-                        </a>
-                        <!-- Diaqram -->
+                                                <!-- Diaqram -->
                         <a href="../diogram/draw.html" class="sidebar-link flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition hover:bg-brand-soft hover:text-brand-blue" data-sidebar-item>
                             <i class="fa-solid fa-chart-pie w-5 text-center"></i>
                             <span class="sidebar-text whitespace-nowrap">Diaqram</span>
@@ -320,6 +318,26 @@
                                     <i class="fa-solid fa-paper-plane text-sm"></i>
                                     <span>Dəvət Linki Yarat</span>
                                     <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PROFİL BÖLMƏSİ - QR KOD BÖLMƏSİ -->
+                        <div class="mt-8 pt-4 border-t border-slate-200">
+                            <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-qrcode text-brand-blue"></i>
+                                QR Kod
+                            </h3>
+                            <div class="flex flex-wrap gap-4">
+                                <button id="openQrCodeModalBtn"
+                                        class="rounded-2xl bg-gradient-to-r from-brand-blue to-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-qrcode"></i>
+                                    QR Kod Yarat
+                                </button>
+                                <button id="viewQrCodesBtn"
+                                        class="rounded-2xl bg-white border-2 border-brand-blue px-6 py-3 text-sm font-semibold text-brand-blue transition hover:bg-brand-soft flex items-center gap-2">
+                                    <i class="fa-solid fa-list"></i>
+                                    QR Kodlarım
                                 </button>
                             </div>
                         </div>
@@ -753,6 +771,7 @@
                 '../assets/js/worker_profile_js/file.service.js',
                 '../assets/js/worker_profile_js/file_service/files.ui.js',
                 '../assets/js/invitation/invitation.service.js',
+                '../assets/js/qr_service/qr.service.js',
                 '../assets/js/worker_profile_js/file_service/file.service.extended.js',
                 '../assets/js/worker_profile_js/file_service/companyFolderService.js',
                 '../assets/js/worker_profile_js/file_service/folder-permission-modal.js',
